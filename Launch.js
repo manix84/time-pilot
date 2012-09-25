@@ -12,7 +12,7 @@ define([
     };
 
     TimePilot.prototype = {
-        _characterStore: {
+        _spriteStore: {
             player: {
                 src: "../sprites/ship.png",
                 frameWidth: 32,
@@ -64,17 +64,17 @@ define([
             this._canvasContext = this._canvas.getContext('2d');
         },
 
-        _drawCharacter: function (characterData) {
+        _drawSprite: function (spriteData) {
             this._canvasContext.drawImage(
-                characterData,
-                characterData.frameWidth,
+                spriteData,
+                spriteData.frameWidth,
                 0,
-                characterData.frameWidth,
-                characterData.frameHeight,
-                ((this._container.clientWidth / 2) - (characterData.frameWidth / 2)),
-                ((this._container.clientHeight / 2) - (characterData.frameHeight / 2)),
-                characterData.frameWidth,
-                characterData.frameHeight
+                spriteData.frameWidth,
+                spriteData.frameHeight,
+                ((this._container.clientWidth / 2) - (spriteData.frameWidth / 2)),
+                ((this._container.clientHeight / 2) - (spriteData.frameHeight / 2)),
+                spriteData.frameWidth,
+                spriteData.frameHeight
             );
         },
 
@@ -83,12 +83,12 @@ define([
                 l = this._enemies.length;
             for (; i < l; i++) {
                 // DRAW ENEMY
-                this._drawCharacter();
+                this._drawSprite();
             }
         },
 
         _drawPlayer: function () {
-            this._draw(this._liveDataStore.player);
+            this._draw(this._spriteStore.player);
         },
 
         _renderMenu: function () {},
