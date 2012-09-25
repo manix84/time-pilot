@@ -1,8 +1,4 @@
-define([
-    'engine/ticker',
-    'engine/Graphic',
-    'engine/sound'
-], function (ticker, Graphic, sound) {
+define(function () {
 
     var TimePilot = function (element) {
         console.log('TimePilot:element', element);
