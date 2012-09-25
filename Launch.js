@@ -25,7 +25,6 @@ define([
         _liveDataStore: {
             level: 1,
 
-            positionY: 0
             player: {
                 spriteRef: null,
                 heading: 90,
@@ -33,6 +32,8 @@ define([
                 positionY: 0
             },
 
+            boss: {
+                spriteRef: null,
                 heading: 90,
                 positionX: 0,
                 positionY: 0
@@ -54,7 +55,22 @@ define([
             this._canvasContext = this._canvas.getContext('2d');
         },
 
-        _renderShip: function () {
+        _drawEnemies: function () {
+            var i = 0,
+                l = this._enemies.length;
+            for (; i < l; i++) {
+                // DRAW ENEMY
+            }
+        },
+
+        _setupPlayer: function () {
+            this._liveDataStore.player.spriteRef.src = "../sprites/ship.png";
+            this._liveDataStore.player.spriteRef.frameWidth = 32;
+            this._liveDataStore.player.spriteRef.frameHeight = 32;
+            this._liveDataStore.player.spriteRef.frameCount = 16;
+        },
+
+        _drawPlayer: function () {
 
             this._canvasContext.drawImage(
                 this._liveDataStore.player.spriteRef,
