@@ -19,8 +19,8 @@ define([
 
         _tickCallback: function () {
             var SPEED = 1;
-            this._player.positionY += (Math.cos(this._player.heading * (Math.PI / 180)) * SPEED);
-            this._player.positionX += (Math.sin(this._player.heading * (Math.PI / 180)) * SPEED);
+            this._player.positionY += (Math.cos(this._player.heading * (Math.PI / 180)) * SPEED).toFixed(15);
+            this._player.positionX += (Math.sin(this._player.heading * (Math.PI / 180)) * SPEED).tiFixed(15);
         },
 
         _player: {
