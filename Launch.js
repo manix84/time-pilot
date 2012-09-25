@@ -9,12 +9,21 @@ define(function () {
 
     TimePilot.prototype = {
         _spriteStore: {
-            player: {
-                src: "../sprites/ship.png",
-                frameWidth: 32,
-                frameHeight: 32,
-                frameCount: 16
-            }
+            player: { src: "../sprites/ship.png", frameWidth: 32, frameHeight: 32, frameCount: 16 },
+            enemies: [
+                { src: "../sprites/enemy_level1.png", frameWidth: 32, frameHeight: 32, frameCount: 16 },
+                { src: "../sprites/enemy_level2.png", frameWidth: 32, frameHeight: 32, frameCount: 16 },
+                { src: "../sprites/enemy_level3.png", frameWidth: 32, frameHeight: 32, frameCount: 16 },
+                { src: "../sprites/enemy_level4.png", frameWidth: 32, frameHeight: 32, frameCount: 16 },
+                { src: "../sprites/enemy_level5.png", frameWidth: 32, frameHeight: 32, frameCount: 16 }
+            ],
+            bosses: [
+                { src: "../sprites/boss_level1.png", frameWidth: 32, frameHeight: 64 },
+                { src: "../sprites/boss_level2.png", frameWidth: 32, frameHeight: 64 },
+                { src: "../sprites/boss_level3.png", frameWidth: 32, frameHeight: 64 },
+                { src: "../sprites/boss_level4.png", frameWidth: 32, frameHeight: 64 },
+                { src: "../sprites/boss_level5.png", frameWidth: 32, frameHeight: 64 }
+            ]
         },
 
         _liveDataStore: {
