@@ -19,25 +19,30 @@ define([
 
         _tickCallback: function () {
             var SPEED = 1;
-            this._player.positionY += (Math.cos(this._player.heading * (Math.PI / 180)) * SPEED);
-            this._player.positionX += (Math.sin(this._player.heading * (Math.PI / 180)) * SPEED);
+            this._player.positionY += (Math.cos(this._player.heading * (Math.PI / 180)) * SPEED).toFixed(15);
+            this._player.positionX += (Math.sin(this._player.heading * (Math.PI / 180)) * SPEED).tiFixed(15);
         },
+        _liveDataStore: {
+            level: 1,
 
-        _player: {
-            heading: 90,
-            positionX: 0,
-            positionY: 0
+            player: {
+                spriteRef: null,
+                heading: 90,
+                positionX: 0,
+                positionY: 0
+            },
+
+            boss: {
+                spriteRef: null,
+                heading: 90,
+                positionX: 0,
+                positionY: 0
+            },
+
+            enemies: [],
+
+            bullets: []
         },
-
-        _boss: {
-            heading: 90,
-            positionX: 0,
-            positionY: 0
-        },
-
-        _enemies: [],
-
-        _bullets: [],
 
         _createCanvas: function () {
             this._canvas = document.createElement('canvas');
@@ -50,23 +55,33 @@ define([
             this._canvasContext = this._canvas.getContext('2d');
         },
 
-        _renderShip: function () {
-            this.playerSprite = new Image();
-            this.playerSprite.src = "../sprites/ship.png";
-            this.playerSprite.frameWidth = 64;
-            this.playerSprite.frameHeight = 64;
-            this.playerSprite.frameCount = 16;
+        _drawEnemies: function () {
+            var i = 0,
+                l = this._enemies.length;
+            for (; i < l; i++) {
+                // DRAW ENEMY
+            }
+        },
+
+        _setupPlayer: function () {
+            this._liveDataStore.player.spriteRef.src = "../sprites/ship.png";
+            this._liveDataStore.player.spriteRef.frameWidth = 32;
+            this._liveDataStore.player.spriteRef.frameHeight = 32;
+            this._liveDataStore.player.spriteRef.frameCount = 16;
+        },
+
+        _drawPlayer: function () {
 
             this._canvasContext.drawImage(
-                this.playerSprite,
-                this.playerSprite.frameWidth,
+                this._liveDataStore.player.spriteRef,
+                this._liveDataStore.player.spriteRef.frameWidth,
                 0,
-                this.playerSprite.frameWidth,
-                this.playerSprite.frameHeight,
-                ((this._container.clientWidth / 2) - (this.playerSprite.frameWidth / 2)),
-                ((this._container.clientHeight / 2) - (this.playerSprite.frameHeight / 2)),
-                this.playerSprite.frameWidth,
-                this.playerSprite.frameHeight
+                this._liveDataStore.player.spriteRef.frameWidth,
+                this._liveDataStore.player.spriteRef.frameHeight,
+                ((this._container.clientWidth / 2) - (this._liveDataStore.player.spriteRef.frameWidth / 2)),
+                ((this._container.clientHeight / 2) - (this._liveDataStore.player.spriteRef.frameHeight / 2)),
+                this._liveDataStore.player.spriteRef.frameWidth,
+                this._liveDataStore.player.spriteRef.frameHeight
             );
 
         },
