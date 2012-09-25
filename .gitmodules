@@ -1,3 +1,0 @@
-[submodule "engine"]
-	path = engine
-	url = git://github.com/manix84/js-games-engine.git
