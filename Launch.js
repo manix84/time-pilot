@@ -44,13 +44,12 @@ define(function () {
 
         init: function () {
             this._createCanvas();
-            this._renderShip();
+            this._renderPlayer();
         },
 
         _tickCallback: function () {
-            var SPEED = 1;
-            this._player.positionY += (Math.cos(this._player.heading * (Math.PI / 180)) * SPEED).toFixed(15);
-            this._player.positionX += (Math.sin(this._player.heading * (Math.PI / 180)) * SPEED).tiFixed(15);
+            this._player.positionY += (Math.cos(this._player.heading * (Math.PI / 180)) * 1).toFixed(15);
+            this._player.positionX += (Math.sin(this._player.heading * (Math.PI / 180)) * 1).tiFixed(15);
         },
 
         _createCanvas: function () {
@@ -67,24 +66,29 @@ define(function () {
         _renderSprite: function (spriteData) {
             this._canvasContext.drawImage(
                 spriteData,
-                spriteData.frameWidth,
-                0,
+                (spriteData.frameX * spriteData.frameWidth),
+                (spriteData.frameY * spriteData.frameHeight),
                 spriteData.frameWidth,
                 spriteData.frameHeight,
-                ((this._container.clientWidth / 2) - (spriteData.frameWidth / 2)),
-                ((this._container.clientHeight / 2) - (spriteData.frameHeight / 2)),
+                spriteData.posX,
+                spriteData.posY,
                 spriteData.frameWidth,
                 spriteData.frameHeight
             );
         },
 
         _renderPlayer: function () {
-            this._render({
-                src: "../sprites/ship.png",
-                frameWidth: 32,
-                frameHeight: 32,
-                frameCount: 16
-            });
+            var spriteData = new Image();
+
+            spriteData.src = "../sprites/player.png";
+            spriteData.frameWidth = 32;
+            spriteData.frameHeight = 32;
+            spriteData.frameX = 0;
+            spriteData.frameY = 0;
+            spriteData.posX = ((this._container.clientWidth / 2) - (32 / 2));
+            spriteData.posY = ((this._container.clientHeight / 2) - (32 / 2));
+
+            this._renderSprite(spriteData);
         },
 
         _renderBoss: function () {
@@ -102,48 +106,60 @@ define(function () {
 
         _renderEnemies: function () {
             var i = 0,
-                l = this._enemies.length;
+                l = this._enemies.length,
+                spriteData = new Image();
+
+            spriteData.src = "../sprites/enemy_level" + this._gameData.level + ".png";
+
+
             for (; i < l; i++) {
                 // DRAW ENEMY
+                // turnSpeed: (0.2 * this._gameData.level)
+                // velocity: (10 * this._gameData.level)
+
                 this._renderSprite({
-                    src: "../sprites/enemy_level" + this._gameData.level + ".png",
+
                     frameWidth: 32,
                     frameHeight: 32,
-                    frameCount: (this._gameData.level !== 3 ? 16 : 12),
-                    turnSpeed: (0.2 * this._gameData.level),
-                    velocity: (10 * this._gameData.level)
+                    frameCount: (this._gameData.level !== 3 ? 16 : 12)
                 });
             }
         },
 
-        _renderMissle: function () {
+        _renderMissles: function () {
             var i = 0,
                 l = this._enemies.length;
             for (; i < l; i++) {
-                // DRAW ENEMY
+                // DRAW MISSLE
+                // turnSpeed: (0.2 * this._gameData.level)
+                // velocity: (10 * this._gameData.level)
                 this._renderSprite({
                     src: "../sprites/missle.png",
-                    turnSpeed: (0.2 * this._gameData.level),
-                    velocity: (10 * this._gameData.level)
+                    posX: 0,
+                    posY: 0
                 });
             }
         },
 
-        _renderBomb: function () {
+        _renderBombs: function () {
             var i = 0,
                 l = this._enemies.length;
             for (; i < l; i++) {
-                // DRAW ENEMY
+                // DRAW BOMB
+                // falling arch: (0.2 * this._gameData.level)
+                // velocity: (10 * this._gameData.level)
                 this._renderSprite({
-                    src: "../sprites/missle.png",
-                    turnSpeed: (0.2 * this._gameData.level),
-                    velocity: (10 * this._gameData.level)
+                    src: "../sprites/bomb.png"
                 });
             }
         },
 
         _renderMenu: function () {},
-        _renderSky: function () {}
+        _renderClouds: function () {
+            // Draw cloud layer 1
+            // Draw cloud layer 2
+            // Draw cloud layer 3
+        }
     };
 
     return TimePilot;
