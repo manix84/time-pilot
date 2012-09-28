@@ -11,14 +11,14 @@ define(function () {
         _spriteStore: {
             player: { src: "../sprites/ship.png", frameWidth: 32, frameHeight: 32, frameCount: 16 },
             enemies: [
-                { src: "../sprites/enemy_level1.png", frameWidth: 32, frameHeight: 32, frameCount: 16 },
-                { src: "../sprites/enemy_level2.png", frameWidth: 32, frameHeight: 32, frameCount: 16 },
-                { src: "../sprites/enemy_level3.png", frameWidth: 32, frameHeight: 32, frameCount: 16 },
-                { src: "../sprites/enemy_level4.png", frameWidth: 32, frameHeight: 32, frameCount: 16 },
-                { src: "../sprites/enemy_level5.png", frameWidth: 32, frameHeight: 32, frameCount: 16 }
+                { src: "../sprites/enemy_level1.png", frameWidth: 32, frameHeight: 32, frameCount: 16, turnSpeed: 0.2, velocity: 10 },
+                { src: "../sprites/enemy_level2.png", frameWidth: 32, frameHeight: 32, frameCount: 16, turnSpeed: 0.4, velocity: 15 },
+                { src: "../sprites/enemy_level3.png", frameWidth: 32, frameHeight: 32, frameCount: 16, turnSpeed: 0.6, velocity: 20 },
+                { src: "../sprites/enemy_level4.png", frameWidth: 32, frameHeight: 32, frameCount: 16, turnSpeed: 1, velocity: 25 },
+                { src: "../sprites/enemy_level5.png", frameWidth: 32, frameHeight: 32, frameCount: 16, turnSpeed: 1.2, velocity: 30 }
             ],
             bosses: [
-                { src: "../sprites/boss_level1.png", frameWidth: 32, frameHeight: 64 },
+                { src: "../sprites/boss_level1.png", frameWidth: 32, frameHeight: 64  },
                 { src: "../sprites/boss_level2.png", frameWidth: 32, frameHeight: 64 },
                 { src: "../sprites/boss_level3.png", frameWidth: 32, frameHeight: 64 },
                 { src: "../sprites/boss_level4.png", frameWidth: 32, frameHeight: 64 },
