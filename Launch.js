@@ -8,25 +8,8 @@ define(function () {
     };
 
     TimePilot.prototype = {
-        _spriteStore: {
-            player: { src: "../sprites/ship.png", frameWidth: 32, frameHeight: 32, frameCount: 16 },
-            enemies: [
-                { src: "../sprites/enemy_level1.png", frameWidth: 32, frameHeight: 32, frameCount: 16, turnSpeed: 0.2, velocity: 10 },
-                { src: "../sprites/enemy_level2.png", frameWidth: 32, frameHeight: 32, frameCount: 16, turnSpeed: 0.4, velocity: 15 },
-                { src: "../sprites/enemy_level3.png", frameWidth: 32, frameHeight: 32, frameCount: 16, turnSpeed: 0.6, velocity: 20 },
-                { src: "../sprites/enemy_level4.png", frameWidth: 32, frameHeight: 32, frameCount: 16, turnSpeed: 1, velocity: 25 },
-                { src: "../sprites/enemy_level5.png", frameWidth: 32, frameHeight: 32, frameCount: 16, turnSpeed: 1.2, velocity: 30 }
-            ],
-            bosses: [
-                { src: "../sprites/boss_level1.png", frameWidth: 32, frameHeight: 64  },
-                { src: "../sprites/boss_level2.png", frameWidth: 32, frameHeight: 64 },
-                { src: "../sprites/boss_level3.png", frameWidth: 32, frameHeight: 64 },
-                { src: "../sprites/boss_level4.png", frameWidth: 32, frameHeight: 64 },
-                { src: "../sprites/boss_level5.png", frameWidth: 32, frameHeight: 64 }
-            ]
-        },
 
-        _liveDataStore: {
+        _gameData: {
             level: 1,
 
             player: {
@@ -36,15 +19,27 @@ define(function () {
             },
 
             boss: {
-                spriteRef: null,
                 heading: 90,
                 positionX: 0,
                 positionY: 0
             },
 
-            enemies: [],
+            enemies: [
+                // {
+                //     following: true/false,z
+                //     heading: 90,
+                //     positionX: 0,
+                //     positionY: 0
+                // }
+            ],
 
-            bullets: []
+            bullets: [
+                // {
+                //     heading: 90,
+                //     positionX: 0,
+                //     positionY: 0
+                // }
+            ]
         },
 
         init: function () {
@@ -69,7 +64,7 @@ define(function () {
             this._canvasContext = this._canvas.getContext('2d');
         },
 
-        _drawSprite: function (spriteData) {
+        _renderSprite: function (spriteData) {
             this._canvasContext.drawImage(
                 spriteData,
                 spriteData.frameWidth,
@@ -83,17 +78,68 @@ define(function () {
             );
         },
 
-        _drawEnemies: function () {
+        _renderPlayer: function () {
+            this._render({
+                src: "../sprites/ship.png",
+                frameWidth: 32,
+                frameHeight: 32,
+                frameCount: 16
+            });
+        },
+
+        _renderBoss: function () {
             var i = 0,
                 l = this._enemies.length;
             for (; i < l; i++) {
                 // DRAW ENEMY
-                this._drawSprite();
+                this._renderSprite({
+                    src: "../sprites/boss_level" + this._gameData.level + ".png",
+                    frameWidth: 32,
+                    frameHeight: 64
+                });
             }
         },
 
-        _drawPlayer: function () {
-            this._draw(this._spriteStore.player);
+        _renderEnemies: function () {
+            var i = 0,
+                l = this._enemies.length;
+            for (; i < l; i++) {
+                // DRAW ENEMY
+                this._renderSprite({
+                    src: "../sprites/enemy_level" + this._gameData.level + ".png",
+                    frameWidth: 32,
+                    frameHeight: 32,
+                    frameCount: (this._gameData.level !== 3 ? 16 : 12),
+                    turnSpeed: (0.2 * this._gameData.level),
+                    velocity: (10 * this._gameData.level)
+                });
+            }
+        },
+
+        _renderMissle: function () {
+            var i = 0,
+                l = this._enemies.length;
+            for (; i < l; i++) {
+                // DRAW ENEMY
+                this._renderSprite({
+                    src: "../sprites/missle.png",
+                    turnSpeed: (0.2 * this._gameData.level),
+                    velocity: (10 * this._gameData.level)
+                });
+            }
+        },
+
+        _renderBomb: function () {
+            var i = 0,
+                l = this._enemies.length;
+            for (; i < l; i++) {
+                // DRAW ENEMY
+                this._renderSprite({
+                    src: "../sprites/missle.png",
+                    turnSpeed: (0.2 * this._gameData.level),
+                    velocity: (10 * this._gameData.level)
+                });
+            }
         },
 
         _renderMenu: function () {},
