@@ -14,30 +14,48 @@ define(function () {
 
             player: {
                 heading: 90,
-                positionX: 0,
-                positionY: 0
+                posX: 0,
+                posY: 0
             },
 
             boss: {
                 heading: 90,
-                positionX: 0,
-                positionY: 0
+                posX: 0,
+                posY: 0
             },
 
             enemies: [
-                // {
-                //     following: true/false,z
-                //     heading: 90,
-                //     positionX: 0,
-                //     positionY: 0
-                // }
+                {
+                    following: true,
+                    heading: 0,
+                    posX: Math.floor(Math.random() * 800) + 1,
+                    posY: Math.floor(Math.random() * 600) + 1
+                },
+                {
+                    following: true,
+                    heading: 90,
+                    posX: Math.floor(Math.random() * 800) + 1,
+                    posY: Math.floor(Math.random() * 600) + 1
+                },
+                {
+                    following: true,
+                    heading: 112.5,
+                    posX: Math.floor(Math.random() * 800) + 1,
+                    posY: Math.floor(Math.random() * 600) + 1
+                },
+                {
+                    following: true,
+                    heading: 202.5,
+                    posX: Math.floor(Math.random() * 800) + 1,
+                    posY: Math.floor(Math.random() * 600) + 1
+                }
             ],
 
             bullets: [
                 // {
                 //     heading: 90,
-                //     positionX: 0,
-                //     positionY: 0
+                //     posX: 0,
+                //     posY: 0
                 // }
             ]
         },
@@ -45,11 +63,12 @@ define(function () {
         init: function () {
             this._createCanvas();
             this._renderPlayer();
+            this._renderEnemies();
         },
 
         _tickCallback: function () {
-            this._player.positionY += (Math.cos(this._player.heading * (Math.PI / 180)) * 1).toFixed(15);
-            this._player.positionX += (Math.sin(this._player.heading * (Math.PI / 180)) * 1).tiFixed(15);
+            this._gameData.player.posY += (Math.cos(this._gameData.player.heading * (Math.PI / 180)) * 1).toFixed(15);
+            this._gameData.player.posX += (Math.sin(this._gameData.player.heading * (Math.PI / 180)) * 1).tiFixed(15);
         },
 
         _createCanvas: function () {
@@ -92,65 +111,85 @@ define(function () {
         },
 
         _renderBoss: function () {
-            var i = 0,
-                l = this._enemies.length;
-            for (; i < l; i++) {
-                // DRAW ENEMY
-                this._renderSprite({
-                    src: "../sprites/boss_level" + this._gameData.level + ".png",
-                    frameWidth: 32,
-                    frameHeight: 64
-                });
-            }
+            var spriteData = new Image();
+
+            spriteData.src = "../sprites/boss_level" + this._gameData.level + ".png";
+            spriteData.frameWidth = 64;
+            spriteData.frameHeight = 32;
+            spriteData.frameX = 0;
+            spriteData.frameY = 0;
+            spriteData.posX = (0 - this._gameData.player.posX);
+            spriteData.posY = (0 - this._gameData.player.posY);
+
+            this._renderSprite(spriteData);
         },
 
         _renderEnemies: function () {
             var i = 0,
-                l = this._enemies.length,
+                l = this._gameData.enemies.length,
                 spriteData = new Image();
 
             spriteData.src = "../sprites/enemy_level" + this._gameData.level + ".png";
-
+            spriteData.frameWidth = 32;
+            spriteData.frameHeight = 32;
 
             for (; i < l; i++) {
-                // DRAW ENEMY
+                // Per-Enemy Data
+                spriteData.frameX = Math.floor((this._gameData.enemies[i].heading - 90) / 22.5);
+                spriteData.frameY = 0;
                 // turnSpeed: (0.2 * this._gameData.level)
                 // velocity: (10 * this._gameData.level)
+                spriteData.posX = (this._gameData.enemies[i].posX - this._gameData.player.posX);
+                spriteData.posY = (this._gameData.enemies[i].posY - this._gameData.player.posY);
 
-                this._renderSprite({
-
-                    frameWidth: 32,
-                    frameHeight: 32,
-                    frameCount: (this._gameData.level !== 3 ? 16 : 12)
-                });
+                // DRAW ENEMY
+                this._renderSprite(spriteData);
             }
         },
 
         _renderMissles: function () {
             var i = 0,
-                l = this._enemies.length;
+                l = this._gameData.enemies.length,
+                spriteData = new Image();
+
+            spriteData.src = "../sprites/missle.png";
+            spriteData.frameWidth = 32;
+            spriteData.frameHeight = 32;
+
             for (; i < l; i++) {
-                // DRAW MISSLE
+                // Per-Enemy Data
+                spriteData.frameX = 0;
+                spriteData.frameY = 0;
                 // turnSpeed: (0.2 * this._gameData.level)
                 // velocity: (10 * this._gameData.level)
-                this._renderSprite({
-                    src: "../sprites/missle.png",
-                    posX: 0,
-                    posY: 0
-                });
+                spriteData.posX = (0 - this._gameData.player.posX);
+                spriteData.posY = (0 - this._gameData.player.posY);
+
+                // DRAW ENEMY
+                this._renderSprite(spriteData);
             }
         },
 
         _renderBombs: function () {
             var i = 0,
-                l = this._enemies.length;
+                l = this._gameData.enemies.length,
+                spriteData = new Image();
+
+            spriteData.src = "../sprites/bomb.png";
+            spriteData.frameWidth = 32;
+            spriteData.frameHeight = 32;
+
             for (; i < l; i++) {
-                // DRAW BOMB
-                // falling arch: (0.2 * this._gameData.level)
+                // Per-Enemy Data
+                spriteData.frameX = 0;
+                spriteData.frameY = 0;
+                // turnSpeed: (0.2 * this._gameData.level)
                 // velocity: (10 * this._gameData.level)
-                this._renderSprite({
-                    src: "../sprites/bomb.png"
-                });
+                spriteData.posX = (0 - this._gameData.player.posX);
+                spriteData.posY = (0 - this._gameData.player.posY);
+
+                // DRAW BOMB
+                this._renderSprite(spriteData);
             }
         },
 
