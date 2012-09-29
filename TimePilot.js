@@ -80,7 +80,6 @@ define(function () {
             ticker = window.setInterval(function () {
                 that._canvasContext.clearRect(0, 0, that._gameData.container.width, that._gameData.container.height);
 
-                that._renderPlayer();
                 that._TMP_drawGrid();
                 that._renderEnemies();
 
@@ -188,6 +187,16 @@ define(function () {
                 });
                 spriteData.posX = this._gameData.enemies[i].posX;
                 spriteData.posY = this._gameData.enemies[i].posY;
+
+                // console.log('spriteData', {
+                //     src: spriteData.src,
+                //     frameX: spriteData.frameX,
+                //     frameY: spriteData.frameY,
+                //     frameWidth: spriteData.frameWidth,
+                //     frameHeight: spriteData.frameHeight,
+                //     posX: this._gameData.enemies[i].posX,
+                //     posY: this._gameData.enemies[i].posY
+                // });
 
                 // DRAW ENEMY
                 this._renderSprite(spriteData);
