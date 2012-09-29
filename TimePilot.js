@@ -51,6 +51,8 @@ define(function () {
             this._createCanvas();
             this._TMP_drawGrid();
             this._renderPlayer();
+
+            this._TMP_createDummyEnemies();
             this._renderEnemies();
 
             ticker = window.setInterval(function () {
@@ -66,6 +68,24 @@ define(function () {
                     alert('Stopping');
                 }
             }, (1000 / 60));
+        },
+
+        _TMP_createDummyEnemies: function () {
+            var i = 0,
+                enemy;
+            for (; i <= 4; i++) {
+                enemy = {
+                    objRef: new Image(),
+                    following: true,
+                    heading: Math.floor(Math.random() * 16) * 22.5,
+                    posX: Math.floor(Math.random() * (800 - 32)),
+                    posY: Math.floor(Math.random() * (600 - 32))
+                };
+                enemy.objRef.src = "../sprites/enemy_level" + this._gameData.level + ".png";
+                enemy.objRef.frameWidth = 32;
+                enemy.objRef.frameHeight = 32;
+                this._gameData.enemies.push(enemy);
+            }
         },
 
         // _tickCallback: function () {
