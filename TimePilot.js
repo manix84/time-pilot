@@ -56,7 +56,7 @@ define(function () {
             this._renderEnemies();
 
             ticker = window.setInterval(function () {
-                that._canvasContext.clearRect(0, 0, that._gameData.container.width, that._gameData.container.height);
+                that._canvas.width = that._canvas.width;
 
                 that._TMP_drawGrid();
 
