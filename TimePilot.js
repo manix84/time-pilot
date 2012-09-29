@@ -140,26 +140,26 @@ define(function () {
 
         _renderEnemies: function () {
             var i = 0,
-                l = this._gameData.enemies.length,
                 spriteData = new Image();
+                n = this._gameData.enemies.length,
+                that = this,
+                spriteData, h, l;
 
             spriteData.src = "../sprites/enemy_level" + this._gameData.level + ".png";
             spriteData.frameWidth = 32;
             spriteData.frameHeight = 32;
 
-            for (; i < l; i++) {
+            for (; i < n; i++) {
+                // Shorten enemy heading and game level.
+                h = this._gameData.enemies[i].heading;
+                l = this._gameData.level;
+
                 // Per-Enemy Data
                 spriteData.frameX = Math.floor(this._gameData.enemies[i].heading / 22.5);
                 spriteData.frameY = 0;
 
-                spriteData.posX = this._gameData.enemies[i].posX + parseFloat((
-                    Math.cos(this._gameData.enemies[i].heading * (Math.PI / 180)) *
-                    (10 * this._gameData.level)
-                ).toFixed(15));
-                spriteData.posY = this._gameData.enemies[i].posY + parseFloat((
-                    Math.sin(this._gameData.enemies[i].heading * (Math.PI / 180)) *
-                    (10 * this._gameData.level)
-                ).toFixed(15));
+                this._gameData.enemies[i].posX += parseFloat((Math.cos(h * (Math.PI / 180)) * (10 * l)).toFixed(15));
+                this._gameData.enemies[i].posY += parseFloat((Math.sin(h * (Math.PI / 180)) * (10 * l)).toFixed(15));
 
                 console.log('spriteData', {
                     src: spriteData.src,
@@ -167,8 +167,8 @@ define(function () {
                     frameY: spriteData.frameY,
                     frameWidth: spriteData.frameWidth,
                     frameHeight: spriteData.frameHeight,
-                    posX: spriteData.posX,
-                    posY: spriteData.posY
+                    posX: this._gameData.enemies[i].posX,
+                    posY: this._gameData.enemies[i].posY
                 });
 
                 // DRAW ENEMY
