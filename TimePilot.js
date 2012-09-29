@@ -69,10 +69,25 @@ define(function () {
         },
 
         init: function () {
+            var that = this,
+                i = 0,
+                ticker;
             this._createCanvas();
             this.drawTestGrid();
             this._renderPlayer();
             this._renderEnemies();
+
+            ticker = window.setInterval(function () {
+                that._canvasContext.clearRect(0, 0, that._gameData.container.width, that._gameData.container.height);
+
+                that.drawTestGrid();
+                that._renderPlayer();
+                that._renderEnemies();
+
+                if (i++ >= 30) {
+                    ticker.clearInterval();
+                }
+            }, 1000);
         },
 
         // _tickCallback: function () {
