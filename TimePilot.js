@@ -162,28 +162,15 @@ define(function () {
                 // Shorten enemy heading and game level.
                 h = this._gameData.enemies[i].heading;
                 l = this._gameData.level;
-
-                spriteData = new Image();
-                spriteData.src = "../sprites/enemy_level" + this._gameData.level + ".png";
-                spriteData.frameWidth = 32;
-                spriteData.frameHeight = 32;
+                spriteData = this._gameData.enemies[i].objRef;
 
                 // Per-Enemy Data
-                spriteData.frameX = Math.floor(this._gameData.enemies[i].heading / 22.5);
+                spriteData.frameX = Math.floor(h / 22.5);
                 spriteData.frameY = 0;
 
-                this._gameData.enemies[i].posX += parseFloat((Math.cos(h * (Math.PI / 180)) * (3 * l)).toFixed(15));
-                this._gameData.enemies[i].posY += parseFloat((Math.sin(h * (Math.PI / 180)) * (3 * l)).toFixed(15));
+                this._gameData.enemies[i].posX += parseFloat((Math.cos(h * (Math.PI / 180)) * (3 * l)).toFixed(5));
+                this._gameData.enemies[i].posY += parseFloat((Math.sin(h * (Math.PI / 180)) * (3 * l)).toFixed(5));
 
-                console.log('spriteData', {
-                    src: spriteData.src,
-                    frameX: spriteData.frameX,
-                    frameY: spriteData.frameY,
-                    frameWidth: spriteData.frameWidth,
-                    frameHeight: spriteData.frameHeight,
-                    posX: this._gameData.enemies[i].posX,
-                    posY: this._gameData.enemies[i].posY
-                });
                 spriteData.posX = this._gameData.enemies[i].posX;
                 spriteData.posY = this._gameData.enemies[i].posY;
 
