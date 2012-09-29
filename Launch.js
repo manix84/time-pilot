@@ -150,10 +150,15 @@ define(function () {
                 // Per-Enemy Data
                 spriteData.frameX = Math.floor((this._gameData.enemies[i].heading - 90) / 22.5);
                 spriteData.frameY = 0;
-                // turnSpeed: (0.2 * this._gameData.level)
-                // velocity: (10 * this._gameData.level)
-                spriteData.posX = (this._gameData.enemies[i].posX - this._gameData.player.posX);
-                spriteData.posY = (this._gameData.enemies[i].posY - this._gameData.player.posY);
+
+                spriteData.posX = this._gameData.enemies[i].posX + parseFloat((
+                    Math.cos(this._gameData.enemies[i].heading * (Math.PI / 180)) *
+                    (10 * this._gameData.level)
+                ).toFixed(15));
+                spriteData.posY = this._gameData.enemies[i].posY + parseFloat((
+                    Math.sin(this._gameData.enemies[i].heading * (Math.PI / 180)) *
+                    (10 * this._gameData.level)
+                ).toFixed(15));
 
                 // DRAW ENEMY
                 this._renderSprite(spriteData);
