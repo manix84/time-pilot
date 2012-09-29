@@ -174,8 +174,8 @@ define(function () {
                 spriteData.frameX = Math.floor(this._gameData.enemies[i].heading / 22.5);
                 spriteData.frameY = 0;
 
-                this._gameData.enemies[i].posX += parseFloat((Math.cos(h * (Math.PI / 180)) * (10 * l)).toFixed(15));
-                this._gameData.enemies[i].posY += parseFloat((Math.sin(h * (Math.PI / 180)) * (10 * l)).toFixed(15));
+                this._gameData.enemies[i].posX += parseFloat((Math.cos(h * (Math.PI / 180)) * (3 * l)).toFixed(15));
+                this._gameData.enemies[i].posY += parseFloat((Math.sin(h * (Math.PI / 180)) * (3 * l)).toFixed(15));
 
                 console.log('spriteData', {
                     src: spriteData.src,
