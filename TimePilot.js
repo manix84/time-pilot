@@ -73,15 +73,15 @@ define(function () {
                 i = 0,
                 ticker;
             this._createCanvas();
-            this.drawTestGrid();
+            this._TMP_drawGrid();
             this._renderPlayer();
             this._renderEnemies();
 
             ticker = window.setInterval(function () {
                 that._canvasContext.clearRect(0, 0, that._gameData.container.width, that._gameData.container.height);
 
-                that.drawTestGrid();
                 that._renderPlayer();
+                that._TMP_drawGrid();
                 that._renderEnemies();
 
                 if (i++ >= 30) {
@@ -247,7 +247,7 @@ define(function () {
             // Draw cloud layer 3
         },
 
-        drawTestGrid: function () {
+        _TMP_drawGrid: function () {
             var x = 0,
                 h = 20,
                 w = 20;
