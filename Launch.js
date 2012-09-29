@@ -27,27 +27,27 @@ define(function () {
             enemies: [
                 {
                     following: true,
-                    heading: 0,
-                    posX: Math.floor(Math.random() * 800) + 1,
-                    posY: Math.floor(Math.random() * 600) + 1
+                    heading: (Math.floor(Math.random() * 16) + 1) * 22.5,
+                    posX: Math.floor(Math.random() * (800 - 32)),
+                    posY: Math.floor(Math.random() * (600 - 32))
                 },
                 {
                     following: true,
-                    heading: 90,
-                    posX: Math.floor(Math.random() * 800) + 1,
-                    posY: Math.floor(Math.random() * 600) + 1
+                    heading: (Math.floor(Math.random() * 16)) * 22.5,
+                    posX: Math.floor(Math.random() * (800 - 32)),
+                    posY: Math.floor(Math.random() * (600 - 32))
                 },
                 {
                     following: true,
-                    heading: 112.5,
-                    posX: Math.floor(Math.random() * 800) + 1,
-                    posY: Math.floor(Math.random() * 600) + 1
+                    heading: (Math.floor(Math.random() * 16)) * 22.5,
+                    posX: Math.floor(Math.random() * (800 - 32)),
+                    posY: Math.floor(Math.random() * (600 - 32))
                 },
                 {
                     following: true,
-                    heading: 202.5,
-                    posX: Math.floor(Math.random() * 800) + 1,
-                    posY: Math.floor(Math.random() * 600) + 1
+                    heading: (Math.floor(Math.random() * 16)) * 22.5,
+                    posX: Math.floor(Math.random() * (800 - 32)),
+                    posY: Math.floor(Math.random() * (600 - 32))
                 }
             ],
 
