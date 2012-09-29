@@ -35,25 +35,25 @@ define(function () {
             enemies: [
                 {
                     following: true,
-                    heading: (Math.floor(Math.random() * 16) + 1) * 22.5,
+                    heading: Math.floor(Math.random() * 16) * 22.5,
                     posX: Math.floor(Math.random() * (800 - 32)),
                     posY: Math.floor(Math.random() * (600 - 32))
                 },
                 {
                     following: true,
-                    heading: (Math.floor(Math.random() * 16)) * 22.5,
+                    heading: Math.floor(Math.random() * 16) * 22.5,
                     posX: Math.floor(Math.random() * (800 - 32)),
                     posY: Math.floor(Math.random() * (600 - 32))
                 },
                 {
                     following: true,
-                    heading: (Math.floor(Math.random() * 16)) * 22.5,
+                    heading: Math.floor(Math.random() * 16) * 22.5,
                     posX: Math.floor(Math.random() * (800 - 32)),
                     posY: Math.floor(Math.random() * (600 - 32))
                 },
                 {
                     following: true,
-                    heading: (Math.floor(Math.random() * 16)) * 22.5,
+                    heading: Math.floor(Math.random() * 16) * 22.5,
                     posX: Math.floor(Math.random() * (800 - 32)),
                     posY: Math.floor(Math.random() * (600 - 32))
                 }
@@ -231,8 +231,8 @@ define(function () {
 
         drawTestGrid: function () {
             var x = 0,
-                h = (this._gameData.container.height / 16),
-                w = (this._gameData.container.width / 20);
+                h = 20,
+                w = 20;
             for (; x <= this._gameData.container.width; x += w) {
                 this._canvasContext.moveTo(0.5 + x, 0);
                 this._canvasContext.lineTo(0.5 + x, this._gameData.container.height);
@@ -244,7 +244,7 @@ define(function () {
                 this._canvasContext.lineTo(this._gameData.container.width, 0.5 + x);
             }
 
-            this._canvasContext.strokeStyle = "#DDD";
+            this._canvasContext.strokeStyle = "#AAA";
             this._canvasContext.stroke();
         }
     };
