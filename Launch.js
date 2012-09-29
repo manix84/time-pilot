@@ -4,6 +4,9 @@ define(function () {
         console.log('TimePilot:element', element);
         this._container = element;
 
+        this._gameData.container.width = this._container.clientWidth;
+        this._gameData.container.height = this._container.clientHeight;
+
         this.init();
     };
 
@@ -11,6 +14,11 @@ define(function () {
 
         _gameData: {
             level: 1,
+
+            container: {
+                height: 0,
+                width: 0
+            },
 
             player: {
                 heading: 90,
@@ -28,26 +36,26 @@ define(function () {
                 {
                     following: true,
                     heading: (Math.floor(Math.random() * 16) + 1) * 22.5,
-                    posX: Math.floor(Math.random() * (this._gameData.container.width - 32)),
-                    posY: Math.floor(Math.random() * (this._gameData.container.height - 32))
+                    posX: Math.floor(Math.random() * (800 - 32)),
+                    posY: Math.floor(Math.random() * (600 - 32))
                 },
                 {
                     following: true,
                     heading: (Math.floor(Math.random() * 16)) * 22.5,
-                    posX: Math.floor(Math.random() * (this._gameData.container.width - 32)),
-                    posY: Math.floor(Math.random() * (this._gameData.container.height - 32))
+                    posX: Math.floor(Math.random() * (800 - 32)),
+                    posY: Math.floor(Math.random() * (600 - 32))
                 },
                 {
                     following: true,
                     heading: (Math.floor(Math.random() * 16)) * 22.5,
-                    posX: Math.floor(Math.random() * (this._gameData.container.width - 32)),
-                    posY: Math.floor(Math.random() * (this._gameData.container.height - 32))
+                    posX: Math.floor(Math.random() * (800 - 32)),
+                    posY: Math.floor(Math.random() * (600 - 32))
                 },
                 {
                     following: true,
                     heading: (Math.floor(Math.random() * 16)) * 22.5,
-                    posX: Math.floor(Math.random() * (this._gameData.container.width - 32)),
-                    posY: Math.floor(Math.random() * (this._gameData.container.height - 32))
+                    posX: Math.floor(Math.random() * (800 - 32)),
+                    posY: Math.floor(Math.random() * (600 - 32))
                 }
             ],
 
@@ -74,9 +82,6 @@ define(function () {
         _createCanvas: function () {
             this._canvas = document.createElement('canvas');
             this._container.appendChild(this._canvas);
-
-            this._gameData.container.width = this._container.clientWidth;
-            this._gameData.container.height = this._container.clientHeight;
 
             this._canvas.setAttribute('height', this._gameData.container.height);
             this._canvas.setAttribute('width', this._gameData.container.width);
