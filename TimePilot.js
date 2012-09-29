@@ -57,12 +57,15 @@ define(function () {
                 that._canvasContext.clearRect(0, 0, that._gameData.container.width, that._gameData.container.height);
 
                 that._TMP_drawGrid();
-                that._renderEnemies();
 
-                if (i++ >= 30) {
+                that._renderEnemies();
+                that._renderPlayer();
+
+                if (i++ >= 200) {
                     window.clearInterval(ticker);
+                    alert('Stopping');
                 }
-            }, 1000);
+            }, (1000 / 60));
         },
 
         // _tickCallback: function () {
