@@ -63,7 +63,7 @@ define(function () {
                 that._renderEnemies();
                 that._renderPlayer();
 
-                if (i++ >= 200) {
+                if (i++ >= 500) {
                     window.clearInterval(ticker);
                     alert('Stopping');
                 }
@@ -73,7 +73,7 @@ define(function () {
         _TMP_createDummyEnemies: function () {
             var i = 0,
                 enemy;
-            for (; i <= 4; i++) {
+            for (; i < 1000; i++) {
                 enemy = {
                     objRef: new Image(),
                     following: true,
