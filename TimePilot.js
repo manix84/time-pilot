@@ -155,19 +155,20 @@ define(function () {
 
         _renderEnemies: function () {
             var i = 0,
-                spriteData = new Image();
                 n = this._gameData.enemies.length,
                 that = this,
                 spriteData, h, l;
 
-            spriteData.src = "../sprites/enemy_level" + this._gameData.level + ".png";
-            spriteData.frameWidth = 32;
-            spriteData.frameHeight = 32;
 
             for (; i < n; i++) {
                 // Shorten enemy heading and game level.
                 h = this._gameData.enemies[i].heading;
                 l = this._gameData.level;
+
+                spriteData = new Image();
+                spriteData.src = "../sprites/enemy_level" + this._gameData.level + ".png";
+                spriteData.frameWidth = 32;
+                spriteData.frameHeight = 32;
 
                 // Per-Enemy Data
                 spriteData.frameX = Math.floor(this._gameData.enemies[i].heading / 22.5);
