@@ -161,6 +161,16 @@ define(function () {
                     (10 * this._gameData.level)
                 ).toFixed(15));
 
+                console.log('spriteData', {
+                    src: spriteData.src,
+                    frameX: spriteData.frameX,
+                    frameY: spriteData.frameY,
+                    frameWidth: spriteData.frameWidth,
+                    frameHeight: spriteData.frameHeight,
+                    posX: spriteData.posX,
+                    posY: spriteData.posY
+                });
+
                 // DRAW ENEMY
                 this._renderSprite(spriteData);
             }
