@@ -70,6 +70,7 @@ define(function () {
 
         init: function () {
             this._createCanvas();
+            this.drawTestGrid();
             this._renderPlayer();
             this._renderEnemies();
         },
@@ -216,6 +217,25 @@ define(function () {
             // Draw cloud layer 1
             // Draw cloud layer 2
             // Draw cloud layer 3
+        },
+
+        drawTestGrid: function () {
+            var x = 0,
+                h = (this._gameData.container.height / 16),
+                w = (this._gameData.container.width / 20);
+            for (; x <= this._gameData.container.width; x += w) {
+                this._canvasContext.moveTo(0.5 + x, 0);
+                this._canvasContext.lineTo(0.5 + x, this._gameData.container.height);
+            }
+
+
+            for (x = 0; x <= this._gameData.container.height; x += h) {
+                this._canvasContext.moveTo(0, 0.5 + x);
+                this._canvasContext.lineTo(this._gameData.container.width, 0.5 + x);
+            }
+
+            this._canvasContext.strokeStyle = "#DDD";
+            this._canvasContext.stroke();
         }
     };
 
