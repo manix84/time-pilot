@@ -28,26 +28,26 @@ define(function () {
                 {
                     following: true,
                     heading: (Math.floor(Math.random() * 16) + 1) * 22.5,
-                    posX: Math.floor(Math.random() * (800 - 32)),
-                    posY: Math.floor(Math.random() * (600 - 32))
+                    posX: Math.floor(Math.random() * (this._gameData.container.width - 32)),
+                    posY: Math.floor(Math.random() * (this._gameData.container.height - 32))
                 },
                 {
                     following: true,
                     heading: (Math.floor(Math.random() * 16)) * 22.5,
-                    posX: Math.floor(Math.random() * (800 - 32)),
-                    posY: Math.floor(Math.random() * (600 - 32))
+                    posX: Math.floor(Math.random() * (this._gameData.container.width - 32)),
+                    posY: Math.floor(Math.random() * (this._gameData.container.height - 32))
                 },
                 {
                     following: true,
                     heading: (Math.floor(Math.random() * 16)) * 22.5,
-                    posX: Math.floor(Math.random() * (800 - 32)),
-                    posY: Math.floor(Math.random() * (600 - 32))
+                    posX: Math.floor(Math.random() * (this._gameData.container.width - 32)),
+                    posY: Math.floor(Math.random() * (this._gameData.container.height - 32))
                 },
                 {
                     following: true,
                     heading: (Math.floor(Math.random() * 16)) * 22.5,
-                    posX: Math.floor(Math.random() * (800 - 32)),
-                    posY: Math.floor(Math.random() * (600 - 32))
+                    posX: Math.floor(Math.random() * (this._gameData.container.width - 32)),
+                    posY: Math.floor(Math.random() * (this._gameData.container.height - 32))
                 }
             ],
 
@@ -75,8 +75,11 @@ define(function () {
             this._canvas = document.createElement('canvas');
             this._container.appendChild(this._canvas);
 
-            this._canvas.setAttribute('height', this._container.clientHeight);
-            this._canvas.setAttribute('width', this._container.clientWidth);
+            this._gameData.container.width = this._container.clientWidth;
+            this._gameData.container.height = this._container.clientHeight;
+
+            this._canvas.setAttribute('height', this._gameData.container.height);
+            this._canvas.setAttribute('width', this._gameData.container.width);
             // this._canvas.innerHTML = this._options.supportError;
 
             this._canvasContext = this._canvas.getContext('2d');
@@ -104,8 +107,8 @@ define(function () {
             spriteData.frameHeight = 32;
             spriteData.frameX = 0;
             spriteData.frameY = 0;
-            spriteData.posX = ((this._container.clientWidth / 2) - (32 / 2));
-            spriteData.posY = ((this._container.clientHeight / 2) - (32 / 2));
+            spriteData.posX = ((this._gameData.container.width / 2) - (32 / 2));
+            spriteData.posY = ((this._gameData.container.height / 2) - (32 / 2));
 
             this._renderSprite(spriteData);
         },
