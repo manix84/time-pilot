@@ -148,7 +148,7 @@ define(function () {
 
             for (; i < l; i++) {
                 // Per-Enemy Data
-                spriteData.frameX = Math.floor((this._gameData.enemies[i].heading - 90) / 22.5);
+                spriteData.frameX = Math.floor(this._gameData.enemies[i].heading / 22.5);
                 spriteData.frameY = 0;
 
                 spriteData.posX = this._gameData.enemies[i].posX + parseFloat((
