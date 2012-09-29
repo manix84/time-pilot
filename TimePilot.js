@@ -85,7 +85,7 @@ define(function () {
                 that._renderEnemies();
 
                 if (i++ >= 30) {
-                    ticker.clearInterval();
+                    window.clearInterval(ticker);
                 }
             }, 1000);
         },
