@@ -33,30 +33,6 @@ define(function () {
             },
 
             enemies: [
-                {
-                    following: true,
-                    heading: Math.floor(Math.random() * 16) * 22.5,
-                    posX: Math.floor(Math.random() * (800 - 32)),
-                    posY: Math.floor(Math.random() * (600 - 32))
-                },
-                {
-                    following: true,
-                    heading: Math.floor(Math.random() * 16) * 22.5,
-                    posX: Math.floor(Math.random() * (800 - 32)),
-                    posY: Math.floor(Math.random() * (600 - 32))
-                },
-                {
-                    following: true,
-                    heading: Math.floor(Math.random() * 16) * 22.5,
-                    posX: Math.floor(Math.random() * (800 - 32)),
-                    posY: Math.floor(Math.random() * (600 - 32))
-                },
-                {
-                    following: true,
-                    heading: Math.floor(Math.random() * 16) * 22.5,
-                    posX: Math.floor(Math.random() * (800 - 32)),
-                    posY: Math.floor(Math.random() * (600 - 32))
-                }
             ],
 
             bullets: [
