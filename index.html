@@ -1,3 +1,4 @@
+
 <!doctype html>
 <!-- The Time Machine GitHub pages theme was designed and developed by Jon Rohan, on Feb 7, 2012. -->
 <!-- Follow him for fun. http://twitter.com/jonrohan. Tail his code on http://github.com/jonrohan -->
@@ -15,6 +16,16 @@
   <meta name="description" content="A recreation in JavaScript of the 1983 classic arcade shooter.">
 
   <meta name="viewport" content="width=device-width,initial-scale=1">
+    <style>
+      #demo {
+	width: 633px;
+	height: 475px;
+	background-color: #F88
+      }
+      #demo canvas {
+	background-color: #ADF
+      }
+    </style>
 
 </head>
 
@@ -62,6 +73,9 @@ $ git checkout gh-pages
 <h3>Support or Contact</h3>
 
 <p>Having trouble with Pages? Check out the documentation at <a href="http://help.github.com/pages">http://help.github.com/pages</a> or contact <a href="mailto:support@github.com">support@github.com</a> and we’ll help you sort it out.</p>
+
+<h3>Demo - Where it's currently up-to</h3>
+<div id='demo'></div>
 	</article>
       </div>
     </div>
@@ -82,16 +96,25 @@ $ git checkout gh-pages
     <p class="name"></p>
   </div>
 
-	    <script type="text/javascript">
-	    var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
-	    document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
-	  </script>
-	  <script type="text/javascript">
-	    try {
-	      var pageTracker = _gat._getTracker("UA-30459282-1");
-	    pageTracker._trackPageview();
-	    } catch(err) {}
-	  </script>
+
+  <script src="../../test/scripts/require.js"></script>
+  <script type='text/javascript'>
+      require([
+	  'TimePilot'
+      ], function (TimePilot) {
+	  new TimePilot(document.getElementById('demo'));
+      });
+  </script>
+  <script type="text/javascript">
+    var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+    document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+  </script>
+  <script type="text/javascript">
+    try {
+      var pageTracker = _gat._getTracker("UA-30459282-1");
+    pageTracker._trackPageview();
+    } catch(err) {}
+  </script>
 
 </body>
 </html>
