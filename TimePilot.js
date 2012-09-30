@@ -183,6 +183,8 @@ define(function () {
                         this._gameData.player.heading += 22.5;
                     } else if (this._gameData.player.heading <= 180 && this._gameData.player.heading > 0) {
                         this._gameData.player.heading -= 22.5;
+                    } else if (this._gameData.player.heading === 180) {
+                        // RANDOMISE
                     }
                     break;
                 case 40: // Down
@@ -190,6 +192,8 @@ define(function () {
                         this._gameData.player.heading += 22.5;
                     } else if (this._gameData.player.heading < 360 && this._gameData.player.heading > 180) {
                         this._gameData.player.heading -= 22.5;
+                    } else if (this._gameData.player.heading === 0) {
+                        // RANDOMISE
                     }
                     break;
                 case 37: // Left
