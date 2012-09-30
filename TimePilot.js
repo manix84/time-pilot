@@ -127,6 +127,9 @@ define(function () {
                         that._gameData.pressedKey = event.keyCode;
                     }
                     break;
+                case 32: // SPACE BAR
+                    // SHOOT
+                    break;
                 }
             });
             this._addListener(this._keyboardLock, 'keyup', function (event) {
