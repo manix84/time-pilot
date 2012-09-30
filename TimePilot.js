@@ -262,8 +262,8 @@ define(function () {
                     // FOLLOW PLAYER
                 }
 
-                spriteData.posX = this._gameData.enemies[i].posX;
-                spriteData.posY = this._gameData.enemies[i].posY;
+                spriteData.posX = this._gameData.enemies[i].posX - this._gameData.player.posX;
+                spriteData.posY = this._gameData.enemies[i].posY - this._gameData.player.posY;
 
                 // DRAW ENEMY
                 this._renderSprite(spriteData);
