@@ -268,10 +268,10 @@ define(function () {
                 // DRAW ENEMY
                 this._renderSprite(spriteData);
 
-                if (this._gameData.enemies[i].posX > this._gameData.container.width ||
-                    this._gameData.enemies[i].posX < -32 ||
-                    this._gameData.enemies[i].posY > this._gameData.container.height ||
-                    this._gameData.enemies[i].posY < -32) {
+                if (spriteData.posX > this._gameData.container.width ||
+                    spriteData.posX < -32 ||
+                    spriteData.posY > this._gameData.container.height ||
+                    spriteData.posY < -32) {
                     this._gameData.enemies.splice(i, 1);
                 }
             }
