@@ -147,12 +147,11 @@ define(function () {
 
         _renderEnemies: function () {
             var i = 0,
-                n = this._gameData.enemies.length,
                 that = this,
                 spriteData, h, l, s;
 
 
-            for (; i < n; i++) {
+            for (; i < this._gameData.enemies.length; i++) {
                 // Shorten enemy heading and game level.
                 h = this._gameData.enemies[i].heading;
                 l = this._gameData.level;
@@ -189,12 +188,11 @@ define(function () {
                 // DRAW ENEMY
                 this._renderSprite(spriteData);
 
-                if (this._gameData.enemies[i].posX > this._gameData.container.width + 100 ||
-                    this._gameData.enemies[i].posX < -100 ||
-                    this._gameData.enemies[i].posY > this._gameData.container.height + 100 ||
-                    this._gameData.enemies[i].posY < -100) {
-                    console.log('deleting enemy: ' + i);
-                    console.count('enemies deleted');
+                if (this._gameData.enemies[i].posX > this._gameData.container.width ||
+                    this._gameData.enemies[i].posX < -32 ||
+                    this._gameData.enemies[i].posY > this._gameData.container.height ||
+                    this._gameData.enemies[i].posY < -32) {
+                    this._gameData.enemies.splice(i, 1);
                 }
             }
         },

@@ -14,7 +14,9 @@
         }, [
             'TimePilot'
         ], function (TimePilot) {
-            new TimePilot(document.getElementById('test'));
+            new TimePilot(document.getElementById('test'), {
+                baseUrl: '../'
+            });
         });
     </script>
     <style>
