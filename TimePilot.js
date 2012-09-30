@@ -76,11 +76,6 @@ define(function () {
             }
         },
 
-        // _tickCallback: function () {
-        //     this._gameData.player.posY += (Math.cos(this._gameData.player.heading * (Math.PI / 180)) * 1).toFixed(15);
-        //     this._gameData.player.posX += (Math.sin(this._gameData.player.heading * (Math.PI / 180)) * 1).tiFixed(15);
-        // },
-
         _createCanvas: function () {
             this._canvas = document.createElement('canvas');
             this._container.appendChild(this._canvas);
