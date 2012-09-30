@@ -47,7 +47,8 @@ define(function () {
         init: function () {
             var that = this,
                 ticker;
-            this._createCanvas();
+
+            this._elementContruction();
             this._TMP_drawGrid();
             this._renderPlayer();
 
@@ -87,7 +88,7 @@ define(function () {
             }
         },
 
-        _createCanvas: function () {
+        _elementContruction: function () {
             this._canvas = document.createElement('canvas');
             this._container.appendChild(this._canvas);
 
