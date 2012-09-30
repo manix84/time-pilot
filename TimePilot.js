@@ -184,14 +184,36 @@ define(function () {
                 case 40: // Down
                     if (this._gameData.player.heading >= 0 && this._gameData.player.heading < 180) {
                         this._gameData.player.heading += 22.5;
-                    } else if (this._gameData.player.heading < 0 && this._gameData.player.heading > 180) {
+                    } else if (this._gameData.player.heading < 360 && this._gameData.player.heading > 180) {
                         this._gameData.player.heading -= 22.5;
                     }
                     break;
                 case 37: // Left
+                    if ((this._gameData.player.heading >= 0 && this._gameData.player.heading < 90) ||
+                        (this._gameData.player.heading >= 270 && this._gameData.player.heading < 360)) {
+                        this._gameData.player.heading += 22.5;
+                    } else if (this._gameData.player.heading < 270 && this._gameData.player.heading > 90) {
+                        this._gameData.player.heading -= 22.5;
+                    } else if (this._gameData.player.heading === 270) {
+                        // RANDOMISE
+                    }
                     break;
                 case 39: // Right
+                    if ((this._gameData.player.heading > 270 && this._gameData.player.heading < 360) ||
+                        (this._gameData.player.heading < 90)) {
+                        if (this._gameData.player.heading === 0) {
+                            this._gameData.player.heading = 360;
+                        }
+                        this._gameData.player.heading -= 22.5;
+                    } else if (this._gameData.player.heading < 270 && this._gameData.player.heading >= 90) {
+                        this._gameData.player.heading += 22.5;
+                    } else if (this._gameData.player.heading === 90) {
+                        // RANDOMISE
+                    }
                     break;
+                }
+                if (this._gameData.player.heading !== h) {
+                    console.log('New Heading: ' + this._gameData.player.heading);
                 }
             }
 
