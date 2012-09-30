@@ -138,21 +138,22 @@ define(function () {
             var i = 0,
                 n = this._gameData.enemies.length,
                 that = this,
-                spriteData, h, l;
+                spriteData, h, l, s;
 
 
             for (; i < n; i++) {
                 // Shorten enemy heading and game level.
                 h = this._gameData.enemies[i].heading;
                 l = this._gameData.level;
+                s = (0.8 * l);
                 spriteData = this._gameData.enemies[i].objRef;
 
                 // Per-Enemy Data
                 spriteData.frameX = Math.floor(h / 22.5);
                 spriteData.frameY = 0;
 
-                this._gameData.enemies[i].posX += parseFloat((Math.cos(h * (Math.PI / 180)) * (3 * l)).toFixed(5));
-                this._gameData.enemies[i].posY += parseFloat((Math.sin(h * (Math.PI / 180)) * (3 * l)).toFixed(5));
+                this._gameData.enemies[i].posX += parseFloat((Math.cos(h * (Math.PI / 180)) * s).toFixed(5));
+                this._gameData.enemies[i].posY += parseFloat((Math.sin(h * (Math.PI / 180)) * s).toFixed(5));
 
                 spriteData.posX = this._gameData.enemies[i].posX;
                 spriteData.posY = this._gameData.enemies[i].posY;
