@@ -8,12 +8,12 @@ $(document).ready(function(){
     for(var i = 0; i < pre.length; i++) {
       var wrap = Math.floor(pre[i].split("").length / 70)
       if (pre[i]==""&&i==pre.length-1) {
-	lines.splice(i, 1);
+        lines.splice(i, 1);
       } else {
-	lines[i] = i+1;
-	for(var j = 0; j < wrap; j++) {
-	  lines[i] += "\n";
-	}
+        lines[i] = i+1;
+        for(var j = 0; j < wrap; j++) {
+          lines[i] += "\n";
+        }
       }
     }
     $(this).before("<pre class='lines'>" + lines.join("\n") + "</pre>");
@@ -39,7 +39,7 @@ $(document).ready(function(){
     $(".current-section").css({"opacity":1,"visibility":"visible"});
     for(var i in headings) {
       if(scrolltop >= headings[i].top) {
-	$(".current-section .name").text(headings[i].text);
+        $(".current-section .name").text(headings[i].text);
       }
     }
   });
