@@ -26,6 +26,7 @@ define(function () {
         _gameData: {
             level: 1,
             tick: 0,
+            pressedKey: false,
             container: {
                 height: 0,
                 width: 0
@@ -49,6 +50,8 @@ define(function () {
                 ticker;
 
             this._elementContruction();
+            this._keyboardLock.focus();
+
             this._TMP_drawGrid();
             this._renderPlayer();
 
@@ -63,11 +66,21 @@ define(function () {
                 that._renderEnemies();
                 that._renderPlayer();
 
-                if (that._gameData.tick++ >= 1000) {
+                if (that._gameData.tick++ >= 10000) {
                     window.clearInterval(ticker);
                     alert('Stopping');
                 }
             }, (1000 / 60));
+        },
+
+        _addListener: function (element, eventName, callback) {
+            if (typeof element.addEventListener === 'function') {
+                element.addEventListener(eventName, callback, false);
+            } else if (!!element.attachEvent) {
+                element.attachEvent('on' + eventName, callback);
+            } else {
+                element['on' + eventName] = callback;
+            }
         },
 
         _TMP_createDummyEnemies: function () {
@@ -89,9 +102,8 @@ define(function () {
         },
 
         _elementContruction: function () {
+            var that = this;
             this._canvas = document.createElement('canvas');
-            this._container.appendChild(this._canvas);
-
             this._canvas.setAttribute('width', this._gameData.container.width);
             this._canvas.setAttribute('height', this._gameData.container.height);
             this._canvas.innerHTML =
@@ -100,6 +112,37 @@ define(function () {
                     "<p>Looks like your browser doesn't support the HTML5 canvas.</p>" +
                     "<p>Please consider updating to a more modern browser such as <a href=''>Google Chrome</a> or <a href=''>Mozilla FireFox</a>.</p>" +
                 "</div>";
+
+            this._keyboardLock = document.createElement('input');
+            // this._keyboardLock.setAttribute('style', 'position:absolute;border:0;top:-9999px;left:-9999px;width:0;height0;resize:none;outline:0');
+            this._keyboardLock.setAttribute('type', 'text');
+            this._addListener(this._keyboardLock, 'keydown', function (event) {
+                switch (event.keyCode) {
+                case 37: // LEFT
+                case 38: // UP
+                case 39: // RIGHT
+                case 40: // DOWN
+                    event.preventDefault();
+                    if (!that._gameData.pressedKey) {
+                        that._gameData.pressedKey = event.keyCode;
+                    }
+                    break;
+                }
+            });
+            this._addListener(this._keyboardLock, 'keyup', function (event) {
+                switch (event.keyCode) {
+                case 37: // LEFT
+                case 38: // UP
+                case 39: // RIGHT
+                case 40: // DOWN
+                    event.preventDefault();
+                    that._gameData.pressedKey = false;
+                    break;
+                }
+            });
+
+            this._container.appendChild(this._canvas);
+            this._container.appendChild(this._keyboardLock);
 
             this._canvasContext = this._canvas.getContext('2d');
         },
@@ -119,15 +162,46 @@ define(function () {
         },
 
         _renderPlayer: function () {
-            var spriteData = new Image();
+            var spriteData = new Image(),
+                h = this._gameData.player.heading,
+                s = 1;
+
+            if (this._gameData.tick % 4 === 1) {
+                if (this._gameData.player.heading === 360) {
+                    this._gameData.player.heading = 0;
+                }
+                switch (this._gameData.pressedKey) {
+                case 38: // Up
+                    if (this._gameData.player.heading > 180 && this._gameData.player.heading < 360) {
+                        this._gameData.player.heading += 22.5;
+                    } else if (this._gameData.player.heading <= 180 && this._gameData.player.heading > 0) {
+                        this._gameData.player.heading -= 22.5;
+                    }
+                    break;
+                case 40: // Down
+                    if (this._gameData.player.heading >= 0 && this._gameData.player.heading < 180) {
+                        this._gameData.player.heading += 22.5;
+                    } else if (this._gameData.player.heading < 0 && this._gameData.player.heading > 180) {
+                        this._gameData.player.heading -= 22.5;
+                    }
+                    break;
+                case 37: // Left
+                    break;
+                case 39: // Right
+                    break;
+                }
+            }
 
             spriteData.src = this._options.baseUrl + "sprites/player.png";
             spriteData.frameWidth = 32;
             spriteData.frameHeight = 32;
-            spriteData.frameX = 0;
+            spriteData.frameX = Math.floor(h / 22.5);
             spriteData.frameY = 0;
             spriteData.posX = ((this._gameData.container.width / 2) - (32 / 2));
             spriteData.posY = ((this._gameData.container.height / 2) - (32 / 2));
+
+            this._gameData.player.posX += parseFloat((Math.cos(h * (Math.PI / 180)) * s).toFixed(5));
+            this._gameData.player.posY += parseFloat((Math.sin(h * (Math.PI / 180)) * s).toFixed(5));
 
             this._renderSprite(spriteData);
         },
@@ -181,6 +255,8 @@ define(function () {
                         }
                         break;
                     }
+                } else {
+                    // FOLLOW PLAYER
                 }
 
                 spriteData.posX = this._gameData.enemies[i].posX;
