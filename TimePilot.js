@@ -14,35 +14,23 @@ define(function () {
 
         _gameData: {
             level: 1,
-
             tick: 0,
             container: {
                 height: 0,
                 width: 0
             },
-
             player: {
                 heading: 90,
                 posX: 0,
                 posY: 0
             },
-
             boss: {
                 heading: 90,
                 posX: 0,
                 posY: 0
             },
-
-            enemies: [
-            ],
-
-            bullets: [
-                // {
-                //     heading: 90,
-                //     posX: 0,
-                //     posY: 0
-                // }
-            ]
+            enemies: [],
+            bullets: []
         },
 
         init: function () {
