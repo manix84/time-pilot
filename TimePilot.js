@@ -91,8 +91,8 @@ define(function () {
             this._canvas = document.createElement('canvas');
             this._container.appendChild(this._canvas);
 
-            this._canvas.setAttribute('height', this._gameData.container.height);
             this._canvas.setAttribute('width', this._gameData.container.width);
+            this._canvas.setAttribute('height', this._gameData.container.height);
             this._canvas.innerHTML =
                 "<div style='padding:3px;background:#CCC'>" +
                     "<img src='../images/supportError.png' style='position:relative;margin:7px' />" +
