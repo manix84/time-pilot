@@ -114,8 +114,11 @@ define(function () {
                 "</div>";
 
             this._keyboardLock = document.createElement('input');
-            // this._keyboardLock.setAttribute('style', 'position:absolute;border:0;top:-9999px;left:-9999px;width:0;height0;resize:none;outline:0');
+            this._keyboardLock.setAttribute('style', 'position:absolute;border:0;top:-9999px;left:-9999px;width:0;height0;resize:none;outline:0');
             this._keyboardLock.setAttribute('type', 'text');
+            this._addListener(this._canvas, 'click', function () {
+                that._keyboardLock.focus();
+            });
             this._addListener(this._keyboardLock, 'keydown', function (event) {
                 switch (event.keyCode) {
                 case 37: // LEFT
@@ -128,6 +131,7 @@ define(function () {
                     }
                     break;
                 case 32: // SPACE BAR
+                    event.preventDefault();
                     // SHOOT
                     break;
                 }
@@ -179,19 +183,45 @@ define(function () {
                         this._gameData.player.heading += 22.5;
                     } else if (this._gameData.player.heading <= 180 && this._gameData.player.heading > 0) {
                         this._gameData.player.heading -= 22.5;
+                    } else if (this._gameData.player.heading === 180) {
+                        // RANDOMISE
                     }
                     break;
                 case 40: // Down
                     if (this._gameData.player.heading >= 0 && this._gameData.player.heading < 180) {
                         this._gameData.player.heading += 22.5;
-                    } else if (this._gameData.player.heading < 0 && this._gameData.player.heading > 180) {
+                    } else if (this._gameData.player.heading < 360 && this._gameData.player.heading > 180) {
                         this._gameData.player.heading -= 22.5;
+                    } else if (this._gameData.player.heading === 0) {
+                        // RANDOMISE
                     }
                     break;
                 case 37: // Left
+                    if ((this._gameData.player.heading >= 0 && this._gameData.player.heading < 90) ||
+                        (this._gameData.player.heading >= 270 && this._gameData.player.heading < 360)) {
+                        this._gameData.player.heading += 22.5;
+                    } else if (this._gameData.player.heading < 270 && this._gameData.player.heading > 90) {
+                        this._gameData.player.heading -= 22.5;
+                    } else if (this._gameData.player.heading === 270) {
+                        // RANDOMISE
+                    }
                     break;
                 case 39: // Right
+                    if ((this._gameData.player.heading > 270 && this._gameData.player.heading < 360) ||
+                        (this._gameData.player.heading < 90)) {
+                        if (this._gameData.player.heading === 0) {
+                            this._gameData.player.heading = 360;
+                        }
+                        this._gameData.player.heading -= 22.5;
+                    } else if (this._gameData.player.heading < 270 && this._gameData.player.heading >= 90) {
+                        this._gameData.player.heading += 22.5;
+                    } else if (this._gameData.player.heading === 90) {
+                        // RANDOMISE
+                    }
                     break;
+                }
+                if (this._gameData.player.heading !== h) {
+                    console.log('New Heading: ' + this._gameData.player.heading);
                 }
             }
 
