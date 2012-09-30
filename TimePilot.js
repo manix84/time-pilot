@@ -233,7 +233,7 @@ define(function () {
                 // Shorten enemy heading and game level.
                 h = this._gameData.enemies[i].heading;
                 l = this._gameData.level;
-                s = (0.8 * l);
+                s = (0.7 + (l / 10));
                 spriteData = this._gameData.enemies[i].objRef;
 
                 // Per-Enemy Data
