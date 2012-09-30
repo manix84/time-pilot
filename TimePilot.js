@@ -15,6 +15,7 @@ define(function () {
         _gameData: {
             level: 1,
 
+            tick: 0,
             container: {
                 height: 0,
                 width: 0
@@ -46,7 +47,6 @@ define(function () {
 
         init: function () {
             var that = this,
-                i = 0,
                 ticker;
             this._createCanvas();
             this._TMP_drawGrid();
@@ -63,7 +63,7 @@ define(function () {
                 that._renderEnemies();
                 that._renderPlayer();
 
-                if (i++ >= 500) {
+                if (that._gameData.tick++ >= 1000) {
                     window.clearInterval(ticker);
                     alert('Stopping');
                 }
