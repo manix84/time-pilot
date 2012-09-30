@@ -114,8 +114,11 @@ define(function () {
                 "</div>";
 
             this._keyboardLock = document.createElement('input');
-            // this._keyboardLock.setAttribute('style', 'position:absolute;border:0;top:-9999px;left:-9999px;width:0;height0;resize:none;outline:0');
+            this._keyboardLock.setAttribute('style', 'position:absolute;border:0;top:-9999px;left:-9999px;width:0;height0;resize:none;outline:0');
             this._keyboardLock.setAttribute('type', 'text');
+            this._addListener(this._canvas, 'click', function () {
+                that._keyboardLock.focus();
+            });
             this._addListener(this._keyboardLock, 'keydown', function (event) {
                 switch (event.keyCode) {
                 case 37: // LEFT
@@ -128,6 +131,7 @@ define(function () {
                     }
                     break;
                 case 32: // SPACE BAR
+                    event.preventDefault();
                     // SHOOT
                     break;
                 }
