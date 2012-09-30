@@ -1,8 +1,16 @@
 define(function () {
 
-    var TimePilot = function (element) {
         console.log('TimePilot:element', element);
+    var TimePilot = function (element, options) {
         this._container = element;
+
+        var property = null;
+
+        for (property in options) {
+            if (options.hasOwnProperty(property) && this._options.hasOwnProperty(property)) {
+                this._options[property] = options[property];
+            }
+        }
 
         this._gameData.container.width = this._container.clientWidth;
         this._gameData.container.height = this._container.clientHeight;
@@ -11,6 +19,10 @@ define(function () {
     };
 
     TimePilot.prototype = {
+
+        _options: {
+            baseUrl: ''
+        },
 
         _gameData: {
             level: 1,
@@ -69,7 +81,7 @@ define(function () {
                     posX: Math.floor(Math.random() * (800 - 32)),
                     posY: Math.floor(Math.random() * (600 - 32))
                 };
-                enemy.objRef.src = "../sprites/enemy_level" + this._gameData.level + ".png";
+                enemy.objRef.src = this._options.baseUrl + "sprites/enemy_level" + this._gameData.level + ".png";
                 enemy.objRef.frameWidth = 32;
                 enemy.objRef.frameHeight = 32;
                 this._gameData.enemies.push(enemy);
@@ -109,7 +121,7 @@ define(function () {
         _renderPlayer: function () {
             var spriteData = new Image();
 
-            spriteData.src = "../sprites/player.png";
+            spriteData.src = this._options.baseUrl + "sprites/player.png";
             spriteData.frameWidth = 32;
             spriteData.frameHeight = 32;
             spriteData.frameX = 0;
@@ -123,7 +135,7 @@ define(function () {
         _renderBoss: function () {
             var spriteData = new Image();
 
-            spriteData.src = "../sprites/boss_level" + this._gameData.level + ".png";
+            spriteData.src = this._options.baseUrl + "sprites/boss_level" + this._gameData.level + ".png";
             spriteData.frameWidth = 64;
             spriteData.frameHeight = 32;
             spriteData.frameX = 0;
@@ -185,7 +197,7 @@ define(function () {
                 l = this._gameData.enemies.length,
                 spriteData = new Image();
 
-            spriteData.src = "../sprites/missle.png";
+            spriteData.src = this._options.baseUrl + "sprites/missle.png";
             spriteData.frameWidth = 32;
             spriteData.frameHeight = 32;
 
@@ -208,7 +220,7 @@ define(function () {
                 l = this._gameData.enemies.length,
                 spriteData = new Image();
 
-            spriteData.src = "../sprites/bomb.png";
+            spriteData.src = this._options.baseUrl + "sprites/bomb.png";
             spriteData.frameWidth = 32;
             spriteData.frameHeight = 32;
 
