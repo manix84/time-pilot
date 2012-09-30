@@ -61,7 +61,7 @@ define(function () {
         _TMP_createDummyEnemies: function () {
             var i = 0,
                 enemy;
-            for (; i < 1000; i++) {
+            for (; i < 100; i++) {
                 enemy = {
                     objRef: new Image(),
                     following: true,
