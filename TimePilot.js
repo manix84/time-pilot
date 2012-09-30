@@ -155,6 +155,23 @@ define(function () {
                 this._gameData.enemies[i].posX += parseFloat((Math.cos(h * (Math.PI / 180)) * s).toFixed(5));
                 this._gameData.enemies[i].posY += parseFloat((Math.sin(h * (Math.PI / 180)) * s).toFixed(5));
 
+                if (!this._gameData.enemies[i].isFollowing) {
+                    switch (Math.floor(Math.random() * 300) + 1) {
+                    case 1:
+                        this._gameData.enemies[i].heading -= 22.5;
+                        if (this._gameData.enemies[i].heading < 0) {
+                            this._gameData.enemies[i].heading = 337.5;
+                        }
+                        break;
+                    case 2:
+                        this._gameData.enemies[i].heading += 22.5;
+                        if (this._gameData.enemies[i].heading >= 360) {
+                            this._gameData.enemies[i].heading = 22.5;
+                        }
+                        break;
+                    }
+                }
+
                 spriteData.posX = this._gameData.enemies[i].posX;
                 spriteData.posY = this._gameData.enemies[i].posY;
 
