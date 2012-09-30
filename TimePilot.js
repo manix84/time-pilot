@@ -167,7 +167,7 @@ define(function () {
         _renderPlayer: function () {
             var spriteData = new Image(),
                 h = this._gameData.player.heading,
-                s = 1;
+                s = 2;
 
             if (this._gameData.tick % 4 === 1) {
                 if (this._gameData.player.heading === 360) {
