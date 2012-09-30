@@ -1,6 +1,5 @@
 define(function () {
 
-        console.log('TimePilot:element', element);
     var TimePilot = function (element, options) {
         this._container = element;
 
