@@ -188,6 +188,14 @@ define(function () {
 
                 // DRAW ENEMY
                 this._renderSprite(spriteData);
+
+                if (this._gameData.enemies[i].posX > this._gameData.container.width + 100 ||
+                    this._gameData.enemies[i].posX < -100 ||
+                    this._gameData.enemies[i].posY > this._gameData.container.height + 100 ||
+                    this._gameData.enemies[i].posY < -100) {
+                    console.log('deleting enemy: ' + i);
+                    console.count('enemies deleted');
+                }
             }
         },
 
