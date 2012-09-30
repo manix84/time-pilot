@@ -174,16 +174,6 @@ define(function () {
                 spriteData.posX = this._gameData.enemies[i].posX;
                 spriteData.posY = this._gameData.enemies[i].posY;
 
-                // console.log('spriteData', {
-                //     src: spriteData.src,
-                //     frameX: spriteData.frameX,
-                //     frameY: spriteData.frameY,
-                //     frameWidth: spriteData.frameWidth,
-                //     frameHeight: spriteData.frameHeight,
-                //     posX: this._gameData.enemies[i].posX,
-                //     posY: this._gameData.enemies[i].posY
-                // });
-
                 // DRAW ENEMY
                 this._renderSprite(spriteData);
             }
