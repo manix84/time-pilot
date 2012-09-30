@@ -77,8 +77,8 @@ define(function () {
                     objRef: new Image(),
                     following: true,
                     heading: Math.floor(Math.random() * 16) * 22.5,
-                    posX: Math.floor(Math.random() * (800 - 32)),
-                    posY: Math.floor(Math.random() * (600 - 32))
+                    posX: Math.floor(Math.random() * (this._gameData.container.width - 32)),
+                    posY: Math.floor(Math.random() * (this._gameData.container.height - 32))
                 };
                 enemy.objRef.src = this._options.baseUrl + "sprites/enemy_level" + this._gameData.level + ".png";
                 enemy.objRef.frameWidth = 32;
