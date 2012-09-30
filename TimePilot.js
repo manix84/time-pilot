@@ -167,7 +167,7 @@ define(function () {
         _renderPlayer: function () {
             var spriteData = new Image(),
                 h = this._gameData.player.heading,
-                s = 1;
+                s = 2;
 
             if (this._gameData.tick % 4 === 1) {
                 if (this._gameData.player.heading === 360) {
@@ -233,7 +233,7 @@ define(function () {
                 // Shorten enemy heading and game level.
                 h = this._gameData.enemies[i].heading;
                 l = this._gameData.level;
-                s = (0.8 * l);
+                s = (0.7 + (l / 10));
                 spriteData = this._gameData.enemies[i].objRef;
 
                 // Per-Enemy Data
@@ -262,16 +262,16 @@ define(function () {
                     // FOLLOW PLAYER
                 }
 
-                spriteData.posX = this._gameData.enemies[i].posX;
-                spriteData.posY = this._gameData.enemies[i].posY;
+                spriteData.posX = this._gameData.enemies[i].posX - this._gameData.player.posX;
+                spriteData.posY = this._gameData.enemies[i].posY - this._gameData.player.posY;
 
                 // DRAW ENEMY
                 this._renderSprite(spriteData);
 
-                if (this._gameData.enemies[i].posX > this._gameData.container.width ||
-                    this._gameData.enemies[i].posX < -32 ||
-                    this._gameData.enemies[i].posY > this._gameData.container.height ||
-                    this._gameData.enemies[i].posY < -32) {
+                if (spriteData.posX > this._gameData.container.width ||
+                    spriteData.posX < -32 ||
+                    spriteData.posY > this._gameData.container.height ||
+                    spriteData.posY < -32) {
                     this._gameData.enemies.splice(i, 1);
                 }
             }
