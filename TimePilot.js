@@ -197,16 +197,6 @@ define(function () {
                     }
                     break;
                 case 37: // Left
-                    if ((this._gameData.player.heading >= 0 && this._gameData.player.heading < 90) ||
-                        (this._gameData.player.heading >= 270 && this._gameData.player.heading < 360)) {
-                        this._gameData.player.heading += 22.5;
-                    } else if (this._gameData.player.heading < 270 && this._gameData.player.heading > 90) {
-                        this._gameData.player.heading -= 22.5;
-                    } else if (this._gameData.player.heading === 270) {
-                        // RANDOMISE
-                    }
-                    break;
-                case 39: // Right
                     if ((this._gameData.player.heading > 270 && this._gameData.player.heading < 360) ||
                         (this._gameData.player.heading < 90)) {
                         if (this._gameData.player.heading === 0) {
@@ -216,6 +206,16 @@ define(function () {
                     } else if (this._gameData.player.heading < 270 && this._gameData.player.heading >= 90) {
                         this._gameData.player.heading += 22.5;
                     } else if (this._gameData.player.heading === 90) {
+                        // RANDOMISE
+                    }
+                    break;
+                case 39: // Right
+                    if ((this._gameData.player.heading >= 0 && this._gameData.player.heading < 90) ||
+                        (this._gameData.player.heading >= 270 && this._gameData.player.heading < 360)) {
+                        this._gameData.player.heading += 22.5;
+                    } else if (this._gameData.player.heading < 270 && this._gameData.player.heading > 90) {
+                        this._gameData.player.heading -= 22.5;
+                    } else if (this._gameData.player.heading === 270) {
                         // RANDOMISE
                     }
                     break;
@@ -233,8 +233,8 @@ define(function () {
             spriteData.posX = ((this._gameData.container.width / 2) - (32 / 2));
             spriteData.posY = ((this._gameData.container.height / 2) - (32 / 2));
 
-            this._gameData.player.posX += parseFloat((Math.cos(h * (Math.PI / 180)) * s).toFixed(5));
-            this._gameData.player.posY += parseFloat((Math.sin(h * (Math.PI / 180)) * s).toFixed(5));
+            this._gameData.player.posX += parseFloat((Math.sin(h * (Math.PI / 180)) * s).toFixed(5));
+            this._gameData.player.posY += parseFloat((Math.cos(h * (Math.PI / 180)) * s).toFixed(5));
 
             this._renderSprite(spriteData);
         },
@@ -270,8 +270,8 @@ define(function () {
                 spriteData.frameX = Math.floor(h / 22.5);
                 spriteData.frameY = 0;
 
-                this._gameData.enemies[i].posX += parseFloat((Math.cos(h * (Math.PI / 180)) * s).toFixed(5));
-                this._gameData.enemies[i].posY += parseFloat((Math.sin(h * (Math.PI / 180)) * s).toFixed(5));
+                this._gameData.enemies[i].posX += parseFloat((Math.sin(h * (Math.PI / 180)) * s).toFixed(5));
+                this._gameData.enemies[i].posY += parseFloat((Math.cos(h * (Math.PI / 180)) * s).toFixed(5));
 
                 if (!this._gameData.enemies[i].isFollowing) {
                     switch (Math.floor(Math.random() * 300) + 1) {
