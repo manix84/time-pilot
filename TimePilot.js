@@ -197,16 +197,6 @@ define(function () {
                     }
                     break;
                 case 37: // Left
-                    if ((this._gameData.player.heading >= 0 && this._gameData.player.heading < 90) ||
-                        (this._gameData.player.heading >= 270 && this._gameData.player.heading < 360)) {
-                        this._gameData.player.heading += 22.5;
-                    } else if (this._gameData.player.heading < 270 && this._gameData.player.heading > 90) {
-                        this._gameData.player.heading -= 22.5;
-                    } else if (this._gameData.player.heading === 270) {
-                        // RANDOMISE
-                    }
-                    break;
-                case 39: // Right
                     if ((this._gameData.player.heading > 270 && this._gameData.player.heading < 360) ||
                         (this._gameData.player.heading < 90)) {
                         if (this._gameData.player.heading === 0) {
@@ -216,6 +206,16 @@ define(function () {
                     } else if (this._gameData.player.heading < 270 && this._gameData.player.heading >= 90) {
                         this._gameData.player.heading += 22.5;
                     } else if (this._gameData.player.heading === 90) {
+                        // RANDOMISE
+                    }
+                    break;
+                case 39: // Right
+                    if ((this._gameData.player.heading >= 0 && this._gameData.player.heading < 90) ||
+                        (this._gameData.player.heading >= 270 && this._gameData.player.heading < 360)) {
+                        this._gameData.player.heading += 22.5;
+                    } else if (this._gameData.player.heading < 270 && this._gameData.player.heading > 90) {
+                        this._gameData.player.heading -= 22.5;
+                    } else if (this._gameData.player.heading === 270) {
                         // RANDOMISE
                     }
                     break;
