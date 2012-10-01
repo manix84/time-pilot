@@ -259,7 +259,7 @@ define(function () {
                 spriteData.frameY = 0;
 
                 this._gameData.enemies[i].posX += parseFloat((Math.sin(h * (Math.PI / 180)) * s).toFixed(5));
-                this._gameData.enemies[i].posY += parseFloat((Math.cos(h * (Math.PI / 180)) * s).toFixed(5));
+                this._gameData.enemies[i].posY -= parseFloat((Math.cos(h * (Math.PI / 180)) * s).toFixed(5));
 
                 if (!this._gameData.enemies[i].isFollowing) {
                     switch (Math.floor(Math.random() * 300) + 1) {
