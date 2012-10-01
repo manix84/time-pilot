@@ -29,7 +29,8 @@ define(function () {
             pressedKey: false,
             container: {
                 height: 0,
-                width: 0
+                width: 0,
+                spawningBorder: 100
             },
             player: {
                 heading: 90,
