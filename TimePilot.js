@@ -168,7 +168,7 @@ define(function () {
             );
         },
 
-        _turnTo: function (destinationAngle, currentAngle, stepSize) {
+        _rotateTo: function (destinationAngle, currentAngle, stepSize) {
             var direction = Math.atan2(
                     parseFloat(Math.sin((destinationAngle - currentAngle) * (Math.PI / 180)).toFixed(15)),
                     parseFloat(Math.cos((destinationAngle - currentAngle) * (Math.PI / 180)).toFixed(15))
@@ -196,16 +196,16 @@ define(function () {
             if (this._gameData.tick % 4 === 1) {
                 switch (this._gameData.pressedKey) {
                 case 38: // Up
-                    this._gameData.player.heading = this._turnTo(0, this._gameData.player.heading, 22.5);
+                    this._gameData.player.heading = this._rotateTo(0, this._gameData.player.heading, 22.5);
                     break;
                 case 40: // Down
-                    this._gameData.player.heading = this._turnTo(180, this._gameData.player.heading, 22.5);
+                    this._gameData.player.heading = this._rotateTo(180, this._gameData.player.heading, 22.5);
                     break;
                 case 37: // Left
-                    this._gameData.player.heading = this._turnTo(270, this._gameData.player.heading, 22.5);
+                    this._gameData.player.heading = this._rotateTo(270, this._gameData.player.heading, 22.5);
                     break;
                 case 39: // Right
-                    this._gameData.player.heading = this._turnTo(90, this._gameData.player.heading, 22.5);
+                    this._gameData.player.heading = this._rotateTo(90, this._gameData.player.heading, 22.5);
                     break;
                 }
                 if (this._gameData.player.heading !== h) {
