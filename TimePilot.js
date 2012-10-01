@@ -52,16 +52,16 @@ define(function () {
             this._elementContruction();
             this._keyboardLock.focus();
 
-            this._TMP_drawGrid();
+            this._DEBUG_drawGrid();
             this._renderPlayer();
 
-            this._TMP_createDummyEnemies();
+            this._DEBUG_createDummyEnemies();
             this._renderEnemies();
 
             ticker = window.setInterval(function () {
                 that._canvas.width = that._canvas.width;
 
-                that._TMP_drawGrid();
+                that._DEBUG_drawGrid();
 
                 that._renderEnemies();
                 that._renderPlayer();
@@ -80,24 +80,6 @@ define(function () {
                 element.attachEvent('on' + eventName, callback);
             } else {
                 element['on' + eventName] = callback;
-            }
-        },
-
-        _TMP_createDummyEnemies: function () {
-            var i = 0,
-                enemy;
-            for (; i < 100; i++) {
-                enemy = {
-                    objRef: new Image(),
-                    following: true,
-                    heading: Math.floor(Math.random() * 16) * 22.5,
-                    posX: Math.floor(Math.random() * (this._gameData.container.width - 32)),
-                    posY: Math.floor(Math.random() * (this._gameData.container.height - 32))
-                };
-                enemy.objRef.src = this._options.baseUrl + "sprites/enemy_level" + this._gameData.level + ".png";
-                enemy.objRef.frameWidth = 32;
-                enemy.objRef.frameHeight = 32;
-                this._gameData.enemies.push(enemy);
             }
         },
 
@@ -348,7 +330,25 @@ define(function () {
             // Draw cloud layer 3
         },
 
-        _TMP_drawGrid: function () {
+        _DEBUG_createDummyEnemies: function () {
+            var i = 0,
+                enemy;
+            for (; i < 2000; i++) {
+                enemy = {
+                    objRef: new Image(),
+                    following: true,
+                    heading: Math.floor(Math.random() * 16) * 22.5,
+                    posX: Math.floor(Math.random() * (this._gameData.container.width - 32)),
+                    posY: Math.floor(Math.random() * (this._gameData.container.height - 32))
+                };
+                enemy.objRef.src = this._options.baseUrl + "sprites/enemy_level" + this._gameData.level + ".png";
+                enemy.objRef.frameWidth = 32;
+                enemy.objRef.frameHeight = 32;
+                this._gameData.enemies.push(enemy);
+            }
+        },
+
+        _DEBUG_drawGrid: function () {
             var x = 0,
                 h = 20,
                 w = 20;
