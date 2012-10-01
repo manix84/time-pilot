@@ -286,12 +286,12 @@ define(function () {
                 // DRAW ENEMY
                 this._renderSprite(spriteData);
 
-                if (spriteData.posX > this._gameData.container.width ||
-                    spriteData.posX < -32 ||
-                    spriteData.posY > this._gameData.container.height ||
-                    spriteData.posY < -32) {
-                    this._gameData.enemies.splice(i, 1);
-                }
+                // if (spriteData.posX > this._gameData.container.width ||
+                //     spriteData.posX < -32 ||
+                //     spriteData.posY > this._gameData.container.height ||
+                //     spriteData.posY < -32) {
+                //     this._gameData.enemies.splice(i, 1);
+                // }
             }
         },
 
