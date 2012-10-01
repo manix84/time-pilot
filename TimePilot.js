@@ -168,56 +168,44 @@ define(function () {
             );
         },
 
+        _turnTo: function (destinationAngle, currentAngle, stepSize) {
+            var direction = Math.atan2(
+                    parseFloat(Math.sin((destinationAngle - currentAngle) * (Math.PI / 180)).toFixed(15)),
+                    parseFloat(Math.cos((destinationAngle - currentAngle) * (Math.PI / 180)).toFixed(15))
+                );
+
+            if (direction > 0) {
+                currentAngle += stepSize;
+            } else if (direction < 0) { // ADD RADIANS
+                currentAngle -= stepSize;
+            }
+            if (currentAngle >= 360) {
+                currentAngle -= 360;
+            } else if (currentAngle < 0) {
+                currentAngle += 360;
+            }
+
+            return currentAngle;
+        },
+
         _renderPlayer: function () {
             var spriteData = new Image(),
                 h = this._gameData.player.heading,
                 s = 2;
 
             if (this._gameData.tick % 4 === 1) {
-                if (this._gameData.player.heading === 360) {
-                    this._gameData.player.heading = 0;
-                }
                 switch (this._gameData.pressedKey) {
                 case 38: // Up
-                    if (this._gameData.player.heading > 180 && this._gameData.player.heading < 360) {
-                        this._gameData.player.heading += 22.5;
-                    } else if (this._gameData.player.heading <= 180 && this._gameData.player.heading > 0) {
-                        this._gameData.player.heading -= 22.5;
-                    } else if (this._gameData.player.heading === 180) {
-                        // RANDOMISE
-                    }
+                    this._gameData.player.heading = this._turnTo(0, this._gameData.player.heading, 22.5);
                     break;
                 case 40: // Down
-                    if (this._gameData.player.heading >= 0 && this._gameData.player.heading < 180) {
-                        this._gameData.player.heading += 22.5;
-                    } else if (this._gameData.player.heading < 360 && this._gameData.player.heading > 180) {
-                        this._gameData.player.heading -= 22.5;
-                    } else if (this._gameData.player.heading === 0) {
-                        // RANDOMISE
-                    }
+                    this._gameData.player.heading = this._turnTo(180, this._gameData.player.heading, 22.5);
                     break;
                 case 37: // Left
-                    if ((this._gameData.player.heading > 270 && this._gameData.player.heading < 360) ||
-                        (this._gameData.player.heading < 90)) {
-                        if (this._gameData.player.heading === 0) {
-                            this._gameData.player.heading = 360;
-                        }
-                        this._gameData.player.heading -= 22.5;
-                    } else if (this._gameData.player.heading < 270 && this._gameData.player.heading >= 90) {
-                        this._gameData.player.heading += 22.5;
-                    } else if (this._gameData.player.heading === 90) {
-                        // RANDOMISE
-                    }
+                    this._gameData.player.heading = this._turnTo(270, this._gameData.player.heading, 22.5);
                     break;
                 case 39: // Right
-                    if ((this._gameData.player.heading >= 0 && this._gameData.player.heading < 90) ||
-                        (this._gameData.player.heading >= 270 && this._gameData.player.heading < 360)) {
-                        this._gameData.player.heading += 22.5;
-                    } else if (this._gameData.player.heading < 270 && this._gameData.player.heading > 90) {
-                        this._gameData.player.heading -= 22.5;
-                    } else if (this._gameData.player.heading === 270) {
-                        // RANDOMISE
-                    }
+                    this._gameData.player.heading = this._turnTo(90, this._gameData.player.heading, 22.5);
                     break;
                 }
                 if (this._gameData.player.heading !== h) {
@@ -234,7 +222,7 @@ define(function () {
             spriteData.posY = ((this._gameData.container.height / 2) - (32 / 2));
 
             this._gameData.player.posX += parseFloat((Math.sin(h * (Math.PI / 180)) * s).toFixed(5));
-            this._gameData.player.posY += parseFloat((Math.cos(h * (Math.PI / 180)) * s).toFixed(5));
+            this._gameData.player.posY -= parseFloat((Math.cos(h * (Math.PI / 180)) * s).toFixed(5));
 
             this._renderSprite(spriteData);
         },
