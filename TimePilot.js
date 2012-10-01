@@ -233,8 +233,8 @@ define(function () {
             spriteData.posX = ((this._gameData.container.width / 2) - (32 / 2));
             spriteData.posY = ((this._gameData.container.height / 2) - (32 / 2));
 
-            this._gameData.player.posX += parseFloat((Math.cos(h * (Math.PI / 180)) * s).toFixed(5));
-            this._gameData.player.posY += parseFloat((Math.sin(h * (Math.PI / 180)) * s).toFixed(5));
+            this._gameData.player.posX += parseFloat((Math.sin(h * (Math.PI / 180)) * s).toFixed(5));
+            this._gameData.player.posY += parseFloat((Math.cos(h * (Math.PI / 180)) * s).toFixed(5));
 
             this._renderSprite(spriteData);
         },
@@ -270,8 +270,8 @@ define(function () {
                 spriteData.frameX = Math.floor(h / 22.5);
                 spriteData.frameY = 0;
 
-                this._gameData.enemies[i].posX += parseFloat((Math.cos(h * (Math.PI / 180)) * s).toFixed(5));
-                this._gameData.enemies[i].posY += parseFloat((Math.sin(h * (Math.PI / 180)) * s).toFixed(5));
+                this._gameData.enemies[i].posX += parseFloat((Math.sin(h * (Math.PI / 180)) * s).toFixed(5));
+                this._gameData.enemies[i].posY += parseFloat((Math.cos(h * (Math.PI / 180)) * s).toFixed(5));
 
                 if (!this._gameData.enemies[i].isFollowing) {
                     switch (Math.floor(Math.random() * 300) + 1) {
