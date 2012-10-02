@@ -278,58 +278,10 @@ define(function () {
             }
         },
 
-        _renderMissles: function () {
-            var i = 0,
-                l = this._gameData.enemies.length,
-                spriteData = new Image();
-
-            spriteData.src = this._options.baseUrl + "sprites/missle.png";
-            spriteData.frameWidth = 32;
-            spriteData.frameHeight = 32;
-
-            for (; i < l; i++) {
-                // Per-Enemy Data
-                spriteData.frameX = 0;
-                spriteData.frameY = 0;
-                // turnSpeed: (0.2 * this._gameData.level)
-                // velocity: (10 * this._gameData.level)
-                spriteData.posX = (0 - this._gameData.player.posX);
-                spriteData.posY = (0 - this._gameData.player.posY);
-
-                // DRAW ENEMY
-                this._renderSprite(spriteData);
-            }
-        },
-
-        _renderBombs: function () {
-            var i = 0,
-                l = this._gameData.enemies.length,
-                spriteData = new Image();
-
-            spriteData.src = this._options.baseUrl + "sprites/bomb.png";
-            spriteData.frameWidth = 32;
-            spriteData.frameHeight = 32;
-
-            for (; i < l; i++) {
-                // Per-Enemy Data
-                spriteData.frameX = 0;
-                spriteData.frameY = 0;
-                // turnSpeed: (0.2 * this._gameData.level)
-                // velocity: (10 * this._gameData.level)
-                spriteData.posX = (0 - this._gameData.player.posX);
-                spriteData.posY = (0 - this._gameData.player.posY);
-
-                // DRAW BOMB
-                this._renderSprite(spriteData);
-            }
-        },
-
+        _renderBullets: function () {},
+        _renderMissles: function () {},
+        _renderBombs: function () {},
         _renderMenu: function () {},
-        _renderClouds: function () {
-            // Draw cloud layer 1
-            // Draw cloud layer 2
-            // Draw cloud layer 3
-        },
 
         _DEBUG_createDummyEnemies: function () {
             var i = 0,
