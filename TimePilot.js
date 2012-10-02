@@ -226,9 +226,7 @@ define(function () {
 
         _renderEnemies: function () {
             var i = 0,
-                that = this,
                 spriteData, h, l, s;
-
 
             for (; i < this._gameData.enemies.length; i++) {
                 // Shorten enemy heading and game level.
@@ -306,11 +304,11 @@ define(function () {
             var x = 0,
                 h = 20,
                 w = 20;
+
             for (; x <= this._gameData.container.width; x += w) {
                 this._canvasContext.moveTo(0.5 + x, 0);
                 this._canvasContext.lineTo(0.5 + x, this._gameData.container.height);
             }
-
 
             for (x = 0; x <= this._gameData.container.height; x += h) {
                 this._canvasContext.moveTo(0, 0.5 + x);
