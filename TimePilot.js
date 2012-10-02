@@ -191,9 +191,6 @@ define(function () {
                     this._gameData.player.heading = this._rotateTo(90, this._gameData.player.heading, 22.5);
                     break;
                 }
-                if (this._gameData.player.heading !== h) {
-                    console.log('New Heading: ' + this._gameData.player.heading);
-                }
             }
 
             spriteData.src = this._options.baseUrl + "sprites/player.png";
