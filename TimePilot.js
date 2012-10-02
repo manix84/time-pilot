@@ -29,9 +29,11 @@ define(function () {
             pressedKey: false,
             container: {
                 height: 0,
-                width: 0
+                width: 0,
+                spawningBorder: 100
             },
             player: {
+                isFiring: false,
                 heading: 90,
                 posX: 0,
                 posY: 0
@@ -64,6 +66,7 @@ define(function () {
                 that._DEBUG_drawGrid();
 
                 that._renderEnemies();
+                that._renderBullets();
                 that._renderPlayer();
 
                 if (that._gameData.tick++ >= 10000) {
@@ -114,7 +117,7 @@ define(function () {
                     break;
                 case 32: // SPACE BAR
                     event.preventDefault();
-                    // SHOOT
+                    that._gameData.player.isFiring = true;
                     break;
                 }
             });
@@ -127,6 +130,9 @@ define(function () {
                     event.preventDefault();
                     that._gameData.pressedKey = false;
                     break;
+                case 32:
+                    that._gameData.player.isFiring = false;
+                    break;
                 }
             });
 
@@ -134,20 +140,6 @@ define(function () {
             this._container.appendChild(this._keyboardLock);
 
             this._canvasContext = this._canvas.getContext('2d');
-        },
-
-        _renderSprite: function (spriteData) {
-            this._canvasContext.drawImage(
-                spriteData,
-                (spriteData.frameX * spriteData.frameWidth),
-                (spriteData.frameY * spriteData.frameHeight),
-                spriteData.frameWidth,
-                spriteData.frameHeight,
-                spriteData.posX,
-                spriteData.posY,
-                spriteData.frameWidth,
-                spriteData.frameHeight
-            );
         },
 
         _rotateTo: function (destinationAngle, currentAngle, stepSize) {
@@ -170,11 +162,27 @@ define(function () {
             return currentAngle;
         },
 
+        _renderSprite: function (spriteData) {
+            this._canvasContext.drawImage(
+                spriteData,
+                (spriteData.frameX * spriteData.frameWidth),
+                (spriteData.frameY * spriteData.frameHeight),
+                spriteData.frameWidth,
+                spriteData.frameHeight,
+                spriteData.posX,
+                spriteData.posY,
+                spriteData.frameWidth,
+                spriteData.frameHeight
+            );
+        },
+
         _renderPlayer: function () {
             var spriteData = new Image(),
                 h = this._gameData.player.heading,
                 s = 2;
 
+            // These tick delays don't work... They cause massive delay, to extreams of no movement/firing.
+            // @TODO: Investigate a better method of slowing rotation and weapons fire.
             if (this._gameData.tick % 4 === 1) {
                 switch (this._gameData.pressedKey) {
                 case 38: // Up
@@ -190,9 +198,14 @@ define(function () {
                     this._gameData.player.heading = this._rotateTo(90, this._gameData.player.heading, 22.5);
                     break;
                 }
-                if (this._gameData.player.heading !== h) {
-                    console.log('New Heading: ' + this._gameData.player.heading);
-                }
+            }
+            if (this._gameData.tick % 15 === 1 && this._gameData.player.isFiring) {
+                this._gameData.bullets.push({
+                    posX: (this._gameData.container.width / 2),
+                    posY: (this._gameData.container.height / 2),
+                    heading: this._gameData.player.heading,
+                    playerRelative: true
+                });
             }
 
             spriteData.src = this._options.baseUrl + "sprites/player.png";
@@ -225,9 +238,7 @@ define(function () {
 
         _renderEnemies: function () {
             var i = 0,
-                that = this,
                 spriteData, h, l, s;
-
 
             for (; i < this._gameData.enemies.length; i++) {
                 // Shorten enemy heading and game level.
@@ -277,63 +288,50 @@ define(function () {
             }
         },
 
-        _renderMissles: function () {
+        _renderBullets: function () {
             var i = 0,
-                l = this._gameData.enemies.length,
-                spriteData = new Image();
+                data = {},
+                bulletSize = 3,
+                h, s;
 
-            spriteData.src = this._options.baseUrl + "sprites/missle.png";
-            spriteData.frameWidth = 32;
-            spriteData.frameHeight = 32;
+            for (; i < this._gameData.bullets.length; i++) {
+                // Shorten enemy heading and game level.
+                h = this._gameData.bullets[i].heading;
+                s = 2;
 
-            for (; i < l; i++) {
-                // Per-Enemy Data
-                spriteData.frameX = 0;
-                spriteData.frameY = 0;
-                // turnSpeed: (0.2 * this._gameData.level)
-                // velocity: (10 * this._gameData.level)
-                spriteData.posX = (0 - this._gameData.player.posX);
-                spriteData.posY = (0 - this._gameData.player.posY);
+                this._gameData.bullets[i].posX += parseFloat((Math.sin(h * (Math.PI / 180)) * s).toFixed(5));
+                this._gameData.bullets[i].posY -= parseFloat((Math.cos(h * (Math.PI / 180)) * s).toFixed(5));
+
+                data.posX = this._gameData.bullets[i].posX;
+                data.posY = this._gameData.bullets[i].posY;
+
+                if (!this._gameData.bullets[i].playerRelative) {
+                    data.posX -= this._gameData.player.posX;
+                    data.posY -= this._gameData.player.posY;
+                }
 
                 // DRAW ENEMY
-                this._renderSprite(spriteData);
+                this._canvasContext.fillStyle = "#FFF";
+                this._canvasContext.fillRect(data.posX, data.posY, bulletSize, bulletSize);
+
+                if (data.posX > this._gameData.container.width ||
+                    data.posX < 0 ||
+                    data.posY > this._gameData.container.height ||
+                    data.posY < 0) {
+                    this._gameData.bullets.splice(i, 1);
+                }
             }
         },
 
-        _renderBombs: function () {
-            var i = 0,
-                l = this._gameData.enemies.length,
-                spriteData = new Image();
-
-            spriteData.src = this._options.baseUrl + "sprites/bomb.png";
-            spriteData.frameWidth = 32;
-            spriteData.frameHeight = 32;
-
-            for (; i < l; i++) {
-                // Per-Enemy Data
-                spriteData.frameX = 0;
-                spriteData.frameY = 0;
-                // turnSpeed: (0.2 * this._gameData.level)
-                // velocity: (10 * this._gameData.level)
-                spriteData.posX = (0 - this._gameData.player.posX);
-                spriteData.posY = (0 - this._gameData.player.posY);
-
-                // DRAW BOMB
-                this._renderSprite(spriteData);
-            }
-        },
-
+        _renderMissles: function () {},
+        _renderBombs: function () {},
         _renderMenu: function () {},
-        _renderClouds: function () {
-            // Draw cloud layer 1
-            // Draw cloud layer 2
-            // Draw cloud layer 3
-        },
+        _renderClouds: function () {},
 
         _DEBUG_createDummyEnemies: function () {
             var i = 0,
                 enemy;
-            for (; i < 2000; i++) {
+            for (; i < 100; i++) {
                 enemy = {
                     objRef: new Image(),
                     following: true,
@@ -352,11 +350,11 @@ define(function () {
             var x = 0,
                 h = 20,
                 w = 20;
+
             for (; x <= this._gameData.container.width; x += w) {
                 this._canvasContext.moveTo(0.5 + x, 0);
                 this._canvasContext.lineTo(0.5 + x, this._gameData.container.height);
             }
-
 
             for (x = 0; x <= this._gameData.container.height; x += h) {
                 this._canvasContext.moveTo(0, 0.5 + x);
