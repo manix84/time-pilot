@@ -53,16 +53,16 @@ define(function () {
             this._elementContruction();
             this._keyboardLock.focus();
 
-            this._TMP_drawGrid();
+            this._DEBUG_drawGrid();
             this._renderPlayer();
 
-            this._TMP_createDummyEnemies();
+            this._DEBUG_createDummyEnemies();
             this._renderEnemies();
 
             ticker = window.setInterval(function () {
                 that._canvas.width = that._canvas.width;
 
-                that._TMP_drawGrid();
+                that._DEBUG_drawGrid();
 
                 that._renderEnemies();
                 that._renderPlayer();
@@ -81,24 +81,6 @@ define(function () {
                 element.attachEvent('on' + eventName, callback);
             } else {
                 element['on' + eventName] = callback;
-            }
-        },
-
-        _TMP_createDummyEnemies: function () {
-            var i = 0,
-                enemy;
-            for (; i < 100; i++) {
-                enemy = {
-                    objRef: new Image(),
-                    following: true,
-                    heading: Math.floor(Math.random() * 16) * 22.5,
-                    posX: Math.floor(Math.random() * (this._gameData.container.width - 32)),
-                    posY: Math.floor(Math.random() * (this._gameData.container.height - 32))
-                };
-                enemy.objRef.src = this._options.baseUrl + "sprites/enemy_level" + this._gameData.level + ".png";
-                enemy.objRef.frameWidth = 32;
-                enemy.objRef.frameHeight = 32;
-                this._gameData.enemies.push(enemy);
             }
         },
 
@@ -169,56 +151,44 @@ define(function () {
             );
         },
 
+        _rotateTo: function (destinationAngle, currentAngle, stepSize) {
+            var direction = Math.atan2(
+                    parseFloat(Math.sin((destinationAngle - currentAngle) * (Math.PI / 180)).toFixed(15)),
+                    parseFloat(Math.cos((destinationAngle - currentAngle) * (Math.PI / 180)).toFixed(15))
+                );
+
+            if (direction > 0) {
+                currentAngle += stepSize;
+            } else if (direction < 0) { // ADD RADIANS
+                currentAngle -= stepSize;
+            }
+            if (currentAngle >= 360) {
+                currentAngle -= 360;
+            } else if (currentAngle < 0) {
+                currentAngle += 360;
+            }
+
+            return currentAngle;
+        },
+
         _renderPlayer: function () {
             var spriteData = new Image(),
                 h = this._gameData.player.heading,
                 s = 2;
 
             if (this._gameData.tick % 4 === 1) {
-                if (this._gameData.player.heading === 360) {
-                    this._gameData.player.heading = 0;
-                }
                 switch (this._gameData.pressedKey) {
                 case 38: // Up
-                    if (this._gameData.player.heading > 180 && this._gameData.player.heading < 360) {
-                        this._gameData.player.heading += 22.5;
-                    } else if (this._gameData.player.heading <= 180 && this._gameData.player.heading > 0) {
-                        this._gameData.player.heading -= 22.5;
-                    } else if (this._gameData.player.heading === 180) {
-                        // RANDOMISE
-                    }
+                    this._gameData.player.heading = this._rotateTo(0, this._gameData.player.heading, 22.5);
                     break;
                 case 40: // Down
-                    if (this._gameData.player.heading >= 0 && this._gameData.player.heading < 180) {
-                        this._gameData.player.heading += 22.5;
-                    } else if (this._gameData.player.heading < 360 && this._gameData.player.heading > 180) {
-                        this._gameData.player.heading -= 22.5;
-                    } else if (this._gameData.player.heading === 0) {
-                        // RANDOMISE
-                    }
+                    this._gameData.player.heading = this._rotateTo(180, this._gameData.player.heading, 22.5);
                     break;
                 case 37: // Left
-                    if ((this._gameData.player.heading > 270 && this._gameData.player.heading < 360) ||
-                        (this._gameData.player.heading < 90)) {
-                        if (this._gameData.player.heading === 0) {
-                            this._gameData.player.heading = 360;
-                        }
-                        this._gameData.player.heading -= 22.5;
-                    } else if (this._gameData.player.heading < 270 && this._gameData.player.heading >= 90) {
-                        this._gameData.player.heading += 22.5;
-                    } else if (this._gameData.player.heading === 90) {
-                        // RANDOMISE
-                    }
+                    this._gameData.player.heading = this._rotateTo(270, this._gameData.player.heading, 22.5);
                     break;
                 case 39: // Right
-                    if ((this._gameData.player.heading >= 0 && this._gameData.player.heading < 90) ||
-                        (this._gameData.player.heading >= 270 && this._gameData.player.heading < 360)) {
-                        this._gameData.player.heading += 22.5;
-                    } else if (this._gameData.player.heading < 270 && this._gameData.player.heading > 90) {
-                        this._gameData.player.heading -= 22.5;
-                    } else if (this._gameData.player.heading === 270) {
-                        // RANDOMISE
-                    }
+                    this._gameData.player.heading = this._rotateTo(90, this._gameData.player.heading, 22.5);
                     break;
                 }
                 if (this._gameData.player.heading !== h) {
@@ -235,7 +205,7 @@ define(function () {
             spriteData.posY = ((this._gameData.container.height / 2) - (32 / 2));
 
             this._gameData.player.posX += parseFloat((Math.sin(h * (Math.PI / 180)) * s).toFixed(5));
-            this._gameData.player.posY += parseFloat((Math.cos(h * (Math.PI / 180)) * s).toFixed(5));
+            this._gameData.player.posY -= parseFloat((Math.cos(h * (Math.PI / 180)) * s).toFixed(5));
 
             this._renderSprite(spriteData);
         },
@@ -272,7 +242,7 @@ define(function () {
                 spriteData.frameY = 0;
 
                 this._gameData.enemies[i].posX += parseFloat((Math.sin(h * (Math.PI / 180)) * s).toFixed(5));
-                this._gameData.enemies[i].posY += parseFloat((Math.cos(h * (Math.PI / 180)) * s).toFixed(5));
+                this._gameData.enemies[i].posY -= parseFloat((Math.cos(h * (Math.PI / 180)) * s).toFixed(5));
 
                 if (!this._gameData.enemies[i].isFollowing) {
                     switch (Math.floor(Math.random() * 300) + 1) {
@@ -299,12 +269,12 @@ define(function () {
                 // DRAW ENEMY
                 this._renderSprite(spriteData);
 
-                if (spriteData.posX > this._gameData.container.width ||
-                    spriteData.posX < -32 ||
-                    spriteData.posY > this._gameData.container.height ||
-                    spriteData.posY < -32) {
-                    this._gameData.enemies.splice(i, 1);
-                }
+                // if (spriteData.posX > this._gameData.container.width ||
+                //     spriteData.posX < -32 ||
+                //     spriteData.posY > this._gameData.container.height ||
+                //     spriteData.posY < -32) {
+                //     this._gameData.enemies.splice(i, 1);
+                // }
             }
         },
 
@@ -361,7 +331,25 @@ define(function () {
             // Draw cloud layer 3
         },
 
-        _TMP_drawGrid: function () {
+        _DEBUG_createDummyEnemies: function () {
+            var i = 0,
+                enemy;
+            for (; i < 2000; i++) {
+                enemy = {
+                    objRef: new Image(),
+                    following: true,
+                    heading: Math.floor(Math.random() * 16) * 22.5,
+                    posX: Math.floor(Math.random() * (this._gameData.container.width - 32)),
+                    posY: Math.floor(Math.random() * (this._gameData.container.height - 32))
+                };
+                enemy.objRef.src = this._options.baseUrl + "sprites/enemy_level" + this._gameData.level + ".png";
+                enemy.objRef.frameWidth = 32;
+                enemy.objRef.frameHeight = 32;
+                this._gameData.enemies.push(enemy);
+            }
+        },
+
+        _DEBUG_drawGrid: function () {
             var x = 0,
                 h = 20,
                 w = 20;
