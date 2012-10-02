@@ -273,7 +273,34 @@ define(function () {
             }
         },
 
-        _renderBullets: function () {},
+        _renderBullets: function () {
+            var i = 0,
+                data = {},
+                bulletSize = 3,
+                h, s;
+
+            for (; i < this._gameData.bullets.length; i++) {
+                // Shorten enemy heading and game level.
+                h = this._gameData.bullets[i].heading;
+                s = 2;
+
+                this._gameData.bullets[i].posX += parseFloat((Math.sin(h * (Math.PI / 180)) * s).toFixed(5));
+                this._gameData.bullets[i].posY -= parseFloat((Math.cos(h * (Math.PI / 180)) * s).toFixed(5));
+
+                data.posX = this._gameData.bullets[i].posX;
+                data.posY = this._gameData.bullets[i].posY;
+
+                if (!this._gameData.bullets[i].playerRelative) {
+                    data.posX -= this._gameData.player.posX;
+                    data.posY -= this._gameData.player.posY;
+                }
+
+                // DRAW ENEMY
+                this._canvasContext.fillStyle = "#FFF";
+                this._canvasContext.fillRect(data.posX, data.posY, (data.posX + bulletSize), (data.posY + bulletSize));
+            }
+        },
+
         _renderMissles: function () {},
         _renderBombs: function () {},
         _renderMenu: function () {},
