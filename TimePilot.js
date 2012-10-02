@@ -137,20 +137,6 @@ define(function () {
             this._canvasContext = this._canvas.getContext('2d');
         },
 
-        _renderSprite: function (spriteData) {
-            this._canvasContext.drawImage(
-                spriteData,
-                (spriteData.frameX * spriteData.frameWidth),
-                (spriteData.frameY * spriteData.frameHeight),
-                spriteData.frameWidth,
-                spriteData.frameHeight,
-                spriteData.posX,
-                spriteData.posY,
-                spriteData.frameWidth,
-                spriteData.frameHeight
-            );
-        },
-
         _rotateTo: function (destinationAngle, currentAngle, stepSize) {
             var direction = Math.atan2(
                     parseFloat(Math.sin((destinationAngle - currentAngle) * (Math.PI / 180)).toFixed(15)),
@@ -169,6 +155,20 @@ define(function () {
             }
 
             return currentAngle;
+        },
+
+        _renderSprite: function (spriteData) {
+            this._canvasContext.drawImage(
+                spriteData,
+                (spriteData.frameX * spriteData.frameWidth),
+                (spriteData.frameY * spriteData.frameHeight),
+                spriteData.frameWidth,
+                spriteData.frameHeight,
+                spriteData.posX,
+                spriteData.posY,
+                spriteData.frameWidth,
+                spriteData.frameHeight
+            );
         },
 
         _renderPlayer: function () {
