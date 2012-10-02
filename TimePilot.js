@@ -33,6 +33,7 @@ define(function () {
                 spawningBorder: 100
             },
             player: {
+                isFiring: false,
                 heading: 90,
                 posX: 0,
                 posY: 0
@@ -65,6 +66,7 @@ define(function () {
                 that._DEBUG_drawGrid();
 
                 that._renderEnemies();
+                that._renderBullets();
                 that._renderPlayer();
 
                 if (that._gameData.tick++ >= 10000) {
@@ -115,7 +117,7 @@ define(function () {
                     break;
                 case 32: // SPACE BAR
                     event.preventDefault();
-                    // SHOOT
+                    that._gameData.player.isFiring = true;
                     break;
                 }
             });
@@ -127,6 +129,9 @@ define(function () {
                 case 40: // DOWN
                     event.preventDefault();
                     that._gameData.pressedKey = false;
+                    break;
+                case 32:
+                    that._gameData.player.isFiring = false;
                     break;
                 }
             });
@@ -176,6 +181,8 @@ define(function () {
                 h = this._gameData.player.heading,
                 s = 2;
 
+            // These tick delays don't work... They cause massive delay, to extreams of no movement/firing.
+            // @TODO: Investigate a better method of slowing rotation and weapons fire.
             if (this._gameData.tick % 4 === 1) {
                 switch (this._gameData.pressedKey) {
                 case 38: // Up
@@ -191,6 +198,14 @@ define(function () {
                     this._gameData.player.heading = this._rotateTo(90, this._gameData.player.heading, 22.5);
                     break;
                 }
+            }
+            if (this._gameData.tick % 15 === 1 && this._gameData.player.isFiring) {
+                this._gameData.bullets.push({
+                    posX: (this._gameData.container.width / 2),
+                    posY: (this._gameData.container.height / 2),
+                    heading: this._gameData.player.heading,
+                    playerRelative: true
+                });
             }
 
             spriteData.src = this._options.baseUrl + "sprites/player.png";
@@ -297,7 +312,14 @@ define(function () {
 
                 // DRAW ENEMY
                 this._canvasContext.fillStyle = "#FFF";
-                this._canvasContext.fillRect(data.posX, data.posY, (data.posX + bulletSize), (data.posY + bulletSize));
+                this._canvasContext.fillRect(data.posX, data.posY, bulletSize, bulletSize);
+
+                if (data.posX > this._gameData.container.width ||
+                    data.posX < 0 ||
+                    data.posY > this._gameData.container.height ||
+                    data.posY < 0) {
+                    this._gameData.bullets.splice(i, 1);
+                }
             }
         },
 
@@ -309,7 +331,7 @@ define(function () {
         _DEBUG_createDummyEnemies: function () {
             var i = 0,
                 enemy;
-            for (; i < 2000; i++) {
+            for (; i < 100; i++) {
                 enemy = {
                     objRef: new Image(),
                     following: true,
