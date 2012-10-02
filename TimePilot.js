@@ -282,6 +282,7 @@ define(function () {
         _renderMissles: function () {},
         _renderBombs: function () {},
         _renderMenu: function () {},
+        _renderClouds: function () {},
 
         _DEBUG_createDummyEnemies: function () {
             var i = 0,
