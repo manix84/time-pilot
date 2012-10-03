@@ -25,6 +25,7 @@ define(function () {
 
         _gameData: {
             tick: 0,
+            theTicker: null,
             pressedKey: false,
             container: {
                 height: 0,
@@ -67,7 +68,9 @@ define(function () {
             this._DEBUG_createDummyEnemies();
             this._renderEnemies();
 
-            ticker = window.setInterval(function () {
+            this._gameData.theTicker = window.setInterval(function () {
+                that._gameData.tick++;
+
                 that._canvas.width = that._canvas.width;
 
                 that._DEBUG_drawGrid();
@@ -75,11 +78,6 @@ define(function () {
                 that._renderEnemies();
                 that._renderBullets();
                 that._renderPlayer();
-
-                if (that._gameData.tick++ >= 10000) {
-                    window.clearInterval(ticker);
-                    alert('Stopping');
-                }
             }, (1000 / 60));
         },
 
@@ -125,6 +123,10 @@ define(function () {
                 case 32: // SPACE BAR
                     event.preventDefault();
                     that._gameData.player.isFiring = true;
+                    break;
+                case 27: // ESC
+                    window.clearInterval(that._gameData.theTicker);
+                    alert('Stopping');
                     break;
                 }
             });
