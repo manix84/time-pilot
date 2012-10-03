@@ -296,13 +296,13 @@ define(function () {
         _renderBullets: function () {
             var i = 0,
                 data = {},
-                bulletSize = 3,
+                bulletSize = 4,
                 h, s;
 
             for (; i < this._gameData.bullets.length; i++) {
                 // Shorten enemy heading and game level.
                 h = this._gameData.bullets[i].heading;
-                s = 2;
+                s = 10;
 
                 this._gameData.bullets[i].posX += parseFloat((Math.sin(h * (Math.PI / 180)) * s).toFixed(5));
                 this._gameData.bullets[i].posY -= parseFloat((Math.cos(h * (Math.PI / 180)) * s).toFixed(5));
