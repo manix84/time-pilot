@@ -282,9 +282,8 @@ define(function () {
                         break;
                     }
                 } else {
-
                     if ((this._gameData.tick - this._gameData.enemies[i].lastMovedTick) > 40) {
-                        this._gameData.enemies[i].lastMovedTick = this._gameData.tick;
+                        this._gameData.enemies[i].lastMovedTick = this._gameData.tick + (Math.floor(Math.random() * 40));
                         a = Math.atan2(
                                 (
                                     (this._gameData.enemies[i].posX - this._gameData.player.posX) -
@@ -296,6 +295,7 @@ define(function () {
                                 )
                             ) * (180 / Math.PI);
                         a = ((a > 0) ? (360 - a) : Math.abs(a));
+                        a = (Math.floor(a / 22.5) * 22.5);
 
                         this._gameData.enemies[i].heading = this._rotateTo(a, this._gameData.enemies[i].heading, 22.5);
                     }
