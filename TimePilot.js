@@ -139,7 +139,7 @@ define(function () {
                     event.preventDefault();
                     that._gameData.pressedKey = false;
                     break;
-                case 32:
+                case 32: // SPACE BAR
                     that._gameData.player.isFiring = false;
                     break;
                 }
