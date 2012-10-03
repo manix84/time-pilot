@@ -34,6 +34,7 @@ define(function () {
             },
             player: {
                 isFiring: false,
+                lastFiredTick: 0,
                 heading: 90,
                 posX: 0,
                 posY: 0
