@@ -24,7 +24,6 @@ define(function () {
         },
 
         _gameData: {
-            level: 1,
             tick: 0,
             pressedKey: false,
             container: {
@@ -40,11 +39,17 @@ define(function () {
                 posX: 0,
                 posY: 0
             },
-            boss: {
-                heading: 90,
-                posX: 0,
-                posY: 0
+            level: 1,
+            levelData: {
+                1: {
+                    enemySpeed: 1,
+                    enemyTurnSpeed: 20,
+                    playerSpeed: 2,
+                    backgroundColor: '#007'
+                }
             },
+
+            boss: {},
             enemies: [],
             bullets: []
         },
