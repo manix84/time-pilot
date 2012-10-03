@@ -35,6 +35,7 @@ define(function () {
             player: {
                 isFiring: false,
                 lastFiredTick: 0,
+                lastMovedTick: 0,
                 heading: 90,
                 posX: 0,
                 posY: 0
@@ -184,7 +185,8 @@ define(function () {
 
             // These tick delays don't work... They cause massive delay, to extreams of no movement/firing.
             // @TODO: Investigate a better method of slowing rotation and weapons fire.
-            if (this._gameData.tick % 4 === 1) {
+            if ((this._gameData.tick - this._gameData.player.lastMovedTick) > 4) {
+                this._gameData.player.lastMovedTick = this._gameData.tick;
                 switch (this._gameData.pressedKey) {
                 case 38: // Up
                     this._gameData.player.heading = this._rotateTo(0, this._gameData.player.heading, 22.5);
@@ -200,7 +202,9 @@ define(function () {
                     break;
                 }
             }
-            if (this._gameData.tick % 15 === 1 && this._gameData.player.isFiring) {
+            if ((this._gameData.tick - this._gameData.player.lastFiredTick) > 10 &&
+                this._gameData.player.isFiring) {
+                this._gameData.player.lastFiredTick = this._gameData.tick;
                 this._gameData.bullets.push({
                     posX: (this._gameData.container.width / 2),
                     posY: (this._gameData.container.height / 2),
