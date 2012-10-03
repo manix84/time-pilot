@@ -25,6 +25,7 @@ define(function () {
 
         _gameData: {
             tick: 0,
+            theTicker: null,
             pressedKey: false,
             container: {
                 height: 0,
@@ -67,7 +68,9 @@ define(function () {
             this._DEBUG_createDummyEnemies();
             this._renderEnemies();
 
-            ticker = window.setInterval(function () {
+            this._gameData.theTicker = window.setInterval(function () {
+                that._gameData.tick++;
+
                 that._canvas.width = that._canvas.width;
 
                 that._DEBUG_drawGrid();
@@ -75,11 +78,6 @@ define(function () {
                 that._renderEnemies();
                 that._renderBullets();
                 that._renderPlayer();
-
-                if (that._gameData.tick++ >= 10000) {
-                    window.clearInterval(ticker);
-                    alert('Stopping');
-                }
             }, (1000 / 60));
         },
 
@@ -126,6 +124,10 @@ define(function () {
                     event.preventDefault();
                     that._gameData.player.isFiring = true;
                     break;
+                case 27: // ESC
+                    window.clearInterval(that._gameData.theTicker);
+                    alert('Stopping');
+                    break;
                 }
             });
             this._addListener(this._keyboardLock, 'keyup', function (event) {
@@ -137,7 +139,7 @@ define(function () {
                     event.preventDefault();
                     that._gameData.pressedKey = false;
                     break;
-                case 32:
+                case 32: // SPACE BAR
                     that._gameData.player.isFiring = false;
                     break;
                 }
@@ -248,7 +250,7 @@ define(function () {
 
         _renderEnemies: function () {
             var i = 0,
-                spriteData, h, l, s;
+                spriteData, h, l, s, a;
 
             for (; i < this._gameData.enemies.length; i++) {
                 // Shorten enemy heading and game level.
@@ -280,7 +282,23 @@ define(function () {
                         break;
                     }
                 } else {
-                    // FOLLOW PLAYER
+                    if ((this._gameData.tick - this._gameData.enemies[i].lastMovedTick) > 40) {
+                        this._gameData.enemies[i].lastMovedTick = this._gameData.tick + (Math.floor(Math.random() * 40));
+                        a = Math.atan2(
+                                (
+                                    (this._gameData.enemies[i].posX - this._gameData.player.posX) -
+                                    ((this._gameData.container.width / 2) - (32 / 2))
+                                ),
+                                (
+                                    (this._gameData.enemies[i].posY - this._gameData.player.posY) -
+                                    ((this._gameData.container.height / 2) - (32 / 2))
+                                )
+                            ) * (180 / Math.PI);
+                        a = ((a > 0) ? (360 - a) : Math.abs(a));
+                        a = (Math.floor(a / 22.5) * 22.5);
+
+                        this._gameData.enemies[i].heading = this._rotateTo(a, this._gameData.enemies[i].heading, 22.5);
+                    }
                 }
 
                 spriteData.posX = this._gameData.enemies[i].posX - this._gameData.player.posX;
@@ -347,7 +365,8 @@ define(function () {
             for (; i < 100; i++) {
                 enemy = {
                     objRef: new Image(),
-                    following: true,
+                    isFollowing: true, // (Math.random() * 20),
+                    lastMovedTick: 0,
                     heading: Math.floor(Math.random() * 16) * 22.5,
                     posX: Math.floor(Math.random() * (this._gameData.container.width - 32)),
                     posY: Math.floor(Math.random() * (this._gameData.container.height - 32))
