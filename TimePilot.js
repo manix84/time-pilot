@@ -352,16 +352,14 @@ define(function () {
                         posY: this._data.bullets[j].posY + (this._data.level[l].bullet.size / 2),
                         radius: this._data.level[l].bullet.hitRadius
                     });
-
                     if (collide) {
-                        console.warn('Bullet ' + j + ' hit enemy ' + i);
                         this._data.enemies.splice(i, 1);
                         this._data.bullets.splice(j, 1);
                     }
                 }
-
                 // DRAW ENEMY
                 this._renderSprite(spriteData);
+
 
                 // if (spriteData.posX > this._data.container.width ||
                 //     spriteData.posX < -32 ||
