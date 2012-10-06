@@ -40,6 +40,10 @@ define(function () {
                 posX: 0,
                 posY: 0
             },
+            bullet: {
+                size: 4,
+                hitRadius: 2
+            },
             level: {
                 current: 1,
                 1: {
@@ -48,14 +52,12 @@ define(function () {
                         turnSpeed: 20,
                         height: 32,
                         width: 32,
-                        hitHeight: 16,
-                        hitWidth: 16
+                        hitRadius: 8
                     },
                     player: {
                         height: 32,
                         width: 32,
-                        hitHeight: 16,
-                        hitWidth: 16,
+                        hitRadius: 8,
                         speed: 3
                     },
                     bgColor: '#007'
@@ -90,10 +92,8 @@ define(function () {
                 that._canvas.width = that._canvas.width;
                 that._canvas.style.background = that._data.level[that._data.level.current].bgColor;
 
-                // that._DEBUG_drawGrid();
-
-                that._renderEnemies();
                 that._renderBullets();
+                that._renderEnemies();
                 that._renderPlayer();
             }, (1000 / 60));
         },
@@ -176,7 +176,7 @@ define(function () {
 
             if (direction > 0) {
                 currentAngle += stepSize;
-            } else if (direction < 0) { // ADD RADIANS
+            } else if (direction < 0) {
                 currentAngle -= stepSize;
             }
             if (currentAngle >= 360) {
@@ -186,6 +186,14 @@ define(function () {
             }
 
             return currentAngle;
+        },
+
+        _detectCollision: function (targetA, targetB) {
+            var dx = targetA.posX - targetB.posX,
+                dy = targetA.posY - targetB.posY,
+                dist = targetA.hitRadius + targetB.hitRadius;
+
+            return (dx * dx + dy * dy <= dist * dist);
         },
 
         _renderSprite: function (spriteData) {
@@ -271,7 +279,7 @@ define(function () {
             var i = 0, j = 0,
                 ts = this._data.level[this._data.level.current].enemyTurnSpeed,
                 t = this._data.tick,
-                spriteData, h, l, s, a, lt;
+                spriteData, collide, h, l, s, a, lt;
 
             for (; i < this._data.enemies.length; i++) {
                 // Shorten enemy heading and game level.
@@ -279,6 +287,7 @@ define(function () {
                 l = this._data.level.current;
                 s = (0.7 + (l / 10));
                 lt = this._data.enemies[i].lastMovedTick;
+                collide = false;
                 spriteData = this._data.enemies[i].objRef;
 
                 // Per-Enemy Data
@@ -343,7 +352,7 @@ define(function () {
         _renderBullets: function () {
             var i = 0,
                 data = {},
-                bulletSize = 4,
+                bs = this._data.bullet.size,
                 s = 7,
                 h;
 
@@ -363,10 +372,9 @@ define(function () {
 
                 this._canvasContext.fillStyle = "#FFF";
                 this._canvasContext.fillRect(
-                    data.posX - (bulletSize / 2),
-                    data.posY - (bulletSize / 2),
-                    bulletSize,
-                    bulletSize
+                    data.posX - (bs / 2),
+                    data.posY - (bs / 2),
+                    bs, bs
                 );
 
                 if (data.posX > this._data.container.width ||
