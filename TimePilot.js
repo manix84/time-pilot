@@ -27,6 +27,7 @@ define(function () {
             tick: 0,
             theTicker: null,
             pressedKey: false,
+            score: 0,
             container: {
                 height: 0,
                 width: 0,
@@ -55,10 +56,10 @@ define(function () {
                         hitRadius: 8
                     },
                     player: {
+                        speed: 3,
                         height: 32,
                         width: 32,
-                        hitRadius: 8,
-                        speed: 3
+                        hitRadius: 8
                     },
                     bgColor: '#007'
                 }
@@ -78,10 +79,7 @@ define(function () {
             this._keyboardLock.focus();
 
             this._DEBUG_drawGrid();
-            this._renderPlayer();
-
             this._DEBUG_createDummyEnemies();
-            this._renderEnemies();
 
             this._data.theTicker = window.setInterval(function () {
                 that._data.tick++;
@@ -95,6 +93,7 @@ define(function () {
                 that._renderBullets();
                 that._renderEnemies();
                 that._renderPlayer();
+                that._renderText(that._data.score, 20, 10, 30);
             }, (1000 / 60));
         },
 
@@ -143,7 +142,7 @@ define(function () {
                     break;
                 case 27: // ESC
                     window.clearInterval(that._data.theTicker);
-                    alert('Stopping');
+                    alert('Stopping at users request.');
                     break;
                 }
             });
@@ -162,6 +161,13 @@ define(function () {
                 }
             });
 
+            this._styles = document.createElement('style');
+            this._styles.innerText = "@font-face {" +
+                "font-family: 'theFont';" +
+                "src: url('" + this._options.baseUrl + "fonts/font.ttf');" +
+            "}​";
+
+            this._container.appendChild(this._styles);
             this._container.appendChild(this._canvas);
             this._container.appendChild(this._keyboardLock);
 
@@ -190,6 +196,18 @@ define(function () {
                 dist = targetA.radius + targetB.radius;
 
             return (dx * dx + dy * dy <= dist * dist);
+        },
+
+        _renderText: function (message, posX, posY, size, color) {
+            posX = posX || 0;
+            posY = posY || 0;
+            size = size || 12;
+            color = color || '#fff';
+
+            this._canvasContext.fillStyle = color;
+            this._canvasContext.font = size + 'px theFont';
+            this._canvasContext.textBaseline = 'top';
+            this._canvasContext.fillText(message, posX, posY);
         },
 
         _renderSprite: function (spriteData) {
@@ -276,14 +294,13 @@ define(function () {
                 l = this._data.level.current,
                 ts = this._data.level[l].enemy.turnSpeed,
                 t = this._data.tick,
-                spriteData, collide, h, s, a, lt;
+                spriteData, h, s, a, lt;
 
             for (; i < this._data.enemies.length; i++) {
                 // Shorten enemy heading and game level.
                 h = this._data.enemies[i].heading;
                 s = (0.7 + (l / 10));
                 lt = this._data.enemies[i].lastMovedTick;
-                collide = false;
                 spriteData = this._data.enemies[i].objRef;
 
                 // Per-Enemy Data
@@ -340,8 +357,22 @@ define(function () {
                     (this._data.level[l].enemy.height / 2)
                 );
 
+                if (this._detectCollision({
+                    // Enemy Position
+                    posX: (this._data.enemies[i].posX - this._data.player.posX),
+                    posY: (this._data.enemies[i].posY - this._data.player.posY),
+                    radius: this._data.level[l].enemy.hitRadius
+                }, {
+                    // Bullet Position
+                    posX: this._data.player.posX + (this._data.level[l].player.width / 2),
+                    posY: this._data.player.posX + (this._data.level[l].player.height / 2),
+                    radius: this._data.level[l].player.hitRadius
+                })) {
+                    console.warn('GAME OVER ', this._data.score);
+                }
+
                 for (j = 0; j < this._data.bullets.length; j++) {
-                    collide = this._detectCollision({
+                    if (this._detectCollision({
                         // Enemy Position
                         posX: (this._data.enemies[i].posX - this._data.player.posX),
                         posY: (this._data.enemies[i].posY - this._data.player.posY),
@@ -351,24 +382,13 @@ define(function () {
                         posX: this._data.bullets[j].posX + (this._data.level[l].bullet.size / 2),
                         posY: this._data.bullets[j].posY + (this._data.level[l].bullet.size / 2),
                         radius: this._data.level[l].bullet.hitRadius
-                    });
-
-                    if (collide) {
-                        console.warn('Bullet ' + j + ' hit enemy ' + i);
+                    })) {
                         this._data.enemies.splice(i, 1);
                         this._data.bullets.splice(j, 1);
+                        this._data.score += 100;
                     }
                 }
-
-                // DRAW ENEMY
                 this._renderSprite(spriteData);
-
-                // if (spriteData.posX > this._data.container.width ||
-                //     spriteData.posX < -32 ||
-                //     spriteData.posY > this._data.container.height ||
-                //     spriteData.posY < -32) {
-                //     this._data.enemies.splice(i, 1);
-                // }
             }
         },
 
