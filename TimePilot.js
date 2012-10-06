@@ -188,12 +188,13 @@ define(function () {
         _renderPlayer: function () {
             var spriteData = new Image(),
                 h = this._gameData.player.heading,
+                t = this._gameData.tick,
                 s = 2;
 
             // These tick delays don't work... They cause massive delay, to extreams of no movement/firing.
             // @TODO: Investigate a better method of slowing rotation and weapons fire.
-            if ((this._gameData.tick - this._gameData.player.lastMovedTick) > 4) {
-                this._gameData.player.lastMovedTick = this._gameData.tick;
+            if ((t - this._gameData.player.lastMovedTick) > 4) {
+                this._gameData.player.lastMovedTick = t;
                 switch (this._gameData.pressedKey) {
                 case 38: // Up
                     this._gameData.player.heading = this._rotateTo(0, this._gameData.player.heading, 22.5);
@@ -209,9 +210,9 @@ define(function () {
                     break;
                 }
             }
-            if ((this._gameData.tick - this._gameData.player.lastFiredTick) > 10 &&
+            if ((t - this._gameData.player.lastFiredTick) > 10 &&
                 this._gameData.player.isFiring) {
-                this._gameData.player.lastFiredTick = this._gameData.tick;
+                this._gameData.player.lastFiredTick = t;
                 this._gameData.bullets.push({
                     posX: (this._gameData.container.width / 2),
                     posY: (this._gameData.container.height / 2),
@@ -250,13 +251,16 @@ define(function () {
 
         _renderEnemies: function () {
             var i = 0,
-                spriteData, h, l, s, a;
+                ts = this._gameData.levelData[this._gameData.level].enemyTurnSpeed,
+                t = this._gameData.tick,
+                spriteData, h, l, s, a, lt;
 
             for (; i < this._gameData.enemies.length; i++) {
                 // Shorten enemy heading and game level.
                 h = this._gameData.enemies[i].heading;
                 l = this._gameData.level;
                 s = (0.7 + (l / 10));
+                lt = this._gameData.enemies[i].lastMovedTick;
                 spriteData = this._gameData.enemies[i].objRef;
 
                 // Per-Enemy Data
@@ -282,18 +286,18 @@ define(function () {
                         break;
                     }
                 } else {
-                    if ((this._gameData.tick - this._gameData.enemies[i].lastMovedTick) > 40) {
-                        this._gameData.enemies[i].lastMovedTick = this._gameData.tick + (Math.floor(Math.random() * 40));
+                    if ((t - lt) > ts) {
+                        this._gameData.enemies[i].lastMovedTick = t + (Math.floor(Math.random() * ts));
                         a = Math.atan2(
-                                (
-                                    (this._gameData.enemies[i].posX - this._gameData.player.posX) -
-                                    ((this._gameData.container.width / 2) - (32 / 2))
-                                ),
-                                (
-                                    (this._gameData.enemies[i].posY - this._gameData.player.posY) -
-                                    ((this._gameData.container.height / 2) - (32 / 2))
-                                )
-                            ) * (180 / Math.PI);
+                            (
+                                (this._gameData.enemies[i].posX - this._gameData.player.posX) -
+                                ((this._gameData.container.width / 2) - (32 / 2))
+                            ),
+                            (
+                                (this._gameData.enemies[i].posY - this._gameData.player.posY) -
+                                ((this._gameData.container.height / 2) - (32 / 2))
+                            )
+                        ) * (180 / Math.PI);
                         a = ((a > 0) ? (360 - a) : Math.abs(a));
                         a = (Math.floor(a / 22.5) * 22.5);
 
