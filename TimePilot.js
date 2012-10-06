@@ -27,6 +27,7 @@ define(function () {
             tick: 0,
             theTicker: null,
             pressedKey: false,
+            score: 0,
             container: {
                 height: 0,
                 width: 0,
@@ -55,10 +56,10 @@ define(function () {
                         hitRadius: 8
                     },
                     player: {
+                        speed: 3,
                         height: 32,
                         width: 32,
-                        hitRadius: 8,
-                        speed: 3
+                        hitRadius: 8
                     },
                     bgColor: '#007'
                 }
@@ -78,10 +79,7 @@ define(function () {
             this._keyboardLock.focus();
 
             this._DEBUG_drawGrid();
-            this._renderPlayer();
-
             this._DEBUG_createDummyEnemies();
-            this._renderEnemies();
 
             this._data.theTicker = window.setInterval(function () {
                 that._data.tick++;
@@ -95,6 +93,7 @@ define(function () {
                 that._renderBullets();
                 that._renderEnemies();
                 that._renderPlayer();
+                that._renderText(that._data.score, 20, 10, 30);
             }, (1000 / 60));
         },
 
@@ -143,7 +142,7 @@ define(function () {
                     break;
                 case 27: // ESC
                     window.clearInterval(that._data.theTicker);
-                    alert('Stopping');
+                    alert('Stopping at users request.');
                     break;
                 }
             });
@@ -162,6 +161,13 @@ define(function () {
                 }
             });
 
+            this._styles = document.createElement('style');
+            this._styles.innerText = "@font-face {" +
+                "font-family: 'theFont';" +
+                "src: url('" + this._options.baseUrl + "fonts/font.ttf');" +
+            "}​";
+
+            this._container.appendChild(this._styles);
             this._container.appendChild(this._canvas);
             this._container.appendChild(this._keyboardLock);
 
@@ -190,6 +196,18 @@ define(function () {
                 dist = targetA.radius + targetB.radius;
 
             return (dx * dx + dy * dy <= dist * dist);
+        },
+
+        _renderText: function (message, posX, posY, size, color) {
+            posX = posX || 0;
+            posY = posY || 0;
+            size = size || 12;
+            color = color || '#fff';
+
+            this._canvasContext.fillStyle = color;
+            this._canvasContext.font = size + 'px theFont';
+            this._canvasContext.textBaseline = 'top';
+            this._canvasContext.fillText(message, posX, posY);
         },
 
         _renderSprite: function (spriteData) {
@@ -350,7 +368,7 @@ define(function () {
                     posY: this._data.player.posX + (this._data.level[l].player.height / 2),
                     radius: this._data.level[l].player.hitRadius
                 })) {
-                    console.warn('GAME OVER');
+                    console.warn('GAME OVER ', this._data.score);
                 }
 
                 for (j = 0; j < this._data.bullets.length; j++) {
@@ -367,6 +385,7 @@ define(function () {
                     })) {
                         this._data.enemies.splice(i, 1);
                         this._data.bullets.splice(j, 1);
+                        this._data.score += 100;
                     }
                 }
                 this._renderSprite(spriteData);
