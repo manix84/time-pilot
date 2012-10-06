@@ -332,10 +332,17 @@ define(function () {
                     }
                 }
 
-                spriteData.posX = this._data.enemies[i].posX - this._data.player.posX;
-                spriteData.posY = this._data.enemies[i].posY - this._data.player.posY;
+                spriteData.posX = (
+                    this._data.enemies[i].posX -
+                    this._data.player.posX -
+                    (this._data.level[l].enemy.width / 2)
+                );
 
-
+                spriteData.posY = (
+                    this._data.enemies[i].posY -
+                    this._data.player.posY -
+                    (this._data.level[l].enemy.height / 2)
+                );
 
                 // DRAW ENEMY
                 this._renderSprite(spriteData);
