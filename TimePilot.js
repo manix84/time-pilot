@@ -276,14 +276,13 @@ define(function () {
                 l = this._data.level.current,
                 ts = this._data.level[l].enemy.turnSpeed,
                 t = this._data.tick,
-                spriteData, collide, h, s, a, lt;
+                spriteData, h, s, a, lt;
 
             for (; i < this._data.enemies.length; i++) {
                 // Shorten enemy heading and game level.
                 h = this._data.enemies[i].heading;
                 s = (0.7 + (l / 10));
                 lt = this._data.enemies[i].lastMovedTick;
-                collide = false;
                 spriteData = this._data.enemies[i].objRef;
 
                 // Per-Enemy Data
@@ -340,8 +339,22 @@ define(function () {
                     (this._data.level[l].enemy.height / 2)
                 );
 
+                if (this._detectCollision({
+                    // Enemy Position
+                    posX: (this._data.enemies[i].posX - this._data.player.posX),
+                    posY: (this._data.enemies[i].posY - this._data.player.posY),
+                    radius: this._data.level[l].enemy.hitRadius
+                }, {
+                    // Bullet Position
+                    posX: this._data.player.posX + (this._data.level[l].player.width / 2),
+                    posY: this._data.player.posX + (this._data.level[l].player.height / 2),
+                    radius: this._data.level[l].player.hitRadius
+                })) {
+                    console.warn('GAME OVER');
+                }
+
                 for (j = 0; j < this._data.bullets.length; j++) {
-                    collide = this._detectCollision({
+                    if (this._detectCollision({
                         // Enemy Position
                         posX: (this._data.enemies[i].posX - this._data.player.posX),
                         posY: (this._data.enemies[i].posY - this._data.player.posY),
@@ -351,22 +364,12 @@ define(function () {
                         posX: this._data.bullets[j].posX + (this._data.level[l].bullet.size / 2),
                         posY: this._data.bullets[j].posY + (this._data.level[l].bullet.size / 2),
                         radius: this._data.level[l].bullet.hitRadius
-                    });
-                    if (collide) {
+                    })) {
                         this._data.enemies.splice(i, 1);
                         this._data.bullets.splice(j, 1);
                     }
                 }
-                // DRAW ENEMY
                 this._renderSprite(spriteData);
-
-
-                // if (spriteData.posX > this._data.container.width ||
-                //     spriteData.posX < -32 ||
-                //     spriteData.posY > this._data.container.height ||
-                //     spriteData.posY < -32) {
-                //     this._data.enemies.splice(i, 1);
-                // }
             }
         },
 
