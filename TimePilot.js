@@ -455,8 +455,8 @@ define(function () {
 
         _addExplosion: function (posX, posY, isBoss) {
             isBoss = isBoss || false;
-            var fw = this._data.enemy.width,
-                fh = this._data.enemy.height;
+            var fw = 64,
+                fh = 32;
 
             this._data.explosions.push({
                 isBoss: (isBoss ? 'boss' : 'enemy'),
