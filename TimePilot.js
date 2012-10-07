@@ -314,7 +314,7 @@ define(function () {
 
                 // Per-Enemy Data
                 spriteData.frameX = Math.floor(h / 22.5);
-                spriteData.frameY = ((Math.floor(this._data.tick / 10) % 2 === 1) ? 1 : 0);
+                spriteData.frameY = (Math.floor(this._data.tick / 10) % 2);
 
                 this._data.enemies[i].posX += parseFloat((Math.sin(h * (Math.PI / 180)) * s).toFixed(5));
                 this._data.enemies[i].posY -= parseFloat((Math.cos(h * (Math.PI / 180)) * s).toFixed(5));
