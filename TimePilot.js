@@ -445,14 +445,18 @@ define(function () {
         _renderMenu: function () {},
         _renderClouds: function () {},
 
-        _addEnemy: function () {
+        _addEnemy: function (posX, posY, heading) {
             var l = this._data.level.current,
                 fw = this._data.level[l].enemy.width,
                 fh = this._data.level[l].enemy.height;
             this._data.enemies.push({
                 isFollowing: (Math.floor(Math.random() * 20) === 0) ? true : false,
                 lastMovedTick: 0,
-                heading: Math.floor(Math.random() * 16) * 22.5,
+                heading: heading || Math.floor(Math.random() * 16) * 22.5,
+                posX: posX || Math.floor(Math.random() * (this._data.container.width - fw)),
+                posY: posY || Math.floor(Math.random() * (this._data.container.height - fh))
+            });
+        },
                 posX: Math.floor(Math.random() * (this._data.container.width - fw)),
                 posY: Math.floor(Math.random() * (this._data.container.height - fh))
             });
