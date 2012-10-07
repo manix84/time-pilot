@@ -441,22 +441,28 @@ define(function () {
         _renderMenu: function () {},
         _renderClouds: function () {},
 
-        _DEBUG_createDummyEnemies: function () {
-            var i = 0,
-                enemy;
-            for (; i < 100; i++) {
+        _addEnemy: function () {
+            var l = this._data.level.current,
+                fw = this._data.level[l].enemy.width,
+                fh = this._data.level[l].enemy.height,
                 enemy = {
                     objRef: new Image(),
-                    isFollowing: true, // (Math.random() * 20),
+                    isFollowing: (Math.floor(Math.random() * 20) === 0) ? true : false,
                     lastMovedTick: 0,
                     heading: Math.floor(Math.random() * 16) * 22.5,
-                    posX: Math.floor(Math.random() * (this._data.container.width - 32)),
-                    posY: Math.floor(Math.random() * (this._data.container.height - 32))
+                    posX: Math.floor(Math.random() * (this._data.container.width - fw)),
+                    posY: Math.floor(Math.random() * (this._data.container.height - fh))
                 };
-                enemy.objRef.src = this._options.baseUrl + "sprites/enemy_level" + this._data.level.current + ".png";
-                enemy.objRef.frameWidth = 32;
-                enemy.objRef.frameHeight = 32;
-                this._data.enemies.push(enemy);
+            enemy.objRef.src = this._options.baseUrl + "sprites/enemy_level" + l + ".png";
+            enemy.objRef.frameWidth = fw;
+            enemy.objRef.frameHeight = fw;
+            this._data.enemies.push(enemy);
+        },
+
+        _DEBUG_createDummyEnemies: function () {
+            var i = 0;
+            for (; i < 100; i++) {
+                this._addEnemy();
             }
         },
 
