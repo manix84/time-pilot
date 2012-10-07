@@ -23,6 +23,8 @@ define(function () {
             baseUrl: ''
         },
 
+        _live: {},
+
         _data: {
             tick: 0,
             theTicker: null,
@@ -86,6 +88,7 @@ define(function () {
                 that._data.tick++;
                 if (that._data.tick % 5 === 1) {
                     that._data.animate = !that._data.animate;
+                }
                 if (that._data.tick === 50000) {
                     window.clearInterval(that._data.theTicker);
                     window.alert('Stopping: 50,000 ticks');
