@@ -407,18 +407,19 @@ define(function () {
                 l = this._data.level.current,
                 bs = this._data.level[l].bullet.size,
                 s = 7,
-                h;
+                bullet, h;
 
             for (; i < this._data.bullets.length; i++) {
-                h = this._data.bullets[i].heading;
+                bullet = this._data.bullets[i];
+                h = bullet.heading;
 
                 this._data.bullets[i].posX += parseFloat((Math.sin(h * (Math.PI / 180)) * s).toFixed(5));
                 this._data.bullets[i].posY -= parseFloat((Math.cos(h * (Math.PI / 180)) * s).toFixed(5));
 
-                data.posX = this._data.bullets[i].posX;
-                data.posY = this._data.bullets[i].posY;
+                data.posX = bullet.posX;
+                data.posY = bullet.posY;
 
-                if (!this._data.bullets[i].playerRelative) {
+                if (!bullet.playerRelative) {
                     data.posX -= this._data.player.posX;
                     data.posY -= this._data.player.posY;
                 }
