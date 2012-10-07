@@ -28,7 +28,6 @@ define(function () {
         _data: {
             tick: 0,
             theTicker: null,
-            animate: 0,
             playerDirection: false,
             score: 0,
             container: {
@@ -86,9 +85,6 @@ define(function () {
 
             this._data.theTicker = window.setInterval(function () {
                 that._data.tick++;
-                if (that._data.tick % 5 === 1) {
-                    that._data.animate = !that._data.animate;
-                }
                 if (that._data.tick === 50000) {
                     window.clearInterval(that._data.theTicker);
                     window.alert('Stopping: 50,000 ticks');
@@ -318,7 +314,7 @@ define(function () {
 
                 // Per-Enemy Data
                 spriteData.frameX = Math.floor(h / 22.5);
-                spriteData.frameY = this._data.animate ? 1 : 0;
+                spriteData.frameY = ((Math.floor(this._data.tick / 10) % 2 === 1) ? 1 : 0);
 
                 this._data.enemies[i].posX += parseFloat((Math.sin(h * (Math.PI / 180)) * s).toFixed(5));
                 this._data.enemies[i].posY -= parseFloat((Math.cos(h * (Math.PI / 180)) * s).toFixed(5));
