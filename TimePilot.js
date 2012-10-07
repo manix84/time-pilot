@@ -67,9 +67,9 @@ define(function () {
                 }
             },
 
-
             boss: {},
             enemies: [],
+            explosions: [],
             bullets: []
         },
 
