@@ -298,16 +298,23 @@ define(function () {
         _renderEnemies: function () {
             var i = 0, j = 0,
                 l = this._data.level.current,
-                ts = this._data.level[l].enemy.turnSpeed,
+                enemyData = this._data.level[l].enemy,
+                fw = enemyData.width,
+                fh = enemyData.height,
+                ts = enemyData.turnSpeed,
                 t = this._data.tick,
-                spriteData, h, s, a, lt;
+                spriteData = new Image(),
+                h, s, a, lt, enemy;
 
+            spriteData.src = this._options.baseUrl + "sprites/enemy_level" + l + ".png";
+            spriteData.frameWidth = fw;
+            spriteData.frameHeight = fw;
             for (; i < this._data.enemies.length; i++) {
                 // Shorten enemy heading and game level.
-                h = this._data.enemies[i].heading;
+                enemy = this._data.enemies[i];
+                h = enemy.heading;
                 s = (0.7 + (l / 10));
-                lt = this._data.enemies[i].lastMovedTick;
-                spriteData = this._data.enemies[i].objRef;
+                lt = enemy.lastMovedTick;
 
                 // Per-Enemy Data
                 spriteData.frameX = Math.floor(h / 22.5);
@@ -320,13 +327,13 @@ define(function () {
                     switch (Math.floor(Math.random() * 300) + 1) {
                     case 1:
                         this._data.enemies[i].heading -= 22.5;
-                        if (this._data.enemies[i].heading < 0) {
+                        if (enemy.heading < 0) {
                             this._data.enemies[i].heading = 337.5;
                         }
                         break;
                     case 2:
                         this._data.enemies[i].heading += 22.5;
-                        if (this._data.enemies[i].heading >= 360) {
+                        if (enemy.heading >= 360) {
                             this._data.enemies[i].heading = 22.5;
                         }
                         break;
@@ -336,38 +343,29 @@ define(function () {
                         this._data.enemies[i].lastMovedTick = t + (Math.floor(Math.random() * ts));
                         a = Math.atan2(
                             (
-                                (this._data.enemies[i].posX - this._data.player.posX) -
-                                ((this._data.container.width / 2) - (32 / 2))
+                                (enemy.posX - this._data.player.posX) -
+                                ((this._data.container.width / 2) - (fw / 2))
                             ),
                             (
-                                (this._data.enemies[i].posY - this._data.player.posY) -
-                                ((this._data.container.height / 2) - (32 / 2))
+                                (enemy.posY - this._data.player.posY) -
+                                ((this._data.container.height / 2) - (fh / 2))
                             )
                         ) * (180 / Math.PI);
                         a = ((a > 0) ? (360 - a) : Math.abs(a));
                         a = (Math.floor(a / 22.5) * 22.5);
 
-                        this._data.enemies[i].heading = this._rotateTo(a, this._data.enemies[i].heading, 22.5);
+                        this._data.enemies[i].heading = this._rotateTo(a, enemy.heading, 22.5);
                     }
                 }
 
-                spriteData.posX = (
-                    this._data.enemies[i].posX -
-                    this._data.player.posX -
-                    (this._data.level[l].enemy.width / 2)
-                );
-
-                spriteData.posY = (
-                    this._data.enemies[i].posY -
-                    this._data.player.posY -
-                    (this._data.level[l].enemy.height / 2)
-                );
+                spriteData.posX = (enemy.posX - this._data.player.posX - (fw / 2));
+                spriteData.posY = (enemy.posY - this._data.player.posY - (fh / 2));
 
                 if (this._detectCollision({
                     // Enemy Position
-                    posX: (this._data.enemies[i].posX - this._data.player.posX),
-                    posY: (this._data.enemies[i].posY - this._data.player.posY),
-                    radius: this._data.level[l].enemy.hitRadius
+                    posX: (enemy.posX - this._data.player.posX),
+                    posY: (enemy.posY - this._data.player.posY),
+                    radius: enemyData.hitRadius
                 }, {
                     // Bullet Position
                     posX: this._data.player.posX + (this._data.level[l].player.width / 2),
@@ -380,15 +378,20 @@ define(function () {
                 for (j = 0; j < this._data.bullets.length; j++) {
                     if (this._detectCollision({
                         // Enemy Position
-                        posX: (this._data.enemies[i].posX - this._data.player.posX),
-                        posY: (this._data.enemies[i].posY - this._data.player.posY),
-                        radius: this._data.level[l].enemy.hitRadius
+                        posX: (enemy.posX - this._data.player.posX),
+                        posY: (enemy.posY - this._data.player.posY),
+                        radius: enemyData.hitRadius
                     }, {
                         // Bullet Position
                         posX: this._data.bullets[j].posX + (this._data.level[l].bullet.size / 2),
                         posY: this._data.bullets[j].posY + (this._data.level[l].bullet.size / 2),
                         radius: this._data.level[l].bullet.hitRadius
                     })) {
+                        // this._addExplosion(
+                        //     (enemy.posX - this._data.player.posX),
+                        //     (enemy.posY - this._data.player.posY),
+                        //     'enemy'
+                        // );
                         this._data.enemies.splice(i, 1);
                         this._data.bullets.splice(j, 1);
                         this._data.score += 100;
@@ -444,19 +447,15 @@ define(function () {
         _addEnemy: function () {
             var l = this._data.level.current,
                 fw = this._data.level[l].enemy.width,
-                fh = this._data.level[l].enemy.height,
-                enemy = {
-                    objRef: new Image(),
-                    isFollowing: (Math.floor(Math.random() * 20) === 0) ? true : false,
-                    lastMovedTick: 0,
-                    heading: Math.floor(Math.random() * 16) * 22.5,
-                    posX: Math.floor(Math.random() * (this._data.container.width - fw)),
-                    posY: Math.floor(Math.random() * (this._data.container.height - fh))
-                };
-            enemy.objRef.src = this._options.baseUrl + "sprites/enemy_level" + l + ".png";
-            enemy.objRef.frameWidth = fw;
-            enemy.objRef.frameHeight = fw;
-            this._data.enemies.push(enemy);
+                fh = this._data.level[l].enemy.height;
+            this._data.enemies.push({
+                isFollowing: (Math.floor(Math.random() * 20) === 0) ? true : false,
+                lastMovedTick: 0,
+                heading: Math.floor(Math.random() * 16) * 22.5,
+                posX: Math.floor(Math.random() * (this._data.container.width - fw)),
+                posY: Math.floor(Math.random() * (this._data.container.height - fh))
+            });
+        },
         },
 
         _DEBUG_createDummyEnemies: function () {
