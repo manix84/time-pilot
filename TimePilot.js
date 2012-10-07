@@ -98,6 +98,8 @@ define(function () {
                 that._renderExplosions();
 
                 that._renderText(that._data.score, 20, 10, 30);
+
+                that._renderText(that._data.player.posX.toFixed(2) + ' x ' + that._data.player.posY.toFixed(2), 20, 40, 15);
             }, (1000 / 60));
         },
 
