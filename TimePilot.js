@@ -387,11 +387,10 @@ define(function () {
                         posY: this._data.bullets[j].posY + (this._data.level[l].bullet.size / 2),
                         radius: this._data.level[l].bullet.hitRadius
                     })) {
-                        // this._addExplosion(
-                        //     (enemy.posX - this._data.player.posX),
-                        //     (enemy.posY - this._data.player.posY),
-                        //     'enemy'
-                        // );
+                        this._addExplosion(
+                            (enemy.posX - this._data.player.posX),
+                            (enemy.posY - this._data.player.posY)
+                        );
                         this._data.enemies.splice(i, 1);
                         this._data.bullets.splice(j, 1);
                         this._data.score += 100;
@@ -457,10 +456,17 @@ define(function () {
                 posY: posY || Math.floor(Math.random() * (this._data.container.height - fh))
             });
         },
+
+        _addExplosion: function (posX, posY, isBoss) {
+            isBoss = isBoss || false;
+            var fw = this._data.enemy.width,
+                fh = this._data.enemy.height;
+
+            this._data.explosions.push({
+                isBoss: (isBoss ? 'boss' : 'enemy'),
                 posX: Math.floor(Math.random() * (this._data.container.width - fw)),
                 posY: Math.floor(Math.random() * (this._data.container.height - fh))
             });
-        },
         },
 
         _DEBUG_createDummyEnemies: function () {
