@@ -26,7 +26,7 @@ define(function () {
         _data: {
             tick: 0,
             theTicker: null,
-            pressedKey: false,
+            playerDirection: false,
             score: 0,
             container: {
                 height: 0,
@@ -132,8 +132,8 @@ define(function () {
                 case 39: // RIGHT
                 case 40: // DOWN
                     event.preventDefault();
-                    if (!that._data.pressedKey) {
-                        that._data.pressedKey = event.keyCode;
+                    if (!that._data.playerDirection) {
+                        that._data.playerDirection = event.keyCode;
                     }
                     break;
                 case 32: // SPACE BAR
@@ -153,7 +153,7 @@ define(function () {
                 case 39: // RIGHT
                 case 40: // DOWN
                     event.preventDefault();
-                    that._data.pressedKey = false;
+                    that._data.playerDirection = false;
                     break;
                 case 32: // SPACE BAR
                     that._data.player.isFiring = false;
@@ -235,7 +235,7 @@ define(function () {
             // @TODO: Investigate a better method of slowing rotation and weapons fire.
             if ((t - this._data.player.lastMovedTick) > 4) {
                 this._data.player.lastMovedTick = t;
-                switch (this._data.pressedKey) {
+                switch (this._data.playerDirection) {
                 case 38: // Up
                     this._data.player.heading = this._rotateTo(0, this._data.player.heading, 22.5);
                     break;
