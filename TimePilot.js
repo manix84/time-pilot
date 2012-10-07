@@ -95,7 +95,11 @@ define(function () {
                 that._renderBullets();
                 that._renderEnemies();
                 that._renderPlayer();
+                that._renderExplosions();
+
                 that._renderText(that._data.score, 20, 10, 30);
+
+                that._renderText(that._data.player.posX.toFixed(2) + ' x ' + that._data.player.posY.toFixed(2), 20, 40, 15);
             }, (1000 / 60));
         },
 
@@ -234,6 +238,31 @@ define(function () {
             );
         },
 
+        _renderExplosions: function () {
+            var spriteData = new Image(),
+                i = 0,
+                explosion;
+
+            for (; i < this._data.explosions.length; i++) {
+                explosion = this._data.explosions[i];
+                spriteData.src = this._options.baseUrl + "sprites/enemy_explosion.png";
+                spriteData.frameWidth = 32;
+                spriteData.frameHeight = 32;
+                spriteData.frameX = (Math.floor((this._data.tick - explosion.startingTick) / 5) % 5);
+                spriteData.frameY = 0;
+                spriteData.posX = (explosion.posX - this._data.player.posX - (spriteData.frameWidth / 2));
+                spriteData.posY = (explosion.posY - this._data.player.posY - (spriteData.frameHeight / 2));
+
+                console.log(spriteData.posX, 'X', spriteData.posY);
+
+                this._renderSprite(spriteData);
+
+                if (spriteData.frameX === 4) {
+                    this._data.explosions.splice(i, 1);
+                }
+            }
+        },
+
         _renderPlayer: function () {
             var spriteData = new Image(),
                 h = this._data.player.heading,
@@ -345,15 +374,6 @@ define(function () {
                 } else {
                     if ((t - lt) > ts) {
                         this._data.enemies[i].lastMovedTick = t + (Math.floor(Math.random() * ts));
-
-                        a = this._findAngle({
-                            posX: (enemy.posX - this._data.player.posX),
-                            posY: (enemy.posY - this._data.player.posY)
-                        }, {
-                            posX: ((this._data.container.width / 2) - (fw / 2)),
-                            posY: ((this._data.container.height / 2) - (fh / 2))
-                        });
-
                         a = this._findAngle(enemy, {
                             posX: this._data.player.posX + ((this._data.container.width / 2) - (fw / 2)),
                             posY: this._data.player.posY + ((this._data.container.height / 2) - (fh / 2))
@@ -393,10 +413,7 @@ define(function () {
                         posY: this._data.bullets[j].posY + (this._data.level[l].bullet.size / 2),
                         radius: this._data.level[l].bullet.hitRadius
                     })) {
-                        this._addExplosion(
-                            (enemy.posX - this._data.player.posX),
-                            (enemy.posY - this._data.player.posY)
-                        );
+                        this._addExplosion(enemy.posX, enemy.posY);
                         this._data.enemies.splice(i, 1);
                         this._data.bullets.splice(j, 1);
                         this._data.score += 100;
@@ -470,8 +487,9 @@ define(function () {
 
             this._data.explosions.push({
                 isBoss: (isBoss ? 'boss' : 'enemy'),
-                posX: Math.floor(Math.random() * (this._data.container.width - fw)),
-                posY: Math.floor(Math.random() * (this._data.container.height - fh))
+                startingTick: this._data.tick,
+                posX: posX,
+                posY: posY
             });
         },
 
