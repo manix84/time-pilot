@@ -374,15 +374,6 @@ define(function () {
                 } else {
                     if ((t - lt) > ts) {
                         this._data.enemies[i].lastMovedTick = t + (Math.floor(Math.random() * ts));
-
-                        a = this._findAngle({
-                            posX: (enemy.posX - this._data.player.posX),
-                            posY: (enemy.posY - this._data.player.posY)
-                        }, {
-                            posX: ((this._data.container.width / 2) - (fw / 2)),
-                            posY: ((this._data.container.height / 2) - (fh / 2))
-                        });
-
                         a = this._findAngle(enemy, {
                             posX: this._data.player.posX + ((this._data.container.width / 2) - (fw / 2)),
                             posY: this._data.player.posY + ((this._data.container.height / 2) - (fh / 2))
