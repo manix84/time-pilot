@@ -3,19 +3,17 @@
 <head>
     <meta charset='utf-8'>
 
-    <title>Testing Station for Projects</title>
+    <title>TimePilot</title>
 
-    <style type="text/css">
-    </style>
-    <script src="../../test/scripts/require.js"></script>
+    <script src="http://cdnjs.cloudflare.com/ajax/libs/require.js/2.0.6/require.min.js"></script>
     <script type='text/javascript'>
         require({
-            baseUrl: '../'
+            baseUrl: './'
         }, [
             'TimePilot'
         ], function (TimePilot) {
             new TimePilot(document.getElementById('test'), {
-                baseUrl: '../'
+                baseUrl: './'
             });
         });
     </script>
@@ -31,7 +29,7 @@
             background-color: #F88
         }
         #test canvas {
-            background-color: #ADF
+            background-color: #FD8
         }
     </style>
 </head>
