@@ -51,14 +51,14 @@ define(function () {
                         hitRadius: 2
                     },
                     enemy: {
-                        speed: 2,
+                        speed: 2.5,
                         turnSpeed: 20,
                         height: 32,
                         width: 32,
                         hitRadius: 8
                     },
                     player: {
-                        speed: 3,
+                        speed: 4,
                         height: 32,
                         width: 32,
                         hitRadius: 8
@@ -81,7 +81,6 @@ define(function () {
             this._keyboardLock.focus();
 
             this._DEBUG_drawGrid();
-            this._DEBUG_createDummyEnemies();
 
             this._data.theTicker = window.setInterval(function () {
                 that._data.tick++;
@@ -97,9 +96,12 @@ define(function () {
                 that._renderPlayer();
                 that._renderExplosions();
 
+                that._populate(); // NEEDS RENAMING
+
                 that._renderText(that._data.score, 20, 10, 30);
 
                 that._renderText(that._data.player.posX.toFixed(2) + ' x ' + that._data.player.posY.toFixed(2), 20, 40, 15);
+                that._renderText(that._data.player.heading + '°', 20, 55, 15);
             }, (1000 / 60));
         },
 
@@ -252,8 +254,6 @@ define(function () {
                 spriteData.frameY = 0;
                 spriteData.posX = (explosion.posX - this._data.player.posX - (spriteData.frameWidth / 2));
                 spriteData.posY = (explosion.posY - this._data.player.posY - (spriteData.frameHeight / 2));
-
-                console.log(spriteData.posX, 'X', spriteData.posY);
 
                 this._renderSprite(spriteData);
 
@@ -493,10 +493,39 @@ define(function () {
             });
         },
 
-        _DEBUG_createDummyEnemies: function () {
-            var i = 0;
-            for (; i < 100; i++) {
-                this._addEnemy();
+        _populate: function () {
+            var posX = 0,
+                posY = 0,
+                angle = 0;
+            if ((this._data.tick % 50 === 0) && this._data.enemies.length < 10)  {
+                switch (Math.floor(Math.random() * 4)) {
+                // switch (0) {
+                case 0: // TOP
+                    posX = (Math.floor(Math.random() * this._data.container.width) - this._data.player.posX);
+                    posY = -((this._data.container.spawningBorder / 2) - this._data.player.posY);
+                    break;
+                case 1: // RIGHT
+                    posX = ((this._data.container.width + (this._data.container.spawningBorder / 2)) - this._data.player.posX);
+                    posY = (Math.floor(Math.random() * this._data.container.height) - this._data.player.posY);
+                    break;
+                case 2: // BOTTOM
+                    posX = (Math.floor(Math.random() * this._data.container.width) - this._data.player.posX);
+                    posY = ((this._data.container.height + (this._data.container.spawningBorder / 2)) - this._data.player.posY);
+                    break;
+                case 3: // LEFT
+                    posX = -((this._data.container.spawningBorder / 2) - this._data.player.posX);
+                    posY = (Math.floor(Math.random() * this._data.container.height) - this._data.player.posY);
+                    break;
+                }
+                angle = this._findAngle({
+                    posX: posX,
+                    posY: posY
+                }, {
+                    posX: this._data.player.posX,
+                    posY: this._data.player.posY
+                });
+                console.log('add enemy: ', posX, posY, angle);
+                this._addEnemy(posX, posY, angle);
             }
         },
 
