@@ -82,6 +82,8 @@ define(function () {
             this._elementContruction();
             this._keyboardLock.focus();
 
+            this._prepopulateArena();
+
             this._DEBUG_drawGrid();
 
             this._data.theTicker = window.setInterval(function () {
@@ -566,6 +568,17 @@ define(function () {
                 posY: posY,
                 size: size || Math.ceil(Math.random() * 3)
             });
+        },
+
+        _prepopulateArena: function () {
+            var i = 0;
+            for (; i < 20; i++) {
+                // Clouds
+                this._addCloud(
+                    Math.floor(Math.random() * this._data.container.width),
+                    Math.floor(Math.random() * this._data.container.height)
+                );
+            }
         },
 
         _populateArena: function () {
