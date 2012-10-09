@@ -96,7 +96,7 @@ define(function () {
                 that._renderPlayer();
                 that._renderExplosions();
 
-                that._populate(); // NEEDS RENAMING
+                that._populateArena(); // NEEDS RENAMING
 
                 that._renderText(that._data.score, 20, 10, 30);
 
@@ -196,6 +196,32 @@ define(function () {
             currentAngle += currentAngle >= 360 ? -360 : (currentAngle < 0 ? 360 : 0);
 
             return currentAngle;
+        },
+
+        _spawningArena: function (side) {
+            var data = {
+                posX: 0,
+                posY: 0
+            };
+            switch (Math.floor(Math.random() * 4)) {
+            case 0: // TOP
+                data.posX = (Math.floor(Math.random() * this._data.container.width) - this._data.player.posX);
+                data.posY = -((this._data.container.spawningBorder / 2) - this._data.player.posY);
+                break;
+            case 1: // RIGHT
+                data.posX = ((this._data.container.width + (this._data.container.spawningBorder / 2)) - this._data.player.posX);
+                data.posY = (Math.floor(Math.random() * this._data.container.height) - this._data.player.posY);
+                break;
+            case 2: // BOTTOM
+                data.posX = (Math.floor(Math.random() * this._data.container.width) - this._data.player.posX);
+                data.posY = ((this._data.container.height + (this._data.container.spawningBorder / 2)) - this._data.player.posY);
+                break;
+            case 3: // LEFT
+                data.posX = -((this._data.container.spawningBorder / 2) - this._data.player.posX);
+                data.posY = (Math.floor(Math.random() * this._data.container.height) - this._data.player.posY);
+                break;
+            }
+            return data;
         },
 
         _findAngle: function (targetA, targetB) {
@@ -482,8 +508,6 @@ define(function () {
 
         _addExplosion: function (posX, posY, isBoss) {
             isBoss = isBoss || false;
-            var fw = 64,
-                fh = 32;
 
             this._data.explosions.push({
                 isBoss: (isBoss ? 'boss' : 'enemy'),
@@ -493,39 +517,17 @@ define(function () {
             });
         },
 
-        _populate: function () {
-            var posX = 0,
-                posY = 0,
+        _populateArena: function () {
+            var data = {},
                 angle = 0;
             if ((this._data.tick % 50 === 0) && this._data.enemies.length < 10)  {
-                switch (Math.floor(Math.random() * 4)) {
-                // switch (0) {
-                case 0: // TOP
-                    posX = (Math.floor(Math.random() * this._data.container.width) - this._data.player.posX);
-                    posY = -((this._data.container.spawningBorder / 2) - this._data.player.posY);
-                    break;
-                case 1: // RIGHT
-                    posX = ((this._data.container.width + (this._data.container.spawningBorder / 2)) - this._data.player.posX);
-                    posY = (Math.floor(Math.random() * this._data.container.height) - this._data.player.posY);
-                    break;
-                case 2: // BOTTOM
-                    posX = (Math.floor(Math.random() * this._data.container.width) - this._data.player.posX);
-                    posY = ((this._data.container.height + (this._data.container.spawningBorder / 2)) - this._data.player.posY);
-                    break;
-                case 3: // LEFT
-                    posX = -((this._data.container.spawningBorder / 2) - this._data.player.posX);
-                    posY = (Math.floor(Math.random() * this._data.container.height) - this._data.player.posY);
-                    break;
-                }
-                angle = this._findAngle({
-                    posX: posX,
-                    posY: posY
-                }, {
+                data = this._spawningArena(Math.floor(Math.random() * 4));
+                angle = this._findAngle({posX: data.posX, posY: data.posY}, {
                     posX: this._data.player.posX,
                     posY: this._data.player.posY
                 });
-                console.log('add enemy: ', posX, posY, angle);
-                this._addEnemy(posX, posY, angle);
+
+                this._addEnemy(data.posX, data.posY, angle);
             }
         },
 
