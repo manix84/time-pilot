@@ -505,9 +505,8 @@ define(function () {
         _renderClouds: function () {
             var i = 0,
                 l = this._data.level.current,
-                // s = this._data.level[l].player.speed,
                 s = 0,
-                h = (this._data.player.heading - 180),
+                h = this._data.player.heading,
                 spriteData = new Image(),
                 cloudType = this._data.level[l].cloudType,
                 cloudData = {
@@ -517,8 +516,6 @@ define(function () {
                 },
                 cloud;
 
-            h += (h < 0) ? 360 : 0;
-            // Per-Enemy Data
             spriteData.frameX = 0;
             spriteData.frameY = 0;
 
