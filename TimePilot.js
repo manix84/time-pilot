@@ -453,6 +453,13 @@ define(function () {
                     }
                 }
                 this._renderSprite(spriteData);
+
+                if (spriteData.posX > (this._data.container.width + this._data.container.despawnBorder) ||
+                    spriteData.posX < -this._data.container.despawnBorder ||
+                    spriteData.posY > (this._data.container.height + this._data.container.despawnBorder) ||
+                    spriteData.posY < -this._data.container.despawnBorder) {
+                    this._data.enemies.splice(i, 1);
+                }
             }
         },
 
@@ -530,6 +537,13 @@ define(function () {
                 spriteData.posY = (cloud.posY - this._data.player.posY - (spriteData.frameHeight / 2));
 
                 this._renderSprite(spriteData);
+
+                if (spriteData.posX > (this._data.container.width + this._data.container.despawnBorder) ||
+                    spriteData.posX < -this._data.container.despawnBorder ||
+                    spriteData.posY > (this._data.container.height + this._data.container.despawnBorder) ||
+                    spriteData.posY < -this._data.container.despawnBorder) {
+                    this._data.clouds.splice(i, 1);
+                }
             }
 
         },
