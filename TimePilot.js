@@ -33,7 +33,7 @@ define(function () {
             container: {
                 height: 0,
                 width: 0,
-                spawningBorder: 100
+                despawnBorder: 100
             },
             player: {
                 isFiring: false,
@@ -46,19 +46,20 @@ define(function () {
             level: {
                 current: 1,
                 1: {
+                    cloudType: 'cloud',
                     bullet: {
                         size: 4,
                         hitRadius: 2
                     },
                     enemy: {
-                        speed: 2,
+                        speed: 2.5,
                         turnSpeed: 20,
                         height: 32,
                         width: 32,
                         hitRadius: 8
                     },
                     player: {
-                        speed: 3,
+                        speed: 4,
                         height: 32,
                         width: 32,
                         hitRadius: 8
@@ -70,7 +71,8 @@ define(function () {
             boss: {},
             enemies: [],
             explosions: [],
-            bullets: []
+            bullets: [],
+            clouds: []
         },
 
         init: function () {
@@ -80,8 +82,9 @@ define(function () {
             this._elementContruction();
             this._keyboardLock.focus();
 
+            this._prepopulateArena();
+
             this._DEBUG_drawGrid();
-            this._DEBUG_createDummyEnemies();
 
             this._data.theTicker = window.setInterval(function () {
                 that._data.tick++;
@@ -92,14 +95,18 @@ define(function () {
                 that._canvas.width = that._canvas.width;
                 that._canvas.style.background = that._data.level[that._data.level.current].bgColor;
 
+                that._renderClouds();
                 that._renderBullets();
                 that._renderEnemies();
                 that._renderPlayer();
                 that._renderExplosions();
 
+                that._populateArena(); // NEEDS RENAMING
+
                 that._renderText(that._data.score, 20, 10, 30);
 
                 that._renderText(that._data.player.posX.toFixed(2) + ' x ' + that._data.player.posY.toFixed(2), 20, 40, 15);
+                that._renderText(that._data.player.heading + '°', 20, 55, 15);
             }, (1000 / 60));
         },
 
@@ -196,6 +203,34 @@ define(function () {
             return currentAngle;
         },
 
+        _spawningArena: function (side) {
+            side = side || Math.floor(Math.random() * 4);
+            var data = {
+                    posX: 0,
+                    posY: 0
+                };
+
+            switch (side) {
+            case 0: // TOP
+                data.posX = (Math.floor(Math.random() * this._data.container.width) - this._data.player.posX);
+                data.posY = -((this._data.container.despawnBorder / 2) - this._data.player.posY);
+                break;
+            case 1: // RIGHT
+                data.posX = ((this._data.container.width + (this._data.container.despawnBorder / 2)) - this._data.player.posX);
+                data.posY = (Math.floor(Math.random() * this._data.container.height) - this._data.player.posY);
+                break;
+            case 2: // BOTTOM
+                data.posX = (Math.floor(Math.random() * this._data.container.width) - this._data.player.posX);
+                data.posY = ((this._data.container.height + (this._data.container.despawnBorder / 2)) - this._data.player.posY);
+                break;
+            case 3: // LEFT
+                data.posX = -((this._data.container.despawnBorder / 2) - this._data.player.posX);
+                data.posY = (Math.floor(Math.random() * this._data.container.height) - this._data.player.posY);
+                break;
+            }
+            return data;
+        },
+
         _findAngle: function (targetA, targetB) {
             var angle = Math.atan2(
                 (targetA.posX - targetB.posX),
@@ -252,8 +287,6 @@ define(function () {
                 spriteData.frameY = 0;
                 spriteData.posX = (explosion.posX - this._data.player.posX - (spriteData.frameWidth / 2));
                 spriteData.posY = (explosion.posY - this._data.player.posY - (spriteData.frameHeight / 2));
-
-                console.log(spriteData.posX, 'X', spriteData.posY);
 
                 this._renderSprite(spriteData);
 
@@ -420,6 +453,13 @@ define(function () {
                     }
                 }
                 this._renderSprite(spriteData);
+
+                if (spriteData.posX > (this._data.container.width + this._data.container.despawnBorder) ||
+                    spriteData.posX < -this._data.container.despawnBorder ||
+                    spriteData.posY > (this._data.container.height + this._data.container.despawnBorder) ||
+                    spriteData.posY < -this._data.container.despawnBorder) {
+                    this._data.enemies.splice(i, 1);
+                }
             }
         },
 
@@ -462,10 +502,52 @@ define(function () {
             }
         },
 
+        _renderClouds: function () {
+            var i = 0,
+                l = this._data.level.current,
+                s = 0,
+                h = this._data.player.heading,
+                spriteData = new Image(),
+                cloudType = this._data.level[l].cloudType,
+                cloudData = {
+                    1: { width: 32, height: 18, speed: 1 },
+                    2: { width: 60, height: 28, speed: 0.5 },
+                    3: { width: 92, height: 32, speed: 0 }
+                },
+                cloud;
+
+            spriteData.frameX = 0;
+            spriteData.frameY = 0;
+
+            for (; i < this._data.clouds.length; i++) {
+                cloud = this._data.clouds[i];
+                s = cloudData[cloud.size].speed;
+
+                this._data.clouds[i].posX += parseFloat((Math.sin(h * (Math.PI / 180)) * s).toFixed(5));
+                this._data.clouds[i].posY -= parseFloat((Math.cos(h * (Math.PI / 180)) * s).toFixed(5));
+
+                spriteData.src = this._options.baseUrl + "sprites/" + cloudType + cloud.size + ".png";
+                spriteData.frameWidth = cloudData[cloud.size].width;
+                spriteData.frameHeight = cloudData[cloud.size].height;
+
+                spriteData.posX = (cloud.posX - this._data.player.posX - (spriteData.frameWidth / 2));
+                spriteData.posY = (cloud.posY - this._data.player.posY - (spriteData.frameHeight / 2));
+
+                this._renderSprite(spriteData);
+
+                if (spriteData.posX > (this._data.container.width + this._data.container.despawnBorder) ||
+                    spriteData.posX < -this._data.container.despawnBorder ||
+                    spriteData.posY > (this._data.container.height + this._data.container.despawnBorder) ||
+                    spriteData.posY < -this._data.container.despawnBorder) {
+                    this._data.clouds.splice(i, 1);
+                }
+            }
+
+        },
+
         _renderMissles: function () {},
         _renderBombs: function () {},
         _renderMenu: function () {},
-        _renderClouds: function () {},
 
         _addEnemy: function (posX, posY, heading) {
             var l = this._data.level.current,
@@ -482,8 +564,6 @@ define(function () {
 
         _addExplosion: function (posX, posY, isBoss) {
             isBoss = isBoss || false;
-            var fw = 64,
-                fh = 32;
 
             this._data.explosions.push({
                 isBoss: (isBoss ? 'boss' : 'enemy'),
@@ -493,10 +573,41 @@ define(function () {
             });
         },
 
-        _DEBUG_createDummyEnemies: function () {
+        _addCloud: function (posX, posY, size) {
+            this._data.clouds.push({
+                posX: posX,
+                posY: posY,
+                size: size || Math.ceil(Math.random() * 3)
+            });
+        },
+
+        _prepopulateArena: function () {
             var i = 0;
-            for (; i < 100; i++) {
-                this._addEnemy();
+            for (; i < 20; i++) {
+                // Clouds
+                this._addCloud(
+                    Math.floor(Math.random() * this._data.container.width),
+                    Math.floor(Math.random() * this._data.container.height)
+                );
+            }
+        },
+
+        _populateArena: function () {
+            var data = {},
+                angle = 0;
+            if ((this._data.tick % 50 === 0) && this._data.enemies.length < 10)  {
+                // Enemies
+                data = this._spawningArena();
+                angle = this._findAngle({posX: data.posX, posY: data.posY}, {
+                    posX: this._data.player.posX,
+                    posY: this._data.player.posY
+                });
+                this._addEnemy(data.posX, data.posY, angle);
+            }
+            if (this._data.tick % 10 === 0 && this._data.clouds.length < 20) {
+                // Clouds
+                data = this._spawningArena();
+                this._addCloud(data.posX, data.posY);
             }
         },
 
