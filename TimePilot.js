@@ -604,7 +604,7 @@ define(function () {
                 });
                 this._addEnemy(data.posX, data.posY, angle);
             }
-            if (this._data.tick % 30 === 0) {
+            if (this._data.tick % 10 === 0 && this._data.clouds.length < 20) {
                 // Clouds
                 data = this._spawningArena();
                 this._addCloud(data.posX, data.posY);
