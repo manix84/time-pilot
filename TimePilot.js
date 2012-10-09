@@ -46,6 +46,7 @@ define(function () {
             level: {
                 current: 1,
                 1: {
+                    cloudType: 'cloud',
                     bullet: {
                         size: 4,
                         hitRadius: 2
@@ -70,7 +71,8 @@ define(function () {
             boss: {},
             enemies: [],
             explosions: [],
-            bullets: []
+            bullets: [],
+            clouds: []
         },
 
         init: function () {
@@ -514,6 +516,14 @@ define(function () {
                 startingTick: this._data.tick,
                 posX: posX,
                 posY: posY
+            });
+        },
+
+        _addCloud: function (posX, posY, size) {
+            this._data.clouds.push({
+                posX: posX,
+                posY: posY,
+                size: size
             });
         },
 
