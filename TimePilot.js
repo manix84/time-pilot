@@ -33,7 +33,7 @@ define(function () {
             container: {
                 height: 0,
                 width: 0,
-                spawningBorder: 100
+                despawnBorder: 100
             },
             player: {
                 isFiring: false,
@@ -211,18 +211,18 @@ define(function () {
             switch (side) {
             case 0: // TOP
                 data.posX = (Math.floor(Math.random() * this._data.container.width) - this._data.player.posX);
-                data.posY = -((this._data.container.spawningBorder / 2) - this._data.player.posY);
+                data.posY = -((this._data.container.despawnBorder / 2) - this._data.player.posY);
                 break;
             case 1: // RIGHT
-                data.posX = ((this._data.container.width + (this._data.container.spawningBorder / 2)) - this._data.player.posX);
+                data.posX = ((this._data.container.width + (this._data.container.despawnBorder / 2)) - this._data.player.posX);
                 data.posY = (Math.floor(Math.random() * this._data.container.height) - this._data.player.posY);
                 break;
             case 2: // BOTTOM
                 data.posX = (Math.floor(Math.random() * this._data.container.width) - this._data.player.posX);
-                data.posY = ((this._data.container.height + (this._data.container.spawningBorder / 2)) - this._data.player.posY);
+                data.posY = ((this._data.container.height + (this._data.container.despawnBorder / 2)) - this._data.player.posY);
                 break;
             case 3: // LEFT
-                data.posX = -((this._data.container.spawningBorder / 2) - this._data.player.posX);
+                data.posX = -((this._data.container.despawnBorder / 2) - this._data.player.posX);
                 data.posY = (Math.floor(Math.random() * this._data.container.height) - this._data.player.posY);
                 break;
             }
