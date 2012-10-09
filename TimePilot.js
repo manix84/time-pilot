@@ -93,6 +93,7 @@ define(function () {
                 that._canvas.width = that._canvas.width;
                 that._canvas.style.background = that._data.level[that._data.level.current].bgColor;
 
+                that._renderClouds();
                 that._renderBullets();
                 that._renderEnemies();
                 that._renderPlayer();
@@ -201,11 +202,13 @@ define(function () {
         },
 
         _spawningArena: function (side) {
+            side = side || Math.floor(Math.random() * 4);
             var data = {
-                posX: 0,
-                posY: 0
-            };
-            switch (Math.floor(Math.random() * 4)) {
+                    posX: 0,
+                    posY: 0
+                };
+
+            switch (side) {
             case 0: // TOP
                 data.posX = (Math.floor(Math.random() * this._data.container.width) - this._data.player.posX);
                 data.posY = -((this._data.container.spawningBorder / 2) - this._data.player.posY);
@@ -490,10 +493,48 @@ define(function () {
             }
         },
 
+        _renderClouds: function () {
+            var i = 0,
+                l = this._data.level.current,
+                // s = this._data.level[l].player.speed,
+                s = 0,
+                h = (this._data.player.heading - 180),
+                spriteData = new Image(),
+                cloudType = this._data.level[l].cloudType,
+                cloudData = {
+                    1: { width: 32, height: 18, speed: 1 },
+                    2: { width: 60, height: 28, speed: 0.5 },
+                    3: { width: 92, height: 32, speed: 0 }
+                },
+                cloud;
+
+            h += (h < 0) ? 360 : 0;
+            // Per-Enemy Data
+            spriteData.frameX = 0;
+            spriteData.frameY = 0;
+
+            for (; i < this._data.clouds.length; i++) {
+                cloud = this._data.clouds[i];
+                s = cloudData[cloud.size].speed;
+
+                this._data.clouds[i].posX += parseFloat((Math.sin(h * (Math.PI / 180)) * s).toFixed(5));
+                this._data.clouds[i].posY -= parseFloat((Math.cos(h * (Math.PI / 180)) * s).toFixed(5));
+
+                spriteData.src = this._options.baseUrl + "sprites/" + cloudType + cloud.size + ".png";
+                spriteData.frameWidth = cloudData[cloud.size].width;
+                spriteData.frameHeight = cloudData[cloud.size].height;
+
+                spriteData.posX = (cloud.posX - this._data.player.posX - (spriteData.frameWidth / 2));
+                spriteData.posY = (cloud.posY - this._data.player.posY - (spriteData.frameHeight / 2));
+
+                this._renderSprite(spriteData);
+            }
+
+        },
+
         _renderMissles: function () {},
         _renderBombs: function () {},
         _renderMenu: function () {},
-        _renderClouds: function () {},
 
         _addEnemy: function (posX, posY, heading) {
             var l = this._data.level.current,
@@ -523,7 +564,7 @@ define(function () {
             this._data.clouds.push({
                 posX: posX,
                 posY: posY,
-                size: size
+                size: size || Math.ceil(Math.random() * 3)
             });
         },
 
@@ -531,13 +572,18 @@ define(function () {
             var data = {},
                 angle = 0;
             if ((this._data.tick % 50 === 0) && this._data.enemies.length < 10)  {
-                data = this._spawningArena(Math.floor(Math.random() * 4));
+                // Enemies
+                data = this._spawningArena();
                 angle = this._findAngle({posX: data.posX, posY: data.posY}, {
                     posX: this._data.player.posX,
                     posY: this._data.player.posY
                 });
-
                 this._addEnemy(data.posX, data.posY, angle);
+            }
+            if (this._data.tick % 30 === 0) {
+                // Clouds
+                data = this._spawningArena();
+                this._addCloud(data.posX, data.posY);
             }
         },
 
