@@ -212,20 +212,20 @@ define(function () {
 
             switch (side) {
             case 0: // TOP
-                data.posX = (Math.floor(Math.random() * this._data.container.width) - this._data.player.posX);
-                data.posY = -((this._data.container.despawnBorder / 2) - this._data.player.posY);
+                data.posX = (Math.floor(Math.random() * this._data.container.width) + this._data.player.posX);
+                data.posY = (-(this._data.container.despawnBorder / 2) + this._data.player.posY);
                 break;
             case 1: // RIGHT
-                data.posX = ((this._data.container.width + (this._data.container.despawnBorder / 2)) - this._data.player.posX);
-                data.posY = (Math.floor(Math.random() * this._data.container.height) - this._data.player.posY);
+                data.posX = ((this._data.container.width + (this._data.container.despawnBorder / 2)) + this._data.player.posX);
+                data.posY = (Math.floor(Math.random() * this._data.container.height) + this._data.player.posY);
                 break;
             case 2: // BOTTOM
-                data.posX = (Math.floor(Math.random() * this._data.container.width) - this._data.player.posX);
-                data.posY = ((this._data.container.height + (this._data.container.despawnBorder / 2)) - this._data.player.posY);
+                data.posX = (Math.floor(Math.random() * this._data.container.width) + this._data.player.posX);
+                data.posY = ((this._data.container.height + (this._data.container.despawnBorder / 2)) + this._data.player.posY);
                 break;
             case 3: // LEFT
-                data.posX = -((this._data.container.despawnBorder / 2) - this._data.player.posX);
-                data.posY = (Math.floor(Math.random() * this._data.container.height) - this._data.player.posY);
+                data.posX = (-(this._data.container.despawnBorder / 2) + this._data.player.posX);
+                data.posY = (Math.floor(Math.random() * this._data.container.height) + this._data.player.posY);
                 break;
             }
             return data;
@@ -598,7 +598,7 @@ define(function () {
             if ((this._data.tick % 50 === 0) && this._data.enemies.length < 10)  {
                 // Enemies
                 data = this._spawningArena();
-                angle = this._findAngle({posX: data.posX, posY: data.posY}, {
+                angle = this._findAngle({ posX: data.posX, posY: data.posY }, {
                     posX: this._data.player.posX,
                     posY: this._data.player.posY
                 });
