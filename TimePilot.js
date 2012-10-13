@@ -244,15 +244,19 @@ define(function () {
             return (dx * dx + dy * dy <= dist * dist);
         },
 
-        _renderText: function (message, posX, posY, size, color) {
+        _renderText: function (message, posX, posY, size, color, shadowColor) {
             posX = posX || 0;
             posY = posY || 0;
             size = size || 12;
             color = color || '#fff';
+            shadowColor = shadowColor || '#000';
 
-            this._canvasContext.fillStyle = color;
             this._canvasContext.font = size + 'px theFont';
             this._canvasContext.textBaseline = 'top';
+
+            this._canvasContext.fillStyle = shadowColor;
+            this._canvasContext.fillText(message, (posX + 2), (posY + 2));
+            this._canvasContext.fillStyle = color;
             this._canvasContext.fillText(message, posX, posY);
         },
 
