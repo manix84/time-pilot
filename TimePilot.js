@@ -203,31 +203,18 @@ define(function () {
             return currentAngle;
         },
 
-        _spawningArena: function (side) {
-            side = side || Math.floor(Math.random() * 4);
-            var data = {
-                    posX: 0,
-                    posY: 0
+        _spawningArena: function (sectorSize) {
+            sectorSize = sectorSize || 90;
+            var h = (this._data.player.heading - (sectorSize / 2)) + Math.floor(Math.random() * sectorSize),
+                radius = (this._data.container.width / 2) + (this._data.container.despawnRadius / 2),
+                data = {
+                    posX: this._data.player.posX + (this._data.container.width / 2),
+                    posY: (this._data.container.height / 2) + this._data.player.posY
                 };
 
-            switch (side) {
-            case 0: // TOP
-                data.posX = (Math.floor(Math.random() * this._data.container.width) + this._data.player.posX);
-                data.posY = (-(this._data.container.despawnBorder / 2) + this._data.player.posY);
-                break;
-            case 1: // RIGHT
-                data.posX = ((this._data.container.width + (this._data.container.despawnBorder / 2)) + this._data.player.posX);
-                data.posY = (Math.floor(Math.random() * this._data.container.height) + this._data.player.posY);
-                break;
-            case 2: // BOTTOM
-                data.posX = (Math.floor(Math.random() * this._data.container.width) + this._data.player.posX);
-                data.posY = ((this._data.container.height + (this._data.container.despawnBorder / 2)) + this._data.player.posY);
-                break;
-            case 3: // LEFT
-                data.posX = (-(this._data.container.despawnBorder / 2) + this._data.player.posX);
-                data.posY = (Math.floor(Math.random() * this._data.container.height) + this._data.player.posY);
-                break;
-            }
+            data.posX += parseFloat((Math.sin(h * (Math.PI / 180)) * radius).toFixed(5));
+            data.posY -= parseFloat((Math.cos(h * (Math.PI / 180)) * radius).toFixed(5));
+
             return data;
         },
 
@@ -593,21 +580,21 @@ define(function () {
         },
 
         _populateArena: function () {
-            var data = {},
+            var spawnAt = {},
                 angle = 0;
             if ((this._data.tick % 50 === 0) && this._data.enemies.length < 10)  {
                 // Enemies
-                data = this._spawningArena();
-                angle = this._findAngle({ posX: data.posX, posY: data.posY }, {
+                spawnAt = this._spawningArena();
+                angle = this._findAngle({ posX: spawnAt.posX, posY: spawnAt.posY }, {
                     posX: this._data.player.posX,
                     posY: this._data.player.posY
                 });
-                this._addEnemy(data.posX, data.posY, angle);
+                this._addEnemy(spawnAt.posX, spawnAt.posY, angle);
             }
             if (this._data.clouds.length < 20) {
                 // Clouds
-                data = this._spawningArena();
-                this._addCloud(data.posX, data.posY);
+                spawnAt = this._spawningArena();
+                this._addCloud(spawnAt.posX, spawnAt.posY);
             }
         },
 
