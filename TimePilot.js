@@ -33,6 +33,7 @@ define(function () {
             container: {
                 height: 0,
                 width: 0,
+                radius: 0, // Dynamic, and used to calculate the spawn and despawn arenas
                 despawnRadius: 0
             },
             player: {
@@ -201,6 +202,10 @@ define(function () {
             currentAngle += currentAngle >= 360 ? -360 : (currentAngle < 0 ? 360 : 0);
 
             return currentAngle;
+        },
+
+        _findContainerRadius: function () {
+            return Math.abs((this._data.container.height / 2) + (this._data.container.width / 2));
         },
 
         _spawningArena: function (sectorSize) {
