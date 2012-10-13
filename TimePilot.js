@@ -218,6 +218,11 @@ define(function () {
             return data;
         },
 
+        _detectDespawn: function (targetA, targetB) {
+            var distance = Math.abs((targetA.posX - targetB.posX) + (targetA.posY - targetB.posY));
+            return (distance > this._data.container.despawnRadius);
+        },
+
         _findAngle: function (targetA, targetB) {
             var angle = Math.atan2(
                 (targetA.posX - targetB.posX),
