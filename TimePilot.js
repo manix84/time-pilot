@@ -33,7 +33,7 @@ define(function () {
             container: {
                 height: 0,
                 width: 0,
-                despawnBorder: 100
+                despawnRadius: 0
             },
             player: {
                 isFiring: false,
@@ -441,10 +441,10 @@ define(function () {
                 }
                 this._renderSprite(spriteData);
 
-                if (spriteData.posX > (this._data.container.width + this._data.container.despawnBorder) ||
-                    spriteData.posX < -this._data.container.despawnBorder ||
-                    spriteData.posY > (this._data.container.height + this._data.container.despawnBorder) ||
-                    spriteData.posY < -this._data.container.despawnBorder) {
+                if (spriteData.posX > (this._data.container.width + this._data.container.despawnRadius) ||
+                    spriteData.posX < -this._data.container.despawnRadius ||
+                    spriteData.posY > (this._data.container.height + this._data.container.despawnRadius) ||
+                    spriteData.posY < -this._data.container.despawnRadius) {
                     this._data.enemies.splice(i, 1);
                 }
             }
@@ -522,10 +522,10 @@ define(function () {
 
                 this._renderSprite(spriteData);
 
-                if (spriteData.posX > (this._data.container.width + this._data.container.despawnBorder) ||
-                    spriteData.posX < -this._data.container.despawnBorder ||
-                    spriteData.posY > (this._data.container.height + this._data.container.despawnBorder) ||
-                    spriteData.posY < -this._data.container.despawnBorder) {
+                if (spriteData.posX > (this._data.container.width + this._data.container.despawnRadius) ||
+                    spriteData.posX < -this._data.container.despawnRadius ||
+                    spriteData.posY > (this._data.container.height + this._data.container.despawnRadius) ||
+                    spriteData.posY < -this._data.container.despawnRadius) {
                     this._data.clouds.splice(i, 1);
                 }
             }
