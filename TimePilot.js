@@ -25,7 +25,9 @@ define(function () {
 
         _live: {},
 
+
         _data: {
+            debug: true,
             tick: 0,
             theTicker: null,
             playerDirection: false,
@@ -33,7 +35,6 @@ define(function () {
             container: {
                 height: 0,
                 width: 0,
-                radius: 0, // Dynamic, and used to calculate the spawn and despawn arenas
                 despawnRadius: 0
             },
             player: {
@@ -68,12 +69,15 @@ define(function () {
                     bgColor: '#007'
                 }
             },
-
             boss: {},
             enemies: [],
             explosions: [],
             bullets: [],
-            clouds: []
+            clouds: [],
+
+            _DEBUG: {
+                trackDots: []
+            }
         },
 
         init: function () {
@@ -105,9 +109,12 @@ define(function () {
                 that._populateArena(); // NEEDS RENAMING
 
                 that._renderText(that._data.score, 20, 10, 30);
-
-                that._renderText(that._data.player.posX.toFixed(2) + ' x ' + that._data.player.posY.toFixed(2), 20, 40, 15);
-                that._renderText(that._data.player.heading + '°', 20, 55, 15);
+                if (that._data.debug) {
+                    that._DEBUG_renderDots();
+                    that._renderText(that._data.player.posX.toFixed(2) + ' x ' + that._data.player.posY.toFixed(2), 20, 40, 15);
+                    that._renderText(that._data.player.heading + '°', 20, 55, 15);
+                    that._renderText('Ticks: ' + that._data.tick, 20, 70, 15);
+                }
             }, (1000 / 60));
         },
 
@@ -204,19 +211,16 @@ define(function () {
             return currentAngle;
         },
 
-        _findContainerRadius: function () {
-            return Math.abs((this._data.container.height / 2) + (this._data.container.width / 2));
-        },
-
         _spawningArena: function (sectorSize) {
             sectorSize = sectorSize || 90;
             var h = (this._data.player.heading - (sectorSize / 2)) + Math.floor(Math.random() * sectorSize),
-                radius = (this._data.container.width / 2) + (this._data.container.despawnRadius / 2),
+                radius = Math.abs(
+                        (this._data.container.height / 2) + (this._data.container.width / 2)
+                    ) + (this._data.container.despawnRadius / 2),
                 data = {
                     posX: this._data.player.posX + (this._data.container.width / 2),
                     posY: (this._data.container.height / 2) + this._data.player.posY
                 };
-
             data.posX += parseFloat((Math.sin(h * (Math.PI / 180)) * radius).toFixed(5));
             data.posY -= parseFloat((Math.cos(h * (Math.PI / 180)) * radius).toFixed(5));
 
@@ -224,8 +228,10 @@ define(function () {
         },
 
         _detectDespawn: function (targetA, targetB) {
-            var distance = Math.abs((targetA.posX - targetB.posX) + (targetA.posY - targetB.posY));
-            return (distance > this._data.container.despawnRadius);
+            var radius = Math.abs(
+                    (this._data.container.height / 2) + (this._data.container.width / 2)
+                ) + this._data.container.despawnRadius;
+            return (radius > this._data.container.despawnRadius);
         },
 
         _findAngle: function (targetA, targetB) {
@@ -598,17 +604,50 @@ define(function () {
                 angle = 0;
             if ((this._data.tick % 50 === 0) && this._data.enemies.length < 10)  {
                 // Enemies
-                spawnAt = this._spawningArena();
+                spawnAt = this._spawningArena(180);
                 angle = this._findAngle({ posX: spawnAt.posX, posY: spawnAt.posY }, {
                     posX: this._data.player.posX,
                     posY: this._data.player.posY
                 });
                 this._addEnemy(spawnAt.posX, spawnAt.posY, angle);
+
+                this._DEBUG_addDot(spawnAt.posX, spawnAt.posY, '#F0F');
             }
             if (this._data.clouds.length < 20) {
                 // Clouds
-                spawnAt = this._spawningArena();
+                spawnAt = this._spawningArena(90);
                 this._addCloud(spawnAt.posX, spawnAt.posY);
+
+                this._DEBUG_addDot(spawnAt.posX, spawnAt.posY, '#0FF');
+            }
+        },
+
+        _DEBUG_addDot: function (posX, posY, color) {
+            this._data._DEBUG.trackDots.push({
+                color: color || '#F0F',
+                posX: (posX - this._data.player.posX),
+                posY: (posY - this._data.player.posY)
+            });
+            if (this._data._DEBUG.trackDots.length > 50) {
+                this._data._DEBUG.trackDots.splice(0, 1);
+            }
+        },
+
+        _DEBUG_renderDots: function () {
+            var i = 0,
+                dot;
+
+            for (; i < this._data._DEBUG.trackDots.length; i++) {
+                dot = this._data._DEBUG.trackDots[i];
+
+                // this._canvasContext.fillStyle = dot.color || '#F0F';
+                // this._canvasContext.fillRect(dot.posX, dot.posY, 5, 5);
+
+                this._canvasContext.lineWidth = 1;
+                this._canvasContext.strokeStyle = dot.color || '#F0F';
+                this._canvasContext.moveTo((this._data.container.width / 2), (this._data.container.height / 2));
+                this._canvasContext.lineTo(dot.posX, dot.posY);
+                this._canvasContext.stroke();
             }
         },
 
