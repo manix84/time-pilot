@@ -90,9 +90,9 @@ define("TimePilot", [
 
             this._data.theTicker = new Ticker(function () {
                 that._data.tick++;
-                if (that._data.tick === 50000) {
-                    window.clearInterval(that._data.theTicker);
-                    window.warn("Stopping: 50,000 ticks");
+                if (that._data.tick % 50000 === 0) {
+                    that.pauseGame();
+                    window.console.warn("Stopping: 50,000 ticks");
                 }
                 that._canvas.width = that._canvas.width;
                 that._canvas.style.background = that._data.level[that._data.level.current].bgColor;
@@ -115,9 +115,23 @@ define("TimePilot", [
                 );
                 that._renderText(that._data.player.heading + "°", 20, 55, 15);
             }, (1000 / 60));
-            this._data.theTicker.start();
+            this.playGame();
         },
 
+        pauseGame: function () {
+            if (this._data.theTicker.getState()) {
+                window.console.info("Pausing");
+                this._data.theTicker.stop();
+                this._renderText("Paused", 20, 70, 30);
+            }
+        },
+
+        playGame: function () {
+            if (!this._data.theTicker.getState()) {
+                window.console.info("Continuing");
+                this._data.theTicker.start();
+            }
+        },
 
         _addListener: function (element, eventName, callback) {
             if (typeof element.addEventListener === "function") {
@@ -157,6 +171,7 @@ define("TimePilot", [
             this._keyboardLock.setAttribute("type", "text");
             this._addListener(this._canvas, "click", function () {
                 that._keyboardLock.focus();
+                that.playGame();
             });
             this._addListener(this._keyboardLock, "keydown", function (event) {
                 switch (event.keyCode) {
@@ -174,7 +189,7 @@ define("TimePilot", [
                     that._data.player.isFiring = true;
                     break;
                 case 27: // ESC
-                    that._data.theTicker.stop();
+                    that.pauseGame();
                     window.console.info("Stopping at users request.");
                     break;
                 }
