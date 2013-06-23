@@ -1,4 +1,6 @@
-define(function () {
+define("TimePilot", [
+    "Ticker"
+], function (Ticker) {
 
     var TimePilot = function (element, options) {
         this._container = element;
@@ -76,21 +78,21 @@ define(function () {
         },
 
         init: function () {
-            var that = this,
-                ticker;
+            var that = this;
 
             this._elementContruction();
             this._keyboardLock.focus();
 
             this._prepopulateArena();
 
-            this._DEBUG_drawGrid();
+            // this._debug.drawGrid();
+            //
 
-            this._data.theTicker = window.setInterval(function () {
+            this._data.theTicker = new Ticker(function () {
                 that._data.tick++;
                 if (that._data.tick === 50000) {
                     window.clearInterval(that._data.theTicker);
-                    window.alert("Stopping: 50,000 ticks");
+                    window.warn("Stopping: 50,000 ticks");
                 }
                 that._canvas.width = that._canvas.width;
                 that._canvas.style.background = that._data.level[that._data.level.current].bgColor;
@@ -113,7 +115,9 @@ define(function () {
                 );
                 that._renderText(that._data.player.heading + "°", 20, 55, 15);
             }, (1000 / 60));
+            this._data.theTicker.start();
         },
+
 
         _addListener: function (element, eventName, callback) {
             if (typeof element.addEventListener === "function") {
@@ -170,8 +174,8 @@ define(function () {
                     that._data.player.isFiring = true;
                     break;
                 case 27: // ESC
-                    window.clearInterval(that._data.theTicker);
-                    window.alert("Stopping at users request.");
+                    that._data.theTicker.stop();
+                    window.console.info("Stopping at users request.");
                     break;
                 }
             });
@@ -633,23 +637,25 @@ define(function () {
             }
         },
 
-        _DEBUG_drawGrid: function () {
-            var x = 0,
-                h = 20,
-                w = 20;
+        _debug: {
+            drawGrid: function () {
+                var x = 0,
+                    h = 20,
+                    w = 20;
 
-            for (; x <= this._data.container.width; x += w) {
-                this._canvasContext.moveTo(0.5 + x, 0);
-                this._canvasContext.lineTo(0.5 + x, this._data.container.height);
+                for (; x <= this._data.container.width; x += w) {
+                    this._canvasContext.moveTo(0.5 + x, 0);
+                    this._canvasContext.lineTo(0.5 + x, this._data.container.height);
+                }
+
+                for (x = 0; x <= this._data.container.height; x += h) {
+                    this._canvasContext.moveTo(0, 0.5 + x);
+                    this._canvasContext.lineTo(this._data.container.width, 0.5 + x);
+                }
+
+                this._canvasContext.strokeStyle = "#AAA";
+                this._canvasContext.stroke();
             }
-
-            for (x = 0; x <= this._data.container.height; x += h) {
-                this._canvasContext.moveTo(0, 0.5 + x);
-                this._canvasContext.lineTo(this._data.container.width, 0.5 + x);
-            }
-
-            this._canvasContext.strokeStyle = "#AAA";
-            this._canvasContext.stroke();
         }
     };
 
