@@ -83,29 +83,38 @@ define("TimePilot", [
             this._elementContruction();
             this._keyboardLock.focus();
 
-            this._prepopulateArena();
+            this._addRandomClouds();
 
-            // this._debug.drawGrid();
-            //
+            this._data.theTicker = new Ticker(1000 / 60);
 
-            this._data.theTicker = new Ticker(function () {
-                if (that._data.theTicker.getTicks() % 50000 === 0) {
-                    that.pauseGame();
-                    window.console.warn("Stopping: 50,000 ticks");
-                }
+            this._data.theTicker.addSchedule(function () {
                 that._canvas.width = that._canvas.width;
                 that._canvas.style.background = that._data.level[that._data.level.current].bgColor;
+            }, 1);
 
+            this._data.theTicker.addSchedule(function () {
+                that.pauseGame();
+                window.console.warn("Stopping: 50,000 ticks");
+            }, 50000);
+
+            this._data.theTicker.addSchedule(function () {
                 that._renderClouds();
+            });
+            this._data.theTicker.addSchedule(function () {
                 that._renderBullets();
+            });
+            this._data.theTicker.addSchedule(function () {
                 that._renderEnemies();
+            });
+            this._data.theTicker.addSchedule(function () {
                 that._renderPlayer();
+            });
+            this._data.theTicker.addSchedule(function () {
                 that._renderExplosions();
-
+            });
+            this._data.theTicker.addSchedule(function () {
                 that._populateArena(); // NEEDS RENAMING
-
                 that._renderText(that._data.score, 20, 10, 30);
-
                 that._renderText(
                     that._data.player.posX.toFixed(2) +
                     " x " +
@@ -113,7 +122,7 @@ define("TimePilot", [
                     20, 40, 15
                 );
                 that._renderText(that._data.player.heading + "°", 20, 55, 15);
-            }, (1000 / 60));
+            });
             this.playGame();
         },
 
@@ -308,7 +317,7 @@ define("TimePilot", [
             );
         },
 
-        _renderExplosions: function () {
+        _renderExplosions: function (ticks) {
             var spriteData = new Image(),
                 i = 0,
                 explosion;
@@ -318,7 +327,7 @@ define("TimePilot", [
                 spriteData.src = this._options.baseUrl + "sprites/enemy_explosion.png";
                 spriteData.frameWidth = 32;
                 spriteData.frameHeight = 32;
-                spriteData.frameX = (Math.floor((this._data.theTicker.getTicks() - explosion.startingTick) / 5) % 5);
+                spriteData.frameX = (Math.floor((ticks - explosion.startingTick) / 5) % 5);
                 spriteData.frameY = 0;
                 spriteData.posX = (explosion.posX - this._data.player.posX - (spriteData.frameWidth / 2));
                 spriteData.posY = (explosion.posY - this._data.player.posY - (spriteData.frameHeight / 2));
@@ -616,7 +625,7 @@ define("TimePilot", [
             });
         },
 
-        _prepopulateArena: function () {
+        _addRandomClouds: function () {
             var i = 0;
             for (; i < 20; i++) {
                 // Clouds
