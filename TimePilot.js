@@ -1,4 +1,6 @@
-define(function () {
+define("TimePilot", [
+    "Ticker"
+], function (Ticker) {
 
     var TimePilot = function (element, options) {
         this._container = element;
@@ -20,7 +22,7 @@ define(function () {
     TimePilot.prototype = {
 
         _options: {
-            baseUrl: ''
+            baseUrl: ""
         },
 
         _live: {},
@@ -46,7 +48,7 @@ define(function () {
             level: {
                 current: 1,
                 1: {
-                    cloudType: 'cloud',
+                    cloudType: "cloud",
                     bullet: {
                         size: 4,
                         hitRadius: 2
@@ -64,7 +66,7 @@ define(function () {
                         width: 32,
                         hitRadius: 8
                     },
-                    bgColor: '#007'
+                    bgColor: "#007"
                 }
             },
 
@@ -76,21 +78,21 @@ define(function () {
         },
 
         init: function () {
-            var that = this,
-                ticker;
+            var that = this;
 
             this._elementContruction();
             this._keyboardLock.focus();
 
             this._prepopulateArena();
 
-            this._DEBUG_drawGrid();
+            // this._debug.drawGrid();
+            //
 
-            this._data.theTicker = window.setInterval(function () {
+            this._data.theTicker = new Ticker(function () {
                 that._data.tick++;
-                if (that._data.tick === 50000) {
-                    window.clearInterval(that._data.theTicker);
-                    window.alert('Stopping: 50,000 ticks');
+                if (that._data.tick % 50000 === 0) {
+                    that.pauseGame();
+                    window.console.warn("Stopping: 50,000 ticks");
                 }
                 that._canvas.width = that._canvas.width;
                 that._canvas.style.background = that._data.level[that._data.level.current].bgColor;
@@ -105,40 +107,68 @@ define(function () {
 
                 that._renderText(that._data.score, 20, 10, 30);
 
-                that._renderText(that._data.player.posX.toFixed(2) + ' x ' + that._data.player.posY.toFixed(2), 20, 40, 15);
-                that._renderText(that._data.player.heading + '°', 20, 55, 15);
+                that._renderText(
+                    that._data.player.posX.toFixed(2) +
+                    " x " +
+                    that._data.player.posY.toFixed(2),
+                    20, 40, 15
+                );
+                that._renderText(that._data.player.heading + "°", 20, 55, 15);
             }, (1000 / 60));
+            this.playGame();
+        },
+
+        pauseGame: function () {
+            if (this._data.theTicker.getState()) {
+                window.console.info("Pausing");
+                this._data.theTicker.stop();
+                this._renderText("Paused", 20, 70, 30);
+            }
+        },
+
+        playGame: function () {
+            if (!this._data.theTicker.getState()) {
+                window.console.info("Continuing");
+                this._data.theTicker.start();
+            }
         },
 
         _addListener: function (element, eventName, callback) {
-            if (typeof element.addEventListener === 'function') {
+            if (typeof element.addEventListener === "function") {
                 element.addEventListener(eventName, callback, false);
             } else if (!!element.attachEvent) {
-                element.attachEvent('on' + eventName, callback);
+                element.attachEvent("on" + eventName, callback);
             } else {
-                element['on' + eventName] = callback;
+                element["on" + eventName] = callback;
             }
         },
 
         _elementContruction: function () {
             var that = this;
-            this._canvas = document.createElement('canvas');
-            this._canvas.setAttribute('width', this._data.container.width);
-            this._canvas.setAttribute('height', this._data.container.height);
+            this._canvas = document.createElement("canvas");
+            this._canvas.setAttribute("width", this._data.container.width);
+            this._canvas.setAttribute("height", this._data.container.height);
             this._canvas.innerHTML =
                 "<div style='padding:3px;background:#CCC'>" +
-                    "<img src='" + this._options.baseUrl + "images/supportError.png' style='position:relative;margin:7px' />" +
+                    "<img src='" + this._options.baseUrl + "images/supportError.png'" +
+                        "style='position:relative;margin:7px' />" +
                     "<p>Looks like your browser doesn't support the HTML5 canvas.</p>" +
-                    "<p>Please consider updating to a more modern browser such as <a href=''>Google Chrome</a> or <a href=''>Mozilla FireFox</a>.</p>" +
+                    "<p>Please consider updating to a more modern browser such as <a href=''>Google Chrome</a> or <a" +
+                        " href=''>Mozilla FireFox</a>.</p>" +
                 "</div>";
 
-            this._keyboardLock = document.createElement('input');
-            this._keyboardLock.setAttribute('style', 'position:absolute;border:0;top:-9999px;left:-9999px;width:0;height0;resize:none;outline:0');
-            this._keyboardLock.setAttribute('type', 'text');
-            this._addListener(this._canvas, 'click', function () {
+            this._keyboardLock = document.createElement("input");
+            this._keyboardLock.setAttribute("style",
+                "position:absolute;" +
+                "top:-999px;" +
+                "left:-999px;"
+            );
+            this._keyboardLock.setAttribute("type", "text");
+            this._addListener(this._canvas, "click", function () {
                 that._keyboardLock.focus();
+                that.playGame();
             });
-            this._addListener(this._keyboardLock, 'keydown', function (event) {
+            this._addListener(this._keyboardLock, "keydown", function (event) {
                 switch (event.keyCode) {
                 case 37: // LEFT
                 case 38: // UP
@@ -154,12 +184,12 @@ define(function () {
                     that._data.player.isFiring = true;
                     break;
                 case 27: // ESC
-                    window.clearInterval(that._data.theTicker);
-                    alert('Stopping at users request.');
+                    that.pauseGame();
+                    window.console.info("Stopping at users request.");
                     break;
                 }
             });
-            this._addListener(this._keyboardLock, 'keyup', function (event) {
+            this._addListener(this._keyboardLock, "keyup", function (event) {
                 switch (event.keyCode) {
                 case 37: // LEFT
                 case 38: // UP
@@ -174,17 +204,17 @@ define(function () {
                 }
             });
 
-            this._styles = document.createElement('style');
+            this._styles = document.createElement("style");
             this._styles.innerText = "@font-face {" +
                 "font-family: 'theFont';" +
                 "src: url('" + this._options.baseUrl + "fonts/font.ttf');" +
-            "}​";
+            " }";
 
             this._container.appendChild(this._styles);
             this._container.appendChild(this._canvas);
             this._container.appendChild(this._keyboardLock);
 
-            this._canvasContext = this._canvas.getContext('2d');
+            this._canvasContext = this._canvas.getContext("2d");
         },
 
         _rotateTo: function (destinationAngle, currentAngle, stepSize) {
@@ -216,12 +246,18 @@ define(function () {
                 data.posY = (-(this._data.container.despawnBorder / 2) + this._data.player.posY);
                 break;
             case 1: // RIGHT
-                data.posX = ((this._data.container.width + (this._data.container.despawnBorder / 2)) + this._data.player.posX);
+                data.posX = (
+                    (this._data.container.width + (this._data.container.despawnBorder / 2)) +
+                    this._data.player.posX
+                );
                 data.posY = (Math.floor(Math.random() * this._data.container.height) + this._data.player.posY);
                 break;
             case 2: // BOTTOM
                 data.posX = (Math.floor(Math.random() * this._data.container.width) + this._data.player.posX);
-                data.posY = ((this._data.container.height + (this._data.container.despawnBorder / 2)) + this._data.player.posY);
+                data.posY = (
+                    (this._data.container.height + (this._data.container.despawnBorder / 2)) +
+                    this._data.player.posY
+                );
                 break;
             case 3: // LEFT
                 data.posX = (-(this._data.container.despawnBorder / 2) + this._data.player.posX);
@@ -251,11 +287,11 @@ define(function () {
             posX = posX || 0;
             posY = posY || 0;
             size = size || 12;
-            color = color || '#fff';
+            color = color || "#fff";
 
             this._canvasContext.fillStyle = color;
-            this._canvasContext.font = size + 'px theFont';
-            this._canvasContext.textBaseline = 'top';
+            this._canvasContext.font = size + "px theFont";
+            this._canvasContext.textBaseline = "top";
             this._canvasContext.fillText(message, posX, posY);
         },
 
@@ -303,7 +339,7 @@ define(function () {
                 l = this._data.level.current,
                 s = this._data.level[l].player.speed;
 
-            // These tick delays don't work... They cause massive delay, to extreams of no movement/firing.
+            // These tick delays don"t work... They cause massive delay, to extreams of no movement/firing.
             // @TODO: Investigate a better method of slowing rotation and weapons fire.
             if ((t - this._data.player.lastMovedTick) > 4) {
                 this._data.player.lastMovedTick = t;
@@ -431,7 +467,7 @@ define(function () {
                     posY: this._data.player.posX + (this._data.level[l].player.height / 2),
                     radius: this._data.level[l].player.hitRadius
                 })) {
-                    console.warn('GAME OVER ', this._data.score);
+                    window.console.warn("GAME OVER ", this._data.score);
                 }
 
                 for (j = 0; j < this._data.bullets.length; j++) {
@@ -566,7 +602,7 @@ define(function () {
             isBoss = isBoss || false;
 
             this._data.explosions.push({
-                isBoss: (isBoss ? 'boss' : 'enemy'),
+                isBoss: (isBoss ? "boss" : "enemy"),
                 startingTick: this._data.tick,
                 posX: posX,
                 posY: posY
@@ -611,23 +647,25 @@ define(function () {
             }
         },
 
-        _DEBUG_drawGrid: function () {
-            var x = 0,
-                h = 20,
-                w = 20;
+        _debug: {
+            drawGrid: function () {
+                var x = 0,
+                    h = 20,
+                    w = 20;
 
-            for (; x <= this._data.container.width; x += w) {
-                this._canvasContext.moveTo(0.5 + x, 0);
-                this._canvasContext.lineTo(0.5 + x, this._data.container.height);
+                for (; x <= this._data.container.width; x += w) {
+                    this._canvasContext.moveTo(0.5 + x, 0);
+                    this._canvasContext.lineTo(0.5 + x, this._data.container.height);
+                }
+
+                for (x = 0; x <= this._data.container.height; x += h) {
+                    this._canvasContext.moveTo(0, 0.5 + x);
+                    this._canvasContext.lineTo(this._data.container.width, 0.5 + x);
+                }
+
+                this._canvasContext.strokeStyle = "#AAA";
+                this._canvasContext.stroke();
             }
-
-            for (x = 0; x <= this._data.container.height; x += h) {
-                this._canvasContext.moveTo(0, 0.5 + x);
-                this._canvasContext.lineTo(this._data.container.width, 0.5 + x);
-            }
-
-            this._canvasContext.strokeStyle = "#AAA";
-            this._canvasContext.stroke();
         }
     };
 
