@@ -160,13 +160,8 @@ define("TimePilot", [
             this._keyboardLock = document.createElement("input");
             this._keyboardLock.setAttribute("style",
                 "position:absolute;" +
-                "border:0;" +
-                "top:-9999px;" +
-                "left:-9999px;" +
-                "width:0;" +
-                "height0;" +
-                "resize:none;" +
-                "outline:0"
+                "top:-999px;" +
+                "left:-999px;"
             );
             this._keyboardLock.setAttribute("type", "text");
             this._addListener(this._canvas, "click", function () {
