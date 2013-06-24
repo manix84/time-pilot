@@ -89,8 +89,7 @@ define("TimePilot", [
             //
 
             this._data.theTicker = new Ticker(function () {
-                that._data.tick++;
-                if (that._data.tick % 50000 === 0) {
+                if (that._data.theTicker.getTicks() % 50000 === 0) {
                     that.pauseGame();
                     window.console.warn("Stopping: 50,000 ticks");
                 }
@@ -319,7 +318,7 @@ define("TimePilot", [
                 spriteData.src = this._options.baseUrl + "sprites/enemy_explosion.png";
                 spriteData.frameWidth = 32;
                 spriteData.frameHeight = 32;
-                spriteData.frameX = (Math.floor((this._data.tick - explosion.startingTick) / 5) % 5);
+                spriteData.frameX = (Math.floor((this._data.theTicker.getTicks() - explosion.startingTick) / 5) % 5);
                 spriteData.frameY = 0;
                 spriteData.posX = (explosion.posX - this._data.player.posX - (spriteData.frameWidth / 2));
                 spriteData.posY = (explosion.posY - this._data.player.posY - (spriteData.frameHeight / 2));
@@ -335,7 +334,7 @@ define("TimePilot", [
         _renderPlayer: function () {
             var spriteData = new Image(),
                 h = this._data.player.heading,
-                t = this._data.tick,
+                t = this._data.theTicker.getTicks(),
                 l = this._data.level.current,
                 s = this._data.level[l].player.speed;
 
@@ -404,7 +403,7 @@ define("TimePilot", [
                 fw = enemyData.width,
                 fh = enemyData.height,
                 ts = enemyData.turnSpeed,
-                t = this._data.tick,
+                t = this._data.theTicker.getTicks(),
                 spriteData = new Image(),
                 h, s, a, lt, enemy;
 
@@ -420,7 +419,7 @@ define("TimePilot", [
 
                 // Per-Enemy Data
                 spriteData.frameX = Math.floor(h / 22.5);
-                spriteData.frameY = (Math.floor(this._data.tick / 10) % 2);
+                spriteData.frameY = (Math.floor(this._data.theTicker.getTicks() / 10) % 2);
 
                 this._data.enemies[i].posX += parseFloat((Math.sin(h * (Math.PI / 180)) * s).toFixed(5));
                 this._data.enemies[i].posY -= parseFloat((Math.cos(h * (Math.PI / 180)) * s).toFixed(5));
@@ -603,7 +602,7 @@ define("TimePilot", [
 
             this._data.explosions.push({
                 isBoss: (isBoss ? "boss" : "enemy"),
-                startingTick: this._data.tick,
+                startingTick: this._data.theTicker.getTicks(),
                 posX: posX,
                 posY: posY
             });
@@ -631,7 +630,7 @@ define("TimePilot", [
         _populateArena: function () {
             var data = {},
                 angle = 0;
-            if ((this._data.tick % 50 === 0) && this._data.enemies.length < 10)  {
+            if ((this._data.theTicker.getTicks() % 50 === 0) && this._data.enemies.length < 10)  {
                 // Enemies
                 data = this._spawningArena();
                 angle = this._findAngle({ posX: data.posX, posY: data.posY }, {
