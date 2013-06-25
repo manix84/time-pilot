@@ -49,11 +49,11 @@ define("Ticker", function () {
          * Add event callback to schedule. This runs a callback on each Nth tick.
          * @method
          * @param   {Function} callback  - Method to run on Nth ticks.
-         * @param   {Number}   [nthTick] - Run this callback ever Nth tick.
+         * @param   {Number}   [nthTick=interval] - Run this callback ever Nth tick.
          * @returns {Number} - ID number for callback. Used in "removeSchedule".
          */
         addSchedule: function (callback, nthTick) {
-            nthTick = nthTick || 1;
+            nthTick = nthTick || this._interval;
 
             var id = ++this._scheduleCount;
             this._schedule[id] = {

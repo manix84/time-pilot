@@ -104,17 +104,15 @@ define("TimePilot", [
                 // that._calculatePlayer();
                 // that._calculateBullets();
                 // that._calculateEnemies();
-            });
+            }, 1);
             this._data.theTicker.addSchedule(function () {
                 that._renderClouds();
                 that._renderPlayer();
                 that._renderBullets();
                 that._renderEnemies();
-            });
-            this._data.theTicker.addSchedule(function () {
+
                 that._renderExplosions();
-            });
-            this._data.theTicker.addSchedule(function () {
+
                 that._populateArena(); // NEEDS RENAMING
                 that._renderText(that._data.score, 20, 10, 30);
                 that._renderText(
@@ -124,7 +122,7 @@ define("TimePilot", [
                     20, 40, 15
                 );
                 that._renderText(that._data.player.heading + "°", 20, 55, 15);
-            });
+            }, 1);
             this.playGame();
         },
 
