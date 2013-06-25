@@ -1,1 +1,3 @@
-Controls.js
+define("Controls", function () {
+
+});

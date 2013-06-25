@@ -83,30 +83,38 @@ define("TimePilot", [
             this._elementContruction();
             this._keyboardLock.focus();
 
-            this._prepopulateArena();
+            this._addRandomClouds();
 
-            // this._debug.drawGrid();
-            //
+            this._data.theTicker = new Ticker(1000 / 60);
 
-            this._data.theTicker = new Ticker(function () {
-                that._data.tick++;
-                if (that._data.tick % 50000 === 0) {
-                    that.pauseGame();
-                    window.console.warn("Stopping: 50,000 ticks");
-                }
+            this._data.theTicker.addSchedule(function () {
                 that._canvas.width = that._canvas.width;
                 that._canvas.style.background = that._data.level[that._data.level.current].bgColor;
+            }, 1);
 
+            this._data.theTicker.addSchedule(function () {
+                that.pauseGame();
+                window.console.warn("Stopping: 50,000 ticks");
+            }, 50000);
+
+            this._data.theTicker.addSchedule(function () {
+                that._calculatePlayer();
+
+                // that._calculateClouds();
+                // that._calculatePlayer();
+                // that._calculateBullets();
+                // that._calculateEnemies();
+            }, 1);
+            this._data.theTicker.addSchedule(function () {
                 that._renderClouds();
+                that._renderPlayer();
                 that._renderBullets();
                 that._renderEnemies();
-                that._renderPlayer();
+
                 that._renderExplosions();
 
                 that._populateArena(); // NEEDS RENAMING
-
                 that._renderText(that._data.score, 20, 10, 30);
-
                 that._renderText(
                     that._data.player.posX.toFixed(2) +
                     " x " +
@@ -114,7 +122,7 @@ define("TimePilot", [
                     20, 40, 15
                 );
                 that._renderText(that._data.player.heading + "°", 20, 55, 15);
-            }, (1000 / 60));
+            }, 1);
             this.playGame();
         },
 
@@ -309,7 +317,7 @@ define("TimePilot", [
             );
         },
 
-        _renderExplosions: function () {
+        _renderExplosions: function (ticks) {
             var spriteData = new Image(),
                 i = 0,
                 explosion;
@@ -319,7 +327,7 @@ define("TimePilot", [
                 spriteData.src = this._options.baseUrl + "sprites/enemy_explosion.png";
                 spriteData.frameWidth = 32;
                 spriteData.frameHeight = 32;
-                spriteData.frameX = (Math.floor((this._data.tick - explosion.startingTick) / 5) % 5);
+                spriteData.frameX = (Math.floor((ticks - explosion.startingTick) / 5) % 5);
                 spriteData.frameY = 0;
                 spriteData.posX = (explosion.posX - this._data.player.posX - (spriteData.frameWidth / 2));
                 spriteData.posY = (explosion.posY - this._data.player.posY - (spriteData.frameHeight / 2));
@@ -332,32 +340,14 @@ define("TimePilot", [
             }
         },
 
-        _renderPlayer: function () {
-            var spriteData = new Image(),
+        _calculatePlayer: function () {
+            var player = this._data.player,
                 h = this._data.player.heading,
-                t = this._data.tick,
+                t = this._data.theTicker.getTicks(),
                 l = this._data.level.current,
                 s = this._data.level[l].player.speed;
 
-            // These tick delays don"t work... They cause massive delay, to extreams of no movement/firing.
-            // @TODO: Investigate a better method of slowing rotation and weapons fire.
-            if ((t - this._data.player.lastMovedTick) > 4) {
-                this._data.player.lastMovedTick = t;
-                switch (this._data.playerDirection) {
-                case 38: // Up
-                    this._data.player.heading = this._rotateTo(0, this._data.player.heading, 22.5);
-                    break;
-                case 40: // Down
-                    this._data.player.heading = this._rotateTo(180, this._data.player.heading, 22.5);
-                    break;
-                case 37: // Left
-                    this._data.player.heading = this._rotateTo(270, this._data.player.heading, 22.5);
-                    break;
-                case 39: // Right
-                    this._data.player.heading = this._rotateTo(90, this._data.player.heading, 22.5);
-                    break;
-                }
-            }
+            /* THIS IS PART OF INTERFACE */
             if ((t - this._data.player.lastFiredTick) > 10 &&
                 this._data.player.isFiring) {
                 this._data.player.lastFiredTick = t;
@@ -368,17 +358,44 @@ define("TimePilot", [
                     playerRelative: true
                 });
             }
+            /* THIS IS PART OF INTERFACE */
+
+            // These tick delays don't work... They cause massive delay, to extreams of no movement/firing.
+            // @TODO: Investigate a better method of slowing rotation and weapons fire.
+            if ((t - player.lastMovedTick) > 4) {
+                player.lastMovedTick = t;
+                switch (this._data.playerDirection) {
+                case 38: // Up
+                    player.heading = this._rotateTo(0, player.heading, 22.5);
+                    break;
+                case 40: // Down
+                    player.heading = this._rotateTo(180, player.heading, 22.5);
+                    break;
+                case 37: // Left
+                    player.heading = this._rotateTo(270, player.heading, 22.5);
+                    break;
+                case 39: // Right
+                    player.heading = this._rotateTo(90, player.heading, 22.5);
+                    break;
+                }
+            }
+
+            player.posX += parseFloat((Math.sin(h * (Math.PI / 180)) * s).toFixed(5));
+            player.posY -= parseFloat((Math.cos(h * (Math.PI / 180)) * s).toFixed(5));
+
+            this._data.player = player;
+        },
+
+        _renderPlayer: function () {
+            var spriteData = new Image();
 
             spriteData.src = this._options.baseUrl + "sprites/player.png";
             spriteData.frameWidth = 32;
             spriteData.frameHeight = 32;
-            spriteData.frameX = Math.floor(h / 22.5);
+            spriteData.frameX = Math.floor(this._data.player.heading / 22.5);
             spriteData.frameY = 0;
             spriteData.posX = ((this._data.container.width / 2) - (32 / 2));
             spriteData.posY = ((this._data.container.height / 2) - (32 / 2));
-
-            this._data.player.posX += parseFloat((Math.sin(h * (Math.PI / 180)) * s).toFixed(5));
-            this._data.player.posY -= parseFloat((Math.cos(h * (Math.PI / 180)) * s).toFixed(5));
 
             this._renderSprite(spriteData);
         },
@@ -404,7 +421,7 @@ define("TimePilot", [
                 fw = enemyData.width,
                 fh = enemyData.height,
                 ts = enemyData.turnSpeed,
-                t = this._data.tick,
+                t = this._data.theTicker.getTicks(),
                 spriteData = new Image(),
                 h, s, a, lt, enemy;
 
@@ -420,7 +437,7 @@ define("TimePilot", [
 
                 // Per-Enemy Data
                 spriteData.frameX = Math.floor(h / 22.5);
-                spriteData.frameY = (Math.floor(this._data.tick / 10) % 2);
+                spriteData.frameY = (Math.floor(this._data.theTicker.getTicks() / 10) % 2);
 
                 this._data.enemies[i].posX += parseFloat((Math.sin(h * (Math.PI / 180)) * s).toFixed(5));
                 this._data.enemies[i].posY -= parseFloat((Math.cos(h * (Math.PI / 180)) * s).toFixed(5));
@@ -603,7 +620,7 @@ define("TimePilot", [
 
             this._data.explosions.push({
                 isBoss: (isBoss ? "boss" : "enemy"),
-                startingTick: this._data.tick,
+                startingTick: this._data.theTicker.getTicks(),
                 posX: posX,
                 posY: posY
             });
@@ -617,7 +634,7 @@ define("TimePilot", [
             });
         },
 
-        _prepopulateArena: function () {
+        _addRandomClouds: function () {
             var i = 0;
             for (; i < 20; i++) {
                 // Clouds
@@ -631,7 +648,7 @@ define("TimePilot", [
         _populateArena: function () {
             var data = {},
                 angle = 0;
-            if ((this._data.tick % 50 === 0) && this._data.enemies.length < 10)  {
+            if ((this._data.theTicker.getTicks() % 50 === 0) && this._data.enemies.length < 10)  {
                 // Enemies
                 data = this._spawningArena();
                 angle = this._findAngle({ posX: data.posX, posY: data.posY }, {
