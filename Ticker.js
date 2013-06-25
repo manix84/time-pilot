@@ -7,7 +7,7 @@ define("Ticker", function () {
     var Ticker = function (interval) {
         this._interval = interval || 17;
         this._ticks = 0;
-        this._state = 0;
+        this._isRunning = false;
         this._schedule = {};
         this._scheduleCount = 0;
     };
@@ -30,7 +30,7 @@ define("Ticker", function () {
                     }
                 }
             }, this._interval);
-            this._state = 1;
+            this._isRunning = true;
             return !!this._theTicker;
         },
 
@@ -41,7 +41,7 @@ define("Ticker", function () {
          */
         stop: function () {
             window.clearInterval(this._theTicker);
-            this._state = 0;
+            this._isRunning = false;
             return !this._theTicker;
         },
 
@@ -50,7 +50,7 @@ define("Ticker", function () {
          * @method
          * @param   {Function} callback  - Method to run on Nth ticks.
          * @param   {Number}   [nthTick=interval] - Run this callback ever Nth tick.
-         * @returns {Number} - ID number for callback. Used in "removeSchedule".
+         * @returns {Number}   ID number for callback. Used in "removeSchedule".
          */
         addSchedule: function (callback, nthTick) {
             nthTick = nthTick || this._interval;
@@ -99,10 +99,10 @@ define("Ticker", function () {
         /**
          * Currently running state. 1 = running, 0 = stopped.
          * @method
-         * @returns {Number}
+         * @returns {Boolean}
          */
         getState: function () {
-            return this._state;
+            return this._isRunning;
         },
 
         /**
