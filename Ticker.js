@@ -23,9 +23,7 @@ define("Ticker", function () {
             this._theTicker = window.setInterval(function () {
                 that._ticks++;
                 for (var eventId in that._schedule) {
-                    if (that._schedule.hasOwnProperty(eventId) &&
-                        (that._ticks % that._schedule[eventId].nthTick === 0)
-                    ) {
+                    if (that._schedule.hasOwnProperty(eventId) && that._ticks % that._schedule[eventId].nthTick === 0) {
                         that._schedule[eventId].callback(that._ticks);
                     }
                 }
@@ -55,13 +53,13 @@ define("Ticker", function () {
         addSchedule: function (callback, nthTick) {
             nthTick = nthTick || this._interval;
 
-            var id = ++this._scheduleCount;
-            this._schedule[id] = {
+            var eventId = ++this._scheduleCount;
+            this._schedule[eventId] = {
                 "callback": callback,
                 "nthTick": nthTick
             };
 
-            return id;
+            return eventId;
         },
 
         /**
