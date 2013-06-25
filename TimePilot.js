@@ -98,16 +98,18 @@ define("TimePilot", [
             }, 50000);
 
             this._data.theTicker.addSchedule(function () {
+                that._calculatePlayer();
+
+                // that._calculateClouds();
+                // that._calculatePlayer();
+                // that._calculateBullets();
+                // that._calculateEnemies();
+            });
+            this._data.theTicker.addSchedule(function () {
                 that._renderClouds();
-            });
-            this._data.theTicker.addSchedule(function () {
-                that._renderBullets();
-            });
-            this._data.theTicker.addSchedule(function () {
-                that._renderEnemies();
-            });
-            this._data.theTicker.addSchedule(function () {
                 that._renderPlayer();
+                that._renderBullets();
+                that._renderEnemies();
             });
             this._data.theTicker.addSchedule(function () {
                 that._renderExplosions();
@@ -340,32 +342,14 @@ define("TimePilot", [
             }
         },
 
-        _renderPlayer: function () {
-            var spriteData = new Image(),
+        _calculatePlayer: function () {
+            var player = this._data.player,
                 h = this._data.player.heading,
                 t = this._data.theTicker.getTicks(),
                 l = this._data.level.current,
                 s = this._data.level[l].player.speed;
 
-            // These tick delays don"t work... They cause massive delay, to extreams of no movement/firing.
-            // @TODO: Investigate a better method of slowing rotation and weapons fire.
-            if ((t - this._data.player.lastMovedTick) > 4) {
-                this._data.player.lastMovedTick = t;
-                switch (this._data.playerDirection) {
-                case 38: // Up
-                    this._data.player.heading = this._rotateTo(0, this._data.player.heading, 22.5);
-                    break;
-                case 40: // Down
-                    this._data.player.heading = this._rotateTo(180, this._data.player.heading, 22.5);
-                    break;
-                case 37: // Left
-                    this._data.player.heading = this._rotateTo(270, this._data.player.heading, 22.5);
-                    break;
-                case 39: // Right
-                    this._data.player.heading = this._rotateTo(90, this._data.player.heading, 22.5);
-                    break;
-                }
-            }
+            /* THIS IS PART OF INTERFACE */
             if ((t - this._data.player.lastFiredTick) > 10 &&
                 this._data.player.isFiring) {
                 this._data.player.lastFiredTick = t;
@@ -376,17 +360,44 @@ define("TimePilot", [
                     playerRelative: true
                 });
             }
+            /* THIS IS PART OF INTERFACE */
+
+            // These tick delays don't work... They cause massive delay, to extreams of no movement/firing.
+            // @TODO: Investigate a better method of slowing rotation and weapons fire.
+            if ((t - player.lastMovedTick) > 4) {
+                player.lastMovedTick = t;
+                switch (this._data.playerDirection) {
+                case 38: // Up
+                    player.heading = this._rotateTo(0, player.heading, 22.5);
+                    break;
+                case 40: // Down
+                    player.heading = this._rotateTo(180, player.heading, 22.5);
+                    break;
+                case 37: // Left
+                    player.heading = this._rotateTo(270, player.heading, 22.5);
+                    break;
+                case 39: // Right
+                    player.heading = this._rotateTo(90, player.heading, 22.5);
+                    break;
+                }
+            }
+
+            player.posX += parseFloat((Math.sin(h * (Math.PI / 180)) * s).toFixed(5));
+            player.posY -= parseFloat((Math.cos(h * (Math.PI / 180)) * s).toFixed(5));
+
+            this._data.player = player;
+        },
+
+        _renderPlayer: function () {
+            var spriteData = new Image();
 
             spriteData.src = this._options.baseUrl + "sprites/player.png";
             spriteData.frameWidth = 32;
             spriteData.frameHeight = 32;
-            spriteData.frameX = Math.floor(h / 22.5);
+            spriteData.frameX = Math.floor(this._data.player.heading / 22.5);
             spriteData.frameY = 0;
             spriteData.posX = ((this._data.container.width / 2) - (32 / 2));
             spriteData.posY = ((this._data.container.height / 2) - (32 / 2));
-
-            this._data.player.posX += parseFloat((Math.sin(h * (Math.PI / 180)) * s).toFixed(5));
-            this._data.player.posY -= parseFloat((Math.cos(h * (Math.PI / 180)) * s).toFixed(5));
 
             this._renderSprite(spriteData);
         },
