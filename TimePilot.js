@@ -1,6 +1,8 @@
 define("TimePilot", [
-], function (Ticker) {
     "lib/Ticker",
+    "lib/Canvas",
+    "TimePilot.Player"
+], function (Ticker, Canvas, Player) {
 
     var TimePilot = function (element, options) {
         this._container = element;
@@ -28,22 +30,18 @@ define("TimePilot", [
         _live: {},
 
         _data: {
-            tick: 0,
             theTicker: null,
-            playerDirection: false,
+            player: {
+                isFiring: false,
+                lastFiredTick: 0,
+                direction: false,
+                lastMovedTick: 0
+            },
             score: 0,
             container: {
                 height: 0,
                 width: 0,
                 despawnBorder: 100
-            },
-            player: {
-                isFiring: false,
-                lastFiredTick: 0,
-                lastMovedTick: 0,
-                heading: 90,
-                posX: 0,
-                posY: 0
             },
             level: {
                 current: 1,
@@ -54,14 +52,8 @@ define("TimePilot", [
                         hitRadius: 2
                     },
                     enemy: {
-                        speed: 2.5,
-                        turnSpeed: 20,
-                        height: 32,
-                        width: 32,
-                        hitRadius: 8
-                    },
-                    player: {
-                        speed: 4,
+                        speed: 5.5,
+                        turnSpeed: 10,
                         height: 32,
                         width: 32,
                         hitRadius: 8
@@ -80,64 +72,106 @@ define("TimePilot", [
         init: function () {
             var that = this;
 
+            this._canvas = new Canvas(this._container);
+            this._player = new Player(this._canvas, 1);
+            this._ticker = new Ticker(17);
+
+
             this._elementContruction();
             this._keyboardLock.focus();
 
             this._addRandomClouds();
 
-            this._data.theTicker = new Ticker(1000 / 60);
 
-            this._data.theTicker.addSchedule(function () {
-                that._canvas.width = that._canvas.width;
-                that._canvas.style.background = that._data.level[that._data.level.current].bgColor;
+            this._ticker.addSchedule(function () {
+                that._canvas.getCanvas().width = that._canvas.getCanvas().width;
+                that._canvas.getCanvas().style.background = that._data.level[that._data.level.current].bgColor;
             }, 1);
 
-            this._data.theTicker.addSchedule(function () {
+            this._ticker.addSchedule(function () {
                 that.pauseGame();
                 window.console.warn("Stopping: 50,000 ticks");
             }, 50000);
 
-            this._data.theTicker.addSchedule(function () {
-                that._calculatePlayer();
+            this._ticker.addSchedule(function () {
+                that._player.calculate();
+                that.rotatePlayer();
 
                 // that._calculateClouds();
-                // that._calculatePlayer();
                 // that._calculateBullets();
                 // that._calculateEnemies();
             }, 1);
-            this._data.theTicker.addSchedule(function () {
+            this._ticker.addSchedule(function () {
+                var playerData = that._player.getData();
+
                 that._renderClouds();
-                that._renderPlayer();
+                that._player.render();
                 that._renderBullets();
                 that._renderEnemies();
+
 
                 that._renderExplosions();
 
                 that._populateArena(); // NEEDS RENAMING
-                that._renderText(that._data.score, 20, 10, 30);
-                that._renderText(
-                    that._data.player.posX.toFixed(2) +
+                that._canvas.renderText(that._data.score, 20, 10, 30);
+                that._canvas.renderText(
+                    playerData.posX.toFixed(2) +
                     " x " +
-                    that._data.player.posY.toFixed(2),
+                    playerData.posY.toFixed(2),
                     20, 40, 15
                 );
-                that._renderText(that._data.player.heading + "°", 20, 55, 15);
+                that._canvas.renderText(playerData.heading + "°", 20, 55, 15);
             }, 1);
+
             this.playGame();
         },
 
+        rotatePlayer: function () {
+            /* THIS IS PART OF INTERFACE */
+            if ((this._ticker.getTicks() - this._data.player.lastFiredTick) > 10 && this._data.player.isFiring) {
+                this._data.player.lastFiredTick = this._ticker.getTicks();
+                this._data.bullets.push({
+                    posX: (this._container.clientWidth / 2),
+                    posY: (this._container.clientHeight / 2),
+                    heading: this._player.getData().heading,
+                    playerRelative: true
+                });
+            }
+            /* THIS IS PART OF INTERFACE */
+
+            // These tick delays don't work... They cause massive delay, to extreams of no movement/firing.
+            // @TODO: Investigate a better method of slowing rotation and weapons fire.
+            if ((this._ticker.getTicks() - this._data.player.lastMovedTick) > 4) {
+                this._data.player.lastMovedTick = this._ticker.getTicks();
+                switch (this._data.player.direction) {
+                case 38: // Up
+                    this._player.setData("heading", this._rotateTo(0, this._player.getData().heading, 22.5));
+                    break;
+                case 40: // Down
+                    this._player.setData("heading", this._rotateTo(180, this._player.getData().heading, 22.5));
+                    break;
+                case 37: // Left
+                    this._player.setData("heading", this._rotateTo(270, this._player.getData().heading, 22.5));
+                    break;
+                case 39: // Right
+                    this._player.setData("heading", this._rotateTo(90, this._player.getData().heading, 22.5));
+                    break;
+                }
+            }
+        },
+
         pauseGame: function () {
-            if (this._data.theTicker.getState()) {
+            if (this._ticker.getState()) {
                 window.console.info("Pausing");
-                this._data.theTicker.stop();
-                this._renderText("Paused", 20, 70, 30);
+                this._ticker.stop();
+                this._canvas.renderText("Paused", 20, 70, 30);
             }
         },
 
         playGame: function () {
-            if (!this._data.theTicker.getState()) {
+            if (!this._ticker.getState()) {
                 window.console.info("Continuing");
-                this._data.theTicker.start();
+                this._ticker.start();
             }
         },
 
@@ -153,17 +187,6 @@ define("TimePilot", [
 
         _elementContruction: function () {
             var that = this;
-            this._canvas = document.createElement("canvas");
-            this._canvas.setAttribute("width", this._data.container.width);
-            this._canvas.setAttribute("height", this._data.container.height);
-            this._canvas.innerHTML =
-                "<div style='padding:3px;background:#CCC'>" +
-                    "<img src='" + this._options.baseUrl + "images/supportError.png'" +
-                        "style='position:relative;margin:7px' />" +
-                    "<p>Looks like your browser doesn't support the HTML5 canvas.</p>" +
-                    "<p>Please consider updating to a more modern browser such as <a href=''>Google Chrome</a> or <a" +
-                        " href=''>Mozilla FireFox</a>.</p>" +
-                "</div>";
 
             this._keyboardLock = document.createElement("input");
             this._keyboardLock.setAttribute("style",
@@ -172,7 +195,7 @@ define("TimePilot", [
                 "left:-999px;"
             );
             this._keyboardLock.setAttribute("type", "text");
-            this._addListener(this._canvas, "click", function () {
+            this._addListener(this._canvas.getCanvas(), "click", function () {
                 that._keyboardLock.focus();
                 that.playGame();
             });
@@ -183,8 +206,8 @@ define("TimePilot", [
                 case 39: // RIGHT
                 case 40: // DOWN
                     event.preventDefault();
-                    if (!that._data.playerDirection) {
-                        that._data.playerDirection = event.keyCode;
+                    if (!that._data.player.direction) {
+                        that._data.player.direction = event.keyCode;
                     }
                     break;
                 case 32: // SPACE BAR
@@ -204,25 +227,15 @@ define("TimePilot", [
                 case 39: // RIGHT
                 case 40: // DOWN
                     event.preventDefault();
-                    that._data.playerDirection = false;
+                    that._data.player.direction = false;
                     break;
                 case 32: // SPACE BAR
                     that._data.player.isFiring = false;
                     break;
                 }
             });
-
-            this._styles = document.createElement("style");
-            this._styles.innerText = "@font-face {" +
-                "font-family: 'theFont';" +
-                "src: url('" + this._options.baseUrl + "fonts/font.ttf');" +
-            " }";
-
-            this._container.appendChild(this._styles);
-            this._container.appendChild(this._canvas);
+            this._container.appendChild(this._canvas.getCanvas());
             this._container.appendChild(this._keyboardLock);
-
-            this._canvasContext = this._canvas.getContext("2d");
         },
 
         _rotateTo: function (destinationAngle, currentAngle, stepSize) {
@@ -250,26 +263,26 @@ define("TimePilot", [
 
             switch (side) {
             case 0: // TOP
-                data.posX = (Math.floor(Math.random() * this._data.container.width) + this._data.player.posX);
-                data.posY = (-(this._data.container.despawnBorder / 2) + this._data.player.posY);
+                data.posX = (Math.floor(Math.random() * this._data.container.width) + this._player.getData().posX);
+                data.posY = (-(this._data.container.despawnBorder / 2) + this._player.getData().posY);
                 break;
             case 1: // RIGHT
                 data.posX = (
                     (this._data.container.width + (this._data.container.despawnBorder / 2)) +
-                    this._data.player.posX
+                    this._player.getData().posX
                 );
-                data.posY = (Math.floor(Math.random() * this._data.container.height) + this._data.player.posY);
+                data.posY = (Math.floor(Math.random() * this._data.container.height) + this._player.getData().posY);
                 break;
             case 2: // BOTTOM
-                data.posX = (Math.floor(Math.random() * this._data.container.width) + this._data.player.posX);
+                data.posX = (Math.floor(Math.random() * this._data.container.width) + this._player.getData().posX);
                 data.posY = (
                     (this._data.container.height + (this._data.container.despawnBorder / 2)) +
-                    this._data.player.posY
+                    this._player.getData().posY
                 );
                 break;
             case 3: // LEFT
-                data.posX = (-(this._data.container.despawnBorder / 2) + this._data.player.posX);
-                data.posY = (Math.floor(Math.random() * this._data.container.height) + this._data.player.posY);
+                data.posX = (-(this._data.container.despawnBorder / 2) + this._player.getData().posX);
+                data.posY = (Math.floor(Math.random() * this._data.container.height) + this._player.getData().posY);
                 break;
             }
             return data;
@@ -291,113 +304,27 @@ define("TimePilot", [
             return (dx * dx + dy * dy <= dist * dist);
         },
 
-        _renderText: function (message, posX, posY, size, color) {
-            posX = posX || 0;
-            posY = posY || 0;
-            size = size || 12;
-            color = color || "#fff";
-
-            this._canvasContext.fillStyle = color;
-            this._canvasContext.font = size + "px theFont";
-            this._canvasContext.textBaseline = "top";
-            this._canvasContext.fillText(message, posX, posY);
-        },
-
-        _renderSprite: function (spriteData) {
-            this._canvasContext.drawImage(
-                spriteData,
-                (spriteData.frameX * spriteData.frameWidth),
-                (spriteData.frameY * spriteData.frameHeight),
-                spriteData.frameWidth,
-                spriteData.frameHeight,
-                spriteData.posX,
-                spriteData.posY,
-                spriteData.frameWidth,
-                spriteData.frameHeight
-            );
-        },
-
-        _renderExplosions: function (ticks) {
+        _renderExplosions: function () {
             var spriteData = new Image(),
                 i = 0,
                 explosion;
 
             for (; i < this._data.explosions.length; i++) {
                 explosion = this._data.explosions[i];
-                spriteData.src = this._options.baseUrl + "sprites/enemy_explosion.png";
+                spriteData.src = "./sprites/enemy_explosion.png";
                 spriteData.frameWidth = 32;
                 spriteData.frameHeight = 32;
-                spriteData.frameX = (Math.floor((ticks - explosion.startingTick) / 5) % 5);
+                spriteData.frameX = (this._ticker.getTicks() - explosion.startingTick % 25);
                 spriteData.frameY = 0;
-                spriteData.posX = (explosion.posX - this._data.player.posX - (spriteData.frameWidth / 2));
-                spriteData.posY = (explosion.posY - this._data.player.posY - (spriteData.frameHeight / 2));
+                spriteData.posX = (explosion.posX - this._player.getData().posX - (spriteData.frameWidth / 2));
+                spriteData.posY = (explosion.posY - this._player.getData().posY - (spriteData.frameHeight / 2));
 
-                this._renderSprite(spriteData);
+                this._canvas.renderSprite(spriteData);
 
                 if (spriteData.frameX === 4) {
                     this._data.explosions.splice(i, 1);
                 }
             }
-        },
-
-        _calculatePlayer: function () {
-            var player = this._data.player,
-                h = this._data.player.heading,
-                t = this._data.theTicker.getTicks(),
-                l = this._data.level.current,
-                s = this._data.level[l].player.speed;
-
-            /* THIS IS PART OF INTERFACE */
-            if ((t - this._data.player.lastFiredTick) > 10 &&
-                this._data.player.isFiring) {
-                this._data.player.lastFiredTick = t;
-                this._data.bullets.push({
-                    posX: (this._data.container.width / 2),
-                    posY: (this._data.container.height / 2),
-                    heading: this._data.player.heading,
-                    playerRelative: true
-                });
-            }
-            /* THIS IS PART OF INTERFACE */
-
-            // These tick delays don't work... They cause massive delay, to extreams of no movement/firing.
-            // @TODO: Investigate a better method of slowing rotation and weapons fire.
-            if ((t - player.lastMovedTick) > 4) {
-                player.lastMovedTick = t;
-                switch (this._data.playerDirection) {
-                case 38: // Up
-                    player.heading = this._rotateTo(0, player.heading, 22.5);
-                    break;
-                case 40: // Down
-                    player.heading = this._rotateTo(180, player.heading, 22.5);
-                    break;
-                case 37: // Left
-                    player.heading = this._rotateTo(270, player.heading, 22.5);
-                    break;
-                case 39: // Right
-                    player.heading = this._rotateTo(90, player.heading, 22.5);
-                    break;
-                }
-            }
-
-            player.posX += parseFloat((Math.sin(h * (Math.PI / 180)) * s).toFixed(5));
-            player.posY -= parseFloat((Math.cos(h * (Math.PI / 180)) * s).toFixed(5));
-
-            this._data.player = player;
-        },
-
-        _renderPlayer: function () {
-            var spriteData = new Image();
-
-            spriteData.src = this._options.baseUrl + "sprites/player.png";
-            spriteData.frameWidth = 32;
-            spriteData.frameHeight = 32;
-            spriteData.frameX = Math.floor(this._data.player.heading / 22.5);
-            spriteData.frameY = 0;
-            spriteData.posX = ((this._data.container.width / 2) - (32 / 2));
-            spriteData.posY = ((this._data.container.height / 2) - (32 / 2));
-
-            this._renderSprite(spriteData);
         },
 
         _renderBoss: function () {
@@ -408,10 +335,10 @@ define("TimePilot", [
             spriteData.frameHeight = 32;
             spriteData.frameX = 0;
             spriteData.frameY = 0;
-            spriteData.posX = (0 - this._data.player.posX);
-            spriteData.posY = (0 - this._data.player.posY);
+            spriteData.posX = (0 - this._player.getData().posX);
+            spriteData.posY = (0 - this._player.getData().posY);
 
-            this._renderSprite(spriteData);
+            this._canvas.renderSprite(spriteData);
         },
 
         _renderEnemies: function () {
@@ -421,7 +348,7 @@ define("TimePilot", [
                 fw = enemyData.width,
                 fh = enemyData.height,
                 ts = enemyData.turnSpeed,
-                t = this._data.theTicker.getTicks(),
+                t = this._ticker.getTicks(),
                 spriteData = new Image(),
                 h, s, a, lt, enemy;
 
@@ -437,7 +364,7 @@ define("TimePilot", [
 
                 // Per-Enemy Data
                 spriteData.frameX = Math.floor(h / 22.5);
-                spriteData.frameY = (Math.floor(this._data.theTicker.getTicks() / 10) % 2);
+                spriteData.frameY = (Math.floor(this._ticker.getTicks() / 10) % 2);
 
                 this._data.enemies[i].posX += parseFloat((Math.sin(h * (Math.PI / 180)) * s).toFixed(5));
                 this._data.enemies[i].posY -= parseFloat((Math.cos(h * (Math.PI / 180)) * s).toFixed(5));
@@ -461,8 +388,8 @@ define("TimePilot", [
                     if ((t - lt) > ts) {
                         this._data.enemies[i].lastMovedTick = t + (Math.floor(Math.random() * ts));
                         a = this._findAngle(enemy, {
-                            posX: this._data.player.posX + ((this._data.container.width / 2) - (fw / 2)),
-                            posY: this._data.player.posY + ((this._data.container.height / 2) - (fh / 2))
+                            posX: this._player.getData().posX + ((this._data.container.width / 2) - (fw / 2)),
+                            posY: this._player.getData().posY + ((this._data.container.height / 2) - (fh / 2))
                         });
                         a = (Math.floor(a / 22.5) * 22.5);
 
@@ -470,19 +397,19 @@ define("TimePilot", [
                     }
                 }
 
-                spriteData.posX = (enemy.posX - this._data.player.posX - (fw / 2));
-                spriteData.posY = (enemy.posY - this._data.player.posY - (fh / 2));
+                spriteData.posX = (enemy.posX - this._player.getData().posX - (fw / 2));
+                spriteData.posY = (enemy.posY - this._player.getData().posY - (fh / 2));
 
                 if (this._detectCollision({
                     // Enemy Position
-                    posX: (enemy.posX - this._data.player.posX),
-                    posY: (enemy.posY - this._data.player.posY),
+                    posX: (enemy.posX - this._player.getData().posX),
+                    posY: (enemy.posY - this._player.getData().posY),
                     radius: enemyData.hitRadius
                 }, {
                     // Bullet Position
-                    posX: this._data.player.posX + (this._data.level[l].player.width / 2),
-                    posY: this._data.player.posX + (this._data.level[l].player.height / 2),
-                    radius: this._data.level[l].player.hitRadius
+                    posX: this._player.getData().posX + (this._player.getData().width / 2),
+                    posY: this._player.getData().posX + (this._player.getData().height / 2),
+                    radius: this._player.getData().hitRadius
                 })) {
                     window.console.warn("GAME OVER ", this._data.score);
                 }
@@ -490,8 +417,8 @@ define("TimePilot", [
                 for (j = 0; j < this._data.bullets.length; j++) {
                     if (this._detectCollision({
                         // Enemy Position
-                        posX: (enemy.posX - this._data.player.posX),
-                        posY: (enemy.posY - this._data.player.posY),
+                        posX: (enemy.posX - this._player.getData().posX),
+                        posY: (enemy.posY - this._player.getData().posY),
                         radius: enemyData.hitRadius
                     }, {
                         // Bullet Position
@@ -505,7 +432,7 @@ define("TimePilot", [
                         this._data.score += 100;
                     }
                 }
-                this._renderSprite(spriteData);
+                this._canvas.renderSprite(spriteData);
 
                 if (spriteData.posX > (this._data.container.width + this._data.container.despawnBorder) ||
                     spriteData.posX < -this._data.container.despawnBorder ||
@@ -522,25 +449,26 @@ define("TimePilot", [
                 l = this._data.level.current,
                 bs = this._data.level[l].bullet.size,
                 s = 7,
-                bullet, h;
+                bullet, heading;
 
             for (; i < this._data.bullets.length; i++) {
                 bullet = this._data.bullets[i];
-                h = bullet.heading;
+                heading = bullet.heading;
 
-                this._data.bullets[i].posX += parseFloat((Math.sin(h * (Math.PI / 180)) * s).toFixed(5));
-                this._data.bullets[i].posY -= parseFloat((Math.cos(h * (Math.PI / 180)) * s).toFixed(5));
+                this._data.bullets[i].posX += parseFloat((Math.sin(heading * (Math.PI / 180)) * s).toFixed(5));
+                this._data.bullets[i].posY -= parseFloat((Math.cos(heading * (Math.PI / 180)) * s).toFixed(5));
+
 
                 data.posX = bullet.posX;
                 data.posY = bullet.posY;
 
                 if (!bullet.playerRelative) {
-                    data.posX -= this._data.player.posX;
-                    data.posY -= this._data.player.posY;
+                    data.posX -= this._player.getData().posX;
+                    data.posY -= this._player.getData().posY;
                 }
 
-                this._canvasContext.fillStyle = "#FFF";
-                this._canvasContext.fillRect(
+                this._canvas.getContext().fillStyle = "#FFF";
+                this._canvas.getContext().fillRect(
                     data.posX - (bs / 2),
                     data.posY - (bs / 2),
                     bs, bs
@@ -559,7 +487,8 @@ define("TimePilot", [
             var i = 0,
                 l = this._data.level.current,
                 s = 0,
-                h = this._data.player.heading,
+                playerData = this._player.getData(),
+                h = playerData.heading,
                 spriteData = new Image(),
                 cloudType = this._data.level[l].cloudType,
                 cloudData = {
@@ -583,10 +512,10 @@ define("TimePilot", [
                 spriteData.frameWidth = cloudData[cloud.size].width;
                 spriteData.frameHeight = cloudData[cloud.size].height;
 
-                spriteData.posX = (cloud.posX - this._data.player.posX - (spriteData.frameWidth / 2));
-                spriteData.posY = (cloud.posY - this._data.player.posY - (spriteData.frameHeight / 2));
+                spriteData.posX = (cloud.posX - playerData.posX - (spriteData.frameWidth / 2));
+                spriteData.posY = (cloud.posY - playerData.posY - (spriteData.frameHeight / 2));
 
-                this._renderSprite(spriteData);
+                this._canvas.renderSprite(spriteData);
 
                 if (spriteData.posX > (this._data.container.width + this._data.container.despawnBorder) ||
                     spriteData.posX < -this._data.container.despawnBorder ||
@@ -598,16 +527,12 @@ define("TimePilot", [
 
         },
 
-        _renderMissles: function () {},
-        _renderBombs: function () {},
-        _renderMenu: function () {},
-
         _addEnemy: function (posX, posY, heading) {
             var l = this._data.level.current,
                 fw = this._data.level[l].enemy.width,
                 fh = this._data.level[l].enemy.height;
             this._data.enemies.push({
-                isFollowing: (Math.floor(Math.random() * 20) === 0) ? true : false,
+                isFollowing: (Math.floor(Math.random() * 2) === 0) ? true : false,
                 lastMovedTick: 0,
                 heading: heading || Math.floor(Math.random() * 16) * 22.5,
                 posX: posX || Math.floor(Math.random() * (this._data.container.width - fw)),
@@ -620,7 +545,7 @@ define("TimePilot", [
 
             this._data.explosions.push({
                 isBoss: (isBoss ? "boss" : "enemy"),
-                startingTick: this._data.theTicker.getTicks(),
+                startingTick: this._ticker.getTicks(),
                 posX: posX,
                 posY: posY
             });
@@ -648,12 +573,12 @@ define("TimePilot", [
         _populateArena: function () {
             var data = {},
                 angle = 0;
-            if ((this._data.theTicker.getTicks() % 50 === 0) && this._data.enemies.length < 10)  {
+            if ((this._ticker.getTicks() % 50 === 0) && this._data.enemies.length < 100)  {
                 // Enemies
                 data = this._spawningArena();
                 angle = this._findAngle({ posX: data.posX, posY: data.posY }, {
-                    posX: this._data.player.posX,
-                    posY: this._data.player.posY
+                    posX: this._player.getData().posX,
+                    posY: this._player.getData().posY
                 });
                 this._addEnemy(data.posX, data.posY, angle);
             }
