@@ -1,6 +1,6 @@
 define("TimePilot", [
-    "Ticker"
 ], function (Ticker) {
+    "lib/Ticker",
 
     var TimePilot = function (element, options) {
         this._container = element;
