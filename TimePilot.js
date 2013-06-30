@@ -96,7 +96,7 @@ define("TimePilot", [
             }, 50000);
 
             this._ticker.addSchedule(function () {
-                that._player.calculate();
+                that._player.resposition();
                 that.rotatePlayer();
 
                 // that._calculateClouds();

@@ -92,10 +92,10 @@ define("TimePilot.Player", [
         },
 
         /**
-         * Calculate player's current position and heading.
+         * Recalculate player's current position and heading.
          * @method
          */
-        calculate: function () {
+        resposition: function () {
             var player = this._data,
                 h = this._data.heading,
                 s = this.getLevelData().velocity;
