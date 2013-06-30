@@ -73,8 +73,10 @@ define("TimePilot", [
             var that = this;
 
             this._canvas = new Canvas(this._container);
-            this._player = new Player(this._canvas, 1);
+            this._player = new Player(this._canvas);
             this._ticker = new Ticker(17);
+
+            this._player.setLevel(1);
 
 
             this._elementContruction();

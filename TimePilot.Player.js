@@ -3,15 +3,25 @@ define("TimePilot.Player", [
 ], function (helpr) {
 
     /**
+     * Level specific data about the player.
+     * @constant
+     * @type {Object}
+     */
+    var LEVEL_DATA = {
+        1: {
+            velocity: 3,
+            turn: 5
+        }
+    };
+
+    /**
      * Player object.
      * @method
      * @constructor
      * @param   {Canvas Instance}   canvas - An instance of the Canvas Object (./Canvas.js)
-     * @param   {Number}            level  - Numeric value of the current level.
      */
-    var Player = function (canvas, level) {
+    var Player = function (canvas) {
         this._canvas = canvas;
-        this._level = level;
     };
 
     Player.prototype = {
@@ -31,14 +41,20 @@ define("TimePilot.Player", [
         },
 
         /**
-         * Level specific data about the player.
-         * @type {Object}
+         * The current level.
+         * @type {Number}
          */
-        _levels: {
-            1: {
-                velocity: 3,
-                turn: 5
-            }
+        _level: 1,
+
+        /**
+         * Set current level.
+         * @method
+         * @param   {Number} level - Level number to be set.
+         * @returns {Boolean}
+         */
+        setLevel: function (level) {
+            this._level = level;
+            return (this._level === level);
         },
 
         /**
@@ -67,13 +83,22 @@ define("TimePilot.Player", [
         },
 
         /**
+         * Get current data for this level
+         * @method
+         * @returns {[type]}
+         */
+        getLevelData: function () {
+            return LEVEL_DATA[this._level];
+        },
+
+        /**
          * Calculate player's current position and heading.
          * @method
          */
         calculate: function () {
             var player = this._data,
                 h = this._data.heading,
-                s = this._levels[this._level].velocity;
+                s = this.getLevelData().velocity;
 
             player.posX += helpr.float(Math.sin(h * (Math.PI / 180)) * s);
             player.posY -= helpr.float(Math.cos(h * (Math.PI / 180)) * s);
