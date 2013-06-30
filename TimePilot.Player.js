@@ -1,4 +1,6 @@
-define("TimePilot.Player", function () {
+define("TimePilot.Player", [
+    "lib/helpers"
+], function (helpr) {
 
     /**
      * Player object.
@@ -73,8 +75,8 @@ define("TimePilot.Player", function () {
                 h = this._data.heading,
                 s = this._levels[this._level].velocity;
 
-            player.posX += parseFloat((Math.sin(h * (Math.PI / 180)) * s).toFixed(5));
-            player.posY -= parseFloat((Math.cos(h * (Math.PI / 180)) * s).toFixed(5));
+            player.posX += helpr.float(Math.sin(h * (Math.PI / 180)) * s);
+            player.posY -= helpr.float(Math.cos(h * (Math.PI / 180)) * s);
 
             this._data.player = player;
         },
@@ -97,7 +99,9 @@ define("TimePilot.Player", function () {
             this._canvas.renderSprite(
                 sprite
             );
-        }
+        },
+
+        explode: function () {}
     };
 
     return Player;
