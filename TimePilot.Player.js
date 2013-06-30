@@ -1,5 +1,12 @@
 define("TimePilot.Player", function () {
 
+    /**
+     * Player object.
+     * @method
+     * @constructor
+     * @param   {Canvas Instance}   canvas - An instance of the Canvas Object (./Canvas.js)
+     * @param   {Number}            level  - Numeric value of the current level.
+     */
     var Player = function (canvas, level) {
         this._canvas = canvas;
         this._level = level;
@@ -60,7 +67,6 @@ define("TimePilot.Player", function () {
         /**
          * Calculate player's current position and heading.
          * @method
-         * @returns {[type]}
          */
         calculate: function () {
             var player = this._data,
@@ -76,7 +82,6 @@ define("TimePilot.Player", function () {
         /**
          * Render the player.
          * @method
-         * @returns {[type]}
          */
         render: function () {
             var sprite = new Image();
