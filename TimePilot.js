@@ -307,13 +307,13 @@ define("TimePilot", [
         },
 
         _renderExplosions: function () {
-            var spriteData = new Image(),
-                i = 0,
-                explosion;
+            var i = 0,
+                spriteData = {},
+                explosion, spriteSrc;
 
             for (; i < this._data.explosions.length; i++) {
                 explosion = this._data.explosions[i];
-                spriteData.src = "./sprites/enemy_explosion.png";
+                spriteSrc = "./sprites/enemy_explosion.png";
                 spriteData.frameWidth = 32;
                 spriteData.frameHeight = 32;
                 spriteData.frameX = (this._ticker.getTicks() - explosion.startingTick % 25);
@@ -321,7 +321,7 @@ define("TimePilot", [
                 spriteData.posX = (explosion.posX - this._player.getData().posX - (spriteData.frameWidth / 2));
                 spriteData.posY = (explosion.posY - this._player.getData().posY - (spriteData.frameHeight / 2));
 
-                this._canvas.renderSprite(spriteData);
+                this._canvas.renderSprite(spriteSrc, spriteData);
 
                 if (spriteData.frameX === 4) {
                     this._data.explosions.splice(i, 1);
@@ -330,9 +330,10 @@ define("TimePilot", [
         },
 
         _renderBoss: function () {
-            var spriteData = new Image();
+            var spriteData = {},
+                spriteSrc;
 
-            spriteData.src = this._options.baseUrl + "sprites/boss_level" + this._data.level.current + ".png";
+            spriteSrc = "./sprites/boss_level" + this._data.level.current + ".png";
             spriteData.frameWidth = 64;
             spriteData.frameHeight = 32;
             spriteData.frameX = 0;
@@ -340,7 +341,7 @@ define("TimePilot", [
             spriteData.posX = (0 - this._player.getData().posX);
             spriteData.posY = (0 - this._player.getData().posY);
 
-            this._canvas.renderSprite(spriteData);
+            this._canvas.renderSprite(spriteSrc, spriteData);
         },
 
         _renderEnemies: function () {
@@ -351,10 +352,10 @@ define("TimePilot", [
                 fh = enemyData.height,
                 ts = enemyData.turnSpeed,
                 t = this._ticker.getTicks(),
-                spriteData = new Image(),
-                h, s, a, lt, enemy;
+                spriteData = {},
+                h, s, a, lt, enemy, spriteSrc;
 
-            spriteData.src = this._options.baseUrl + "sprites/enemy_level" + l + ".png";
+            spriteSrc = "./sprites/enemy_level" + l + ".png";
             spriteData.frameWidth = fw;
             spriteData.frameHeight = fw;
             for (; i < this._data.enemies.length; i++) {
@@ -434,7 +435,7 @@ define("TimePilot", [
                         this._data.score += 100;
                     }
                 }
-                this._canvas.renderSprite(spriteData);
+                this._canvas.renderSprite(spriteSrc, spriteData);
 
                 if (spriteData.posX > (this._data.container.width + this._data.container.despawnBorder) ||
                     spriteData.posX < -this._data.container.despawnBorder ||
@@ -491,14 +492,14 @@ define("TimePilot", [
                 s = 0,
                 playerData = this._player.getData(),
                 h = playerData.heading,
-                spriteData = new Image(),
                 cloudType = this._data.level[l].cloudType,
                 cloudData = {
                     1: { width: 32, height: 18, speed: 1 },
                     2: { width: 60, height: 28, speed: 0.5 },
                     3: { width: 92, height: 32, speed: 0 }
                 },
-                cloud;
+                spriteData = {},
+                cloud, spriteSrc;
 
             spriteData.frameX = 0;
             spriteData.frameY = 0;
@@ -510,14 +511,14 @@ define("TimePilot", [
                 this._data.clouds[i].posX += parseFloat((Math.sin(h * (Math.PI / 180)) * s).toFixed(5));
                 this._data.clouds[i].posY -= parseFloat((Math.cos(h * (Math.PI / 180)) * s).toFixed(5));
 
-                spriteData.src = this._options.baseUrl + "sprites/" + cloudType + cloud.size + ".png";
+                spriteSrc = this._options.baseUrl + "sprites/" + cloudType + cloud.size + ".png";
                 spriteData.frameWidth = cloudData[cloud.size].width;
                 spriteData.frameHeight = cloudData[cloud.size].height;
 
                 spriteData.posX = (cloud.posX - playerData.posX - (spriteData.frameWidth / 2));
                 spriteData.posY = (cloud.posY - playerData.posY - (spriteData.frameHeight / 2));
 
-                this._canvas.renderSprite(spriteData);
+                this._canvas.renderSprite(spriteSrc, spriteData);
 
                 if (spriteData.posX > (this._data.container.width + this._data.container.despawnBorder) ||
                     spriteData.posX < -this._data.container.despawnBorder ||

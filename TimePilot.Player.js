@@ -111,18 +111,18 @@ define("TimePilot.Player", [
          * @method
          */
         render: function () {
-            var sprite = new Image();
-
-            sprite.src = "./sprites/player.png";
-            sprite.frameWidth = 32;
-            sprite.frameHeight = 32;
-            sprite.frameX = Math.floor(this._data.heading / 22.5);
-            sprite.frameY = 0;
-            sprite.posX = ((this._canvas.getCanvas().width / 2) - (sprite.frameWidth / 2));
-            sprite.posY = ((this._canvas.getCanvas().height / 2) - (sprite.frameWidth / 2));
-
+            var spriteSrc = "./sprites/player.png",
+                spriteData = {
+                    frameWidth: 32,
+                    frameHeight: 32,
+                    frameX: Math.floor(this._data.heading / 22.5),
+                    frameY: 0,
+                    posX: ((this._canvas.getCanvas().width / 2) - (32 / 2)),
+                    posY: ((this._canvas.getCanvas().height / 2) - (32 / 2))
+                };
             this._canvas.renderSprite(
-                sprite
+                spriteSrc,
+                spriteData
             );
         },
 
