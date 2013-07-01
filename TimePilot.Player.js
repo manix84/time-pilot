@@ -3,7 +3,19 @@ define("TimePilot.Player", [
 ], function (helpr) {
 
     /**
-     * Level specific data about the player.
+     * Constant data about the player.
+     * @constant
+     * @type {Object}
+     */
+    var PLAYER_DATA = {
+        height: 32,
+        width: 32,
+        hitRadius: 8,
+        src: "./sprites/player.png"
+    };
+
+    /**
+     * Constant level specific data about the player.
      * @constant
      * @type {Object}
      */
@@ -13,17 +25,12 @@ define("TimePilot.Player", [
             turn: 5
         }
     };
-    var PLAYER_DATA = {
-        height: 32,
-        width: 32,
-        hitRadius: 8
-    };
 
     /**
      * Player object.
-     * @method
      * @constructor
-     * @param   {Canvas Instance}   canvas - An instance of the Canvas Object (./Canvas.js)
+     * @param   {Canvas Instance} canvas
+     * @returns {Player Instance}
      */
     var Player = function (canvas) {
         this._canvas = canvas;
@@ -114,7 +121,7 @@ define("TimePilot.Player", [
          * @method
          */
         render: function () {
-            this._canvas.renderSprite("./sprites/player.png", {
+            this._canvas.renderSprite(PLAYER_DATA.src, {
                 frameWidth: PLAYER_DATA.width,
                 frameHeight: PLAYER_DATA.height,
                 frameX: Math.floor(this._data.heading / 22.5),
