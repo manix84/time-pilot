@@ -1,6 +1,6 @@
 define("TimePilot.Player", [
     "lib/helpers"
-], function (helpr) {
+], function (helpers) {
 
     /**
      * Constant data about the player.
@@ -21,8 +21,8 @@ define("TimePilot.Player", [
      */
     var LEVEL_DATA = {
         1: {
-            velocity: 3,
-            turn: 5
+            velocity: 4,    // Higher = Faster
+            turnInterval: 5 // Lower = Faster
         }
     };
 
@@ -105,13 +105,13 @@ define("TimePilot.Player", [
          * Recalculate player's current position and heading.
          * @method
          */
-        resposition: function () {
+        reposition: function () {
             var player = this._data,
                 heading = this._data.heading,
                 velocity = this.getLevelData().velocity;
 
-            player.posX += helpr.float(Math.sin(heading * (Math.PI / 180)) * velocity);
-            player.posY -= helpr.float(Math.cos(heading * (Math.PI / 180)) * velocity);
+            player.posX += helpers.float(Math.sin(heading * (Math.PI / 180)) * velocity);
+            player.posY -= helpers.float(Math.cos(heading * (Math.PI / 180)) * velocity);
 
             this._data.player = player;
         },
