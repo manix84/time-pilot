@@ -13,6 +13,11 @@ define("TimePilot.Player", [
             turn: 5
         }
     };
+    var PLAYER_DATA = {
+        height: 32,
+        width: 32,
+        hitRadius: 8
+    };
 
     /**
      * Player object.
@@ -35,9 +40,7 @@ define("TimePilot.Player", [
             heading: 90,
             posX: 0,
             posY: 0,
-            height: 32,
-            width: 32,
-            hitRadius: 8
+            alive: true
         },
 
         /**
@@ -111,19 +114,14 @@ define("TimePilot.Player", [
          * @method
          */
         render: function () {
-            var spriteSrc = "./sprites/player.png",
-                spriteData = {
-                    frameWidth: 32,
-                    frameHeight: 32,
-                    frameX: Math.floor(this._data.heading / 22.5),
-                    frameY: 0,
-                    posX: ((this._canvas.getCanvas().width / 2) - (32 / 2)),
-                    posY: ((this._canvas.getCanvas().height / 2) - (32 / 2))
-                };
-            this._canvas.renderSprite(
-                spriteSrc,
-                spriteData
-            );
+            this._canvas.renderSprite("./sprites/player.png", {
+                frameWidth: PLAYER_DATA.width,
+                frameHeight: PLAYER_DATA.height,
+                frameX: Math.floor(this._data.heading / 22.5),
+                frameY: 0,
+                posX: ((this._canvas.getCanvas().width / 2) - (PLAYER_DATA.width / 2)),
+                posY: ((this._canvas.getCanvas().height / 2) - (PLAYER_DATA.height / 2))
+            });
         },
 
         explode: function () {}
