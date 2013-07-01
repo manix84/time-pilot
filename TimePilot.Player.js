@@ -107,11 +107,11 @@ define("TimePilot.Player", [
          */
         resposition: function () {
             var player = this._data,
-                h = this._data.heading,
-                s = this.getLevelData().velocity;
+                heading = this._data.heading,
+                velocity = this.getLevelData().velocity;
 
-            player.posX += helpr.float(Math.sin(h * (Math.PI / 180)) * s);
-            player.posY -= helpr.float(Math.cos(h * (Math.PI / 180)) * s);
+            player.posX += helpr.float(Math.sin(heading * (Math.PI / 180)) * velocity);
+            player.posY -= helpr.float(Math.cos(heading * (Math.PI / 180)) * velocity);
 
             this._data.player = player;
         },
@@ -126,8 +126,8 @@ define("TimePilot.Player", [
                 frameHeight: PLAYER_DATA.height,
                 frameX: Math.floor(this._data.heading / 22.5),
                 frameY: 0,
-                posX: ((this._canvas.getCanvas().width / 2) - (PLAYER_DATA.width / 2)),
-                posY: ((this._canvas.getCanvas().height / 2) - (PLAYER_DATA.height / 2))
+                posX: ((this._canvas.width / 2) - (PLAYER_DATA.width / 2)),
+                posY: ((this._canvas.height / 2) - (PLAYER_DATA.height / 2))
             });
         },
 
