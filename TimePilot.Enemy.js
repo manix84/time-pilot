@@ -116,7 +116,13 @@ define("TimePilot.Enemy", [
             };
         },
 
-        detectAreaExit: function (arenaSize) {
+        /**
+         * Detect if the entity has left a given radius of the player.
+         * @method
+         * @param   {Number} radius - Maximum radial from player before they are concidered outside the battle.
+         * @returns {Boolean} True = entity has left the area, False = entity is still in area.
+         */
+        detectAreaExit: function (radius) {
             var levelData = this.getLevelData(),
                 player = this._player.getData(),
                 hasExistedArea;
@@ -125,7 +131,7 @@ define("TimePilot.Enemy", [
                     posY: player.posY + ((this._canvas.height / 2) - (levelData.height / 2))
                 },
                 this.getData(),
-                arenaSize
+                radius
             );
 
             return hasExistedArea;
