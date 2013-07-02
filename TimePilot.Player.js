@@ -35,7 +35,8 @@ define("TimePilot.Player", [
     var Player = function (canvas) {
         this._canvas = canvas;
 
-        this._loadAssets();
+        this._playerSprite = new Image();
+        this._playerSprite.src = PLAYER_DATA.src;
     };
 
     Player.prototype = {
@@ -104,21 +105,6 @@ define("TimePilot.Player", [
         },
 
         /**
-         * Attempts to load player assets before the sprite requires them.
-         * @method
-         * @param {Function} [callback=Empty Function] - Function to be run when assets have loaded.
-         */
-        _loadAssets: function (callback) {
-            callback = callback || function () {};
-            var img = new Image();
-            img.src = PLAYER_DATA.src;
-            img.onload = function () {
-                callback();
-                img = null;
-            };
-        },
-
-        /**
          * Recalculate player's current position and heading.
          * @method
          */
@@ -138,7 +124,7 @@ define("TimePilot.Player", [
          * @method
          */
         render: function () {
-            this._canvas.renderSprite(PLAYER_DATA.src, {
+            this._canvas.renderSprite(this._playerSprite, {
                 frameWidth: PLAYER_DATA.width,
                 frameHeight: PLAYER_DATA.height,
                 frameX: Math.floor(this._data.heading / 22.5),

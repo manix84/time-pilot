@@ -85,6 +85,21 @@ define("TimePilot", [
 
             this._player.setLevel(1);
 
+            this._canvas.registerAssets([
+                "./fonts/font.ttf",
+                "./sprites/player.png",
+                "./sprites/enemy_level1.png",
+                "./sprites/enemy_level2.png",
+                "./sprites/enemy_level3.png",
+                "./sprites/enemy_level4.png",
+                "./sprites/enemy_level5.png",
+                "./sprites/cloud1.png",
+                "./sprites/cloud2.png",
+                "./sprites/cloud3.png"
+            ]);
+
+            this._canvas.preloadAssets();
+
 
             this._elementContruction();
             this._keyboardLock.focus();
@@ -322,11 +337,12 @@ define("TimePilot", [
         _renderExplosions: function () {
             var i = 0,
                 spriteData = {},
-                explosion, spriteSrc;
+                sprite = new Image(),
+                explosion;
 
             for (; i < this._data.explosions.length; i++) {
                 explosion = this._data.explosions[i];
-                spriteSrc = "./sprites/enemy_explosion.png";
+                sprite.src = "./sprites/enemy_explosion.png";
                 spriteData.frameWidth = 32;
                 spriteData.frameHeight = 32;
                 spriteData.frameX = (this._ticker.getTicks() - explosion.startingTick % 25);
@@ -334,7 +350,7 @@ define("TimePilot", [
                 spriteData.posX = (explosion.posX - this._player.getData().posX - (spriteData.frameWidth / 2));
                 spriteData.posY = (explosion.posY - this._player.getData().posY - (spriteData.frameHeight / 2));
 
-                this._canvas.renderSprite(spriteSrc, spriteData);
+                this._canvas.renderSprite(sprite, spriteData);
 
                 if (spriteData.frameX === 4) {
                     this._data.explosions.splice(i, 1);
@@ -344,9 +360,9 @@ define("TimePilot", [
 
         _renderBoss: function () {
             var spriteData = {},
-                spriteSrc;
+                sprite = new Image();
 
-            spriteSrc = "./sprites/boss_level" + this._data.level.current + ".png";
+            sprite.src = "./sprites/boss_level" + this._data.level.current + ".png";
             spriteData.frameWidth = 64;
             spriteData.frameHeight = 32;
             spriteData.frameX = 0;
@@ -354,7 +370,7 @@ define("TimePilot", [
             spriteData.posX = (0 - this._player.getData().posX);
             spriteData.posY = (0 - this._player.getData().posY);
 
-            this._canvas.renderSprite(spriteSrc, spriteData);
+            this._canvas.renderSprite(sprite, spriteData);
         },
 
         _renderBullets: function () {
@@ -410,7 +426,8 @@ define("TimePilot", [
                     3: { width: 92, height: 32, speed: 0 }
                 },
                 spriteData = {},
-                cloud, spriteSrc;
+                sprite = new Image(),
+                cloud;
 
             spriteData.frameX = 0;
             spriteData.frameY = 0;
@@ -422,14 +439,14 @@ define("TimePilot", [
                 this._data.clouds[i].posX += parseFloat((Math.sin(h * (Math.PI / 180)) * s).toFixed(5));
                 this._data.clouds[i].posY -= parseFloat((Math.cos(h * (Math.PI / 180)) * s).toFixed(5));
 
-                spriteSrc = this._options.baseUrl + "sprites/" + cloudType + cloud.size + ".png";
+                sprite.src = "./sprites/" + cloudType + cloud.size + ".png";
                 spriteData.frameWidth = cloudData[cloud.size].width;
                 spriteData.frameHeight = cloudData[cloud.size].height;
 
                 spriteData.posX = (cloud.posX - playerData.posX - (spriteData.frameWidth / 2));
                 spriteData.posY = (cloud.posY - playerData.posY - (spriteData.frameHeight / 2));
 
-                this._canvas.renderSprite(spriteSrc, spriteData);
+                this._canvas.renderSprite(sprite, spriteData);
 
                 if (spriteData.posX > (this._data.container.width + this._data.container.despawnBorder) ||
                     spriteData.posX < -this._data.container.despawnBorder ||
