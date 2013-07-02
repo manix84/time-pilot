@@ -1,5 +1,11 @@
 define("engine/Canvas", function () {
 
+    /**
+     * Create a canvas instance to run the game in.
+     * @constructor
+     * @param   {HTML Element} containerElement - Element to load the canvas into.
+     * @returns {Canvas Instance}
+     */
     var Canvas = function (containerElement) {
         this._containerElement = containerElement;
         this._canvas = document.createElement("canvas");
