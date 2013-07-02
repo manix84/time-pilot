@@ -1,4 +1,4 @@
-define("lib/Canvas", function () {
+define("engine/Canvas", function () {
 
     var Canvas = function (containerElement) {
         this._containerElement = containerElement;

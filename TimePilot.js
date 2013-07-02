@@ -1,6 +1,6 @@
 define("TimePilot", [
-    "lib/Ticker",
-    "lib/Canvas",
+    "engine/Ticker",
+    "engine/Canvas",
     "TimePilot.Player",
     "TimePilot.EnemyFactory"
 ], function (Ticker, Canvas, Player, EnemyFactory) {

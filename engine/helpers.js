@@ -1,4 +1,4 @@
-define("lib/helpers", function () {
+define("engine/helpers", function () {
     var helpers = {
 
         /**

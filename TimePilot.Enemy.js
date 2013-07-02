@@ -1,5 +1,5 @@
 define("TimePilot.Enemy", [
-    "lib/helpers"
+    "engine/helpers"
 ], function (helpers) {
 
     /**
@@ -44,6 +44,8 @@ define("TimePilot.Enemy", [
         this._data.posY = posY;
         this._data.heading = heading;
         this._data.isInArena = true;
+
+        this._loadAssets();
     };
 
     Enemy.prototype = {
@@ -99,7 +101,28 @@ define("TimePilot.Enemy", [
             return LEVEL_DATA[this._level];
         },
 
-        detectAreaExit: function (arenaSize) {
+        /**
+         * Attempts to load player assets before the sprite requires them.
+         * @method
+         * @param {Function} [callback=Empty Function] - Function to be run when assets have loaded.
+         */
+        _loadAssets: function (callback) {
+            callback = callback || function () {};
+            var img = new Image();
+            img.src = this.getLevelData().src;
+            img.onload = function () {
+                callback();
+                img = null;
+            };
+        },
+
+        /**
+         * Detect if the entity has left a given radius of the player.
+         * @method
+         * @param   {Number} radius - Maximum radial from player before they are concidered outside the battle.
+         * @returns {Boolean} True = entity has left the area, False = entity is still in area.
+         */
+        detectAreaExit: function (radius) {
             var levelData = this.getLevelData(),
                 player = this._player.getData(),
                 hasExistedArea;
@@ -108,7 +131,7 @@ define("TimePilot.Enemy", [
                     posY: player.posY + ((this._canvas.height / 2) - (levelData.height / 2))
                 },
                 this.getData(),
-                arenaSize
+                radius
             );
 
             return hasExistedArea;
