@@ -44,6 +44,8 @@ define("TimePilot.Enemy", [
         this._data.posY = posY;
         this._data.heading = heading;
         this._data.isInArena = true;
+
+        this._loadAssets();
     };
 
     Enemy.prototype = {
@@ -97,6 +99,21 @@ define("TimePilot.Enemy", [
          */
         getLevelData: function () {
             return LEVEL_DATA[this._level];
+        },
+
+        /**
+         * Attempts to load player assets before the sprite requires them.
+         * @method
+         * @param {Function} [callback=Empty Function] - Function to be run when assets have loaded.
+         */
+        _loadAssets: function (callback) {
+            callback = callback || function () {};
+            var img = new Image();
+            img.src = this.getLevelData().src;
+            img.onload = function () {
+                callback();
+                img = null;
+            };
         },
 
         detectAreaExit: function (arenaSize) {

@@ -34,6 +34,8 @@ define("TimePilot.Player", [
      */
     var Player = function (canvas) {
         this._canvas = canvas;
+
+        this._loadAssets();
     };
 
     Player.prototype = {
@@ -99,6 +101,21 @@ define("TimePilot.Player", [
          */
         getLevelData: function () {
             return LEVEL_DATA[this._level];
+        },
+
+        /**
+         * Attempts to load player assets before the sprite requires them.
+         * @method
+         * @param {Function} [callback=Empty Function] - Function to be run when assets have loaded.
+         */
+        _loadAssets: function (callback) {
+            callback = callback || function () {};
+            var img = new Image();
+            img.src = PLAYER_DATA.src;
+            img.onload = function () {
+                callback();
+                img = null;
+            };
         },
 
         /**
