@@ -23,6 +23,9 @@ define("TimePilot.EnemyFactory", [
         /**
          * Create an enemy instance and keep a record of it in the factory.
          * @method
+         * @param   {Number} posX    - X coordinate to start from.
+         * @param   {Number} posY    - Y coordinate to start from.
+         * @param   {Number} heading - Heading to start from.
          */
         create: function (posX, posY, heading) {
             this._enemies.push(
@@ -35,22 +38,12 @@ define("TimePilot.EnemyFactory", [
          * @method
          */
         reposition: function () {
-            var player = this._player.getData(),
-                levelData, i, isInArena;
-
+            var i;
 
             for (i in this._enemies) {
                 if (this._enemies.hasOwnProperty(i)) {
                     this._enemies[i].reposition();
-                    levelData = this._enemies[i].getLevelData();
-                    isInArena = helpers.detectAreaExit({
-                            posX: player.posX + ((this._canvas.width / 2) - (levelData.width / 2)),
-                            posY: player.posY + ((this._canvas.height / 2) - (levelData.height / 2))
-                        },
-                        this._enemies[i].getData(),
-                        500
-                    );
-                    if (!isInArena) {
+                    if (this._enemies[i].detectAreaExit(500)) {
                         this.despawn(i);
                     }
                 }
@@ -70,8 +63,12 @@ define("TimePilot.EnemyFactory", [
             }
         },
 
+        /**
+         * Despawn specified entity.
+         * @method
+         * @param   {Number} entityId - Index ID of entity you wish to remove.
+         */
         despawn: function (entityId) {
-            window.console.log("Despawning", this._enemies[entityId]);
             this._enemies.splice(entityId, 1);
         }
     };

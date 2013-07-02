@@ -99,6 +99,21 @@ define("TimePilot.Enemy", [
             return LEVEL_DATA[this._level];
         },
 
+        detectAreaExit: function (arenaSize) {
+            var levelData = this.getLevelData(),
+                player = this._player.getData(),
+                hasExistedArea;
+            hasExistedArea = helpers.detectAreaExit({
+                    posX: player.posX + ((this._canvas.width / 2) - (levelData.width / 2)),
+                    posY: player.posY + ((this._canvas.height / 2) - (levelData.height / 2))
+                },
+                this.getData(),
+                arenaSize
+            );
+
+            return hasExistedArea;
+        },
+
         /**
          * Recalculate player's current position and heading.
          * @method
