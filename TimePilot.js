@@ -84,6 +84,7 @@ define("TimePilot", [
             this._enemies = new EnemyFactory(GAME_RULES, this._canvas, this._ticker, this._player);
 
             this._player.setLevel(1);
+            this._canvas.renderText("Loading", 20, 10, {size: 30});
 
             this._canvas.registerAssets([
                 "./fonts/font.ttf",
@@ -97,9 +98,15 @@ define("TimePilot", [
                 "./sprites/cloud2.png",
                 "./sprites/cloud3.png"
             ]);
+            this._canvas.preloadAssets(function (obj) {
+                if (!obj.remaining) {
+                    that._start();
+                }
+            });
+        },
 
-            this._canvas.preloadAssets();
-
+        _start: function () {
+            var that = this;
 
             this._elementContruction();
             this._keyboardLock.focus();
@@ -143,14 +150,14 @@ define("TimePilot", [
                 that._renderExplosions();
 
                 that._populateArena(); // NEEDS RENAMING
-                that._canvas.renderText(that._data.score, 20, 10, 30);
+                that._canvas.renderText(that._data.score, 20, 10, {size: 30});
                 that._canvas.renderText(
                     playerData.posX.toFixed(2) +
                     " x " +
                     playerData.posY.toFixed(2),
-                    20, 40, 15
+                    20, 40, {size: 15}
                 );
-                that._canvas.renderText(playerData.heading + "°", 20, 55, 15);
+                that._canvas.renderText(playerData.heading + "°", 20, 55, {size: 15});
             }, 1);
 
             this.playGame();
@@ -194,7 +201,7 @@ define("TimePilot", [
             if (this._ticker.getState()) {
                 window.console.info("Pausing");
                 this._ticker.stop();
-                this._canvas.renderText("Paused", 20, 70, 30);
+                this._canvas.renderText("Paused", 20, 70, {size: 30});
             }
         },
 
@@ -264,7 +271,6 @@ define("TimePilot", [
                     break;
                 }
             });
-            this._container.appendChild(this._canvas.getCanvas());
             this._container.appendChild(this._keyboardLock);
         },
 

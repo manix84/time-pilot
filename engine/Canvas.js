@@ -34,6 +34,7 @@ define("engine/Canvas", function () {
             " }";
 
             this._containerElement.appendChild(this._styles);
+            this._containerElement.appendChild(this._canvas);
         },
 
         /**
@@ -86,13 +87,13 @@ define("engine/Canvas", function () {
         preloadAssets: function (callback) {
             callback = callback || function () {};
             var loadedCount = 0,
-                notLoadedCount = this._assets.length,
-                i = (notLoadedCount - 1),
+                remainingCount = (this._assets.length - 1),
+                i = remainingCount,
                 img = [],
                 onload = function () {
                     callback({
                         loaded: ++loadedCount,
-                        notLoaded: --notLoadedCount
+                        remaining: --remainingCount
                     });
                 };
 
@@ -107,25 +108,30 @@ define("engine/Canvas", function () {
         /**
          * Render text.
          * @method
-         * @param   {String} message   - Text to be rendered
-         * @param   {Number} startPosX - X coordinate to render
-         * @param   {Number} startPosY - Y coordinate to render
-         * @param   {Number} size      - Text size
-         * @param   {String} color     - Text color
-         * @param   {String} font      - Font type
+         * @param   {String} message            - Text to be rendered
+         * @param   {Number} [startPosX]        - X coordinate to render
+         * @param   {Number} [startPosY]        - Y coordinate to render
+         * @param   {Object} [newOptions]
+         * @enum    {String} [newOptions.align] - Text alignment
+         * @enum    {Number} [newOptions.size]  - Text size
+         * @enum    {String} [newOptions.color] - Text color
+         * @enum    {String} [newOptions.font]  - Font type
          */
-        renderText: function (message, startPosX, startPosY, size, color, font) {
+        renderText: function (message, startPosX, startPosY, newOptions) {
             startPosX   = startPosX || 0;
             startPosY   = startPosY || 0;
-            size        = size      || 12;
-            color       = color     || "#fff";
-            font        = font      || "theFont";
+            var options = {
+                    size: newOptions.size || 12,
+                    align: newOptions.align || "left",
+                    valign: newOptions.valign || "top",
+                    color: newOptions.color || "#fff",
+                    font: newOptions.font || "theFont"
+                },
+                context = this.getContext();
 
-            var context = this.getContext();
-
-            context.fillStyle = color;
-            context.font = size + "px " + font;
-            context.textBaseline = "top";
+            context.fillStyle = options.color;
+            context.font = options.size + "px " + options.font;
+            context.textBaseline = options.valign;
             context.fillText(message, startPosX, startPosY);
         },
 
