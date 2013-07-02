@@ -59,11 +59,8 @@ define("engine/Canvas", function () {
             context.fillText(message, startPosX, startPosY);
         },
 
-        renderSprite: function (spriteSrc, spriteData) {
-            var context = this.getContext(),
-                sprite = new Image();
-
-            sprite.src = spriteSrc;
+        renderSprite: function (sprite, spriteData) {
+            var context = this.getContext();
 
             context.drawImage(
                 sprite,

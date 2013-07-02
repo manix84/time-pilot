@@ -46,6 +46,8 @@ define("TimePilot.Enemy", [
         this._data.isInArena = true;
 
         this._loadAssets();
+        this._enemySprite = new Image();
+        this._enemySprite.src = this.getLevelData().src;
     };
 
     Enemy.prototype = {
@@ -169,7 +171,7 @@ define("TimePilot.Enemy", [
          */
         render: function () {
             var levelData = this.getLevelData();
-            this._canvas.renderSprite(levelData.src, {
+            this._canvas.renderSprite(this._enemySprite, {
                 frameWidth: levelData.width,
                 frameHeight: levelData.height,
                 frameX: Math.floor(this._data.heading / 22.5),

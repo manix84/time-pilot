@@ -36,6 +36,8 @@ define("TimePilot.Player", [
         this._canvas = canvas;
 
         this._loadAssets();
+        this._playerSprite = new Image();
+        this._playerSprite.src = PLAYER_DATA.src;
     };
 
     Player.prototype = {
@@ -138,7 +140,7 @@ define("TimePilot.Player", [
          * @method
          */
         render: function () {
-            this._canvas.renderSprite(PLAYER_DATA.src, {
+            this._canvas.renderSprite(this._playerSprite, {
                 frameWidth: PLAYER_DATA.width,
                 frameHeight: PLAYER_DATA.height,
                 frameX: Math.floor(this._data.heading / 22.5),
