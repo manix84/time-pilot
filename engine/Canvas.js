@@ -86,13 +86,13 @@ define("engine/Canvas", function () {
         preloadAssets: function (callback) {
             callback = callback || function () {};
             var loadedCount = 0,
-                notLoadedCount = this._assets.length,
-                i = (notLoadedCount - 1),
+                remainingCount = (this._assets.length - 1),
+                i = remainingCount,
                 img = [],
                 onload = function () {
                     callback({
                         loaded: ++loadedCount,
-                        notLoaded: --notLoadedCount
+                        remaining: --remainingCount
                     });
                 };
 

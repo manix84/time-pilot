@@ -97,9 +97,15 @@ define("TimePilot", [
                 "./sprites/cloud2.png",
                 "./sprites/cloud3.png"
             ]);
+            this._canvas.preloadAssets(function (obj) {
+                if (!obj.remaining) {
+                    that._start();
+                }
+            });
+        },
 
-            this._canvas.preloadAssets();
-
+        _start: function () {
+            var that = this;
 
             this._elementContruction();
             this._keyboardLock.focus();
