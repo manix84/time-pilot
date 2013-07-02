@@ -45,7 +45,8 @@ define("TimePilot.Enemy", [
         this._data.heading = heading;
         this._data.isInArena = true;
 
-        this._loadAssets();
+        this.loadAssets();
+
         this._enemySprite = new Image();
         this._enemySprite.src = this.getLevelData().src;
     };
@@ -104,11 +105,11 @@ define("TimePilot.Enemy", [
         },
 
         /**
-         * Attempts to load player assets before the sprite requires them.
+         * Attempts to pre-load assets.
          * @method
          * @param {Function} [callback=Empty Function] - Function to be run when assets have loaded.
          */
-        _loadAssets: function (callback) {
+        loadAssets: function (callback) {
             callback = callback || function () {};
             var img = new Image();
             img.src = this.getLevelData().src;
