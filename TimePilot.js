@@ -84,6 +84,7 @@ define("TimePilot", [
             this._enemies = new EnemyFactory(GAME_RULES, this._canvas, this._ticker, this._player);
 
             this._player.setLevel(1);
+            this._canvas.renderText("Loading", 20, 10, {size: 30});
 
             this._canvas.registerAssets([
                 "./fonts/font.ttf",
@@ -149,14 +150,14 @@ define("TimePilot", [
                 that._renderExplosions();
 
                 that._populateArena(); // NEEDS RENAMING
-                that._canvas.renderText(that._data.score, 20, 10, 30);
+                that._canvas.renderText(that._data.score, 20, 10, {size: 30});
                 that._canvas.renderText(
                     playerData.posX.toFixed(2) +
                     " x " +
                     playerData.posY.toFixed(2),
-                    20, 40, 15
+                    20, 40, {size: 15}
                 );
-                that._canvas.renderText(playerData.heading + "°", 20, 55, 15);
+                that._canvas.renderText(playerData.heading + "°", 20, 55, {size: 15});
             }, 1);
 
             this.playGame();
@@ -200,7 +201,7 @@ define("TimePilot", [
             if (this._ticker.getState()) {
                 window.console.info("Pausing");
                 this._ticker.stop();
-                this._canvas.renderText("Paused", 20, 70, 30);
+                this._canvas.renderText("Paused", 20, 70, {size: 30});
             }
         },
 
