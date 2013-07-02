@@ -34,6 +34,7 @@ define("engine/Canvas", function () {
             " }";
 
             this._containerElement.appendChild(this._styles);
+            this._containerElement.appendChild(this._canvas);
         },
 
         /**

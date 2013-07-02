@@ -270,7 +270,6 @@ define("TimePilot", [
                     break;
                 }
             });
-            this._container.appendChild(this._canvas.getCanvas());
             this._container.appendChild(this._keyboardLock);
         },
 
