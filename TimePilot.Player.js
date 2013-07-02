@@ -1,24 +1,36 @@
 define("TimePilot.Player", [
     "lib/helpers"
-], function (helpr) {
+], function (helpers) {
 
     /**
-     * Level specific data about the player.
+     * Constant data about the player.
+     * @constant
+     * @type {Object}
+     */
+    var PLAYER_DATA = {
+        height: 32,
+        width: 32,
+        hitRadius: 8,
+        src: "./sprites/player.png"
+    };
+
+    /**
+     * Constant level specific data about the player.
      * @constant
      * @type {Object}
      */
     var LEVEL_DATA = {
         1: {
-            velocity: 3,
-            turn: 5
+            velocity: 4,    // Higher = Faster
+            turnInterval: 5 // Lower = Faster
         }
     };
 
     /**
      * Player object.
-     * @method
      * @constructor
-     * @param   {Canvas Instance}   canvas - An instance of the Canvas Object (./Canvas.js)
+     * @param   {Canvas Instance} canvas
+     * @returns {Player Instance}
      */
     var Player = function (canvas) {
         this._canvas = canvas;
@@ -35,9 +47,7 @@ define("TimePilot.Player", [
             heading: 90,
             posX: 0,
             posY: 0,
-            height: 32,
-            width: 32,
-            hitRadius: 8
+            alive: true
         },
 
         /**
@@ -95,13 +105,13 @@ define("TimePilot.Player", [
          * Recalculate player's current position and heading.
          * @method
          */
-        resposition: function () {
+        reposition: function () {
             var player = this._data,
-                h = this._data.heading,
-                s = this.getLevelData().velocity;
+                heading = this._data.heading,
+                velocity = this.getLevelData().velocity;
 
-            player.posX += helpr.float(Math.sin(h * (Math.PI / 180)) * s);
-            player.posY -= helpr.float(Math.cos(h * (Math.PI / 180)) * s);
+            player.posX += helpers.float(Math.sin(heading * (Math.PI / 180)) * velocity);
+            player.posY -= helpers.float(Math.cos(heading * (Math.PI / 180)) * velocity);
 
             this._data.player = player;
         },
@@ -111,19 +121,14 @@ define("TimePilot.Player", [
          * @method
          */
         render: function () {
-            var spriteSrc = "./sprites/player.png",
-                spriteData = {
-                    frameWidth: 32,
-                    frameHeight: 32,
-                    frameX: Math.floor(this._data.heading / 22.5),
-                    frameY: 0,
-                    posX: ((this._canvas.getCanvas().width / 2) - (32 / 2)),
-                    posY: ((this._canvas.getCanvas().height / 2) - (32 / 2))
-                };
-            this._canvas.renderSprite(
-                spriteSrc,
-                spriteData
-            );
+            this._canvas.renderSprite(PLAYER_DATA.src, {
+                frameWidth: PLAYER_DATA.width,
+                frameHeight: PLAYER_DATA.height,
+                frameX: Math.floor(this._data.heading / 22.5),
+                frameY: 0,
+                posX: ((this._canvas.width / 2) - (PLAYER_DATA.width / 2)),
+                posY: ((this._canvas.height / 2) - (PLAYER_DATA.height / 2))
+            });
         },
 
         explode: function () {}

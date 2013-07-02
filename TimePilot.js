@@ -1,8 +1,14 @@
 define("TimePilot", [
     "lib/Ticker",
     "lib/Canvas",
-    "TimePilot.Player"
-], function (Ticker, Canvas, Player) {
+    "TimePilot.Player",
+    "TimePilot.EnemyFactory"
+], function (Ticker, Canvas, Player, EnemyFactory) {
+
+    var GAME_RULES = {
+        spawningRadius: 100,
+        despawnRadius: 150
+    };
 
     var TimePilot = function (element, options) {
         this._container = element;
@@ -73,8 +79,9 @@ define("TimePilot", [
             var that = this;
 
             this._canvas = new Canvas(this._container);
-            this._player = new Player(this._canvas);
             this._ticker = new Ticker(17);
+            this._player = new Player(this._canvas);
+            this._enemies = new EnemyFactory(GAME_RULES, this._canvas, this._ticker, this._player);
 
             this._player.setLevel(1);
 
@@ -96,7 +103,10 @@ define("TimePilot", [
             }, 50000);
 
             this._ticker.addSchedule(function () {
-                that._player.resposition();
+                that._player.reposition();
+                that._enemies.reposition();
+
+
                 that.rotatePlayer();
 
                 // that._calculateClouds();
@@ -107,9 +117,12 @@ define("TimePilot", [
                 var playerData = that._player.getData();
 
                 that._renderClouds();
+
                 that._player.render();
+                that._enemies.render();
+
                 that._renderBullets();
-                that._renderEnemies();
+                // that._renderEnemies();
 
 
                 that._renderExplosions();
@@ -344,108 +357,6 @@ define("TimePilot", [
             this._canvas.renderSprite(spriteSrc, spriteData);
         },
 
-        _renderEnemies: function () {
-            var i = 0, j = 0,
-                l = this._data.level.current,
-                enemyData = this._data.level[l].enemy,
-                fw = enemyData.width,
-                fh = enemyData.height,
-                ts = enemyData.turnSpeed,
-                t = this._ticker.getTicks(),
-                spriteData = {},
-                h, s, a, lt, enemy, spriteSrc;
-
-            spriteSrc = "./sprites/enemy_level" + l + ".png";
-            spriteData.frameWidth = fw;
-            spriteData.frameHeight = fw;
-            for (; i < this._data.enemies.length; i++) {
-                // Shorten enemy heading and game level.
-                enemy = this._data.enemies[i];
-                h = enemy.heading;
-                s = (0.7 + (l / 10));
-                lt = enemy.lastMovedTick;
-
-                // Per-Enemy Data
-                spriteData.frameX = Math.floor(h / 22.5);
-                spriteData.frameY = (Math.floor(this._ticker.getTicks() / 10) % 2);
-
-                this._data.enemies[i].posX += parseFloat((Math.sin(h * (Math.PI / 180)) * s).toFixed(5));
-                this._data.enemies[i].posY -= parseFloat((Math.cos(h * (Math.PI / 180)) * s).toFixed(5));
-
-                if (!this._data.enemies[i].isFollowing) {
-                    switch (Math.floor(Math.random() * 300) + 1) {
-                    case 1:
-                        this._data.enemies[i].heading -= 22.5;
-                        if (enemy.heading < 0) {
-                            this._data.enemies[i].heading = 337.5;
-                        }
-                        break;
-                    case 2:
-                        this._data.enemies[i].heading += 22.5;
-                        if (enemy.heading >= 360) {
-                            this._data.enemies[i].heading = 22.5;
-                        }
-                        break;
-                    }
-                } else {
-                    if ((t - lt) > ts) {
-                        this._data.enemies[i].lastMovedTick = t + (Math.floor(Math.random() * ts));
-                        a = this._findAngle(enemy, {
-                            posX: this._player.getData().posX + ((this._data.container.width / 2) - (fw / 2)),
-                            posY: this._player.getData().posY + ((this._data.container.height / 2) - (fh / 2))
-                        });
-                        a = (Math.floor(a / 22.5) * 22.5);
-
-                        this._data.enemies[i].heading = this._rotateTo(a, enemy.heading, 22.5);
-                    }
-                }
-
-                spriteData.posX = (enemy.posX - this._player.getData().posX - (fw / 2));
-                spriteData.posY = (enemy.posY - this._player.getData().posY - (fh / 2));
-
-                if (this._detectCollision({
-                    // Enemy Position
-                    posX: (enemy.posX - this._player.getData().posX),
-                    posY: (enemy.posY - this._player.getData().posY),
-                    radius: enemyData.hitRadius
-                }, {
-                    // Bullet Position
-                    posX: this._player.getData().posX + (this._player.getData().width / 2),
-                    posY: this._player.getData().posX + (this._player.getData().height / 2),
-                    radius: this._player.getData().hitRadius
-                })) {
-                    window.console.warn("GAME OVER ", this._data.score);
-                }
-
-                for (j = 0; j < this._data.bullets.length; j++) {
-                    if (this._detectCollision({
-                        // Enemy Position
-                        posX: (enemy.posX - this._player.getData().posX),
-                        posY: (enemy.posY - this._player.getData().posY),
-                        radius: enemyData.hitRadius
-                    }, {
-                        // Bullet Position
-                        posX: this._data.bullets[j].posX + (this._data.level[l].bullet.size / 2),
-                        posY: this._data.bullets[j].posY + (this._data.level[l].bullet.size / 2),
-                        radius: this._data.level[l].bullet.hitRadius
-                    })) {
-                        this._addExplosion(enemy.posX, enemy.posY);
-                        this._data.enemies.splice(i, 1);
-                        this._data.bullets.splice(j, 1);
-                        this._data.score += 100;
-                    }
-                }
-                this._canvas.renderSprite(spriteSrc, spriteData);
-
-                if (spriteData.posX > (this._data.container.width + this._data.container.despawnBorder) ||
-                    spriteData.posX < -this._data.container.despawnBorder ||
-                    spriteData.posY > (this._data.container.height + this._data.container.despawnBorder) ||
-                    spriteData.posY < -this._data.container.despawnBorder) {
-                    this._data.enemies.splice(i, 1);
-                }
-            }
-        },
-
         _renderBullets: function () {
             var i = 0,
                 data = {},
@@ -530,19 +441,6 @@ define("TimePilot", [
 
         },
 
-        _addEnemy: function (posX, posY, heading) {
-            var l = this._data.level.current,
-                fw = this._data.level[l].enemy.width,
-                fh = this._data.level[l].enemy.height;
-            this._data.enemies.push({
-                isFollowing: (Math.floor(Math.random() * 2) === 0) ? true : false,
-                lastMovedTick: 0,
-                heading: heading || Math.floor(Math.random() * 16) * 22.5,
-                posX: posX || Math.floor(Math.random() * (this._data.container.width - fw)),
-                posY: posY || Math.floor(Math.random() * (this._data.container.height - fh))
-            });
-        },
-
         _addExplosion: function (posX, posY, isBoss) {
             isBoss = isBoss || false;
 
@@ -583,7 +481,7 @@ define("TimePilot", [
                     posX: this._player.getData().posX,
                     posY: this._player.getData().posY
                 });
-                this._addEnemy(data.posX, data.posY, angle);
+                this._enemies.create(data.posX, data.posY, angle);
             }
             if (this._data.clouds.length < 20) {
                 // Clouds
