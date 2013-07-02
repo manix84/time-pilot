@@ -45,8 +45,6 @@ define("TimePilot.Enemy", [
         this._data.heading = heading;
         this._data.isInArena = true;
 
-        this.loadAssets();
-
         this._enemySprite = new Image();
         this._enemySprite.src = this.getLevelData().src;
     };
@@ -102,21 +100,6 @@ define("TimePilot.Enemy", [
          */
         getLevelData: function () {
             return LEVEL_DATA[this._level];
-        },
-
-        /**
-         * Attempts to pre-load assets.
-         * @method
-         * @param {Function} [callback=Empty Function] - Function to be run when assets have loaded.
-         */
-        loadAssets: function (callback) {
-            callback = callback || function () {};
-            var img = new Image();
-            img.src = this.getLevelData().src;
-            img.onload = function () {
-                callback();
-                img = null;
-            };
         },
 
         /**

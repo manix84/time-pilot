@@ -7,6 +7,7 @@ define("engine/Canvas", function () {
         this.width = this._containerElement.clientWidth;
         this.height = this._containerElement.clientHeight;
 
+        this._assets = [];
 
         this.init();
     };
@@ -42,6 +43,34 @@ define("engine/Canvas", function () {
 
         getCanvas: function () {
             return this._canvas;
+        },
+
+        registerAssets: function (assets) {
+            if (typeof assets === "string") {
+                assets = [assets];
+            }
+            this._assets = [].concat(this._assets, assets);
+        },
+
+        preloadAssets: function (callback) {
+            callback = callback || function () {};
+            var loadedCount = 0,
+                notLoadedCount = this._assets.length,
+                i = (notLoadedCount - 1),
+                img = [],
+                onload = function () {
+                    callback({
+                        loaded: ++loadedCount,
+                        notLoaded: --notLoadedCount
+                    });
+                };
+
+            for (; 0 <= i; i--) {
+                img[i] = new Image();
+                img[i].src = this._assets[i];
+                img[i].onload = onload;
+                this._assets.splice(i, 1);
+            }
         },
 
         renderText: function (message, startPosX, startPosY, size, color, font) {

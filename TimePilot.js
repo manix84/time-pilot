@@ -85,6 +85,21 @@ define("TimePilot", [
 
             this._player.setLevel(1);
 
+            this._canvas.registerAssets([
+                "./fonts/font.ttf",
+                "./sprites/player.png",
+                "./sprites/enemy_level1.png",
+                "./sprites/enemy_level2.png",
+                "./sprites/enemy_level3.png",
+                "./sprites/enemy_level4.png",
+                "./sprites/enemy_level5.png",
+                "./sprites/cloud1.png",
+                "./sprites/cloud2.png",
+                "./sprites/cloud3.png"
+            ]);
+
+            this._canvas.preloadAssets();
+
 
             this._elementContruction();
             this._keyboardLock.focus();
