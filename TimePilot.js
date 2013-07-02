@@ -24,7 +24,7 @@ define("TimePilot", [
         this._data.container.width = this._container.clientWidth;
         this._data.container.height = this._container.clientHeight;
 
-        this.init();
+        this._init();
     };
 
     TimePilot.prototype = {
@@ -75,7 +75,7 @@ define("TimePilot", [
             clouds: []
         },
 
-        init: function () {
+        _init: function () {
             var that = this;
 
             this._canvas = new Canvas(this._container);
