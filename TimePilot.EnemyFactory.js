@@ -55,11 +55,12 @@ define("TimePilot.EnemyFactory", [
          * @method
          */
         render: function () {
-            var i = 0,
-                len = this._enemies.length;
+            var i = 0;
 
-            for (; i < len; ++i) {
-                this._enemies[i].render();
+            for (i in this._enemies) {
+                if (this._enemies.hasOwnProperty(i)) {
+                    this._enemies[i].render();
+                }
             }
         },
 
