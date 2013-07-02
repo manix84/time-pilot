@@ -1,4 +1,4 @@
-define("lib/Ticker", function () {
+define("engine/Ticker", function () {
     /**
      * Creates an instance of a ticker object.
      * @method

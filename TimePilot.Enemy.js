@@ -1,5 +1,5 @@
 define("TimePilot.Enemy", [
-    "lib/helpers"
+    "engine/helpers"
 ], function (helpers) {
 
     /**

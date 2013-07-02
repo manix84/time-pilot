@@ -1,5 +1,5 @@
 define("TimePilot.Player", [
-    "lib/helpers"
+    "engine/helpers"
 ], function (helpers) {
 
     /**
