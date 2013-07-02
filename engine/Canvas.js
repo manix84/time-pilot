@@ -9,11 +9,15 @@ define("engine/Canvas", function () {
 
         this._assets = [];
 
-        this.init();
+        this._init();
     };
 
     Canvas.prototype = {
-        init: function () {
+        /**
+         * Initialising canvas.
+         * @method
+         */
+        _init: function () {
             this._canvas.setAttribute("width", this.width);
             this._canvas.setAttribute("height", this.height);
 
@@ -26,6 +30,12 @@ define("engine/Canvas", function () {
             this._containerElement.appendChild(this._styles);
         },
 
+        /**
+         * Return 2D or 3D canvas context.
+         * @method
+         * @param   {String} dimentions - Canvas context you want back (2D or 3D).
+         * @returns {Canvas Context}
+         */
         getContext: function (dimentions) {
             var context;
 
@@ -41,10 +51,20 @@ define("engine/Canvas", function () {
             return context;
         },
 
+        /**
+         * Get the Canvas.
+         * @method
+         * @returns {Canvas}
+         */
         getCanvas: function () {
             return this._canvas;
         },
 
+        /**
+         * Register assets to be preloaded.
+         * @method
+         * @param   {String/Array} assets - Assets to be preloaded.
+         */
         registerAssets: function (assets) {
             if (typeof assets === "string") {
                 assets = [assets];
@@ -52,6 +72,11 @@ define("engine/Canvas", function () {
             this._assets = [].concat(this._assets, assets);
         },
 
+        /**
+         * Begin preloading registered assets. Callback is run each time an asset is loaded.
+         * @method
+         * @param   {Function} callback - Callback is run on each completed asset.
+         */
         preloadAssets: function (callback) {
             callback = callback || function () {};
             var loadedCount = 0,
@@ -73,6 +98,16 @@ define("engine/Canvas", function () {
             }
         },
 
+        /**
+         * Render text.
+         * @method
+         * @param   {String} message   - Text to be rendered
+         * @param   {Number} startPosX - X coordinate to render
+         * @param   {Number} startPosY - Y coordinate to render
+         * @param   {Number} size      - Text size
+         * @param   {String} color     - Text color
+         * @param   {String} font      - Font type
+         */
         renderText: function (message, startPosX, startPosY, size, color, font) {
             startPosX   = startPosX || 0;
             startPosY   = startPosY || 0;
@@ -88,6 +123,12 @@ define("engine/Canvas", function () {
             context.fillText(message, startPosX, startPosY);
         },
 
+        /**
+         * Render sprite
+         * @method
+         * @param   {Image Sprite} sprite   - Image sprite to be rendered
+         * @param   {Object} spriteData     - Object containing coordinates and sprite positions.
+         */
         renderSprite: function (sprite, spriteData) {
             var context = this.getContext();
 
