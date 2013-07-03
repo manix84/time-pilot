@@ -231,11 +231,7 @@ define("TimePilot", [
             var that = this;
 
             this._keyboardLock = document.createElement("input");
-            this._keyboardLock.setAttribute("style",
-                "position:absolute;" +
-                "top:-999px;" +
-                "left:-999px;"
-            );
+            this._keyboardLock.setAttribute("style", "position:absolute;left:-999px;");
             this._keyboardLock.setAttribute("type", "text");
             this._addListener(this._canvas.getCanvas(), "click", function () {
                 that._keyboardLock.focus();
