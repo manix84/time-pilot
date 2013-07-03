@@ -104,6 +104,26 @@ define("engine/helpers", function () {
                 dy = radialCenter.posY - target.posY;
 
             return (dx * dx + dy * dy >= radius * radius);
+        },
+
+        drawDebugGrid: function (canvas, widthSpace, heightSpace) {
+            widthSpace = widthSpace || 20;
+            heightSpace = heightSpace || 20;
+            var x = 0;
+
+            for (; x <= canvas.width; x += widthSpace) {
+                canvas.getCanvas().moveTo(0.5 + x, 0);
+                canvas.getCanvas().lineTo(0.5 + x, canvas.height);
+            }
+
+            for (x = 0; x <= canvas.height; x += heightSpace) {
+                canvas.getCanvas().moveTo(0, 0.5 + x);
+                canvas.getCanvas().lineTo(canvas.width, 0.5 + x);
+            }
+
+            canvas.getCanvas().strokeStyle = "#AAA";
+            canvas.getCanvas().stroke();
+
         }
 
     };

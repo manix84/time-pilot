@@ -478,27 +478,6 @@ define("TimePilot", [
                 data = helpers.getSpawnCoords(this._player.getData(), this._canvas);
                 this._addCloud(data.posX, data.posY);
             }
-        },
-
-        _debug: {
-            drawGrid: function () {
-                var x = 0,
-                    h = 20,
-                    w = 20;
-
-                for (; x <= this._data.container.width; x += w) {
-                    this._canvasContext.moveTo(0.5 + x, 0);
-                    this._canvasContext.lineTo(0.5 + x, this._data.container.height);
-                }
-
-                for (x = 0; x <= this._data.container.height; x += h) {
-                    this._canvasContext.moveTo(0, 0.5 + x);
-                    this._canvasContext.lineTo(this._data.container.width, 0.5 + x);
-                }
-
-                this._canvasContext.strokeStyle = "#AAA";
-                this._canvasContext.stroke();
-            }
         }
     };
 
