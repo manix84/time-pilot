@@ -75,7 +75,7 @@ define("TimePilot.Bullet", [
          * @returns {object}
          */
         getLevelData: function () {
-            return CONSTS.bullets.basicEnemies[this._level];
+            return CONSTS.levels[this._level].player.projectile;
         },
 
         /**
