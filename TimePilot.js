@@ -464,7 +464,7 @@ define("TimePilot", [
         _populateArena: function () {
             var data = {},
                 angle = 0;
-            if ((this._ticker.getTicks() % 50 === 0) && this._data.enemies.length < 100)  {
+            if ((this._ticker.getTicks() % 50 === 0) && this._data.enemies.length < 10)  {
                 // Enemies
                 data = helpers.getSpawnCoords(this._player.getData(), this._canvas);
                 angle = this._findAngle({ posX: data.posX, posY: data.posY }, {
