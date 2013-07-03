@@ -40,25 +40,23 @@ define("engine/helpers", function () {
          * WORK IN PROGRESS!!!
          * TODO: Finalise this!
          * @method
-         * @param   {Player Instance} player        [description]
-         * @param   {Canvas Instance} canvas        [description]
-         * @param   {Game Rules Object} gameRules   [description]
+         * @param   {Player Instance} player        - [description]
+         * @param   {Canvas Instance} canvas        - [description]
          * @returns {Object}
          */
-        getSpawnCoords: function (player, canvas, gameRules) {
+        getSpawnCoords: function (target, canvas) {
             var data = {},
-                heading, radius;
+                spawnRadius = 450,
+                spawnArc = 80,
+                heading;
 
-            heading = ((player.heading - (gameRules.spawnArc / 2)) + Math.floor(Math.random() * gameRules.spawnArc));
-            radius = Math.abs(
-                    (canvas.height / 2) + (canvas.width / 2)
-                ) + (gameRules.spawnRadius / 2);
+            heading = ((target.heading - (spawnArc / 2)) + Math.floor(Math.random() * spawnArc));
 
-            data.posX = player.posX + (canvas.width / 2);
-            data.posY = player.posY + (canvas.height / 2);
+            data.posX = target.posX + (canvas.width / 2);
+            data.posY = target.posY + (canvas.height / 2);
 
-            data.posX += this.float(Math.sin(heading * (Math.PI / 180)) * radius);
-            data.posY -= this.float(Math.cos(heading * (Math.PI / 180)) * radius);
+            data.posX += this.float(Math.sin(heading * (Math.PI / 180)) * spawnRadius);
+            data.posY -= this.float(Math.cos(heading * (Math.PI / 180)) * spawnRadius);
 
             return data;
         },

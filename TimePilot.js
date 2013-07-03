@@ -1,9 +1,10 @@
 define("TimePilot", [
     "engine/Ticker",
     "engine/Canvas",
+    "engine/helpers",
     "TimePilot.Player",
     "TimePilot.EnemyFactory"
-], function (Ticker, Canvas, Player, EnemyFactory) {
+], function (Ticker, Canvas, helpers, Player, EnemyFactory) {
 
     var GAME_RULES = {
         spawningRadius: 100,
@@ -290,40 +291,6 @@ define("TimePilot", [
             return currentAngle;
         },
 
-        _spawningArena: function (side) {
-            side = side || Math.floor(Math.random() * 4);
-            var data = {
-                    posX: 0,
-                    posY: 0
-                };
-
-            switch (side) {
-            case 0: // TOP
-                data.posX = (Math.floor(Math.random() * this._data.container.width) + this._player.getData().posX);
-                data.posY = (-(this._data.container.despawnBorder / 2) + this._player.getData().posY);
-                break;
-            case 1: // RIGHT
-                data.posX = (
-                    (this._data.container.width + (this._data.container.despawnBorder / 2)) +
-                    this._player.getData().posX
-                );
-                data.posY = (Math.floor(Math.random() * this._data.container.height) + this._player.getData().posY);
-                break;
-            case 2: // BOTTOM
-                data.posX = (Math.floor(Math.random() * this._data.container.width) + this._player.getData().posX);
-                data.posY = (
-                    (this._data.container.height + (this._data.container.despawnBorder / 2)) +
-                    this._player.getData().posY
-                );
-                break;
-            case 3: // LEFT
-                data.posX = (-(this._data.container.despawnBorder / 2) + this._player.getData().posX);
-                data.posY = (Math.floor(Math.random() * this._data.container.height) + this._player.getData().posY);
-                break;
-            }
-            return data;
-        },
-
         _findAngle: function (targetA, targetB) {
             var angle = Math.atan2(
                 (targetA.posX - targetB.posX),
@@ -499,7 +466,7 @@ define("TimePilot", [
                 angle = 0;
             if ((this._ticker.getTicks() % 50 === 0) && this._data.enemies.length < 100)  {
                 // Enemies
-                data = this._spawningArena();
+                data = helpers.getSpawnCoords(this._player.getData(), this._canvas);
                 angle = this._findAngle({ posX: data.posX, posY: data.posY }, {
                     posX: this._player.getData().posX,
                     posY: this._player.getData().posY
@@ -508,7 +475,7 @@ define("TimePilot", [
             }
             if (this._data.clouds.length < 20) {
                 // Clouds
-                data = this._spawningArena();
+                data = helpers.getSpawnCoords(this._player.getData(), this._canvas);
                 this._addCloud(data.posX, data.posY);
             }
         },
