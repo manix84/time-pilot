@@ -37,8 +37,6 @@ define("engine/helpers", function () {
 
         /**
          * Takes the player's position and heading then returns a random spawning location within that.
-         * WORK IN PROGRESS!!!
-         * TODO: Finalise this!
          * @method
          * @param   {Player Instance} player        - [description]
          * @param   {Canvas Instance} canvas        - [description]
