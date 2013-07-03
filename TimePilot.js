@@ -464,7 +464,7 @@ define("TimePilot", [
         _populateArena: function () {
             var data = {},
                 angle = 0;
-            if ((this._ticker.getTicks() % 50 === 0) && this._data.enemies.length < 100)  {
+            if ((this._ticker.getTicks() % 50 === 0) && this._data.enemies.length < 10)  {
                 // Enemies
                 data = helpers.getSpawnCoords(this._player.getData(), this._canvas);
                 angle = this._findAngle({ posX: data.posX, posY: data.posY }, {
@@ -477,27 +477,6 @@ define("TimePilot", [
                 // Clouds
                 data = helpers.getSpawnCoords(this._player.getData(), this._canvas);
                 this._addCloud(data.posX, data.posY);
-            }
-        },
-
-        _debug: {
-            drawGrid: function () {
-                var x = 0,
-                    h = 20,
-                    w = 20;
-
-                for (; x <= this._data.container.width; x += w) {
-                    this._canvasContext.moveTo(0.5 + x, 0);
-                    this._canvasContext.lineTo(0.5 + x, this._data.container.height);
-                }
-
-                for (x = 0; x <= this._data.container.height; x += h) {
-                    this._canvasContext.moveTo(0, 0.5 + x);
-                    this._canvasContext.lineTo(this._data.container.width, 0.5 + x);
-                }
-
-                this._canvasContext.strokeStyle = "#AAA";
-                this._canvasContext.stroke();
             }
         }
     };
