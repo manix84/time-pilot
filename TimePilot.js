@@ -132,12 +132,7 @@ define("TimePilot", [
                 that._enemies.reposition();
                 that._bullets.reposition();
 
-
                 that.rotatePlayer();
-
-                // that._calculateClouds();
-                // that._calculateBullets();
-                // that._calculateEnemies();
             }, 1);
             this._ticker.addSchedule(function () {
                 var playerData = that._player.getData();
@@ -147,10 +142,6 @@ define("TimePilot", [
                 that._player.render();
                 that._enemies.render();
                 that._bullets.render();
-
-                // that._renderBullets();
-                // that._renderEnemies();
-
 
                 that._renderExplosions();
 
@@ -388,7 +379,6 @@ define("TimePilot", [
                     this._data.clouds.splice(i, 1);
                 }
             }
-
         },
 
         _addExplosion: function (posX, posY, isBoss) {
