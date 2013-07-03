@@ -6,7 +6,6 @@ define("TimePilot.Enemy", [
     /**
      * Creates an enemy to add to the page.
      * @constructor
-     * @param   {Object}            gameRules   - Object containing basic game rules.
      * @param   {Canvas Instance}   canvas      - Canvas Instance.
      * @param   {Ticker Instance}   ticker      - Ticker Instance.
      * @param   {Player Instance}   player      - Player Instance.
@@ -16,8 +15,7 @@ define("TimePilot.Enemy", [
      * @returns {Enemy Instance}
      */
 
-    var Enemy = function (gameRules, canvas, ticker, player, posX, posY, heading) {
-        this._gameRules = gameRules;
+    var Enemy = function (canvas, ticker, player, posX, posY, heading) {
         this._canvas = canvas;
         this._player = player;
         this._ticker = ticker;

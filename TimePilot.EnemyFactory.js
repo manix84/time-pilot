@@ -10,8 +10,7 @@ define("TimePilot.EnemyFactory", [
      * @param   {Player Instance} player - Player Instance
      * @returns {Enemy Factory Instance}
      */
-    var EnemyFactory = function (gameRules, canvas, ticker, player) {
-        this._gameRules = gameRules;
+    var EnemyFactory = function (canvas, ticker, player) {
         this._canvas = canvas;
         this._player = player;
         this._ticker = ticker;
@@ -29,7 +28,7 @@ define("TimePilot.EnemyFactory", [
          */
         create: function (posX, posY, heading) {
             this._enemies.push(
-                new Enemy(this._gameRules, this._canvas, this._ticker, this._player, posX, posY, heading)
+                new Enemy(this._canvas, this._ticker, this._player, posX, posY, heading)
             );
         },
 

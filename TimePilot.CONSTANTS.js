@@ -9,6 +9,12 @@ define("TimePilot.CONSTANTS", function () {
         },
         levels: {
             1: {
+                arena: {
+                    backgroundColor: "#007",
+                    spawningArc: 90,
+                    spawningRadius: 450,
+                    despawnRadius: 500
+                },
                 player: {
                     velocity: 6,
                     turnInterval: 5,
