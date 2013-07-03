@@ -6,15 +6,12 @@ define("TimePilot.BulletFactory", [
      * Construct an bullet factory for managing creation, movement, rendering and removal of bullets.
      * @constructor
      * @param   {Canvas Instance} canvas - Canvas Instance
-     * @param   {Ticker Instance} ticker - Ticker Instance
      * @param   {Player Instance} player - Player Instance
      * @returns {Bullet Factory Instance}
      */
-    var BulletFactory = function (gameRules, canvas, ticker, player) {
-        this._gameRules = gameRules;
+    var BulletFactory = function (canvas, player) {
         this._canvas = canvas;
         this._player = player;
-        this._ticker = ticker;
 
         this._bullets = [];
     };
@@ -29,8 +26,33 @@ define("TimePilot.BulletFactory", [
          */
         create: function (posX, posY, heading) {
             this._bullets.push(
-                new Bullet(this._gameRules, this._canvas, this._ticker, this._player, posX, posY, heading)
+                new Bullet(this._canvas, this._player, posX, posY, heading)
             );
+        },
+
+        /**
+         * Get the current number of spawned entities.
+         * @method
+         * @returns {Number}
+         */
+        getCount: function () {
+            return this._bullets.length;
+        },
+
+        /**
+         * Return the data for all entities in an array.
+         * @method
+         * @returns {Array}
+         */
+        getData: function () {
+            var data = [],
+                i = 0;
+            for (i in this._bullets) {
+                if (this._bullets.hasOwnProperty(i)) {
+                    data.push(this._bullets[i].getData());
+                }
+            }
+            return data;
         },
 
         /**
