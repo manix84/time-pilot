@@ -78,7 +78,7 @@ define("TimePilot.Player", [
          * @returns {[type]}
          */
         getLevelData: function () {
-            return CONSTS.player.levels[this._level];
+            return CONSTS.levels[this._level].player;
         },
 
         /**

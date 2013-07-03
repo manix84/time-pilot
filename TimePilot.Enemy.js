@@ -82,7 +82,7 @@ define("TimePilot.Enemy", [
          * @returns {object}
          */
         getLevelData: function () {
-            return CONSTS.enemies.basic[this._level];
+            return CONSTS.levels[this._level].enemies.basic;
         },
 
         /**
