@@ -1,24 +1,7 @@
 define("TimePilot.Enemy", [
+    "TimePilot.CONSTANTS",
     "engine/helpers"
-], function (helpers) {
-
-    /**
-     * Level specific data about the player.
-     * @constant
-     * @type {Object}
-     */
-    var LEVEL_DATA = {
-        1: {
-            src: "./sprites/enemy_level1.png",
-            velocity: 3,
-            turn: 5,
-            height: 32,
-            width: 32,
-            firingChance: 0.2,
-            hitRadius: 8,
-            canRotate: true
-        }
-    };
+], function (CONSTS, helpers) {
 
     /**
      * Creates an enemy to add to the page.
@@ -99,7 +82,7 @@ define("TimePilot.Enemy", [
          * @returns {object}
          */
         getLevelData: function () {
-            return LEVEL_DATA[this._level];
+            return CONSTS.enemies.basic[this._level];
         },
 
         /**

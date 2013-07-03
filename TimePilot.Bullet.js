@@ -1,19 +1,8 @@
 define("TimePilot.Bullet", [
+    "TimePilot.CONSTANTS",
     "engine/helpers"
-], function (helpers) {
+], function (CONSTS, helpers) {
 
-    /**
-     * Level specific data about the player.
-     * @constant
-     * @type {Object}
-     */
-    var LEVEL_DATA = {
-        1: {
-            velocity: 7,
-            size: 2,
-            color: "#FFF"
-        }
-    };
     /**
      * Creates a bullet to add to render.
      * @constructor
@@ -86,7 +75,7 @@ define("TimePilot.Bullet", [
          * @returns {object}
          */
         getLevelData: function () {
-            return LEVEL_DATA[this._level];
+            return CONSTS.bullets.basicEnemies[this._level];
         },
 
         /**
