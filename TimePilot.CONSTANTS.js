@@ -10,6 +10,7 @@ define("TimePilot.CONSTANTS", function () {
         levels: {
             1: {
                 arena: {
+                    introText: "A.D 1910",
                     backgroundColor: "#007",
                     spawningArc: 90,
                     spawningRadius: 450,
