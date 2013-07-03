@@ -1,38 +1,31 @@
-define("TimePilot.Enemy", [
+define("TimePilot.Bullet", [
     "TimePilot.CONSTANTS",
     "engine/helpers"
 ], function (CONSTS, helpers) {
 
     /**
-     * Creates an enemy to add to the page.
+     * Creates a bullet to add to render.
      * @constructor
-     * @param   {Object}            gameRules   - Object containing basic game rules.
      * @param   {Canvas Instance}   canvas      - Canvas Instance.
-     * @param   {Ticker Instance}   ticker      - Ticker Instance.
      * @param   {Player Instance}   player      - Player Instance.
      * @param   {Number}            posX        - Spawning location on the X axis.
      * @param   {Number}            posY        - Spawning location on the Y axis.
      * @param   {Number}            heading     - Start heading (usually towards the player).
-     * @returns {Enemy Instance}
+     * @returns {Bullet Instance}
      */
 
-    var Enemy = function (gameRules, canvas, ticker, player, posX, posY, heading) {
-        this._gameRules = gameRules;
+    var Bullet = function (canvas, player, posX, posY, heading) {
         this._canvas = canvas;
         this._player = player;
-        this._ticker = ticker;
 
         this._data = {};
         this._data.posX = posX;
         this._data.posY = posY;
         this._data.heading = heading;
-        this._data.isInArena = true;
 
-        this._enemySprite = new Image();
-        this._enemySprite.src = this.getLevelData().src;
     };
 
-    Enemy.prototype = {
+    Bullet.prototype = {
 
         /**
          * Get data for the player.
@@ -82,7 +75,7 @@ define("TimePilot.Enemy", [
          * @returns {object}
          */
         getLevelData: function () {
-            return CONSTS.enemies.basic[this._level];
+            return CONSTS.bullets.basicEnemies[this._level];
         },
 
         /**
@@ -95,6 +88,7 @@ define("TimePilot.Enemy", [
             var levelData = this.getLevelData(),
                 player = this._player.getData(),
                 hasExistedArea;
+
             hasExistedArea = helpers.detectAreaExit({
                     posX: player.posX + ((this._canvas.width / 2) - (levelData.width / 2)),
                     posY: player.posY + ((this._canvas.height / 2) - (levelData.height / 2))
@@ -107,47 +101,36 @@ define("TimePilot.Enemy", [
         },
 
         /**
-         * Recalculate player's current position and heading.
+         * Reposition the entity.
          * @method
          */
         reposition: function () {
-            var enemy = this._data,
-                heading = this._data.heading,
-                levelData = this.getLevelData(),
-                player = this._player.getData(),
-                canvas = this._canvas,
-                turnTo;
+            var levelData = this.getLevelData(),
+                velocity = levelData.velocity,
+                heading = this._data.heading;
 
-            // Per-Enemy Data
-
-            enemy.posX += helpers.float(Math.sin(heading * (Math.PI / 180)) * levelData.velocity);
-            enemy.posY -= helpers.float(Math.cos(heading * (Math.PI / 180)) * levelData.velocity);
-
-            turnTo = helpers.findHeading(enemy, {
-                posX: player.posX + ((canvas.width / 2) - (levelData.width / 2)),
-                posY: player.posY + ((canvas.height / 2) - (levelData.height / 2))
-            });
-            turnTo = (Math.floor(turnTo / 22.5) * 22.5);
-
-            enemy.heading = helpers.rotateTo(turnTo, enemy.heading, 22.5);
+            this._data.posX += helpers.float(Math.sin(heading * (Math.PI / 180)) * velocity);
+            this._data.posY -= helpers.float(Math.cos(heading * (Math.PI / 180)) * velocity);
         },
 
         /**
-         * Render the player.
+         * Render the entity.
          * @method
          */
         render: function () {
-            var levelData = this.getLevelData();
-            this._canvas.renderSprite(this._enemySprite, {
-                frameWidth: levelData.width,
-                frameHeight: levelData.height,
-                frameX: Math.floor(this._data.heading / 22.5),
-                frameY: (Math.floor(this._ticker.getTicks() / 10) % 2),
-                posX: (this._data.posX - this._player.getData().posX - (levelData.width / 2)),
-                posY: (this._data.posY - this._player.getData().posY - (levelData.height / 2))
-            });
+            var levelData = this.getLevelData(),
+                size = levelData.size,
+                color = levelData.color,
+                context = this._canvas.getContext();
+
+            context.fillStyle = color;
+            context.fillRect(
+                this._data.posX - (size / 2),
+                this._data.posY - (size / 2),
+                size, size
+            );
         }
     };
 
-    return Enemy;
+    return Bullet;
 });

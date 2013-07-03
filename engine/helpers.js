@@ -38,8 +38,11 @@ define("engine/helpers", function () {
         /**
          * Takes the player's position and heading then returns a random spawning location within that.
          * @method
-         * @param   {Player Instance} player        - [description]
-         * @param   {Canvas Instance} canvas        - [description]
+         * @param   {Object} target
+         * @param   {Number} target.heading     - Heading of the target.
+         * @param   {Number} target.posX        - X position of the target.
+         * @param   {Number} target.posY        - Y position of the target.
+         * @param   {Canvas Instance} canvas    - [description]
          * @returns {Object}
          */
         getSpawnCoords: function (target, canvas) {

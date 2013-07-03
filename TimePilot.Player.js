@@ -1,30 +1,7 @@
 define("TimePilot.Player", [
+    "TimePilot.CONSTANTS",
     "engine/helpers"
-], function (helpers) {
-
-    /**
-     * Constant data about the player.
-     * @constant
-     * @type {Object}
-     */
-    var PLAYER_DATA = {
-        height: 32,
-        width: 32,
-        hitRadius: 8,
-        src: "./sprites/player.png"
-    };
-
-    /**
-     * Constant level specific data about the player.
-     * @constant
-     * @type {Object}
-     */
-    var LEVEL_DATA = {
-        1: {
-            velocity: 4,    // Higher = Faster
-            turnInterval: 5 // Lower = Faster
-        }
-    };
+], function (CONSTS, helpers) {
 
     /**
      * Player object.
@@ -36,7 +13,7 @@ define("TimePilot.Player", [
         this._canvas = canvas;
 
         this._playerSprite = new Image();
-        this._playerSprite.src = PLAYER_DATA.src;
+        this._playerSprite.src = CONSTS.player.src;
     };
 
     Player.prototype = {
@@ -101,7 +78,7 @@ define("TimePilot.Player", [
          * @returns {[type]}
          */
         getLevelData: function () {
-            return LEVEL_DATA[this._level];
+            return CONSTS.player.levels[this._level];
         },
 
         /**
@@ -125,12 +102,12 @@ define("TimePilot.Player", [
          */
         render: function () {
             this._canvas.renderSprite(this._playerSprite, {
-                frameWidth: PLAYER_DATA.width,
-                frameHeight: PLAYER_DATA.height,
+                frameWidth: CONSTS.player.width,
+                frameHeight: CONSTS.player.height,
                 frameX: Math.floor(this._data.heading / 22.5),
                 frameY: 0,
-                posX: ((this._canvas.width / 2) - (PLAYER_DATA.width / 2)),
-                posY: ((this._canvas.height / 2) - (PLAYER_DATA.height / 2))
+                posX: ((this._canvas.width / 2) - (CONSTS.player.width / 2)),
+                posY: ((this._canvas.height / 2) - (CONSTS.player.height / 2))
             });
         },
 

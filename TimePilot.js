@@ -3,8 +3,9 @@ define("TimePilot", [
     "engine/Canvas",
     "engine/helpers",
     "TimePilot.Player",
-    "TimePilot.EnemyFactory"
-], function (Ticker, Canvas, helpers, Player, EnemyFactory) {
+    "TimePilot.EnemyFactory",
+    "TimePilot.BulletFactory"
+], function (Ticker, Canvas, helpers, Player, EnemyFactory, BulletFactory) {
 
     var GAME_RULES = {
         spawningRadius: 100,
@@ -83,6 +84,7 @@ define("TimePilot", [
             this._ticker = new Ticker(17);
             this._player = new Player(this._canvas);
             this._enemies = new EnemyFactory(GAME_RULES, this._canvas, this._ticker, this._player);
+            this._bullets = new BulletFactory(this._canvas, this._player);
 
             this._player.setLevel(1);
             this._canvas.renderText("Loading", 20, 10, {size: 30});
@@ -128,6 +130,7 @@ define("TimePilot", [
             this._ticker.addSchedule(function () {
                 that._player.reposition();
                 that._enemies.reposition();
+                that._bullets.reposition();
 
 
                 that.rotatePlayer();
@@ -143,8 +146,9 @@ define("TimePilot", [
 
                 that._player.render();
                 that._enemies.render();
+                that._bullets.render();
 
-                that._renderBullets();
+                // that._renderBullets();
                 // that._renderEnemies();
 
 
@@ -165,15 +169,15 @@ define("TimePilot", [
         },
 
         rotatePlayer: function () {
+            var playerData = this._player.getData();
             /* THIS IS PART OF INTERFACE */
             if ((this._ticker.getTicks() - this._data.player.lastFiredTick) > 10 && this._data.player.isFiring) {
                 this._data.player.lastFiredTick = this._ticker.getTicks();
-                this._data.bullets.push({
-                    posX: (this._container.clientWidth / 2),
-                    posY: (this._container.clientHeight / 2),
-                    heading: this._player.getData().heading,
-                    playerRelative: true
-                });
+                this._bullets.create(
+                    (this._data.container.width / 2),
+                    (this._data.container.height / 2),
+                    playerData.heading
+                );
             }
             /* THIS IS PART OF INTERFACE */
 
@@ -346,46 +350,6 @@ define("TimePilot", [
             this._canvas.renderSprite(sprite, spriteData);
         },
 
-        _renderBullets: function () {
-            var i = 0,
-                data = {},
-                l = this._data.level.current,
-                bs = this._data.level[l].bullet.size,
-                s = 7,
-                bullet, heading;
-
-            for (; i < this._data.bullets.length; i++) {
-                bullet = this._data.bullets[i];
-                heading = bullet.heading;
-
-                this._data.bullets[i].posX += parseFloat((Math.sin(heading * (Math.PI / 180)) * s).toFixed(5));
-                this._data.bullets[i].posY -= parseFloat((Math.cos(heading * (Math.PI / 180)) * s).toFixed(5));
-
-
-                data.posX = bullet.posX;
-                data.posY = bullet.posY;
-
-                if (!bullet.playerRelative) {
-                    data.posX -= this._player.getData().posX;
-                    data.posY -= this._player.getData().posY;
-                }
-
-                this._canvas.getContext().fillStyle = "#FFF";
-                this._canvas.getContext().fillRect(
-                    data.posX - (bs / 2),
-                    data.posY - (bs / 2),
-                    bs, bs
-                );
-
-                if (data.posX > this._data.container.width ||
-                    data.posX < 0 ||
-                    data.posY > this._data.container.height ||
-                    data.posY < 0) {
-                    this._data.bullets.splice(i, 1);
-                }
-            }
-        },
-
         _renderClouds: function () {
             var i = 0,
                 l = this._data.level.current,
@@ -464,7 +428,7 @@ define("TimePilot", [
         _populateArena: function () {
             var data = {},
                 angle = 0;
-            if ((this._ticker.getTicks() % 50 === 0) && this._data.enemies.length < 10)  {
+            if ((this._ticker.getTicks() % 50 === 0) && this._enemies.getCount() < 10)  {
                 // Enemies
                 data = helpers.getSpawnCoords(this._player.getData(), this._canvas);
                 angle = this._findAngle({ posX: data.posX, posY: data.posY }, {
