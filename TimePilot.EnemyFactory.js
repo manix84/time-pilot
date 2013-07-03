@@ -34,6 +34,31 @@ define("TimePilot.EnemyFactory", [
         },
 
         /**
+         * Get the current number of spawned entities.
+         * @method
+         * @returns {Number}
+         */
+        getCount: function () {
+            return this._enemies.length;
+        },
+
+        /**
+         * Return the data for all entities in an array.
+         * @method
+         * @returns {Array}
+         */
+        getData: function () {
+            var data = [],
+                i = 0;
+            for (i in this._enemies) {
+                if (this._enemies.hasOwnProperty(i)) {
+                    data.push(this._enemies[i].getData());
+                }
+            }
+            return data;
+        },
+
+        /**
          * Run all reposition logic.
          * @method
          */
