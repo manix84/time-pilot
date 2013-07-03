@@ -2,15 +2,11 @@ define("TimePilot", [
     "engine/Ticker",
     "engine/Canvas",
     "engine/helpers",
+    "TimePilot.CONSTANTS",
     "TimePilot.Player",
     "TimePilot.EnemyFactory",
     "TimePilot.BulletFactory"
-], function (Ticker, Canvas, helpers, Player, EnemyFactory, BulletFactory) {
-
-    var GAME_RULES = {
-        spawningRadius: 100,
-        despawnRadius: 150
-    };
+], function (Ticker, Canvas, helpers, CONST, Player, EnemyFactory, BulletFactory) {
 
     var TimePilot = function (element, options) {
         this._container = element;
@@ -23,9 +19,6 @@ define("TimePilot", [
             }
         }
 
-        this._data.container.width = this._container.clientWidth;
-        this._data.container.height = this._container.clientHeight;
-
         this._init();
     };
 
@@ -35,46 +28,22 @@ define("TimePilot", [
             baseUrl: ""
         },
 
-        _live: {},
-
         _data: {
             theTicker: null,
             player: {
                 isFiring: false,
                 lastFiredTick: 0,
                 direction: false,
-                lastMovedTick: 0
+                lastMovedTick: 0,
+                continues: 3,
+                lives: 3
             },
+            level: 1,
             score: 0,
-            container: {
-                height: 0,
-                width: 0,
-                despawnBorder: 100
-            },
-            level: {
-                current: 1,
-                1: {
-                    cloudType: "cloud",
-                    bullet: {
-                        size: 4,
-                        hitRadius: 2
-                    },
-                    enemy: {
-                        speed: 5.5,
-                        turnSpeed: 10,
-                        height: 32,
-                        width: 32,
-                        hitRadius: 8
-                    },
-                    bgColor: "#007"
-                }
-            },
 
-            boss: {},
-            enemies: [],
-            explosions: [],
-            bullets: [],
-            clouds: []
+
+            clouds: [],
+            explosions: []
         },
 
         _init: function () {
@@ -83,7 +52,7 @@ define("TimePilot", [
             this._canvas = new Canvas(this._container);
             this._ticker = new Ticker(17);
             this._player = new Player(this._canvas);
-            this._enemies = new EnemyFactory(GAME_RULES, this._canvas, this._ticker, this._player);
+            this._enemies = new EnemyFactory(this._canvas, this._ticker, this._player);
             this._bullets = new BulletFactory(this._canvas, this._player);
 
             this._player.setLevel(1);
@@ -119,7 +88,7 @@ define("TimePilot", [
 
             this._ticker.addSchedule(function () {
                 that._canvas.getCanvas().width = that._canvas.getCanvas().width;
-                that._canvas.getCanvas().style.background = that._data.level[that._data.level.current].bgColor;
+                that._canvas.getCanvas().style.background = CONST.levels[that._data.level].arena.backgroundColor;
             }, 1);
 
             this._ticker.addSchedule(function () {
@@ -165,8 +134,8 @@ define("TimePilot", [
             if ((this._ticker.getTicks() - this._data.player.lastFiredTick) > 10 && this._data.player.isFiring) {
                 this._data.player.lastFiredTick = this._ticker.getTicks();
                 this._bullets.create(
-                    (this._data.container.width / 2),
-                    (this._data.container.height / 2),
+                    (this._canvas.width / 2),
+                    (this._canvas.height / 2),
                     playerData.heading
                 );
             }
@@ -326,7 +295,7 @@ define("TimePilot", [
             var spriteData = {},
                 sprite = new Image();
 
-            sprite.src = "./sprites/boss_level" + this._data.level.current + ".png";
+            sprite.src = "./sprites/boss_level" + this._data.level + ".png";
             spriteData.frameWidth = 64;
             spriteData.frameHeight = 32;
             spriteData.frameX = 0;
@@ -339,11 +308,11 @@ define("TimePilot", [
 
         _renderClouds: function () {
             var i = 0,
-                l = this._data.level.current,
+                l = this._data.level,
                 s = 0,
                 playerData = this._player.getData(),
                 h = playerData.heading,
-                cloudType = this._data.level[l].cloudType,
+                cloudType = "cloud",
                 cloudData = {
                     1: { width: 32, height: 18, speed: 1 },
                     2: { width: 60, height: 28, speed: 0.5 },
@@ -372,10 +341,10 @@ define("TimePilot", [
 
                 this._canvas.renderSprite(sprite, spriteData);
 
-                if (spriteData.posX > (this._data.container.width + this._data.container.despawnBorder) ||
-                    spriteData.posX < -this._data.container.despawnBorder ||
-                    spriteData.posY > (this._data.container.height + this._data.container.despawnBorder) ||
-                    spriteData.posY < -this._data.container.despawnBorder) {
+                if (spriteData.posX > (this._canvas.width + CONST.levels[this._data.level].arena.spawningRadius) ||
+                    spriteData.posX < -CONST.levels[this._data.level].arena.spawningRadius ||
+                    spriteData.posY > (this._canvas.height + CONST.levels[this._data.level].arena.spawningRadius) ||
+                    spriteData.posY < -CONST.levels[this._data.level].arena.spawningRadius) {
                     this._data.clouds.splice(i, 1);
                 }
             }
@@ -405,8 +374,8 @@ define("TimePilot", [
             for (; i < 20; i++) {
                 // Clouds
                 this._addCloud(
-                    Math.floor(Math.random() * this._data.container.width),
-                    Math.floor(Math.random() * this._data.container.height)
+                    Math.floor(Math.random() * this._canvas.width),
+                    Math.floor(Math.random() * this._canvas.height)
                 );
             }
         },
