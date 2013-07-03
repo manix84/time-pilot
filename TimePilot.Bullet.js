@@ -10,8 +10,7 @@ define("TimePilot.Bullet", [
     var LEVEL_DATA = {
         1: {
             velocity: 7,
-            height: 32,
-            width: 32,
+            size: 2,
             color: "#FFF"
         }
     };
@@ -123,8 +122,6 @@ define("TimePilot.Bullet", [
 
             this._data.posX += helpers.float(Math.sin(heading * (Math.PI / 180)) * velocity);
             this._data.posY -= helpers.float(Math.cos(heading * (Math.PI / 180)) * velocity);
-
-            window.console.log(this._data.posX + "x" + this._data.posY, "h: " + heading);
         },
 
         /**
