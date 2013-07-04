@@ -25,6 +25,7 @@ define("TimePilot.Enemy", [
         this._data.posY = posY;
         this._data.heading = heading;
         this._data.level = 1;
+        this._data.isDead = false;
         this._data.tickOffset = Math.floor(Math.random() * 100);
 
         this._enemySprite = new Image();
@@ -154,6 +155,10 @@ define("TimePilot.Enemy", [
                 posX: (this._data.posX - this._player.getData().posX - (levelData.width / 2)),
                 posY: (this._data.posY - this._player.getData().posY - (levelData.height / 2))
             });
+        },
+
+        kill: function () {
+            this._data.isDead = true;
         }
     };
 

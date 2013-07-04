@@ -71,8 +71,8 @@ define("TimePilot.EnemyFactory", [
                     if (this._enemies[i].detectAreaExit(500)) {
                         this.despawn(i);
                     } else if (this._enemies[i].detectPlayerCollision()) {
-                        // this._enemies[i].explode();
-                        // this._player.explode();
+                        // this._enemies[i].kill();
+                        // this._player.kill();
                         window.console.warn("Ouch that hurt! " + i + " hit me he did.");
                     }
                 }
