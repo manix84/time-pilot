@@ -27,7 +27,9 @@ define("TimePilot.Player", [
             heading: 90,
             posX: 0,
             posY: 0,
-            alive: true
+            exploading: 0,
+            continues: 0,
+            lives: 1
         },
 
         /**
