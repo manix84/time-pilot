@@ -372,8 +372,9 @@ define("TimePilot", [
 
         _spawnEntities: function () {
             var data = {},
-                angle = 0;
-            if ((this._ticker.getTicks() % 50 === 0) && this._enemies.getCount() < 10)  {
+                angle = 0,
+                randomTickInterval = (Math.floor(Math.random() * (1 - 200 + 1)) + 200);
+            if ((this._ticker.getTicks() % randomTickInterval === 0) && this._enemies.getCount() < 10)  {
                 // Enemies
                 data = helpers.getSpawnCoords(this._player.getData(), this._canvas);
                 angle = this._findAngle({ posX: data.posX, posY: data.posY }, {
