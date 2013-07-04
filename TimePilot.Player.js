@@ -14,29 +14,21 @@ define("TimePilot.Player", [
 
         this._playerSprite = new Image();
         this._playerSprite.src = CONSTS.player.src;
-    };
 
-    Player.prototype = {
-
-        /**
-         * Stored data about the player.
-         * @type {Object}
-         */
-        _data: {
+        this._data = {
             isFiring: false,
             heading: 90,
             posX: 0,
             posY: 0,
             exploading: 0,
             continues: 0,
-            lives: 1
-        },
+            lives: 1,
+            score: 0,
+            level: 1
+        };
+    };
 
-        /**
-         * The current level.
-         * @type {Number}
-         */
-        _level: 1,
+    Player.prototype = {
 
         /**
          * Set current level.
@@ -45,8 +37,8 @@ define("TimePilot.Player", [
          * @returns {Boolean}
          */
         setLevel: function (level) {
-            this._level = level;
-            return (this._level === level);
+            this._data.level = level;
+            return (this._data.level === level);
         },
 
         /**
@@ -80,7 +72,7 @@ define("TimePilot.Player", [
          * @returns {[type]}
          */
         getLevelData: function () {
-            return CONSTS.levels[this._level].player;
+            return CONSTS.levels[this._data.level].player;
         },
 
         /**
