@@ -7,45 +7,30 @@ define("TimePilot.Player", [
      * Player object.
      * @constructor
      * @param   {Canvas Instance} canvas
+     * @param   {Ticker Instance} ticker
      * @returns {Player Instance}
      */
-    var Player = function (canvas) {
+    var Player = function (canvas, ticker) {
         this._canvas = canvas;
+        this._ticker = ticker;
 
         this._playerSprite = new Image();
         this._playerSprite.src = CONSTS.player.src;
-    };
 
-    Player.prototype = {
-
-        /**
-         * Stored data about the player.
-         * @type {Object}
-         */
-        _data: {
+        this._data = {
             isFiring: false,
             heading: 90,
             posX: 0,
             posY: 0,
-            alive: true
-        },
+            exploading: 0,
+            continues: 0,
+            lives: 1,
+            score: 0,
+            level: 1
+        };
+    };
 
-        /**
-         * The current level.
-         * @type {Number}
-         */
-        _level: 1,
-
-        /**
-         * Set current level.
-         * @method
-         * @param   {Number} level - Level number to be set.
-         * @returns {Boolean}
-         */
-        setLevel: function (level) {
-            this._level = level;
-            return (this._level === level);
-        },
+    Player.prototype = {
 
         /**
          * Get data for the player.
@@ -78,7 +63,7 @@ define("TimePilot.Player", [
          * @returns {[type]}
          */
         getLevelData: function () {
-            return CONSTS.levels[this._level].player;
+            return CONSTS.levels[this._data.level].player;
         },
 
         /**
@@ -111,7 +96,10 @@ define("TimePilot.Player", [
             });
         },
 
-        explode: function () {}
+        kill: function () {
+            this._data.isDead = true;
+            this._deathTick = this._ticker.getTicks();
+        }
     };
 
     return Player;

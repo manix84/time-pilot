@@ -17,7 +17,7 @@ define("TimePilot.CONSTANTS", function () {
                     despawnRadius: 500
                 },
                 player: {
-                    velocity: 6,
+                    velocity: 4,
                     turnInterval: 5,
                     projectile: {
                         velocity: 7,
@@ -29,7 +29,7 @@ define("TimePilot.CONSTANTS", function () {
                     basic: {
                         src: "./sprites/enemy_level1.png",
                         velocity: 3,
-                        turn: 5,
+                        turnLimiter: 25,
                         height: 32,
                         width: 32,
                         firingChance: 0.2,
