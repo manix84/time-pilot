@@ -94,7 +94,10 @@ define("TimePilot.Player", [
             });
         },
 
-        explode: function () {}
+        kill: function () {
+            this._data.isDead = true;
+            this._deathTick = this._ticker.getTicks();
+        }
     };
 
     return Player;
