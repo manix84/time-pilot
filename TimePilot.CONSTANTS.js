@@ -17,7 +17,7 @@ define("TimePilot.CONSTANTS", function () {
                     despawnRadius: 500
                 },
                 player: {
-                    velocity: 6,
+                    velocity: 4,
                     turnInterval: 5,
                     projectile: {
                         velocity: 7,
