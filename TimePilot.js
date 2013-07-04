@@ -60,7 +60,7 @@ define("TimePilot", [
 
             this._canvas = new Canvas(this._container);
             this._ticker = new Ticker(17);
-            this._player = new Player(this._canvas);
+            this._player = new Player(this._canvas, this._ticker);
             this._enemies = new EnemyFactory(this._canvas, this._ticker, this._player);
             this._bullets = new BulletFactory(this._canvas, this._player);
             this._hud = new Hud(this._canvas, this._player);

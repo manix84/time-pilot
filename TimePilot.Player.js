@@ -7,10 +7,12 @@ define("TimePilot.Player", [
      * Player object.
      * @constructor
      * @param   {Canvas Instance} canvas
+     * @param   {Ticker Instance} ticker
      * @returns {Player Instance}
      */
-    var Player = function (canvas) {
+    var Player = function (canvas, ticker) {
         this._canvas = canvas;
+        this._ticker = ticker;
 
         this._playerSprite = new Image();
         this._playerSprite.src = CONSTS.player.src;
