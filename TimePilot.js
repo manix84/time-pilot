@@ -5,8 +5,18 @@ define("TimePilot", [
     "TimePilot.CONSTANTS",
     "TimePilot.Player",
     "TimePilot.EnemyFactory",
-    "TimePilot.BulletFactory"
-], function (Ticker, Canvas, helpers, CONST, Player, EnemyFactory, BulletFactory) {
+    "TimePilot.BulletFactory",
+    "TimePilot.Hud"
+], function (
+    Ticker,
+    Canvas,
+    helpers,
+    CONST,
+    Player,
+    EnemyFactory,
+    BulletFactory,
+    Hud
+) {
 
     var TimePilot = function (element, options) {
         this._container = element;
@@ -53,8 +63,9 @@ define("TimePilot", [
             this._player = new Player(this._canvas);
             this._enemies = new EnemyFactory(this._canvas, this._ticker, this._player);
             this._bullets = new BulletFactory(this._canvas, this._player);
+            this._hud = new Hud(this._canvas, this._player);
 
-            this._player.setLevel(1);
+            this._player.setData("level", 1);
             this._canvas.renderText("Loading", 20, 10, {size: 30});
 
             this._canvas.registerAssets([
@@ -103,7 +114,6 @@ define("TimePilot", [
                 that.rotatePlayer();
             }, 1);
             this._ticker.addSchedule(function () {
-                var playerData = that._player.getData();
 
                 that._renderClouds(1);
                 that._renderClouds(2);
@@ -113,16 +123,8 @@ define("TimePilot", [
                 that._bullets.render();
 
                 that._renderClouds(3);
+                that._hud.render();
 
-                that._canvas.renderText(that._data.score, 20, 10, {size: 30});
-                that._canvas.renderText(
-                    playerData.posX.toFixed(2) +
-                    " x " +
-                    playerData.posY.toFixed(2),
-                    20, 40, {size: 15}
-                );
-                that._canvas.renderText(playerData.heading + "°", 20, 55, {size: 15});
-                that._spawnEntities(); // NEEDS RENAMING
             }, 1);
 
             this.playGame();
