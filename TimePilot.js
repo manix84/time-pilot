@@ -42,8 +42,7 @@ define("TimePilot", [
             score: 0,
 
 
-            clouds: [],
-            explosions: []
+            clouds: []
         },
 
         _init: function () {
@@ -113,7 +112,6 @@ define("TimePilot", [
                 that._enemies.render();
                 that._bullets.render();
 
-                that._renderExplosions();
                 that._renderClouds(3);
 
                 that._populateArena(); // NEEDS RENAMING
@@ -351,17 +349,6 @@ define("TimePilot", [
                     }
                 }
             }
-        },
-
-        _addExplosion: function (posX, posY, isBoss) {
-            isBoss = isBoss || false;
-
-            this._data.explosions.push({
-                isBoss: (isBoss ? "boss" : "enemy"),
-                startingTick: this._ticker.getTicks(),
-                posX: posX,
-                posY: posY
-            });
         },
 
         _addCloud: function (posX, posY, size) {
