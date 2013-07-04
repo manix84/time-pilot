@@ -24,7 +24,7 @@ define("TimePilot.Enemy", [
         this._data.posX = posX;
         this._data.posY = posY;
         this._data.heading = heading;
-        this._data.isInArena = true;
+        this._data.level = 1;
 
         this._enemySprite = new Image();
         this._enemySprite.src = this.getLevelData().src;
@@ -56,31 +56,36 @@ define("TimePilot.Enemy", [
                 return false;
             }
         },
-
-        /**
-         * The current level.
-         * @type {Number}
-         */
-        _level: 1,
-
-        /**
-         * Set current level.
-         * @method
-         * @param   {Number} level - Level number to be set.
-         * @returns {Boolean}
-         */
-        setLevel: function (level) {
-            this._level = level;
-            return (this._level === level);
-        },
-
         /**
          * Get current data for this level
          * @method
          * @returns {object}
          */
         getLevelData: function () {
-            return CONSTS.levels[this._level].enemies.basic;
+            return CONSTS.levels[this._data.level].enemies.basic;
+        },
+
+        /**
+         * Detect if this entity has collided with the player.
+         * @method
+         * @returns {Boolean}
+         */
+        detectPlayerCollision: function () {
+            var levelData = this.getLevelData(),
+                player = this._player.getData();
+
+            var hasExistedArea = helpers.detectCollision({
+                    posX: player.posX + ((this._canvas.width / 2) - (levelData.width / 2)),
+                    posY: player.posY + ((this._canvas.height / 2) - (levelData.height / 2)),
+                    radius: CONSTS.player.hitRadius
+                }, {
+                    posX: this._data.posX,
+                    posY: this._data.posY,
+                    radius: levelData.hitRadius
+                }
+            );
+
+            return hasExistedArea;
         },
 
         /**
@@ -91,17 +96,17 @@ define("TimePilot.Enemy", [
          */
         detectAreaExit: function (radius) {
             var levelData = this.getLevelData(),
-                player = this._player.getData(),
-                hasExistedArea;
-            hasExistedArea = helpers.detectAreaExit({
+                player = this._player.getData();
+
+            return helpers.detectAreaExit({
                     posX: player.posX + ((this._canvas.width / 2) - (levelData.width / 2)),
                     posY: player.posY + ((this._canvas.height / 2) - (levelData.height / 2))
+                }, {
+                    posX: this._data.posX,
+                    posY: this._data.posY
                 },
-                this.getData(),
                 radius
             );
-
-            return hasExistedArea;
         },
 
         /**
