@@ -106,13 +106,15 @@ define("TimePilot", [
             this._ticker.addSchedule(function () {
                 var playerData = that._player.getData();
 
-                that._renderClouds();
+                that._renderClouds(1);
+                that._renderClouds(2);
 
                 that._player.render();
                 that._enemies.render();
                 that._bullets.render();
 
                 that._renderExplosions();
+                that._renderClouds(3);
 
                 that._populateArena(); // NEEDS RENAMING
                 that._canvas.renderText(that._data.score, 20, 10, {size: 30});
@@ -306,9 +308,8 @@ define("TimePilot", [
             this._canvas.renderSprite(sprite, spriteData);
         },
 
-        _renderClouds: function () {
+        _renderClouds: function (layer) {
             var i = 0,
-                l = this._data.level,
                 s = 0,
                 playerData = this._player.getData(),
                 h = playerData.heading,
@@ -327,25 +328,27 @@ define("TimePilot", [
 
             for (; i < this._data.clouds.length; i++) {
                 cloud = this._data.clouds[i];
-                s = cloudData[cloud.size].speed;
+                if (layer && cloud.size === layer) {
+                    s = cloudData[cloud.size].speed;
 
-                this._data.clouds[i].posX += parseFloat((Math.sin(h * (Math.PI / 180)) * s).toFixed(5));
-                this._data.clouds[i].posY -= parseFloat((Math.cos(h * (Math.PI / 180)) * s).toFixed(5));
+                    this._data.clouds[i].posX += parseFloat((Math.sin(h * (Math.PI / 180)) * s).toFixed(5));
+                    this._data.clouds[i].posY -= parseFloat((Math.cos(h * (Math.PI / 180)) * s).toFixed(5));
 
-                sprite.src = "./sprites/" + cloudType + cloud.size + ".png";
-                spriteData.frameWidth = cloudData[cloud.size].width;
-                spriteData.frameHeight = cloudData[cloud.size].height;
+                    sprite.src = "./sprites/" + cloudType + cloud.size + ".png";
+                    spriteData.frameWidth = cloudData[cloud.size].width;
+                    spriteData.frameHeight = cloudData[cloud.size].height;
 
-                spriteData.posX = (cloud.posX - playerData.posX - (spriteData.frameWidth / 2));
-                spriteData.posY = (cloud.posY - playerData.posY - (spriteData.frameHeight / 2));
+                    spriteData.posX = (cloud.posX - playerData.posX - (spriteData.frameWidth / 2));
+                    spriteData.posY = (cloud.posY - playerData.posY - (spriteData.frameHeight / 2));
 
-                this._canvas.renderSprite(sprite, spriteData);
+                    this._canvas.renderSprite(sprite, spriteData);
 
-                if (spriteData.posX > (this._canvas.width + CONST.levels[this._data.level].arena.spawningRadius) ||
-                    spriteData.posX < -CONST.levels[this._data.level].arena.spawningRadius ||
-                    spriteData.posY > (this._canvas.height + CONST.levels[this._data.level].arena.spawningRadius) ||
-                    spriteData.posY < -CONST.levels[this._data.level].arena.spawningRadius) {
-                    this._data.clouds.splice(i, 1);
+                    if (spriteData.posX > (this._canvas.width + CONST.levels[this._data.level].arena.spawningRadius) ||
+                        spriteData.posX < -CONST.levels[this._data.level].arena.spawningRadius ||
+                        spriteData.posY > (this._canvas.height + CONST.levels[this._data.level].arena.spawningRadius) ||
+                        spriteData.posY < -CONST.levels[this._data.level].arena.spawningRadius) {
+                        this._data.clouds.splice(i, 1);
+                    }
                 }
             }
         },
