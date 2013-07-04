@@ -114,7 +114,6 @@ define("TimePilot", [
 
                 that._renderClouds(3);
 
-                that._populateArena(); // NEEDS RENAMING
                 that._canvas.renderText(that._data.score, 20, 10, {size: 30});
                 that._canvas.renderText(
                     playerData.posX.toFixed(2) +
@@ -123,6 +122,7 @@ define("TimePilot", [
                     20, 40, {size: 15}
                 );
                 that._canvas.renderText(playerData.heading + "°", 20, 55, {size: 15});
+                that._spawnEntities(); // NEEDS RENAMING
             }, 1);
 
             this.playGame();
@@ -370,7 +370,7 @@ define("TimePilot", [
             }
         },
 
-        _populateArena: function () {
+        _spawnEntities: function () {
             var data = {},
                 angle = 0;
             if ((this._ticker.getTicks() % 50 === 0) && this._enemies.getCount() < 10)  {
