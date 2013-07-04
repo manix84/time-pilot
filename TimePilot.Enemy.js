@@ -166,7 +166,7 @@ define("TimePilot.Enemy", [
          */
         _renderDeath: function () {
             var levelData = this.getLevelData(),
-                frameX = (this._ticker.getTicks() - this._data.deathTick) % 25;
+                frameX = Math.floor((this._ticker.getTicks() - this._data.deathTick) / 4);
 
             this._enemySprite.src = "./sprites/enemy_explosion.png";
 
