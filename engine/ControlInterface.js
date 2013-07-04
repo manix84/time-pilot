@@ -1,0 +1,3 @@
+define("ControlInterface", function () {
+
+});
