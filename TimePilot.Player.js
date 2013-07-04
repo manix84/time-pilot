@@ -31,17 +31,6 @@ define("TimePilot.Player", [
     Player.prototype = {
 
         /**
-         * Set current level.
-         * @method
-         * @param   {Number} level - Level number to be set.
-         * @returns {Boolean}
-         */
-        setLevel: function (level) {
-            this._data.level = level;
-            return (this._data.level === level);
-        },
-
-        /**
          * Get data for the player.
          * @method
          * @returns {Object}
