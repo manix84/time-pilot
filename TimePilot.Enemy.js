@@ -25,7 +25,8 @@ define("TimePilot.Enemy", [
         this._data.posY = posY;
         this._data.heading = heading;
         this._data.level = 1;
-        this._data.isDead = false;
+        this._data.deathTick = false;
+        this._data.removeMe = false;
         this._data.tickOffset = Math.floor(Math.random() * 100);
 
         this._enemySprite = new Image();
@@ -81,8 +82,8 @@ define("TimePilot.Enemy", [
                     posY: player.posY + ((this._canvas.height / 2) - (levelData.height / 2)),
                     radius: CONSTS.player.hitRadius
                 }, {
-                    posX: this._data.posX,
-                    posY: this._data.posY,
+                    posX: (this._data.posX - (CONSTS.player.width / 2)),
+                    posY: (this._data.posY - (CONSTS.player.height / 2)),
                     radius: levelData.hitRadius
                 }
             );
@@ -142,10 +143,11 @@ define("TimePilot.Enemy", [
         },
 
         /**
-         * Render the player.
+         * Render the player normally.
+         * @protected
          * @method
          */
-        render: function () {
+        _render: function () {
             var levelData = this.getLevelData();
             this._canvas.renderSprite(this._enemySprite, {
                 frameWidth: levelData.width,
@@ -157,9 +159,45 @@ define("TimePilot.Enemy", [
             });
         },
 
+        /**
+         * Render the death animation for the player.
+         * @protected
+         * @method
+         */
+        _renderDeath: function () {
+            var levelData = this.getLevelData(),
+                frameX = (this._ticker.getTicks() - this._data.deathTick) % 25;
+
+            this._enemySprite.src = "./sprites/enemy_explosion.png";
+
+            this._canvas.renderSprite(this._enemySprite, {
+                frameWidth: 32,
+                frameHeight: 32,
+                frameX: frameX,
+                frameY: 0,
+                posX: (this._data.posX - this._player.getData().posX - (32 / 2)),
+                posY: (this._data.posY - this._player.getData().posY - (32 / 2))
+            });
+
+            if (frameX === 4) {
+                this._data.removeMe = true;
+            }
+        },
+
+        /**
+         * Render the player.
+         * @method
+         */
+        render: function () {
+            if (!this._data.deathTick) {
+                this._render();
+            } else {
+                this._renderDeath();
+            }
+        },
+
         kill: function () {
-            this._data.isDead = true;
-            this._deathTick = this._ticker.getTicks();
+            this._data.deathTick = this._ticker.getTicks();
         }
     };
 

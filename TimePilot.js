@@ -76,6 +76,7 @@ define("TimePilot", [
                 "./sprites/enemy_level3.png",
                 "./sprites/enemy_level4.png",
                 "./sprites/enemy_level5.png",
+                "./sprites/enemy_explosion.png",
                 "./sprites/cloud1.png",
                 "./sprites/cloud2.png",
                 "./sprites/cloud3.png"

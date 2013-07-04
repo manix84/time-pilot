@@ -68,12 +68,11 @@ define("TimePilot.EnemyFactory", [
                 if (this._enemies.hasOwnProperty(i)) {
                     this._enemies[i].reposition();
 
-                    if (this._enemies[i].detectAreaExit(500)) {
+                    if (this._enemies[i].getData().removeMe || this._enemies[i].detectAreaExit(500)) {
                         this.despawn(i);
                     } else if (this._enemies[i].detectPlayerCollision()) {
                         this._enemies[i].kill();
                         this._player.kill();
-                        window.console.warn("Ouch that hurt! " + i + " hit me he did.");
                     }
                 }
             }
