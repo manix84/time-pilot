@@ -2,15 +2,21 @@ define("TimePilot", [
     "engine/Ticker",
     "engine/Canvas",
     "engine/helpers",
+    "TimePilot.CONSTANTS",
     "TimePilot.Player",
     "TimePilot.EnemyFactory",
-    "TimePilot.BulletFactory"
-], function (Ticker, Canvas, helpers, Player, EnemyFactory, BulletFactory) {
-
-    var GAME_RULES = {
-        spawningRadius: 100,
-        despawnRadius: 150
-    };
+    "TimePilot.BulletFactory",
+    "TimePilot.Hud"
+], function (
+    Ticker,
+    Canvas,
+    helpers,
+    CONST,
+    Player,
+    EnemyFactory,
+    BulletFactory,
+    Hud
+) {
 
     var TimePilot = function (element, options) {
         this._container = element;
@@ -23,9 +29,6 @@ define("TimePilot", [
             }
         }
 
-        this._data.container.width = this._container.clientWidth;
-        this._data.container.height = this._container.clientHeight;
-
         this._init();
     };
 
@@ -35,45 +38,20 @@ define("TimePilot", [
             baseUrl: ""
         },
 
-        _live: {},
-
         _data: {
             theTicker: null,
             player: {
                 isFiring: false,
                 lastFiredTick: 0,
                 direction: false,
-                lastMovedTick: 0
+                lastMovedTick: 0,
+                continues: 3,
+                lives: 3
             },
+            level: 1,
             score: 0,
-            container: {
-                height: 0,
-                width: 0,
-                despawnBorder: 100
-            },
-            level: {
-                current: 1,
-                1: {
-                    cloudType: "cloud",
-                    bullet: {
-                        size: 4,
-                        hitRadius: 2
-                    },
-                    enemy: {
-                        speed: 5.5,
-                        turnSpeed: 10,
-                        height: 32,
-                        width: 32,
-                        hitRadius: 8
-                    },
-                    bgColor: "#007"
-                }
-            },
 
-            boss: {},
-            enemies: [],
-            explosions: [],
-            bullets: [],
+
             clouds: []
         },
 
@@ -83,10 +61,11 @@ define("TimePilot", [
             this._canvas = new Canvas(this._container);
             this._ticker = new Ticker(17);
             this._player = new Player(this._canvas);
-            this._enemies = new EnemyFactory(GAME_RULES, this._canvas, this._ticker, this._player);
+            this._enemies = new EnemyFactory(this._canvas, this._ticker, this._player);
             this._bullets = new BulletFactory(this._canvas, this._player);
+            this._hud = new Hud(this._canvas, this._player);
 
-            this._player.setLevel(1);
+            this._player.setData("level", 1);
             this._canvas.renderText("Loading", 20, 10, {size: 30});
 
             this._canvas.registerAssets([
@@ -119,7 +98,7 @@ define("TimePilot", [
 
             this._ticker.addSchedule(function () {
                 that._canvas.getCanvas().width = that._canvas.getCanvas().width;
-                that._canvas.getCanvas().style.background = that._data.level[that._data.level.current].bgColor;
+                that._canvas.getCanvas().style.background = CONST.levels[that._data.level].arena.backgroundColor;
             }, 1);
 
             this._ticker.addSchedule(function () {
@@ -132,37 +111,21 @@ define("TimePilot", [
                 that._enemies.reposition();
                 that._bullets.reposition();
 
-
+                that._spawnEntities();
                 that.rotatePlayer();
-
-                // that._calculateClouds();
-                // that._calculateBullets();
-                // that._calculateEnemies();
             }, 1);
             this._ticker.addSchedule(function () {
-                var playerData = that._player.getData();
 
-                that._renderClouds();
+                that._renderClouds(1);
+                that._renderClouds(2);
 
                 that._player.render();
                 that._enemies.render();
                 that._bullets.render();
 
-                // that._renderBullets();
-                // that._renderEnemies();
+                that._renderClouds(3);
+                that._hud.render();
 
-
-                that._renderExplosions();
-
-                that._populateArena(); // NEEDS RENAMING
-                that._canvas.renderText(that._data.score, 20, 10, {size: 30});
-                that._canvas.renderText(
-                    playerData.posX.toFixed(2) +
-                    " x " +
-                    playerData.posY.toFixed(2),
-                    20, 40, {size: 15}
-                );
-                that._canvas.renderText(playerData.heading + "°", 20, 55, {size: 15});
             }, 1);
 
             this.playGame();
@@ -174,8 +137,8 @@ define("TimePilot", [
             if ((this._ticker.getTicks() - this._data.player.lastFiredTick) > 10 && this._data.player.isFiring) {
                 this._data.player.lastFiredTick = this._ticker.getTicks();
                 this._bullets.create(
-                    (this._data.container.width / 2),
-                    (this._data.container.height / 2),
+                    (this._canvas.width / 2),
+                    (this._canvas.height / 2),
                     playerData.heading
                 );
             }
@@ -206,7 +169,7 @@ define("TimePilot", [
             if (this._ticker.getState()) {
                 window.console.info("Pausing");
                 this._ticker.stop();
-                this._canvas.renderText("Paused", 20, 70, {size: 30});
+                this._hud.pause();
             }
         },
 
@@ -335,7 +298,7 @@ define("TimePilot", [
             var spriteData = {},
                 sprite = new Image();
 
-            sprite.src = "./sprites/boss_level" + this._data.level.current + ".png";
+            sprite.src = "./sprites/boss_level" + this._data.level + ".png";
             spriteData.frameWidth = 64;
             spriteData.frameHeight = 32;
             spriteData.frameX = 0;
@@ -346,13 +309,12 @@ define("TimePilot", [
             this._canvas.renderSprite(sprite, spriteData);
         },
 
-        _renderClouds: function () {
+        _renderClouds: function (layer) {
             var i = 0,
-                l = this._data.level.current,
                 s = 0,
                 playerData = this._player.getData(),
                 h = playerData.heading,
-                cloudType = this._data.level[l].cloudType,
+                cloudType = "cloud",
                 cloudData = {
                     1: { width: 32, height: 18, speed: 1 },
                     2: { width: 60, height: 28, speed: 0.5 },
@@ -367,39 +329,29 @@ define("TimePilot", [
 
             for (; i < this._data.clouds.length; i++) {
                 cloud = this._data.clouds[i];
-                s = cloudData[cloud.size].speed;
+                if (layer && cloud.size === layer) {
+                    s = cloudData[cloud.size].speed;
 
-                this._data.clouds[i].posX += parseFloat((Math.sin(h * (Math.PI / 180)) * s).toFixed(5));
-                this._data.clouds[i].posY -= parseFloat((Math.cos(h * (Math.PI / 180)) * s).toFixed(5));
+                    this._data.clouds[i].posX += parseFloat((Math.sin(h * (Math.PI / 180)) * s).toFixed(5));
+                    this._data.clouds[i].posY -= parseFloat((Math.cos(h * (Math.PI / 180)) * s).toFixed(5));
 
-                sprite.src = "./sprites/" + cloudType + cloud.size + ".png";
-                spriteData.frameWidth = cloudData[cloud.size].width;
-                spriteData.frameHeight = cloudData[cloud.size].height;
+                    sprite.src = "./sprites/" + cloudType + cloud.size + ".png";
+                    spriteData.frameWidth = cloudData[cloud.size].width;
+                    spriteData.frameHeight = cloudData[cloud.size].height;
 
-                spriteData.posX = (cloud.posX - playerData.posX - (spriteData.frameWidth / 2));
-                spriteData.posY = (cloud.posY - playerData.posY - (spriteData.frameHeight / 2));
+                    spriteData.posX = (cloud.posX - playerData.posX - (spriteData.frameWidth / 2));
+                    spriteData.posY = (cloud.posY - playerData.posY - (spriteData.frameHeight / 2));
 
-                this._canvas.renderSprite(sprite, spriteData);
+                    this._canvas.renderSprite(sprite, spriteData);
 
-                if (spriteData.posX > (this._data.container.width + this._data.container.despawnBorder) ||
-                    spriteData.posX < -this._data.container.despawnBorder ||
-                    spriteData.posY > (this._data.container.height + this._data.container.despawnBorder) ||
-                    spriteData.posY < -this._data.container.despawnBorder) {
-                    this._data.clouds.splice(i, 1);
+                    if (spriteData.posX > (this._canvas.width + CONST.levels[this._data.level].arena.spawningRadius) ||
+                        spriteData.posX < -CONST.levels[this._data.level].arena.spawningRadius ||
+                        spriteData.posY > (this._canvas.height + CONST.levels[this._data.level].arena.spawningRadius) ||
+                        spriteData.posY < -CONST.levels[this._data.level].arena.spawningRadius) {
+                        this._data.clouds.splice(i, 1);
+                    }
                 }
             }
-
-        },
-
-        _addExplosion: function (posX, posY, isBoss) {
-            isBoss = isBoss || false;
-
-            this._data.explosions.push({
-                isBoss: (isBoss ? "boss" : "enemy"),
-                startingTick: this._ticker.getTicks(),
-                posX: posX,
-                posY: posY
-            });
         },
 
         _addCloud: function (posX, posY, size) {
@@ -415,16 +367,17 @@ define("TimePilot", [
             for (; i < 20; i++) {
                 // Clouds
                 this._addCloud(
-                    Math.floor(Math.random() * this._data.container.width),
-                    Math.floor(Math.random() * this._data.container.height)
+                    Math.floor(Math.random() * this._canvas.width),
+                    Math.floor(Math.random() * this._canvas.height)
                 );
             }
         },
 
-        _populateArena: function () {
+        _spawnEntities: function () {
             var data = {},
-                angle = 0;
-            if ((this._ticker.getTicks() % 50 === 0) && this._enemies.getCount() < 10)  {
+                angle = 0,
+                randomTickInterval = (Math.floor(Math.random() * (1 - 200 + 1)) + 200);
+            if ((this._ticker.getTicks() % randomTickInterval === 0) && this._enemies.getCount() < 10)  {
                 // Enemies
                 data = helpers.getSpawnCoords(this._player.getData(), this._canvas);
                 angle = this._findAngle({ posX: data.posX, posY: data.posY }, {
