@@ -29,7 +29,7 @@ define("TimePilot.CONSTANTS", function () {
                     basic: {
                         src: "./sprites/enemy_level1.png",
                         velocity: 3,
-                        turn: 5,
+                        turnLimiter: 30,
                         height: 32,
                         width: 32,
                         firingChance: 0.2,

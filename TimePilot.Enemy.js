@@ -25,6 +25,7 @@ define("TimePilot.Enemy", [
         this._data.posY = posY;
         this._data.heading = heading;
         this._data.level = 1;
+        this._data.tickOffset = Math.floor(Math.random() * 100);
 
         this._enemySprite = new Image();
         this._enemySprite.src = this.getLevelData().src;
@@ -119,6 +120,7 @@ define("TimePilot.Enemy", [
                 levelData = this.getLevelData(),
                 player = this._player.getData(),
                 canvas = this._canvas,
+                tick = (this._ticker.getTicks() - this._data.tickOffset),
                 turnTo;
 
             // Per-Enemy Data
@@ -126,13 +128,16 @@ define("TimePilot.Enemy", [
             enemy.posX += helpers.float(Math.sin(heading * (Math.PI / 180)) * levelData.velocity);
             enemy.posY -= helpers.float(Math.cos(heading * (Math.PI / 180)) * levelData.velocity);
 
-            turnTo = helpers.findHeading(enemy, {
-                posX: player.posX + ((canvas.width / 2) - (levelData.width / 2)),
-                posY: player.posY + ((canvas.height / 2) - (levelData.height / 2))
-            });
-            turnTo = (Math.floor(turnTo / 22.5) * 22.5);
+            if (tick % levelData.turnLimiter === 0) {
+                turnTo = helpers.findHeading(enemy, {
+                    posX: player.posX + ((canvas.width / 2) - (levelData.width / 2)),
+                    posY: player.posY + ((canvas.height / 2) - (levelData.height / 2))
+                });
+                turnTo = (Math.floor(turnTo / 22.5) * 22.5);
 
-            enemy.heading = helpers.rotateTo(turnTo, enemy.heading, 22.5);
+                enemy.heading = helpers.rotateTo(turnTo, enemy.heading, 22.5);
+            }
+
         },
 
         /**
