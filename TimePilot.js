@@ -111,6 +111,7 @@ define("TimePilot", [
                 that._enemies.reposition();
                 that._bullets.reposition();
 
+                that._spawnEntities();
                 that.rotatePlayer();
             }, 1);
             this._ticker.addSchedule(function () {
