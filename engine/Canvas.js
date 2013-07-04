@@ -116,6 +116,7 @@ define("engine/Canvas", function () {
          * @enum    {Number} [newOptions.size]  - Text size
          * @enum    {String} [newOptions.color] - Text color
          * @enum    {String} [newOptions.font]  - Font type
+         * @enum    {String} [newOptions.stroke]  - Stroke color. If not set, it won't show.
          */
         renderText: function (message, startPosX, startPosY, newOptions) {
             startPosX   = startPosX || 0;
@@ -125,14 +126,21 @@ define("engine/Canvas", function () {
                     align: newOptions.align || "left",
                     valign: newOptions.valign || "top",
                     color: newOptions.color || "#fff",
-                    font: newOptions.font || "theFont"
+                    font: newOptions.font || "theFont",
+                    stoke: newOptions.stroke || false
                 },
                 context = this.getContext();
 
             context.fillStyle = options.color;
             context.font = options.size + "px " + options.font;
+            context.textAlign = options.align;
             context.textBaseline = options.valign;
             context.fillText(message, startPosX, startPosY);
+
+            if (options.stoke) {
+                context.strokeStyle = options.stroke;
+                context.strokeText(message, startPosX, startPosY);
+            }
         },
 
         /**

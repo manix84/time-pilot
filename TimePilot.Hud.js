@@ -1,5 +1,12 @@
 define("TimePilot.Hud", function () {
 
+    /**
+     * Create a hud instance to be rendered on the canvas
+     * @constructor
+     * @param   {Canvas Instance} canvas
+     * @param   {Player Instance} player
+     * @returns {Hud Instance}
+     */
     var Hud = function (canvas, player) {
         this._canvas = canvas;
         this._playerData = player.getData();
@@ -11,7 +18,6 @@ define("TimePilot.Hud", function () {
         /**
          * Render hud to the canvas.
          * @method
-         * @returns {[type]}
          */
         render: function () {
             this._canvas.renderText(this._playerData.score,
@@ -32,6 +38,24 @@ define("TimePilot.Hud", function () {
                     {size: 15}
                 );
             }
+        },
+
+        /**
+         * Render paused message.
+         * @method
+         */
+        pause: function () {
+            this._canvas.renderText("Paused",
+                (this._canvas.width / 2),
+                (this._canvas.height / 2),
+                {
+                    size: 30,
+                    align: "center",
+                    valign: "middle",
+                    color: "#FFF",
+                    stroke: "#000"
+                }
+            );
         }
 
 

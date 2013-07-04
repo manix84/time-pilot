@@ -169,7 +169,7 @@ define("TimePilot", [
             if (this._ticker.getState()) {
                 window.console.info("Pausing");
                 this._ticker.stop();
-                this._canvas.renderText("Paused", 20, 70, {size: 30});
+                this._hud.pause();
             }
         },
 
