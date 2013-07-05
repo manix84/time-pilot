@@ -1,7 +1,10 @@
 define("TimePilot.EnemyFactory", [
     "engine/helpers",
     "TimePilot.Enemy"
-], function (helpers, Enemy) {
+], function (
+    helpers,
+    Enemy
+) {
     /**
      * Construct an enemy factory for managing creation, movement, rendering and removal of enemies.
      * @constructor

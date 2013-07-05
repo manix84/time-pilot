@@ -1,7 +1,10 @@
 define("TimePilot.BulletFactory", [
     "engine/helpers",
     "TimePilot.Bullet"
-], function (helpers, Bullet) {
+], function (
+    helpers,
+    Bullet
+) {
     /**
      * Construct an bullet factory for managing creation, movement, rendering and removal of bullets.
      * @constructor

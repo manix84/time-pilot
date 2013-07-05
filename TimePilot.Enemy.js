@@ -1,7 +1,10 @@
 define("TimePilot.Enemy", [
     "TimePilot.CONSTANTS",
     "engine/helpers"
-], function (CONSTS, helpers) {
+], function (
+    CONSTS,
+    helpers
+) {
 
     /**
      * Creates an enemy to add to the page.
