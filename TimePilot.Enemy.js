@@ -95,7 +95,7 @@ define("TimePilot.Enemy", [
         },
 
         /**
-         * Detect if the entity has left a given radius of the plentityayer.
+         * Detect if the entity has left a given radius of the entity.
          * @method
          * @param   {Number} radius - Maximum radial from player before they are concidered outside the battle.
          * @returns {Boolean} True = entity has left the area, False = entity is still in area.
