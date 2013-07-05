@@ -1,7 +1,10 @@
 define("TimePilot.Player", [
     "TimePilot.CONSTANTS",
     "engine/helpers"
-], function (CONSTS, helpers) {
+], function (
+    CONSTS,
+    helpers
+) {
 
     /**
      * Player object.

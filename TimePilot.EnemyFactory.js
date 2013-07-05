@@ -1,7 +1,10 @@
 define("TimePilot.EnemyFactory", [
     "engine/helpers",
     "TimePilot.Enemy"
-], function (helpers, Enemy) {
+], function (
+    helpers,
+    Enemy
+) {
     /**
      * Construct an enemy factory for managing creation, movement, rendering and removal of enemies.
      * @constructor
@@ -57,6 +60,10 @@ define("TimePilot.EnemyFactory", [
             return data;
         },
 
+        /**
+         * Run player collision calculations on all entities.
+         * @method
+         */
         detectPlayerCollision: function () {
             var i;
 
@@ -69,6 +76,10 @@ define("TimePilot.EnemyFactory", [
 
         },
 
+        /**
+         * Run arena exit calculations on all entities.
+         * @method
+         */
         detectArenaExit: function () {
             var i;
 
@@ -80,6 +91,10 @@ define("TimePilot.EnemyFactory", [
 
         },
 
+        /**
+         * If an entity declares it is to be removed, remove it.
+         * @method
+         */
         cleanup: function () {
             var i;
 
