@@ -248,30 +248,6 @@ define("TimePilot", [
             this._container.appendChild(this._keyboardLock);
         },
 
-        _renderExplosions: function () {
-            var i = 0,
-                spriteData = {},
-                sprite = new Image(),
-                explosion;
-
-            for (; i < this._data.explosions.length; i++) {
-                explosion = this._data.explosions[i];
-                sprite.src = "./sprites/enemy_explosion.png";
-                spriteData.frameWidth = 32;
-                spriteData.frameHeight = 32;
-                spriteData.frameX = (this._ticker.getTicks() - explosion.startingTick % 25);
-                spriteData.frameY = 0;
-                spriteData.posX = (explosion.posX - this._player.getData().posX - (spriteData.frameWidth / 2));
-                spriteData.posY = (explosion.posY - this._player.getData().posY - (spriteData.frameHeight / 2));
-
-                this._canvas.renderSprite(sprite, spriteData);
-
-                if (spriteData.frameX === 4) {
-                    this._data.explosions.splice(i, 1);
-                }
-            }
-        },
-
         _renderBoss: function () {
             var spriteData = {},
                 sprite = new Image();
