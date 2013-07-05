@@ -248,21 +248,6 @@ define("TimePilot", [
             this._container.appendChild(this._keyboardLock);
         },
 
-        _renderBoss: function () {
-            var spriteData = {},
-                sprite = new Image();
-
-            sprite.src = "./sprites/boss_level" + this._data.level + ".png";
-            spriteData.frameWidth = 64;
-            spriteData.frameHeight = 32;
-            spriteData.frameX = 0;
-            spriteData.frameY = 0;
-            spriteData.posX = (0 - this._player.getData().posX);
-            spriteData.posY = (0 - this._player.getData().posY);
-
-            this._canvas.renderSprite(sprite, spriteData);
-        },
-
         _renderClouds: function (layer) {
             var i = 0,
                 s = 0,
