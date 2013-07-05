@@ -43,7 +43,9 @@ define("TimePilot.CONSTANTS", function () {
                         explosion: {
                             src: "./sprites/enemy_explosion.png",
                             width: 32,
-                            height: 32
+                            height: 32,
+                            frames: 4,
+                            frameLimiter: 5
                         }
                     }
                 },

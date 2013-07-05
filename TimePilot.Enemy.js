@@ -168,7 +168,7 @@ define("TimePilot.Enemy", [
          */
         _renderDeath: function () {
             var explosionData = this.getLevelData().explosion,
-                frameX = Math.floor((this._ticker.getTicks() - this._data.deathTick) / 4);
+                frameX = Math.floor((this._ticker.getTicks() - this._data.deathTick) / explosionData.frameLimiter);
 
             this._enemySprite.src = explosionData.src;
 
@@ -181,7 +181,7 @@ define("TimePilot.Enemy", [
                 posY: (this._data.posY - this._player.getData().posY - (explosionData.height / 2))
             });
 
-            if (frameX === 4) {
+            if (frameX === explosionData.frames) {
                 this._data.removeMe = true;
             }
         },
