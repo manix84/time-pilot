@@ -1,7 +1,10 @@
 define("TimePilot.Enemy", [
     "TimePilot.CONSTANTS",
     "engine/helpers"
-], function (CONSTS, helpers) {
+], function (
+    CONSTS,
+    helpers
+) {
 
     /**
      * Creates an enemy to add to the page.
@@ -164,21 +167,21 @@ define("TimePilot.Enemy", [
          * @method
          */
         _renderDeath: function () {
-            var levelData = this.getLevelData(),
-                frameX = Math.floor((this._ticker.getTicks() - this._data.deathTick) / 4);
+            var explosionData = this.getLevelData().explosion,
+                frameX = Math.floor((this._ticker.getTicks() - this._data.deathTick) / explosionData.frameLimiter);
 
-            this._enemySprite.src = "./sprites/enemy_explosion.png";
+            this._enemySprite.src = explosionData.src;
 
             this._canvas.renderSprite(this._enemySprite, {
-                frameWidth: 32,
-                frameHeight: 32,
+                frameWidth: explosionData.width,
+                frameHeight: explosionData.height,
                 frameX: frameX,
                 frameY: 0,
-                posX: (this._data.posX - this._player.getData().posX - (32 / 2)),
-                posY: (this._data.posY - this._player.getData().posY - (32 / 2))
+                posX: (this._data.posX - this._player.getData().posX - (explosionData.width / 2)),
+                posY: (this._data.posY - this._player.getData().posY - (explosionData.height / 2))
             });
 
-            if (frameX === 4) {
+            if (frameX === explosionData.frames) {
                 this._data.removeMe = true;
             }
         },

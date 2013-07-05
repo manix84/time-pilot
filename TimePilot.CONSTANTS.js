@@ -3,8 +3,8 @@ define("TimePilot.CONSTANTS", function () {
     var CONSTS = {
         player: {
             src: "./sprites/player.png",
-            height: 32,
             width: 32,
+            height: 32,
             hitRadius: 8
         },
         levels: {
@@ -21,7 +21,7 @@ define("TimePilot.CONSTANTS", function () {
                     turnInterval: 5,
                     projectile: {
                         velocity: 7,
-                        size: 2,
+                        size: 4,
                         color: "#FFF"
                     }
                 },
@@ -30,15 +30,22 @@ define("TimePilot.CONSTANTS", function () {
                         src: "./sprites/enemy_level1.png",
                         velocity: 3,
                         turnLimiter: 25,
-                        height: 32,
                         width: 32,
+                        height: 32,
                         firingChance: 0.2,
                         hitRadius: 8,
                         canRotate: true,
                         projectile: {
-                            velocity: 7,
-                            size: 2,
+                            velocity: 4,
+                            size: 4,
                             color: "#FF9"
+                        },
+                        explosion: {
+                            src: "./sprites/enemy_explosion.png",
+                            width: 32,
+                            height: 32,
+                            frames: 4,
+                            frameLimiter: 5
                         }
                     }
                 },
