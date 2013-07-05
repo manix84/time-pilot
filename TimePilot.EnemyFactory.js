@@ -60,6 +60,10 @@ define("TimePilot.EnemyFactory", [
             return data;
         },
 
+        /**
+         * Run player collision calculations on all entities.
+         * @method
+         */
         detectPlayerCollision: function () {
             var i;
 
@@ -72,6 +76,10 @@ define("TimePilot.EnemyFactory", [
 
         },
 
+        /**
+         * Run arena exit calculations on all entities.
+         * @method
+         */
         detectArenaExit: function () {
             var i;
 
@@ -83,6 +91,10 @@ define("TimePilot.EnemyFactory", [
 
         },
 
+        /**
+         * If an entity declares it is to be removed, remove it.
+         * @method
+         */
         cleanup: function () {
             var i;
 
