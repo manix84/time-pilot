@@ -1,7 +1,10 @@
 define("TimePilot.EnemyFactory", [
     "engine/helpers",
     "TimePilot.Enemy"
-], function (helpers, Enemy) {
+], function (
+    helpers,
+    Enemy
+) {
     /**
      * Construct an enemy factory for managing creation, movement, rendering and removal of enemies.
      * @constructor
@@ -58,6 +61,52 @@ define("TimePilot.EnemyFactory", [
         },
 
         /**
+         * Run player collision calculations on all entities.
+         * @method
+         */
+        detectPlayerCollision: function () {
+            var i;
+
+            for (i in this._enemies) {
+                if (this._enemies.hasOwnProperty(i) && this._enemies[i].detectPlayerCollision()) {
+                    this._enemies[i].kill();
+                    this._player.kill();
+                }
+            }
+
+        },
+
+        /**
+         * Run arena exit calculations on all entities.
+         * @method
+         */
+        detectArenaExit: function () {
+            var i;
+
+            for (i in this._enemies) {
+                if (this._enemies.hasOwnProperty(i) && this._enemies[i].detectAreaExit(500)) {
+                    this._despawn(i);
+                }
+            }
+
+        },
+
+        /**
+         * If an entity declares it is to be removed, remove it.
+         * @method
+         */
+        cleanup: function () {
+            var i;
+
+            for (i in this._enemies) {
+                if (this._enemies.hasOwnProperty(i) && this._enemies[i].removeMe) {
+                    this._despawn(i);
+                }
+            }
+
+        },
+
+        /**
          * Run all reposition logic.
          * @method
          */
@@ -67,14 +116,6 @@ define("TimePilot.EnemyFactory", [
             for (i in this._enemies) {
                 if (this._enemies.hasOwnProperty(i)) {
                     this._enemies[i].reposition();
-
-                    if (this._enemies[i].detectAreaExit(500)) {
-                        this.despawn(i);
-                    } else if (this._enemies[i].detectPlayerCollision()) {
-                        // this._enemies[i].explode();
-                        // this._player.explode();
-                        window.console.warn("Ouch that hurt! " + i + " hit me he did.");
-                    }
                 }
             }
         },
@@ -98,7 +139,7 @@ define("TimePilot.EnemyFactory", [
          * @method
          * @param   {Number} entityId - Index ID of entity you wish to remove.
          */
-        despawn: function (entityId) {
+        _despawn: function (entityId) {
             this._enemies.splice(entityId, 1);
         }
     };

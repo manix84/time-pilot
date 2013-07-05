@@ -17,11 +17,11 @@ define("TimePilot.CONSTANTS", function () {
                     despawnRadius: 500
                 },
                 player: {
-                    velocity: 6,
+                    velocity: 4,
                     turnInterval: 5,
                     projectile: {
                         velocity: 7,
-                        size: 2,
+                        size: 4,
                         color: "#FFF"
                     }
                 },
@@ -29,15 +29,15 @@ define("TimePilot.CONSTANTS", function () {
                     basic: {
                         src: "./sprites/enemy_level1.png",
                         velocity: 3,
-                        turn: 5,
+                        turnLimiter: 25,
                         height: 32,
                         width: 32,
                         firingChance: 0.2,
                         hitRadius: 8,
                         canRotate: true,
                         projectile: {
-                            velocity: 7,
-                            size: 2,
+                            velocity: 4,
+                            size: 4,
                             color: "#FF9"
                         }
                     }

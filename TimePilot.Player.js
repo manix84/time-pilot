@@ -1,16 +1,21 @@
 define("TimePilot.Player", [
     "TimePilot.CONSTANTS",
     "engine/helpers"
-], function (CONSTS, helpers) {
+], function (
+    CONSTS,
+    helpers
+) {
 
     /**
      * Player object.
      * @constructor
      * @param   {Canvas Instance} canvas
+     * @param   {Ticker Instance} ticker
      * @returns {Player Instance}
      */
-    var Player = function (canvas) {
+    var Player = function (canvas, ticker) {
         this._canvas = canvas;
+        this._ticker = ticker;
 
         this._playerSprite = new Image();
         this._playerSprite.src = CONSTS.player.src;
@@ -83,7 +88,7 @@ define("TimePilot.Player", [
          * Render the player.
          * @method
          */
-        render: function () {
+        _render: function () {
             this._canvas.renderSprite(this._playerSprite, {
                 frameWidth: CONSTS.player.width,
                 frameHeight: CONSTS.player.height,
@@ -94,7 +99,46 @@ define("TimePilot.Player", [
             });
         },
 
-        explode: function () {}
+        /**
+         * Render the death animation for the player.
+         * @protected
+         * @method
+         */
+        _renderDeath: function () {
+            var levelData = this.getLevelData(),
+                frameX = Math.floor((this._ticker.getTicks() - this._data.deathTick) / 4);
+
+            this._playerSprite.src = "./sprites/player_explosion.png";
+
+            this._canvas.renderSprite(this._playerSprite, {
+                frameWidth: 64,
+                frameHeight: 32,
+                frameX: frameX,
+                frameY: 0,
+                posX: ((this._canvas.width / 2) - (64 / 2)),
+                posY: ((this._canvas.height / 2) - (CONSTS.player.height / 2))
+            });
+
+            if (frameX === 4) {
+                this._data.removeMe = true;
+            }
+        },
+
+        /**
+         * Render the player.
+         * @method
+         */
+        render: function () {
+            if (!this._data.deathTick) {
+                this._render();
+            } else {
+                this._renderDeath();
+            }
+        },
+
+        kill: function () {
+            this._data.deathTick = this._ticker.getTicks();
+        }
     };
 
     return Player;

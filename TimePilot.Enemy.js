@@ -1,7 +1,10 @@
 define("TimePilot.Enemy", [
     "TimePilot.CONSTANTS",
     "engine/helpers"
-], function (CONSTS, helpers) {
+], function (
+    CONSTS,
+    helpers
+) {
 
     /**
      * Creates an enemy to add to the page.
@@ -25,6 +28,9 @@ define("TimePilot.Enemy", [
         this._data.posY = posY;
         this._data.heading = heading;
         this._data.level = 1;
+        this._data.deathTick = false;
+        this._data.removeMe = false;
+        this._data.tickOffset = Math.floor(Math.random() * 100);
 
         this._enemySprite = new Image();
         this._enemySprite.src = this.getLevelData().src;
@@ -79,8 +85,8 @@ define("TimePilot.Enemy", [
                     posY: player.posY + ((this._canvas.height / 2) - (levelData.height / 2)),
                     radius: CONSTS.player.hitRadius
                 }, {
-                    posX: this._data.posX,
-                    posY: this._data.posY,
+                    posX: (this._data.posX - (CONSTS.player.width / 2)),
+                    posY: (this._data.posY - (CONSTS.player.height / 2)),
                     radius: levelData.hitRadius
                 }
             );
@@ -119,27 +125,31 @@ define("TimePilot.Enemy", [
                 levelData = this.getLevelData(),
                 player = this._player.getData(),
                 canvas = this._canvas,
+                tick = (this._ticker.getTicks() - this._data.tickOffset),
                 turnTo;
 
             // Per-Enemy Data
-
             enemy.posX += helpers.float(Math.sin(heading * (Math.PI / 180)) * levelData.velocity);
             enemy.posY -= helpers.float(Math.cos(heading * (Math.PI / 180)) * levelData.velocity);
 
-            turnTo = helpers.findHeading(enemy, {
-                posX: player.posX + ((canvas.width / 2) - (levelData.width / 2)),
-                posY: player.posY + ((canvas.height / 2) - (levelData.height / 2))
-            });
-            turnTo = (Math.floor(turnTo / 22.5) * 22.5);
+            if (tick % levelData.turnLimiter === 0) {
+                turnTo = helpers.findHeading(enemy, {
+                    posX: player.posX + ((canvas.width / 2) - (levelData.width / 2)),
+                    posY: player.posY + ((canvas.height / 2) - (levelData.height / 2))
+                });
+                turnTo = (Math.floor(turnTo / 22.5) * 22.5);
 
-            enemy.heading = helpers.rotateTo(turnTo, enemy.heading, 22.5);
+                enemy.heading = helpers.rotateTo(turnTo, enemy.heading, 22.5);
+            }
+
         },
 
         /**
-         * Render the player.
+         * Render the player normally.
+         * @protected
          * @method
          */
-        render: function () {
+        _render: function () {
             var levelData = this.getLevelData();
             this._canvas.renderSprite(this._enemySprite, {
                 frameWidth: levelData.width,
@@ -149,6 +159,47 @@ define("TimePilot.Enemy", [
                 posX: (this._data.posX - this._player.getData().posX - (levelData.width / 2)),
                 posY: (this._data.posY - this._player.getData().posY - (levelData.height / 2))
             });
+        },
+
+        /**
+         * Render the death animation for the player.
+         * @protected
+         * @method
+         */
+        _renderDeath: function () {
+            var levelData = this.getLevelData(),
+                frameX = Math.floor((this._ticker.getTicks() - this._data.deathTick) / 4);
+
+            this._enemySprite.src = "./sprites/enemy_explosion.png";
+
+            this._canvas.renderSprite(this._enemySprite, {
+                frameWidth: 32,
+                frameHeight: 32,
+                frameX: frameX,
+                frameY: 0,
+                posX: (this._data.posX - this._player.getData().posX - (32 / 2)),
+                posY: (this._data.posY - this._player.getData().posY - (32 / 2))
+            });
+
+            if (frameX === 4) {
+                this._data.removeMe = true;
+            }
+        },
+
+        /**
+         * Render the player.
+         * @method
+         */
+        render: function () {
+            if (!this._data.deathTick) {
+                this._render();
+            } else {
+                this._renderDeath();
+            }
+        },
+
+        kill: function () {
+            this._data.deathTick = this._ticker.getTicks();
         }
     };
 

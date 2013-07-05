@@ -1,7 +1,10 @@
 define("TimePilot.Bullet", [
     "TimePilot.CONSTANTS",
     "engine/helpers"
-], function (CONSTS, helpers) {
+], function (
+    CONSTS,
+    helpers
+) {
 
     /**
      * Creates a bullet to add to render.
