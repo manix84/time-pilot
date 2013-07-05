@@ -105,21 +105,21 @@ define("TimePilot.Player", [
          * @method
          */
         _renderDeath: function () {
-            var levelData = this.getLevelData(),
-                frameX = Math.floor((this._ticker.getTicks() - this._data.deathTick) / 4);
+            var explosionData = CONSTS.player.explosion,
+                frameX = Math.floor((this._ticker.getTicks() - this._data.deathTick) / explosionData.frameLimiter);
 
-            this._playerSprite.src = "./sprites/player_explosion.png";
+            this._playerSprite.src = explosionData.src;
 
             this._canvas.renderSprite(this._playerSprite, {
-                frameWidth: 64,
-                frameHeight: 32,
+                frameWidth: explosionData.width,
+                frameHeight: explosionData.height,
                 frameX: frameX,
                 frameY: 0,
-                posX: ((this._canvas.width / 2) - (64 / 2)),
-                posY: ((this._canvas.height / 2) - (CONSTS.player.height / 2))
+                posX: ((this._canvas.width / 2) - (explosionData.width / 2)),
+                posY: ((this._canvas.height / 2) - (explosionData.height / 2))
             });
 
-            if (frameX === 4) {
+            if (frameX === explosionData.frames) {
                 this._data.removeMe = true;
             }
         },

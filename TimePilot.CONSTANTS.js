@@ -5,7 +5,14 @@ define("TimePilot.CONSTANTS", function () {
             src: "./sprites/player.png",
             width: 32,
             height: 32,
-            hitRadius: 8
+            hitRadius: 8,
+            explosion: {
+                src: "./sprites/player_explosion.png",
+                width: 64,
+                height: 32,
+                frames: 4,
+                frameLimiter: 8
+            }
         },
         levels: {
             1: {
