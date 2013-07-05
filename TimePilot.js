@@ -248,38 +248,6 @@ define("TimePilot", [
             this._container.appendChild(this._keyboardLock);
         },
 
-        _rotateTo: function (destinationAngle, currentAngle, stepSize) {
-            var direction = Math.atan2(
-                    parseFloat(Math.sin((destinationAngle - currentAngle) * (Math.PI / 180)).toFixed(15)),
-                    parseFloat(Math.cos((destinationAngle - currentAngle) * (Math.PI / 180)).toFixed(15))
-                );
-
-            if (direction > 0) {
-                currentAngle += stepSize;
-            } else if (direction < 0) {
-                currentAngle -= stepSize;
-            }
-            currentAngle += currentAngle >= 360 ? -360 : (currentAngle < 0 ? 360 : 0);
-
-            return currentAngle;
-        },
-
-        _findAngle: function (targetA, targetB) {
-            var angle = Math.atan2(
-                (targetA.posX - targetB.posX),
-                (targetA.posY - targetB.posY)
-            ) * (180 / Math.PI);
-            return ((angle > 0) ? (360 - angle) : Math.abs(angle));
-        },
-
-        _detectCollision: function (targetA, targetB) {
-            var dx = targetA.posX - targetB.posX,
-                dy = targetA.posY - targetB.posY,
-                dist = targetA.radius + targetB.radius;
-
-            return (dx * dx + dy * dy <= dist * dist);
-        },
-
         _renderExplosions: function () {
             var i = 0,
                 spriteData = {},
