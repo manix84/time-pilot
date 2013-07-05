@@ -390,7 +390,10 @@ define("TimePilot", [
             if ((this._ticker.getTicks() % randomTickInterval === 0) && this._enemies.getCount() < 10)  {
                 // Enemies
                 data = helpers.getSpawnCoords(this._player.getData(), this._canvas);
-                angle = this._findAngle({ posX: data.posX, posY: data.posY }, {
+                angle = helpers.findHeading({
+                    posX: data.posX,
+                    posY: data.posY
+                }, {
                     posX: this._player.getData().posX,
                     posY: this._player.getData().posY
                 });
