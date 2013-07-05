@@ -126,7 +126,6 @@ define("TimePilot.Enemy", [
                 turnTo;
 
             // Per-Enemy Data
-
             enemy.posX += helpers.float(Math.sin(heading * (Math.PI / 180)) * levelData.velocity);
             enemy.posY -= helpers.float(Math.cos(heading * (Math.PI / 180)) * levelData.velocity);
 

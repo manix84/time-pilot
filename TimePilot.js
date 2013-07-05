@@ -128,6 +128,15 @@ define("TimePilot", [
                 that._hud.render();
 
             }, 1);
+            this._ticker.addSchedule(function () {
+                that._enemies.detectPlayerCollision();
+            }, 1);
+            this._ticker.addSchedule(function () {
+                that._enemies.detectArenaExit();
+            }, 1);
+            this._ticker.addSchedule(function () {
+                that._enemies.cleanup();
+            }, 1);
 
             this.playGame();
         },
@@ -151,16 +160,16 @@ define("TimePilot", [
                 this._data.player.lastMovedTick = this._ticker.getTicks();
                 switch (this._data.player.direction) {
                 case 38: // Up
-                    this._player.setData("heading", this._rotateTo(0, this._player.getData().heading, 22.5));
+                    this._player.setData("heading", helpers.rotateTo(0, this._player.getData().heading, 22.5));
                     break;
                 case 40: // Down
-                    this._player.setData("heading", this._rotateTo(180, this._player.getData().heading, 22.5));
+                    this._player.setData("heading", helpers.rotateTo(180, this._player.getData().heading, 22.5));
                     break;
                 case 37: // Left
-                    this._player.setData("heading", this._rotateTo(270, this._player.getData().heading, 22.5));
+                    this._player.setData("heading", helpers.rotateTo(270, this._player.getData().heading, 22.5));
                     break;
                 case 39: // Right
-                    this._player.setData("heading", this._rotateTo(90, this._player.getData().heading, 22.5));
+                    this._player.setData("heading", helpers.rotateTo(90, this._player.getData().heading, 22.5));
                     break;
                 }
             }
@@ -239,77 +248,6 @@ define("TimePilot", [
             this._container.appendChild(this._keyboardLock);
         },
 
-        _rotateTo: function (destinationAngle, currentAngle, stepSize) {
-            var direction = Math.atan2(
-                    parseFloat(Math.sin((destinationAngle - currentAngle) * (Math.PI / 180)).toFixed(15)),
-                    parseFloat(Math.cos((destinationAngle - currentAngle) * (Math.PI / 180)).toFixed(15))
-                );
-
-            if (direction > 0) {
-                currentAngle += stepSize;
-            } else if (direction < 0) {
-                currentAngle -= stepSize;
-            }
-            currentAngle += currentAngle >= 360 ? -360 : (currentAngle < 0 ? 360 : 0);
-
-            return currentAngle;
-        },
-
-        _findAngle: function (targetA, targetB) {
-            var angle = Math.atan2(
-                (targetA.posX - targetB.posX),
-                (targetA.posY - targetB.posY)
-            ) * (180 / Math.PI);
-            return ((angle > 0) ? (360 - angle) : Math.abs(angle));
-        },
-
-        _detectCollision: function (targetA, targetB) {
-            var dx = targetA.posX - targetB.posX,
-                dy = targetA.posY - targetB.posY,
-                dist = targetA.radius + targetB.radius;
-
-            return (dx * dx + dy * dy <= dist * dist);
-        },
-
-        _renderExplosions: function () {
-            var i = 0,
-                spriteData = {},
-                sprite = new Image(),
-                explosion;
-
-            for (; i < this._data.explosions.length; i++) {
-                explosion = this._data.explosions[i];
-                sprite.src = "./sprites/enemy_explosion.png";
-                spriteData.frameWidth = 32;
-                spriteData.frameHeight = 32;
-                spriteData.frameX = (this._ticker.getTicks() - explosion.startingTick % 25);
-                spriteData.frameY = 0;
-                spriteData.posX = (explosion.posX - this._player.getData().posX - (spriteData.frameWidth / 2));
-                spriteData.posY = (explosion.posY - this._player.getData().posY - (spriteData.frameHeight / 2));
-
-                this._canvas.renderSprite(sprite, spriteData);
-
-                if (spriteData.frameX === 4) {
-                    this._data.explosions.splice(i, 1);
-                }
-            }
-        },
-
-        _renderBoss: function () {
-            var spriteData = {},
-                sprite = new Image();
-
-            sprite.src = "./sprites/boss_level" + this._data.level + ".png";
-            spriteData.frameWidth = 64;
-            spriteData.frameHeight = 32;
-            spriteData.frameX = 0;
-            spriteData.frameY = 0;
-            spriteData.posX = (0 - this._player.getData().posX);
-            spriteData.posY = (0 - this._player.getData().posY);
-
-            this._canvas.renderSprite(sprite, spriteData);
-        },
-
         _renderClouds: function (layer) {
             var i = 0,
                 s = 0,
@@ -381,7 +319,10 @@ define("TimePilot", [
             if ((this._ticker.getTicks() % randomTickInterval === 0) && this._enemies.getCount() < 10)  {
                 // Enemies
                 data = helpers.getSpawnCoords(this._player.getData(), this._canvas);
-                angle = this._findAngle({ posX: data.posX, posY: data.posY }, {
+                angle = helpers.findHeading({
+                    posX: data.posX,
+                    posY: data.posY
+                }, {
                     posX: this._player.getData().posX,
                     posY: this._player.getData().posY
                 });

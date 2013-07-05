@@ -57,6 +57,40 @@ define("TimePilot.EnemyFactory", [
             return data;
         },
 
+        detectPlayerCollision: function () {
+            var i;
+
+            for (i in this._enemies) {
+                if (this._enemies.hasOwnProperty(i) && this._enemies[i].detectPlayerCollision()) {
+                    this._enemies[i].kill();
+                    this._player.kill();
+                }
+            }
+
+        },
+
+        detectArenaExit: function () {
+            var i;
+
+            for (i in this._enemies) {
+                if (this._enemies.hasOwnProperty(i) && this._enemies[i].detectAreaExit(500)) {
+                    this._despawn(i);
+                }
+            }
+
+        },
+
+        cleanup: function () {
+            var i;
+
+            for (i in this._enemies) {
+                if (this._enemies.hasOwnProperty(i) && this._enemies[i].removeMe) {
+                    this._despawn(i);
+                }
+            }
+
+        },
+
         /**
          * Run all reposition logic.
          * @method
@@ -67,13 +101,6 @@ define("TimePilot.EnemyFactory", [
             for (i in this._enemies) {
                 if (this._enemies.hasOwnProperty(i)) {
                     this._enemies[i].reposition();
-
-                    if (this._enemies[i].getData().removeMe || this._enemies[i].detectAreaExit(500)) {
-                        this.despawn(i);
-                    } else if (this._enemies[i].detectPlayerCollision()) {
-                        this._enemies[i].kill();
-                        this._player.kill();
-                    }
                 }
             }
         },
@@ -97,7 +124,7 @@ define("TimePilot.EnemyFactory", [
          * @method
          * @param   {Number} entityId - Index ID of entity you wish to remove.
          */
-        despawn: function (entityId) {
+        _despawn: function (entityId) {
             this._enemies.splice(entityId, 1);
         }
     };
