@@ -21,7 +21,7 @@ define("TimePilot.CONSTANTS", function () {
                     turnInterval: 5,
                     projectile: {
                         velocity: 7,
-                        size: 2,
+                        size: 4,
                         color: "#FFF"
                     }
                 },
@@ -36,8 +36,8 @@ define("TimePilot.CONSTANTS", function () {
                         hitRadius: 8,
                         canRotate: true,
                         projectile: {
-                            velocity: 7,
-                            size: 2,
+                            velocity: 4,
+                            size: 4,
                             color: "#FF9"
                         }
                     }
