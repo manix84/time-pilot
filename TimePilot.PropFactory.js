@@ -1,14 +1,120 @@
-define("TimePilot.PropFactory.js", [
+define("TimePilot.PropFactory", [
     "TimePilot.Prop"
 ], function (
     Prop
 ) {
 
-    var PropFactory = function () {
+    var PropFactory = function (canvas, player) {
+        this._canvas = canvas;
+        this._player = player;
 
+        this._props = [];
     };
 
     PropFactory.prototype = {
+        /**
+         * Create a prop instance and keep a record of it in the factory.
+         * @method
+         * @param   {Number} posX    - X coordinate to start from.
+         * @param   {Number} posY    - Y coordinate to start from.
+         */
+        create: function (posX, posY) {
+            this._props.push(
+                new Prop(this._canvas, this._player, posX, posY)
+            );
+        },
+
+        /**
+         * Get the current number of spawned entities.
+         * @method
+         * @returns {Number}
+         */
+        getCount: function () {
+            return this._props.length;
+        },
+
+        /**
+         * Return the data for all prop entities in an array.
+         * @method
+         * @returns {Array}
+         */
+        getData: function () {
+            var data = [],
+                i = 0;
+            for (i in this._props) {
+                if (this._props.hasOwnProperty(i)) {
+                    data.push(this._props[i].getData());
+                }
+            }
+            return data;
+        },
+
+        /**
+         * Run arena exit calculations on all entities.
+         * @method
+         */
+        detectArenaExit: function () {
+            var i;
+
+            for (i in this._props) {
+                if (this._props.hasOwnProperty(i) && this._props[i].detectAreaExit(500)) {
+                    this._despawn(i);
+                }
+            }
+
+        },
+
+        /**
+         * If an entity declares it is to be removed, remove it.
+         * @method
+         */
+        cleanup: function () {
+            var i;
+
+            for (i in this._props) {
+                if (this._props.hasOwnProperty(i) && this._props[i].removeMe) {
+                    this._despawn(i);
+                }
+            }
+
+        },
+
+        /**
+         * Run all reposition logic.
+         * @method
+         */
+        reposition: function () {
+            var i;
+
+            for (i in this._props) {
+                if (this._props.hasOwnProperty(i)) {
+                    this._props[i].reposition();
+                }
+            }
+        },
+
+        /**
+         * Render all entities on the canvas.
+         * @method
+         */
+        render: function () {
+            var i = 0;
+
+            for (i in this._props) {
+                if (this._props.hasOwnProperty(i)) {
+                    this._props[i].render();
+                }
+            }
+        },
+
+        /**
+         * Despawn specified entity.
+         * @method
+         * @param   {Number} entityId - Index ID of entity you wish to remove.
+         */
+        _despawn: function (entityId) {
+            this._props.splice(entityId, 1);
+        }
 
     };
 
