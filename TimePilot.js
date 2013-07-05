@@ -128,6 +128,15 @@ define("TimePilot", [
                 that._hud.render();
 
             }, 1);
+            this._ticker.addSchedule(function () {
+                that._enemies.detectPlayerCollision();
+            }, 1);
+            this._ticker.addSchedule(function () {
+                that._enemies.detectArenaExit();
+            }, 1);
+            this._ticker.addSchedule(function () {
+                that._enemies.cleanup();
+            }, 1);
 
             this.playGame();
         },
