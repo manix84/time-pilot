@@ -160,16 +160,16 @@ define("TimePilot", [
                 this._data.player.lastMovedTick = this._ticker.getTicks();
                 switch (this._data.player.direction) {
                 case 38: // Up
-                    this._player.setData("heading", this._rotateTo(0, this._player.getData().heading, 22.5));
+                    this._player.setData("heading", helpers.rotateTo(0, this._player.getData().heading, 22.5));
                     break;
                 case 40: // Down
-                    this._player.setData("heading", this._rotateTo(180, this._player.getData().heading, 22.5));
+                    this._player.setData("heading", helpers.rotateTo(180, this._player.getData().heading, 22.5));
                     break;
                 case 37: // Left
-                    this._player.setData("heading", this._rotateTo(270, this._player.getData().heading, 22.5));
+                    this._player.setData("heading", helpers.rotateTo(270, this._player.getData().heading, 22.5));
                     break;
                 case 39: // Right
-                    this._player.setData("heading", this._rotateTo(90, this._player.getData().heading, 22.5));
+                    this._player.setData("heading", helpers.rotateTo(90, this._player.getData().heading, 22.5));
                     break;
                 }
             }
