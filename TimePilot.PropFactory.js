@@ -50,21 +50,6 @@ define("TimePilot.PropFactory", [
         },
 
         /**
-         * Run arena exit calculations on all entities.
-         * @method
-         */
-        detectArenaExit: function () {
-            var i;
-
-            for (i in this._props) {
-                if (this._props.hasOwnProperty(i) && this._props[i].detectAreaExit(500)) {
-                    this._despawn(i);
-                }
-            }
-
-        },
-
-        /**
          * If an entity declares it is to be removed, remove it.
          * @method
          */
@@ -72,7 +57,7 @@ define("TimePilot.PropFactory", [
             var i;
 
             for (i in this._props) {
-                if (this._props.hasOwnProperty(i) && this._props[i].removeMe) {
+                if (this._props.hasOwnProperty(i) && this._props[i].getData().removeMe) {
                     this._despawn(i);
                 }
             }
@@ -97,12 +82,15 @@ define("TimePilot.PropFactory", [
          * Render all entities on the canvas.
          * @method
          */
-        render: function () {
+        render: function (layer) {
+            layer = layer || false;
             var i = 0;
 
             for (i in this._props) {
                 if (this._props.hasOwnProperty(i)) {
-                    this._props[i].render();
+                    if (!layer || this._props[i].getData().layer === layer) {
+                        this._props[i].render();
+                    }
                 }
             }
         },
