@@ -89,13 +89,14 @@ define("TimePilot.Player", [
          * @method
          */
         _render: function () {
+            var player = CONSTS.player;
             this._canvas.renderSprite(this._playerSprite, {
-                frameWidth: CONSTS.player.width,
-                frameHeight: CONSTS.player.height,
+                frameWidth: player.width,
+                frameHeight: player.height,
                 frameX: Math.floor(this._data.heading / 22.5),
                 frameY: 0,
-                posX: ((this._canvas.width / 2) - (CONSTS.player.width / 2)),
-                posY: ((this._canvas.height / 2) - (CONSTS.player.height / 2))
+                posX: ((this._canvas.width / 2) - (player.width / 2)),
+                posY: ((this._canvas.height / 2) - (player.height / 2))
             });
         },
 
