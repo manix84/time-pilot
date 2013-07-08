@@ -2,17 +2,22 @@ define("TimePilot.CONSTANTS", function () {
 
     var CONSTS = {
         player: {
-            src: "./sprites/player.png",
+            src: "./sprites/player/player.png",
             width: 32,
             height: 32,
             hitRadius: 8,
             explosion: {
-                src: "./sprites/player_explosion.png",
+                src: "./sprites/player/explosion.png",
                 width: 64,
                 height: 32,
                 frames: 4,
                 frameLimiter: 8
             }
+        },
+        limits: {
+            props: 20,
+            spawningRadius: 450,
+            despawnRadius: 500
         },
         levels: {
             1: {
@@ -24,7 +29,7 @@ define("TimePilot.CONSTANTS", function () {
                     despawnRadius: 500
                 },
                 player: {
-                    velocity: 4,
+                    velocity: 5,
                     turnInterval: 5,
                     projectile: {
                         velocity: 7,
@@ -34,7 +39,7 @@ define("TimePilot.CONSTANTS", function () {
                 },
                 enemies: {
                     basic: {
-                        src: "./sprites/enemy_level1.png",
+                        src: "./sprites/enemies/basic/level1.png",
                         velocity: 3,
                         turnLimiter: 25,
                         width: 32,
@@ -43,12 +48,12 @@ define("TimePilot.CONSTANTS", function () {
                         hitRadius: 8,
                         canRotate: true,
                         projectile: {
-                            velocity: 4,
-                            size: 4,
+                            velocity: 5,
+                            size: 6,
                             color: "#FF9"
                         },
                         explosion: {
-                            src: "./sprites/enemy_explosion.png",
+                            src: "./sprites/enemies/basic/explosion.png",
                             width: 32,
                             height: 32,
                             frames: 4,
@@ -56,24 +61,30 @@ define("TimePilot.CONSTANTS", function () {
                         }
                     }
                 },
-                backgroundProps: [
+                props: [
                     {
-                        src: "./sprites/cloud1.png",
+                        src: "./sprites/props/cloud1.png",
                         width: 32,
                         height: 18,
-                        speed: 0.1
+                        relativeVelocity: 0.5,
+                        layer: 1,
+                        reversed: false
                     },
                     {
-                        src: "./sprites/cloud2.png",
+                        src: "./sprites/props/cloud2.png",
                         width: 60,
                         height: 28,
-                        speed: 0.5
+                        relativeVelocity: 0.25,
+                        layer: 1,
+                        reversed: false
                     },
                     {
-                        src: "./sprites/cloud3.png",
+                        src: "./sprites/props/cloud3.png",
                         width: 92,
                         height: 32,
-                        speed: 1
+                        relativeVelocity: 0,
+                        layer: 2,
+                        reversed: false
                     }
                 ]
             }

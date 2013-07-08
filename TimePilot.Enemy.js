@@ -39,7 +39,7 @@ define("TimePilot.Enemy", [
     Enemy.prototype = {
 
         /**
-         * Get data for the player.
+         * Get data for the entity.
          * @method
          * @returns {Object}
          */
@@ -48,7 +48,7 @@ define("TimePilot.Enemy", [
         },
 
         /**
-         * Set data in the player's data object.
+         * Set data in the entity's data object.
          * @method
          * @param   {String} key  - Key from _data object
          * @param   {Multi} value - Value to be set onto the key from the _data object.
@@ -72,7 +72,7 @@ define("TimePilot.Enemy", [
         },
 
         /**
-         * Detect if this entity has collided with the player.
+         * Detect if this entity has collided with the entity.
          * @method
          * @returns {Boolean}
          */
@@ -95,7 +95,7 @@ define("TimePilot.Enemy", [
         },
 
         /**
-         * Detect if the entity has left a given radius of the player.
+         * Detect if the entity has left a given radius of the entity.
          * @method
          * @param   {Number} radius - Maximum radial from player before they are concidered outside the battle.
          * @returns {Boolean} True = entity has left the area, False = entity is still in area.
@@ -116,7 +116,7 @@ define("TimePilot.Enemy", [
         },
 
         /**
-         * Recalculate player's current position and heading.
+         * Recalculate entity's current position and heading.
          * @method
          */
         reposition: function () {
@@ -145,7 +145,7 @@ define("TimePilot.Enemy", [
         },
 
         /**
-         * Render the player normally.
+         * Render the entity normally.
          * @protected
          * @method
          */
@@ -162,7 +162,7 @@ define("TimePilot.Enemy", [
         },
 
         /**
-         * Render the death animation for the player.
+         * Render the death animation for the entity.
          * @protected
          * @method
          */
@@ -187,7 +187,7 @@ define("TimePilot.Enemy", [
         },
 
         /**
-         * Render the player.
+         * Render the entity.
          * @method
          */
         render: function () {

@@ -90,17 +90,28 @@ define("engine/Canvas", function () {
                 remainingCount = (this._assets.length - 1),
                 i = remainingCount,
                 img = [],
-                onload = function () {
-                    callback({
-                        loaded: ++loadedCount,
-                        remaining: --remainingCount
-                    });
-                };
+                onload, onerror;
 
-            for (; 0 <= i; i--) {
+            onload = function () {
+                callback({
+                    loaded: ++loadedCount,
+                    remaining: --remainingCount
+                });
+                window.console.info("Loaded: " + loadedCount + ", Remaining: " + remainingCount);
+            };
+            onerror = function () {
+                callback({
+                    loaded: ++loadedCount,
+                    remaining: --remainingCount
+                });
+                window.console.error("Loaded: " + loadedCount + ", Remaining: " + remainingCount);
+            };
+
+            for (; 0 < i; i--) {
                 img[i] = new Image();
                 img[i].src = this._assets[i];
                 img[i].onload = onload;
+                img[i].onerror = onerror;
                 this._assets.splice(i, 1);
             }
         },
