@@ -73,17 +73,17 @@ define("TimePilot", [
 
             this._canvas.registerAssets([
                 "./fonts/font.ttf",
-                "./sprites/player.png",
-                "./sprites/player_explosion.png",
-                "./sprites/enemy_level1.png",
-                "./sprites/enemy_level2.png",
-                "./sprites/enemy_level3.png",
-                "./sprites/enemy_level4.png",
-                "./sprites/enemy_level5.png",
-                "./sprites/enemy_explosion.png",
-                "./sprites/cloud1.png",
-                "./sprites/cloud2.png",
-                "./sprites/cloud3.png"
+                "./sprites/player/player.png",
+                "./sprites/player/explosion.png",
+                "./sprites/enemies/basic/level1.png",
+                "./sprites/enemies/basic/level2.png",
+                "./sprites/enemies/basic/level3.png",
+                "./sprites/enemies/basic/level4.png",
+                "./sprites/enemies/basic/level5.png",
+                "./sprites/enemies/basic/explosion.png",
+                "./sprites/props/cloud1.png",
+                "./sprites/props/cloud2.png",
+                "./sprites/props/cloud3.png"
             ]);
             this._canvas.preloadAssets(function (obj) {
                 if (!obj.remaining) {
