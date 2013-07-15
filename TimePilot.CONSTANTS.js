@@ -6,6 +6,7 @@ define("TimePilot.CONSTANTS", function () {
             width: 32,
             height: 32,
             hitRadius: 8,
+            rotationFrameCount: 16,
             explosion: {
                 src: "./sprites/player/explosion.png",
                 width: 64,
