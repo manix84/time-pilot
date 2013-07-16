@@ -7,7 +7,7 @@ define("TimePilot.ControlInterface", [
 ) {
 
     /**
-     * Create a ControlInterface
+     * Create a ControlInterface instance
      * @constructor
      * @method
      * @returns {ControlInterface instance}
