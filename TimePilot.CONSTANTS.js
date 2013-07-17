@@ -62,6 +62,13 @@ define("TimePilot.CONSTANTS", function () {
                         }
                     }
                 },
+                bonus: {
+                    src: "./sprites/parachute.png",
+                    velocity: 2,
+                    animationCycle: [1, 2, 3, 4, 4, 3, 2, 1],
+                    width: 32,
+                    height: 32
+                },
                 props: [
                     {
                         src: "./sprites/props/cloud1.png",
