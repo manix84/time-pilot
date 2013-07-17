@@ -14,6 +14,9 @@ define("engine/GameArena", function () {
         this._isInFullScreen = false;
         this._assets = [];
 
+        this._oldWidth = this._containerElement.clientWidth;
+        this._oldHeight = this._containerElement.clientHeight;
+
         this._init();
     };
 
@@ -43,8 +46,14 @@ define("engine/GameArena", function () {
             width = width || this._containerElement.clientWidth;
             height = height || this._containerElement.clientHeight;
 
-            this._canvas.setAttribute("width", width);
-            this._canvas.setAttribute("height", height);
+            this._oldWidth = this.width;
+            this._oldHeight = this.height;
+
+            this._canvas.width = width;
+            this._canvas.height = height;
+
+            this._containerElement.width = width;
+            this._containerElement.height = height;
 
             this.width = width;
             this.height = height;
@@ -76,18 +85,16 @@ define("engine/GameArena", function () {
          * @method
          */
         enterFullScreen: function () {
-            var element = this._containerElement;
+            var element = this._canvas;
+            this.resize(screen.width, screen.height);
             if (element.requestFullscreen) {
                 element.requestFullscreen();
-                this.resize();
                 this._isInFullScreen = true;
             } else if (element.mozRequestFullScreen) {
                 element.mozRequestFullScreen();
-                this.resize();
                 this._isInFullScreen = true;
             } else if (element.webkitRequestFullscreen) {
                 element.webkitRequestFullscreen(Element.ALLOW_KEYBOARD_INPUT);
-                this.resize();
                 this._isInFullScreen = true;
             }
         },
@@ -99,15 +106,15 @@ define("engine/GameArena", function () {
         exitFullScreen: function () {
             if (document.cancelFullScreen) {
                 document.cancelFullScreen();
-                this.resize();
+                this.resize(this._oldWidth, this._oldHeight);
                 this._isInFullScreen = false;
             } else if (document.mozCancelFullScreen) {
                 document.mozCancelFullScreen();
-                this.resize();
+                this.resize(this._oldWidth, this._oldHeight);
                 this._isInFullScreen = false;
             } else if (document.webkitCancelFullScreen) {
                 document.webkitCancelFullScreen();
-                this.resize();
+                this.resize(this._oldWidth, this._oldHeight);
                 this._isInFullScreen = false;
             }
         },
