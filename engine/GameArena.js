@@ -9,7 +9,9 @@ define("engine/GameArena", function () {
     var GameArena = function (containerElement) {
         this._containerElement = containerElement;
         this._canvas = document.createElement("canvas");
+        this.resize();
 
+        this._isInFullScreen = false;
         this._assets = [];
 
         this._init();
@@ -32,6 +34,23 @@ define("engine/GameArena", function () {
         },
 
         /**
+         * Resize the canvas to specified height and width. Defaults to the container elements current dimentions.
+         * @method
+         * @param   {Number} width
+         * @param   {Number} height
+         */
+        resize: function (width, height) {
+            width = width || this._containerElement.clientWidth;
+            height = height || this._containerElement.clientHeight;
+
+            this._canvas.setAttribute("width", width);
+            this._canvas.setAttribute("height", height);
+
+            this.width = width;
+            this.height = height;
+        },
+
+        /**
          * Return 2D or 3D canvas context.
          * @method
          * @param   {String} dimentions - Canvas context you want back (2D or 3D).
@@ -51,6 +70,63 @@ define("engine/GameArena", function () {
             }
             return context;
         },
+
+        /**
+         * Enter full-screen, using the full-screen api.
+         * @method
+         */
+        enterFullScreen: function () {
+            var element = this._containerElement;
+            if (element.requestFullscreen) {
+                element.requestFullscreen();
+                this.resize();
+                this._isInFullScreen = true;
+            } else if (element.mozRequestFullScreen) {
+                element.mozRequestFullScreen();
+                this.resize();
+                this._isInFullScreen = true;
+            } else if (element.webkitRequestFullscreen) {
+                element.webkitRequestFullscreen(Element.ALLOW_KEYBOARD_INPUT);
+                this.resize();
+                this._isInFullScreen = true;
+            }
+        },
+
+        /**
+         * Exit full-screen mode.
+         * @method
+         */
+        exitFullScreen: function () {
+            if (document.cancelFullScreen) {
+                document.cancelFullScreen();
+                this.resize();
+                this._isInFullScreen = false;
+            } else if (document.mozCancelFullScreen) {
+                document.mozCancelFullScreen();
+                this.resize();
+                this._isInFullScreen = false;
+            } else if (document.webkitCancelFullScreen) {
+                document.webkitCancelFullScreen();
+                this.resize();
+                this._isInFullScreen = false;
+            }
+        },
+
+        /**
+         * Toggle full-screen mode.
+         * @method
+         */
+        toggleFullScreen: function () {
+            window.console.log("this._isInFullScreen", this._isInFullScreen);
+            if (this._isInFullScreen) {
+                this.exitFullScreen();
+                window.console.log("Exiting full-screen");
+            } else {
+                this.enterFullScreen();
+                window.console.log("Entering full-screen");
+            }
+        },
+
         /**
          * Get the Canvas.
          * @method

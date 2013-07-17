@@ -220,6 +220,9 @@ define("TimePilot", [
             });
             this._addListener(this._keyboardLock, "keydown", function (event) {
                 switch (event.keyCode) {
+                case 70: // "F"
+                    that._gameArena.toggleFullScreen();
+                    break;
                 case 37: // LEFT
                 case 38: // UP
                 case 39: // RIGHT
