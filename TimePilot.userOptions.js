@@ -27,7 +27,7 @@ define("TimePilot.userOptions", function () {
             showPlayerCoordinates: true
         },
 
-        enableDebug: true,
+        enableDebug: false,
 
         controllerType: "keyboard1",
 
