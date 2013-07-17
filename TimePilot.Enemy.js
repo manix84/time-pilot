@@ -31,8 +31,9 @@ define("TimePilot.Enemy", [
         this._data.heading = heading;
         this._data.level = 1;
         this._data.deathTick = false;
-        this._data.removeMe = false;
         this._data.tickOffset = Math.floor(Math.random() * 100);
+
+        this.removeMe = false;
 
         this._enemySprite = new Image();
         this._enemySprite.src = this.getLevelData().src;
@@ -185,7 +186,7 @@ define("TimePilot.Enemy", [
             });
 
             if (frameX === explosionData.frames) {
-                this._data.removeMe = true;
+                this.removeMe = true;
             }
         },
 
