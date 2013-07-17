@@ -223,6 +223,13 @@ define("TimePilot", [
                 case 70: // "F"
                     that._gameArena.toggleFullScreen();
                     break;
+                case 80: // "P"
+                    if (that._ticker.getState()) {
+                        that.pauseGame();
+                    } else {
+                        that.playGame();
+                    }
+                    break;
                 case 37: // LEFT
                 case 38: // UP
                 case 39: // RIGHT

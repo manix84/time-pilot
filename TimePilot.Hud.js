@@ -1,4 +1,8 @@
-define("TimePilot.Hud", function () {
+define("TimePilot.Hud", [
+    "TimePilot.userOptions"
+], function (
+    userOptions
+) {
 
     /**
      * Create a hud instance to be rendered on the gameArena
@@ -10,8 +14,6 @@ define("TimePilot.Hud", function () {
     var Hud = function (gameArena, player) {
         this._gameArena = gameArena;
         this._playerData = player.getData();
-
-        this._isDebug = true;
     };
 
     Hud.prototype = {
@@ -26,7 +28,7 @@ define("TimePilot.Hud", function () {
                 { size: 30 }
             );
 
-            if (this._isDebug) {
+            if (userOptions.enableDebug && userOptions.debug.showPlayerCoordinates) {
                 this._gameArena.renderText(this._playerData.posX.toFixed(2) + " x " + this._playerData.posY.toFixed(2),
                     20,
                     40,

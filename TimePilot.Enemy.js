@@ -1,8 +1,10 @@
 define("TimePilot.Enemy", [
     "TimePilot.CONSTANTS",
+    "TimePilot.userOptions",
     "engine/helpers"
 ], function (
     CONSTS,
+    userOptions,
     helpers
 ) {
 
@@ -151,6 +153,7 @@ define("TimePilot.Enemy", [
          */
         _render: function () {
             var levelData = this.getLevelData();
+
             this._gameArena.renderSprite(this._enemySprite, {
                 frameWidth: levelData.width,
                 frameHeight: levelData.height,
@@ -159,6 +162,16 @@ define("TimePilot.Enemy", [
                 posX: (this._data.posX - this._player.getData().posX - (levelData.width / 2)),
                 posY: (this._data.posY - this._player.getData().posY - (levelData.height / 2))
             });
+
+            if (userOptions.enableDebug && userOptions.debug.showHitboxes) {
+                this._gameArena.drawCircle(
+                    (this._data.posX - this._player.getData().posX),
+                    (this._data.posY - this._player.getData().posY),
+                    levelData.hitRadius, {
+                        strokeColor: "#F00"
+                    }
+                );
+            }
         },
 
         /**
