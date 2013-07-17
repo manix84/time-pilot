@@ -1,32 +1,26 @@
-define("engine/Canvas", function () {
+define("engine/GameArena", function () {
 
     /**
-     * Create a canvas instance to run the game in.
+     * Create a GameArena instance to run the game in.
      * @constructor
      * @param   {HTML Element} containerElement - Element to load the canvas into.
-     * @returns {Canvas Instance}
+     * @returns {GameArena Instance}
      */
-    var Canvas = function (containerElement) {
+    var GameArena = function (containerElement) {
         this._containerElement = containerElement;
         this._canvas = document.createElement("canvas");
-
-        this.width = this._containerElement.clientWidth;
-        this.height = this._containerElement.clientHeight;
 
         this._assets = [];
 
         this._init();
     };
 
-    Canvas.prototype = {
+    GameArena.prototype = {
         /**
          * Initialising canvas.
          * @method
          */
         _init: function () {
-            this._canvas.setAttribute("width", this.width);
-            this._canvas.setAttribute("height", this.height);
-
             this._styles = document.createElement("style");
             this._styles.innerText = "@font-face {" +
                 "font-family: 'theFont';" +
@@ -57,7 +51,6 @@ define("engine/Canvas", function () {
             }
             return context;
         },
-
         /**
          * Get the Canvas.
          * @method
@@ -173,6 +166,6 @@ define("engine/Canvas", function () {
         }
     };
 
-    return Canvas;
+    return GameArena;
 
 });

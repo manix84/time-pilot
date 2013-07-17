@@ -42,10 +42,10 @@ define("engine/helpers", function () {
          * @param   {Number} target.heading     - Heading of the target.
          * @param   {Number} target.posX        - X position of the target.
          * @param   {Number} target.posY        - Y position of the target.
-         * @param   {Canvas Instance} canvas    - [description]
+         * @param   {Canvas Instance} gameArena    - [description]
          * @returns {Object}
          */
-        getSpawnCoords: function (target, canvas) {
+        getSpawnCoords: function (target, gameArena) {
             var data = {},
                 spawnRadius = 450,
                 spawnArc = 80,
@@ -53,8 +53,8 @@ define("engine/helpers", function () {
 
             heading = ((target.heading - (spawnArc / 2)) + Math.floor(Math.random() * spawnArc));
 
-            data.posX = target.posX + (canvas.width / 2);
-            data.posY = target.posY + (canvas.height / 2);
+            data.posX = target.posX + (gameArena.width / 2);
+            data.posY = target.posY + (gameArena.height / 2);
 
             data.posX += this.float(Math.sin(heading * (Math.PI / 180)) * spawnRadius);
             data.posY -= this.float(Math.cos(heading * (Math.PI / 180)) * spawnRadius);
@@ -107,23 +107,23 @@ define("engine/helpers", function () {
             return (dx * dx + dy * dy >= radius * radius);
         },
 
-        drawDebugGrid: function (canvas, widthSpace, heightSpace) {
+        drawDebugGrid: function (gameArena, widthSpace, heightSpace) {
             widthSpace = widthSpace || 20;
             heightSpace = heightSpace || 20;
             var x = 0;
 
-            for (; x <= canvas.width; x += widthSpace) {
-                canvas.getCanvas().moveTo(0.5 + x, 0);
-                canvas.getCanvas().lineTo(0.5 + x, canvas.height);
+            for (; x <= gameArena.width; x += widthSpace) {
+                gameArena.getCanvas().moveTo(0.5 + x, 0);
+                gameArena.getCanvas().lineTo(0.5 + x, gameArena.height);
             }
 
-            for (x = 0; x <= canvas.height; x += heightSpace) {
-                canvas.getCanvas().moveTo(0, 0.5 + x);
-                canvas.getCanvas().lineTo(canvas.width, 0.5 + x);
+            for (x = 0; x <= gameArena.height; x += heightSpace) {
+                gameArena.getCanvas().moveTo(0, 0.5 + x);
+                gameArena.getCanvas().lineTo(gameArena.width, 0.5 + x);
             }
 
-            canvas.getCanvas().strokeStyle = "#AAA";
-            canvas.getCanvas().stroke();
+            gameArena.getCanvas().strokeStyle = "#AAA";
+            gameArena.getCanvas().stroke();
 
         }
 

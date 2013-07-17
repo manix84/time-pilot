@@ -8,13 +8,13 @@ define("TimePilot.EnemyFactory", [
     /**
      * Construct an enemy factory for managing creation, movement, rendering and removal of enemies.
      * @constructor
-     * @param   {Canvas Instance} canvas - Canvas Instance
+     * @param   {Canvas Instance} gameArena - Canvas Instance
      * @param   {Ticker Instance} ticker - Ticker Instance
      * @param   {Player Instance} player - Player Instance
      * @returns {Enemy Factory Instance}
      */
-    var EnemyFactory = function (canvas, ticker, player) {
-        this._canvas = canvas;
+    var EnemyFactory = function (gameArena, ticker, player) {
+        this._gameArena = gameArena;
         this._player = player;
         this._ticker = ticker;
 
@@ -31,7 +31,7 @@ define("TimePilot.EnemyFactory", [
          */
         create: function (posX, posY, heading) {
             this._enemies.push(
-                new Enemy(this._canvas, this._ticker, this._player, posX, posY, heading)
+                new Enemy(this._gameArena, this._ticker, this._player, posX, posY, heading)
             );
         },
 
@@ -121,7 +121,7 @@ define("TimePilot.EnemyFactory", [
         },
 
         /**
-         * Render all enemies on the canvas.
+         * Render all enemies on the gameArena.
          * @method
          */
         render: function () {
