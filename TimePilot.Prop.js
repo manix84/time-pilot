@@ -6,8 +6,8 @@ define("TimePilot.Prop", [
     helpers
 ) {
 
-    var Prop = function (canvas, player, posX, posY) {
-        this._canvas = canvas;
+    var Prop = function (gameArena, player, posX, posY) {
+        this._gameArena = gameArena;
         this._player = player;
 
         this._data = {};
@@ -59,8 +59,8 @@ define("TimePilot.Prop", [
             }
 
             removeProp = helpers.detectAreaExit({
-                    posX: player.posX + ((this._canvas.width / 2) - (levelData.width / 2)),
-                    posY: player.posY + ((this._canvas.height / 2) - (levelData.height / 2))
+                    posX: player.posX + ((this._gameArena.width / 2) - (levelData.width / 2)),
+                    posY: player.posY + ((this._gameArena.height / 2) - (levelData.height / 2))
                 }, {
                     posX: this._data.posX,
                     posY: this._data.posY
@@ -80,9 +80,7 @@ define("TimePilot.Prop", [
                 player = this._player.getData(),
                 playerVelocity = CONSTS.levels[this._data.level].player.velocity,
                 heading = (levelData.reversed ? (player.heading + 180) % 360 : player.heading),
-                velocity = (playerVelocity * levelData.relativeVelocity),
-                canvas = this._canvas,
-                turnTo;
+                velocity = (playerVelocity * levelData.relativeVelocity);
 
             this._data.posX += helpers.float(Math.sin(heading * (Math.PI / 180)) * velocity);
             this._data.posY -= helpers.float(Math.cos(heading * (Math.PI / 180)) * velocity);
@@ -96,7 +94,7 @@ define("TimePilot.Prop", [
          */
         render: function () {
             var levelData = this.getLevelData();
-            this._canvas.renderSprite(this._propSprite, {
+            this._gameArena.renderSprite(this._propSprite, {
                 frameWidth: levelData.width,
                 frameHeight: levelData.height,
                 frameX: 0,

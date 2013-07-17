@@ -1,6 +1,6 @@
 define("TimePilot", [
     "engine/Ticker",
-    "engine/Canvas",
+    "engine/GameArena",
     "engine/helpers",
     "TimePilot.CONSTANTS",
     "TimePilot.Player",
@@ -10,7 +10,7 @@ define("TimePilot", [
     "TimePilot.Hud"
 ], function (
     Ticker,
-    Canvas,
+    GameArena,
     helpers,
     CONST,
     Player,
@@ -60,32 +60,32 @@ define("TimePilot", [
         _init: function () {
             var that = this;
 
-            this._canvas = new Canvas(this._container);
+            this._gameArena = new GameArena(this._container);
             this._ticker = new Ticker(17);
-            this._player = new Player(this._canvas, this._ticker);
-            this._enemies = new EnemyFactory(this._canvas, this._ticker, this._player);
-            this._bullets = new BulletFactory(this._canvas, this._player);
-            this._props = new PropFactory(this._canvas, this._player);
-            this._hud = new Hud(this._canvas, this._player);
+            this._player = new Player(this._gameArena, this._ticker);
+            this._enemies = new EnemyFactory(this._gameArena, this._ticker, this._player);
+            this._bullets = new BulletFactory(this._gameArena, this._player);
+            this._props = new PropFactory(this._gameArena, this._player);
+            this._hud = new Hud(this._gameArena, this._player);
 
             this._player.setData("level", 1);
-            this._canvas.renderText("Loading", 20, 10, {size: 30});
+            this._gameArena.renderText("Loading", 20, 10, {size: 30});
 
-            this._canvas.registerAssets([
+            this._gameArena.registerAssets([
                 "./fonts/font.ttf",
-                "./sprites/player.png",
-                "./sprites/player_explosion.png",
-                "./sprites/enemy_level1.png",
-                "./sprites/enemy_level2.png",
-                "./sprites/enemy_level3.png",
-                "./sprites/enemy_level4.png",
-                "./sprites/enemy_level5.png",
-                "./sprites/enemy_explosion.png",
-                "./sprites/cloud1.png",
-                "./sprites/cloud2.png",
-                "./sprites/cloud3.png"
+                "./sprites/player/player.png",
+                "./sprites/player/explosion.png",
+                "./sprites/enemies/basic/level1.png",
+                "./sprites/enemies/basic/level2.png",
+                "./sprites/enemies/basic/level3.png",
+                "./sprites/enemies/basic/level4.png",
+                "./sprites/enemies/basic/level5.png",
+                "./sprites/enemies/basic/explosion.png",
+                "./sprites/props/cloud1.png",
+                "./sprites/props/cloud2.png",
+                "./sprites/props/cloud3.png"
             ]);
-            this._canvas.preloadAssets(function (obj) {
+            this._gameArena.preloadAssets(function (obj) {
                 if (!obj.remaining) {
                     that._start();
                 }
@@ -102,8 +102,8 @@ define("TimePilot", [
 
 
             this._ticker.addSchedule(function () {
-                that._canvas.getCanvas().width = that._canvas.getCanvas().width;
-                that._canvas.getCanvas().style.background = CONST.levels[that._data.level].arena.backgroundColor;
+                that._gameArena.getCanvas().width = that._gameArena.getCanvas().width;
+                that._gameArena.getCanvas().style.background = CONST.levels[that._data.level].arena.backgroundColor;
             }, 1);
 
             this._ticker.addSchedule(function () {
@@ -155,8 +155,8 @@ define("TimePilot", [
             if ((this._ticker.getTicks() - this._data.player.lastFiredTick) > 10 && this._data.player.isFiring) {
                 this._data.player.lastFiredTick = this._ticker.getTicks();
                 this._bullets.create(
-                    (this._canvas.width / 2),
-                    (this._canvas.height / 2),
+                    (this._gameArena.width / 2),
+                    (this._gameArena.height / 2),
                     playerData.heading
                 );
             }
@@ -214,12 +214,22 @@ define("TimePilot", [
             this._keyboardLock = document.createElement("input");
             this._keyboardLock.setAttribute("style", "position:absolute;left:-999px;");
             this._keyboardLock.setAttribute("type", "text");
-            this._addListener(this._canvas.getCanvas(), "click", function () {
+            this._addListener(this._gameArena.getCanvas(), "click", function () {
                 that._keyboardLock.focus();
                 that.playGame();
             });
             this._addListener(this._keyboardLock, "keydown", function (event) {
                 switch (event.keyCode) {
+                case 70: // "F"
+                    that._gameArena.toggleFullScreen();
+                    break;
+                case 80: // "P"
+                    if (that._ticker.getState()) {
+                        that.pauseGame();
+                    } else {
+                        that.playGame();
+                    }
+                    break;
                 case 37: // LEFT
                 case 38: // UP
                 case 39: // RIGHT
@@ -261,8 +271,8 @@ define("TimePilot", [
             for (; i < 20; i++) {
                 // Clouds
                 this._props.create(
-                    Math.floor(Math.random() * this._canvas.width),
-                    Math.floor(Math.random() * this._canvas.height)
+                    Math.floor(Math.random() * this._gameArena.width),
+                    Math.floor(Math.random() * this._gameArena.height)
                 );
             }
         },
@@ -273,7 +283,7 @@ define("TimePilot", [
                 randomTickInterval = (Math.floor(Math.random() * (1 - 200 + 1)) + 200);
             if ((this._ticker.getTicks() % randomTickInterval === 0) && this._enemies.getCount() < 10)  {
                 // Enemies
-                data = helpers.getSpawnCoords(this._player.getData(), this._canvas);
+                data = helpers.getSpawnCoords(this._player.getData(), this._gameArena);
                 angle = helpers.findHeading({
                     posX: data.posX,
                     posY: data.posY
@@ -285,7 +295,7 @@ define("TimePilot", [
             }
             if (this._props.getCount() < 20) {
                 // Clouds
-                data = helpers.getSpawnCoords(this._player.getData(), this._canvas);
+                data = helpers.getSpawnCoords(this._player.getData(), this._gameArena);
                 this._props.create(data.posX, data.posY);
             }
         }

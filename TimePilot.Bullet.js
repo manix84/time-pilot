@@ -9,7 +9,7 @@ define("TimePilot.Bullet", [
     /**
      * Creates a bullet to add to render.
      * @constructor
-     * @param   {Canvas Instance}   canvas      - Canvas Instance.
+     * @param   {Canvas Instance}   gameArena      - Canvas Instance.
      * @param   {Player Instance}   player      - Player Instance.
      * @param   {Number}            posX        - Spawning location on the X axis.
      * @param   {Number}            posY        - Spawning location on the Y axis.
@@ -17,8 +17,8 @@ define("TimePilot.Bullet", [
      * @returns {Bullet Instance}
      */
 
-    var Bullet = function (canvas, player, posX, posY, heading) {
-        this._canvas = canvas;
+    var Bullet = function (gameArena, player, posX, posY, heading) {
+        this._gameArena = gameArena;
         this._player = player;
 
         this._data = {};
@@ -93,8 +93,8 @@ define("TimePilot.Bullet", [
                 hasExistedArea;
 
             hasExistedArea = helpers.detectAreaExit({
-                    posX: player.posX + ((this._canvas.width / 2) - (levelData.width / 2)),
-                    posY: player.posY + ((this._canvas.height / 2) - (levelData.height / 2))
+                    posX: player.posX + ((this._gameArena.width / 2) - (levelData.width / 2)),
+                    posY: player.posY + ((this._gameArena.height / 2) - (levelData.height / 2))
                 },
                 this.getData(),
                 radius
@@ -124,7 +124,7 @@ define("TimePilot.Bullet", [
             var levelData = this.getLevelData(),
                 size = levelData.size,
                 color = levelData.color,
-                context = this._canvas.getContext();
+                context = this._gameArena.getContext();
 
             context.fillStyle = color;
             context.fillRect(

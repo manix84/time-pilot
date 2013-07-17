@@ -1,20 +1,22 @@
 define("TimePilot.Player", [
     "TimePilot.CONSTANTS",
+    "TimePilot.userOptions",
     "engine/helpers"
 ], function (
     CONSTS,
+    userOptions,
     helpers
 ) {
 
     /**
      * Player object.
      * @constructor
-     * @param   {Canvas Instance} canvas
+     * @param   {Canvas Instance} gameArena
      * @param   {Ticker Instance} ticker
      * @returns {Player Instance}
      */
-    var Player = function (canvas, ticker) {
-        this._canvas = canvas;
+    var Player = function (gameArena, ticker) {
+        this._gameArena = gameArena;
         this._ticker = ticker;
 
         this._playerSprite = new Image();
@@ -90,13 +92,13 @@ define("TimePilot.Player", [
          */
         _render: function () {
             var player = CONSTS.player;
-            this._canvas.renderSprite(this._playerSprite, {
+            this._gameArena.renderSprite(this._playerSprite, {
                 frameWidth: player.width,
                 frameHeight: player.height,
                 frameX: Math.floor(this._data.heading / 22.5),
                 frameY: 0,
-                posX: ((this._canvas.width / 2) - (player.width / 2)),
-                posY: ((this._canvas.height / 2) - (player.height / 2))
+                posX: ((this._gameArena.width / 2) - (player.width / 2)),
+                posY: ((this._gameArena.height / 2) - (player.height / 2))
             });
         },
 
@@ -111,13 +113,13 @@ define("TimePilot.Player", [
 
             this._playerSprite.src = explosionData.src;
 
-            this._canvas.renderSprite(this._playerSprite, {
+            this._gameArena.renderSprite(this._playerSprite, {
                 frameWidth: explosionData.width,
                 frameHeight: explosionData.height,
                 frameX: frameX,
                 frameY: 0,
-                posX: ((this._canvas.width / 2) - (explosionData.width / 2)),
-                posY: ((this._canvas.height / 2) - (explosionData.height / 2))
+                posX: ((this._gameArena.width / 2) - (explosionData.width / 2)),
+                posY: ((this._gameArena.height / 2) - (explosionData.height / 2))
             });
 
             if (frameX === explosionData.frames) {
@@ -134,6 +136,16 @@ define("TimePilot.Player", [
                 this._render();
             } else {
                 this._renderDeath();
+            }
+
+            if (userOptions.enableDebug && userOptions.debug.showHitboxes) {
+                this._gameArena.drawCircle(
+                    (this._gameArena.width / 2),
+                    (this._gameArena.height / 2),
+                    CONSTS.player.hitRadius, {
+                        strokeColor: "#F00"
+                    }
+                );
             }
         },
 

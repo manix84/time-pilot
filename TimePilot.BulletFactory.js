@@ -8,12 +8,12 @@ define("TimePilot.BulletFactory", [
     /**
      * Construct an bullet factory for managing creation, movement, rendering and removal of bullets.
      * @constructor
-     * @param   {Canvas Instance} canvas - Canvas Instance
+     * @param   {Canvas Instance} gameArena - Canvas Instance
      * @param   {Player Instance} player - Player Instance
      * @returns {Bullet Factory Instance}
      */
-    var BulletFactory = function (canvas, player) {
-        this._canvas = canvas;
+    var BulletFactory = function (gameArena, player) {
+        this._gameArena = gameArena;
         this._player = player;
 
         this._bullets = [];
@@ -29,7 +29,7 @@ define("TimePilot.BulletFactory", [
          */
         create: function (posX, posY, heading) {
             this._bullets.push(
-                new Bullet(this._canvas, this._player, posX, posY, heading)
+                new Bullet(this._gameArena, this._player, posX, posY, heading)
             );
         },
 
@@ -76,7 +76,7 @@ define("TimePilot.BulletFactory", [
         },
 
         /**
-         * Render all bullets on the canvas.
+         * Render all bullets on the gameArena.
          * @method
          */
         render: function () {

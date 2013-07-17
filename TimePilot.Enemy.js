@@ -1,15 +1,17 @@
 define("TimePilot.Enemy", [
     "TimePilot.CONSTANTS",
+    "TimePilot.userOptions",
     "engine/helpers"
 ], function (
     CONSTS,
+    userOptions,
     helpers
 ) {
 
     /**
      * Creates an enemy to add to the page.
      * @constructor
-     * @param   {Canvas Instance}   canvas      - Canvas Instance.
+     * @param   {Canvas Instance}   gameArena      - Canvas Instance.
      * @param   {Ticker Instance}   ticker      - Ticker Instance.
      * @param   {Player Instance}   player      - Player Instance.
      * @param   {Number}            posX        - Spawning location on the X axis.
@@ -18,8 +20,8 @@ define("TimePilot.Enemy", [
      * @returns {Enemy Instance}
      */
 
-    var Enemy = function (canvas, ticker, player, posX, posY, heading) {
-        this._canvas = canvas;
+    var Enemy = function (gameArena, ticker, player, posX, posY, heading) {
+        this._gameArena = gameArena;
         this._player = player;
         this._ticker = ticker;
 
@@ -29,8 +31,9 @@ define("TimePilot.Enemy", [
         this._data.heading = heading;
         this._data.level = 1;
         this._data.deathTick = false;
-        this._data.removeMe = false;
         this._data.tickOffset = Math.floor(Math.random() * 100);
+
+        this.removeMe = false;
 
         this._enemySprite = new Image();
         this._enemySprite.src = this.getLevelData().src;
@@ -81,8 +84,8 @@ define("TimePilot.Enemy", [
                 player = this._player.getData();
 
             var hasExistedArea = helpers.detectCollision({
-                    posX: player.posX + ((this._canvas.width / 2) - (levelData.width / 2)),
-                    posY: player.posY + ((this._canvas.height / 2) - (levelData.height / 2)),
+                    posX: player.posX + ((this._gameArena.width / 2) - (levelData.width / 2)),
+                    posY: player.posY + ((this._gameArena.height / 2) - (levelData.height / 2)),
                     radius: CONSTS.player.hitRadius
                 }, {
                     posX: (this._data.posX - (CONSTS.player.width / 2)),
@@ -105,8 +108,8 @@ define("TimePilot.Enemy", [
                 player = this._player.getData();
 
             return helpers.detectAreaExit({
-                    posX: player.posX + ((this._canvas.width / 2) - (levelData.width / 2)),
-                    posY: player.posY + ((this._canvas.height / 2) - (levelData.height / 2))
+                    posX: player.posX + ((this._gameArena.width / 2) - (levelData.width / 2)),
+                    posY: player.posY + ((this._gameArena.height / 2) - (levelData.height / 2))
                 }, {
                     posX: this._data.posX,
                     posY: this._data.posY
@@ -124,7 +127,7 @@ define("TimePilot.Enemy", [
                 heading = this._data.heading,
                 levelData = this.getLevelData(),
                 player = this._player.getData(),
-                canvas = this._canvas,
+                gameArena = this._gameArena,
                 tick = (this._ticker.getTicks() - this._data.tickOffset),
                 turnTo;
 
@@ -134,8 +137,8 @@ define("TimePilot.Enemy", [
 
             if (tick % levelData.turnLimiter === 0) {
                 turnTo = helpers.findHeading(enemy, {
-                    posX: player.posX + ((canvas.width / 2) - (levelData.width / 2)),
-                    posY: player.posY + ((canvas.height / 2) - (levelData.height / 2))
+                    posX: player.posX + ((gameArena.width / 2) - (levelData.width / 2)),
+                    posY: player.posY + ((gameArena.height / 2) - (levelData.height / 2))
                 });
                 turnTo = (Math.floor(turnTo / 22.5) * 22.5);
 
@@ -151,7 +154,8 @@ define("TimePilot.Enemy", [
          */
         _render: function () {
             var levelData = this.getLevelData();
-            this._canvas.renderSprite(this._enemySprite, {
+
+            this._gameArena.renderSprite(this._enemySprite, {
                 frameWidth: levelData.width,
                 frameHeight: levelData.height,
                 frameX: Math.floor(this._data.heading / 22.5),
@@ -172,7 +176,7 @@ define("TimePilot.Enemy", [
 
             this._enemySprite.src = explosionData.src;
 
-            this._canvas.renderSprite(this._enemySprite, {
+            this._gameArena.renderSprite(this._enemySprite, {
                 frameWidth: explosionData.width,
                 frameHeight: explosionData.height,
                 frameX: frameX,
@@ -182,7 +186,7 @@ define("TimePilot.Enemy", [
             });
 
             if (frameX === explosionData.frames) {
-                this._data.removeMe = true;
+                this.removeMe = true;
             }
         },
 
@@ -191,10 +195,22 @@ define("TimePilot.Enemy", [
          * @method
          */
         render: function () {
+            var levelData = this.getLevelData();
+
             if (!this._data.deathTick) {
                 this._render();
             } else {
                 this._renderDeath();
+            }
+
+            if (userOptions.enableDebug && userOptions.debug.showHitboxes) {
+                this._gameArena.drawCircle(
+                    (this._data.posX - this._player.getData().posX),
+                    (this._data.posY - this._player.getData().posY),
+                    levelData.hitRadius, {
+                        strokeColor: "#F00"
+                    }
+                );
             }
         },
 

@@ -4,8 +4,8 @@ define("TimePilot.PropFactory", [
     Prop
 ) {
 
-    var PropFactory = function (canvas, player) {
-        this._canvas = canvas;
+    var PropFactory = function (gameArena, player) {
+        this._gameArena = gameArena;
         this._player = player;
 
         this._props = [];
@@ -20,7 +20,7 @@ define("TimePilot.PropFactory", [
          */
         create: function (posX, posY) {
             this._props.push(
-                new Prop(this._canvas, this._player, posX, posY)
+                new Prop(this._gameArena, this._player, posX, posY)
             );
         },
 
@@ -79,7 +79,7 @@ define("TimePilot.PropFactory", [
         },
 
         /**
-         * Render all entities on the canvas.
+         * Render all entities on the gameArena.
          * @method
          */
         render: function (layer) {
