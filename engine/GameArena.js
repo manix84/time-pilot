@@ -1,32 +1,28 @@
-define("engine/Canvas", function () {
+define("engine/GameArena", function () {
 
     /**
-     * Create a canvas instance to run the game in.
+     * Create a GameArena instance to run the game in.
      * @constructor
      * @param   {HTML Element} containerElement - Element to load the canvas into.
-     * @returns {Canvas Instance}
+     * @returns {GameArena Instance}
      */
-    var Canvas = function (containerElement) {
+    var GameArena = function (containerElement) {
         this._containerElement = containerElement;
         this._canvas = document.createElement("canvas");
+        this.resize();
 
-        this.width = this._containerElement.clientWidth;
-        this.height = this._containerElement.clientHeight;
-
+        this._isInFullScreen = false;
         this._assets = [];
 
         this._init();
     };
 
-    Canvas.prototype = {
+    GameArena.prototype = {
         /**
          * Initialising canvas.
          * @method
          */
         _init: function () {
-            this._canvas.setAttribute("width", this.width);
-            this._canvas.setAttribute("height", this.height);
-
             this._styles = document.createElement("style");
             this._styles.innerText = "@font-face {" +
                 "font-family: 'theFont';" +
@@ -35,6 +31,23 @@ define("engine/Canvas", function () {
 
             this._containerElement.appendChild(this._styles);
             this._containerElement.appendChild(this._canvas);
+        },
+
+        /**
+         * Resize the canvas to specified height and width. Defaults to the container elements current dimentions.
+         * @method
+         * @param   {Number} width
+         * @param   {Number} height
+         */
+        resize: function (width, height) {
+            width = width || this._containerElement.clientWidth;
+            height = height || this._containerElement.clientHeight;
+
+            this._canvas.setAttribute("width", width);
+            this._canvas.setAttribute("height", height);
+
+            this.width = width;
+            this.height = height;
         },
 
         /**
@@ -56,6 +69,62 @@ define("engine/Canvas", function () {
                 context = this._canvas.getContext("2d");
             }
             return context;
+        },
+
+        /**
+         * Enter full-screen, using the full-screen api.
+         * @method
+         */
+        enterFullScreen: function () {
+            var element = this._containerElement;
+            if (element.requestFullscreen) {
+                element.requestFullscreen();
+                this.resize();
+                this._isInFullScreen = true;
+            } else if (element.mozRequestFullScreen) {
+                element.mozRequestFullScreen();
+                this.resize();
+                this._isInFullScreen = true;
+            } else if (element.webkitRequestFullscreen) {
+                element.webkitRequestFullscreen(Element.ALLOW_KEYBOARD_INPUT);
+                this.resize();
+                this._isInFullScreen = true;
+            }
+        },
+
+        /**
+         * Exit full-screen mode.
+         * @method
+         */
+        exitFullScreen: function () {
+            if (document.cancelFullScreen) {
+                document.cancelFullScreen();
+                this.resize();
+                this._isInFullScreen = false;
+            } else if (document.mozCancelFullScreen) {
+                document.mozCancelFullScreen();
+                this.resize();
+                this._isInFullScreen = false;
+            } else if (document.webkitCancelFullScreen) {
+                document.webkitCancelFullScreen();
+                this.resize();
+                this._isInFullScreen = false;
+            }
+        },
+
+        /**
+         * Toggle full-screen mode.
+         * @method
+         */
+        toggleFullScreen: function () {
+            window.console.log("this._isInFullScreen", this._isInFullScreen);
+            if (this._isInFullScreen) {
+                this.exitFullScreen();
+                window.console.log("Exiting full-screen");
+            } else {
+                this.enterFullScreen();
+                window.console.log("Entering full-screen");
+            }
         },
 
         /**
@@ -173,6 +242,6 @@ define("engine/Canvas", function () {
         }
     };
 
-    return Canvas;
+    return GameArena;
 
 });
