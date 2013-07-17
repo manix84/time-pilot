@@ -162,16 +162,6 @@ define("TimePilot.Enemy", [
                 posX: (this._data.posX - this._player.getData().posX - (levelData.width / 2)),
                 posY: (this._data.posY - this._player.getData().posY - (levelData.height / 2))
             });
-
-            if (userOptions.enableDebug && userOptions.debug.showHitboxes) {
-                this._gameArena.drawCircle(
-                    (this._data.posX - this._player.getData().posX),
-                    (this._data.posY - this._player.getData().posY),
-                    levelData.hitRadius, {
-                        strokeColor: "#F00"
-                    }
-                );
-            }
         },
 
         /**
@@ -204,10 +194,22 @@ define("TimePilot.Enemy", [
          * @method
          */
         render: function () {
+            var levelData = this.getLevelData();
+
             if (!this._data.deathTick) {
                 this._render();
             } else {
                 this._renderDeath();
+            }
+
+            if (userOptions.enableDebug && userOptions.debug.showHitboxes) {
+                this._gameArena.drawCircle(
+                    (this._data.posX - this._player.getData().posX),
+                    (this._data.posY - this._player.getData().posY),
+                    levelData.hitRadius, {
+                        strokeColor: "#F00"
+                    }
+                );
             }
         },
 
