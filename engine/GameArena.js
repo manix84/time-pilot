@@ -127,10 +127,8 @@ define("engine/GameArena", function () {
             window.console.log("this._isInFullScreen", this._isInFullScreen);
             if (this._isInFullScreen) {
                 this.exitFullScreen();
-                window.console.log("Exiting full-screen");
             } else {
                 this.enterFullScreen();
-                window.console.log("Entering full-screen");
             }
         },
 
@@ -173,14 +171,12 @@ define("engine/GameArena", function () {
                     loaded: ++loadedCount,
                     remaining: --remainingCount
                 });
-                window.console.info("Loaded: " + loadedCount + ", Remaining: " + remainingCount);
             };
             onerror = function () {
                 callback({
                     loaded: ++loadedCount,
                     remaining: --remainingCount
                 });
-                window.console.error("Loaded: " + loadedCount + ", Remaining: " + remainingCount);
             };
 
             for (; 0 < i; i--) {
