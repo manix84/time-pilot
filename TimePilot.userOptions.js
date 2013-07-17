@@ -27,10 +27,22 @@ define("TimePilot.userOptions", function () {
             showPlayerCoordinates: true
         },
 
+        /**
+         * Enable debug menus and overlays.
+         * @type {Boolean}
+         */
         enableDebug: false,
 
+        /**
+         * Selected controller to be accessed on the controlInterface.
+         * @type {String}
+         */
         controllerType: "keyboard1",
 
+        /**
+         * Set options in this object (userOptions), and store it so that the user doesn't have to set options each time
+         * @method
+         */
         setOption: function () {}
     };
 
@@ -38,7 +50,6 @@ define("TimePilot.userOptions", function () {
      * Gather overrides the user has set.
      */
     (function () {
-
     }());
 
     return userOptions;
