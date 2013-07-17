@@ -199,17 +199,18 @@ define("engine/GameArena", function () {
          * @enum    {String} [newOptions.stroke]  - Stroke color. If not set, it won't show.
          */
         renderText: function (message, startPosX, startPosY, newOptions) {
-            startPosX   = startPosX || 0;
-            startPosY   = startPosY || 0;
+            startPosX = startPosX || 0;
+            startPosY = startPosY || 0;
             var options = {
-                    size: newOptions.size || 12,
-                    align: newOptions.align || "left",
-                    valign: newOptions.valign || "top",
-                    color: newOptions.color || "#fff",
-                    font: newOptions.font || "theFont",
-                    stoke: newOptions.stroke || false
-                },
-                context = this.getContext();
+                size: newOptions.size || 12,
+                align: newOptions.align || "left",
+                valign: newOptions.valign || "top",
+                color: newOptions.color || "#fff",
+                font: newOptions.font || "theFont",
+                stroke: newOptions.stroke || false,
+                strokeWidth: newOptions.strokeWidth || 1
+            },
+            context = this.getContext();
 
             context.fillStyle = options.color;
             context.font = options.size + "px " + options.font;
@@ -217,7 +218,7 @@ define("engine/GameArena", function () {
             context.textBaseline = options.valign;
             context.fillText(message, startPosX, startPosY);
 
-            if (options.stoke) {
+            if (options.stroke) {
                 context.strokeStyle = options.stroke;
                 context.strokeText(message, startPosX, startPosY);
             }
@@ -239,6 +240,29 @@ define("engine/GameArena", function () {
                 spriteData.posX, spriteData.posY,
                 spriteData.frameWidth, spriteData.frameHeight
             );
+        },
+
+        drawCircle: function (posX, posY, radius, newOptions) {
+            posX = posX || 0;
+            posY = posY || 0;
+
+            var options = {
+                color: newOptions.color || "transparent",
+                strokeColor: newOptions.strokeColor || false,
+                strokeWidth: newOptions.strokeWidth || 1
+            },
+            context = this.getContext();
+
+            context.beginPath();
+            context.arc(posX, posY, radius, 0, 2 * Math.PI, false);
+            context.fillStyle = options.color;
+            context.fill();
+
+            if (options.strokeColor) {
+                context.lineWidth = options.strokeWidth;
+                context.strokeStyle = options.strokeColor;
+                context.stroke();
+            }
         }
     };
 
