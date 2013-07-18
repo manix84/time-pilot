@@ -179,7 +179,7 @@ define("TimePilot.Player", [
             if (showHitboxes || invincible) {
                 if (invincible) {
                     color = "#FFD700";
-                    hitRadius = ((CONSTS.player.width + CONSTS.player.height) / 4) + (this._ticker % 3);
+                    hitRadius = ((CONSTS.player.width + CONSTS.player.height) / 4);
                 }
                 this._gameArena.drawCircle(
                     (this._gameArena.width / 2),
