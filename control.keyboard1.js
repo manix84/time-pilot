@@ -1,15 +1,5 @@
 define("control.keyboard1", function () {
 
-    var __addListener = function (element, eventName, callback) {
-        if (typeof element.addEventListener === "function") {
-            element.addEventListener(eventName, callback, false);
-        } else if (!!element.attachEvent) {
-            element.attachEvent("on" + eventName, callback);
-        } else {
-            element["on" + eventName] = callback;
-        }
-    };
-
     var keyboard1 = function (controlInterface) {
         this._controlInterface = controlInterface;
 

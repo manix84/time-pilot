@@ -1,4 +1,8 @@
-define("engine/GameArena", function () {
+define("engine/GameArena", [
+    "engine/helpers"
+], function (
+    helpers
+) {
 
     /**
      * Create a GameArena instance to run the game in.
@@ -7,6 +11,7 @@ define("engine/GameArena", function () {
      * @returns {GameArena Instance}
      */
     var GameArena = function (containerElement) {
+        var that = this;
         this._containerElement = containerElement;
         this._canvas = document.createElement("canvas");
         this.resize();
@@ -16,6 +21,17 @@ define("engine/GameArena", function () {
 
         this._oldWidth = this._containerElement.clientWidth;
         this._oldHeight = this._containerElement.clientHeight;
+
+        helpers.bind("webkitfullscreenchange mozfullscreenchange fullscreenchange", function () {
+            that._isInFullScreen = !that._isInFullScreen;
+            if (that._isInFullScreen) {
+                that.resize(screen.width, screen.height);
+                window.console.log("Entered Full-Screen");
+            } else {
+                that.resize(that._oldWidth, that._oldHeight);
+                window.console.log("Exited Full-Screen");
+            }
+        });
 
         this._init();
     };
@@ -46,8 +62,10 @@ define("engine/GameArena", function () {
             width = width || this._containerElement.clientWidth;
             height = height || this._containerElement.clientHeight;
 
-            this._oldWidth = this.width;
-            this._oldHeight = this.height;
+            if (this._oldWidth !== this.width && this._oldHeight !== this.height) {
+                this._oldWidth = this.width;
+                this._oldHeight = this.height;
+            }
 
             this._canvas.width = width;
             this._canvas.height = height;
@@ -86,16 +104,12 @@ define("engine/GameArena", function () {
          */
         enterFullScreen: function () {
             var element = this._canvas;
-            this.resize(screen.width, screen.height);
             if (element.requestFullscreen) {
                 element.requestFullscreen();
-                this._isInFullScreen = true;
             } else if (element.mozRequestFullScreen) {
                 element.mozRequestFullScreen();
-                this._isInFullScreen = true;
             } else if (element.webkitRequestFullscreen) {
                 element.webkitRequestFullscreen(Element.ALLOW_KEYBOARD_INPUT);
-                this._isInFullScreen = true;
             }
         },
 
@@ -106,16 +120,10 @@ define("engine/GameArena", function () {
         exitFullScreen: function () {
             if (document.cancelFullScreen) {
                 document.cancelFullScreen();
-                this.resize(this._oldWidth, this._oldHeight);
-                this._isInFullScreen = false;
             } else if (document.mozCancelFullScreen) {
                 document.mozCancelFullScreen();
-                this.resize(this._oldWidth, this._oldHeight);
-                this._isInFullScreen = false;
             } else if (document.webkitCancelFullScreen) {
                 document.webkitCancelFullScreen();
-                this.resize(this._oldWidth, this._oldHeight);
-                this._isInFullScreen = false;
             }
         },
 
