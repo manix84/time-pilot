@@ -30,7 +30,7 @@ define("TimePilot.userOptions", function () {
              * Make the player immortal.
              * @type {boolean}
              */
-            invinsible: true
+            invincible: true
         },
 
         /**

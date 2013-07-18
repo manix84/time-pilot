@@ -31,9 +31,7 @@ define("TimePilot.Player", [
             continues: 0,
             lives: 1,
             score: 0,
-            level: 1,
-            invinsible: (userOptions.enableDebug && userOptions.debug.invinsible),
-            showHitboxes: (userOptions.enableDebug && userOptions.debug.showHitboxes)
+            level: 1
         };
     };
 
@@ -134,19 +132,21 @@ define("TimePilot.Player", [
          * @method
          */
         render: function () {
+            var hitRadius = CONSTS.player.hitRadius,
+                color = "#F00",
+                invincible = (userOptions.enableDebug && userOptions.debug.invincible),
+                showHitboxes = (userOptions.enableDebug && userOptions.debug.showHitboxes);
+
             if (!this._data.deathTick) {
                 this._render();
             } else {
                 this._renderDeath();
             }
 
-            if (this._data.showHitboxes || this._data.invinsible) {
-                var hitRadius = CONSTS.player.hitRadius,
-                    color = "#F00";
-
-                if (this._data.invinsible) {
+            if (showHitboxes || invincible) {
+                if (invincible) {
                     color = "#FFD700";
-                    hitRadius = ((CONSTS.player.width + CONSTS.player.height) / 3);
+                    hitRadius = ((CONSTS.player.width + CONSTS.player.height) / 4) + (this._ticker % 3);
                 }
                 this._gameArena.drawCircle(
                     (this._gameArena.width / 2),
@@ -159,7 +159,7 @@ define("TimePilot.Player", [
         },
 
         kill: function () {
-            if (this._data.invinsible) {
+            if (userOptions.enableDebug && userOptions.debug.invincible) {
                 return;
             }
             this._data.deathTick = this._ticker.getTicks();
