@@ -9,22 +9,29 @@ define("TimePilot.Bullet", [
     /**
      * Creates a bullet to add to render.
      * @constructor
-     * @param   {Canvas Instance}   gameArena      - Canvas Instance.
-     * @param   {Player Instance}   player      - Player Instance.
+     * @param   {Canvas Instance}   gameArena   - Canvas Instance.
      * @param   {Number}            posX        - Spawning location on the X axis.
      * @param   {Number}            posY        - Spawning location on the Y axis.
      * @param   {Number}            heading     - Start heading (usually towards the player).
      * @returns {Bullet Instance}
      */
 
-    var Bullet = function (gameArena, player, posX, posY, heading) {
+    var Bullet = function (gameArena, posX, posY, heading, newOptions) {
+        newOptions = newOptions || {};
+
         this._gameArena = gameArena;
-        this._player = player;
 
         this._data = {};
         this._data.posX = posX;
         this._data.posY = posY;
         this._data.heading = heading;
+
+
+        this._data.options = {
+            size: newOptions.size || 4,
+            velocity: newOptions.velocity || 20,
+            color: newOptions.color || "#FFF"
+        };
 
     };
 
@@ -73,34 +80,19 @@ define("TimePilot.Bullet", [
         },
 
         /**
-         * Get current data for this level
-         * @method
-         * @returns {object}
-         */
-        getLevelData: function () {
-            return CONSTS.levels[this._level].player.projectile;
-        },
-
-        /**
          * Detect if the entity has left a given radius of the player.
          * @method
          * @param   {Number} radius - Maximum radial from player before they are concidered outside the battle.
          * @returns {Boolean} True = entity has left the area, False = entity is still in area.
          */
         detectAreaExit: function (radius) {
-            var levelData = this.getLevelData(),
-                player = this._player.getData(),
-                hasExistedArea;
-
-            hasExistedArea = helpers.detectAreaExit({
-                    posX: player.posX + ((this._gameArena.width / 2) - (levelData.width / 2)),
-                    posY: player.posY + ((this._gameArena.height / 2) - (levelData.height / 2))
-                },
-                this.getData(),
-                radius
-            );
-
-            return hasExistedArea;
+            // return helpers.detectAreaExit({
+            //         posX: this._gameArena.posX + ((this._gameArena.width / 2) - (this._data.options.width / 2)),
+            //         posY: this._gameArena.posY + ((this._gameArena.height / 2) - (this._data.options.height / 2))
+            //     },
+            //     this.getData(),
+            //     radius
+            // );
         },
 
         /**
@@ -108,8 +100,7 @@ define("TimePilot.Bullet", [
          * @method
          */
         reposition: function () {
-            var levelData = this.getLevelData(),
-                velocity = levelData.velocity,
+            var velocity = this._data.options.velocity,
                 heading = this._data.heading;
 
             this._data.posX += helpers.float(Math.sin(heading * (Math.PI / 180)) * velocity);
@@ -121,9 +112,8 @@ define("TimePilot.Bullet", [
          * @method
          */
         render: function () {
-            var levelData = this.getLevelData(),
-                size = levelData.size,
-                color = levelData.color,
+            var size = this._data.options.size,
+                color = this._data.options.color,
                 context = this._gameArena.getContext();
 
             context.fillStyle = color;

@@ -1,4 +1,8 @@
-define("engine/GameArena", function () {
+define("engine/GameArena", [
+    "engine/helpers"
+], function (
+    helpers
+) {
 
     /**
      * Create a GameArena instance to run the game in.
@@ -7,6 +11,7 @@ define("engine/GameArena", function () {
      * @returns {GameArena Instance}
      */
     var GameArena = function (containerElement) {
+        var that = this;
         this._containerElement = containerElement;
         this._canvas = document.createElement("canvas");
         this.resize();
@@ -16,6 +21,20 @@ define("engine/GameArena", function () {
 
         this._oldWidth = this._containerElement.clientWidth;
         this._oldHeight = this._containerElement.clientHeight;
+
+        this.posX = 0;
+        this.posY = 0;
+
+        helpers.bind("webkitfullscreenchange mozfullscreenchange fullscreenchange", function () {
+            that._isInFullScreen = !that._isInFullScreen;
+            if (that._isInFullScreen) {
+                that.resize(screen.width, screen.height);
+                window.console.log("Entered Full-Screen");
+            } else {
+                that.resize(that._oldWidth, that._oldHeight);
+                window.console.log("Exited Full-Screen");
+            }
+        });
 
         this._init();
     };
@@ -37,6 +56,16 @@ define("engine/GameArena", function () {
         },
 
         /**
+         * Update current viewport coordinates.
+         * @param  {Number} posX
+         * @param  {Number} posY
+         */
+        updatePosition: function (posX, posY) {
+            this.posX = posX;
+            this.posY = posY;
+        },
+
+        /**
          * Resize the canvas to specified height and width. Defaults to the container elements current dimentions.
          * @method
          * @param   {Number} width
@@ -46,8 +75,10 @@ define("engine/GameArena", function () {
             width = width || this._containerElement.clientWidth;
             height = height || this._containerElement.clientHeight;
 
-            this._oldWidth = this.width;
-            this._oldHeight = this.height;
+            if (this._oldWidth !== this.width && this._oldHeight !== this.height) {
+                this._oldWidth = this.width;
+                this._oldHeight = this.height;
+            }
 
             this._canvas.width = width;
             this._canvas.height = height;
@@ -86,16 +117,12 @@ define("engine/GameArena", function () {
          */
         enterFullScreen: function () {
             var element = this._canvas;
-            this.resize(screen.width, screen.height);
             if (element.requestFullscreen) {
                 element.requestFullscreen();
-                this._isInFullScreen = true;
             } else if (element.mozRequestFullScreen) {
                 element.mozRequestFullScreen();
-                this._isInFullScreen = true;
             } else if (element.webkitRequestFullscreen) {
                 element.webkitRequestFullscreen(Element.ALLOW_KEYBOARD_INPUT);
-                this._isInFullScreen = true;
             }
         },
 
@@ -106,16 +133,10 @@ define("engine/GameArena", function () {
         exitFullScreen: function () {
             if (document.cancelFullScreen) {
                 document.cancelFullScreen();
-                this.resize(this._oldWidth, this._oldHeight);
-                this._isInFullScreen = false;
             } else if (document.mozCancelFullScreen) {
                 document.mozCancelFullScreen();
-                this.resize(this._oldWidth, this._oldHeight);
-                this._isInFullScreen = false;
             } else if (document.webkitCancelFullScreen) {
                 document.webkitCancelFullScreen();
-                this.resize(this._oldWidth, this._oldHeight);
-                this._isInFullScreen = false;
             }
         },
 
@@ -133,12 +154,18 @@ define("engine/GameArena", function () {
         },
 
         /**
-         * Get the Canvas.
-         * @method
-         * @returns {Canvas}
+         * Set the canvas background-color.
+         * @param  {String} color - Background-color to be set.
          */
-        getCanvas: function () {
-            return this._canvas;
+        setBackgroundColor: function (color) {
+            this._canvas.style.background = color;
+        },
+
+        /**
+         * Clear entire games arena.
+         */
+        clear: function () {
+            this._canvas.width = this._canvas.width;
         },
 
         /**
@@ -222,6 +249,7 @@ define("engine/GameArena", function () {
             context.fillText(message, startPosX, startPosY);
 
             if (options.stroke) {
+                context.lineWidth = options.strokeWidth;
                 context.strokeStyle = options.stroke;
                 context.strokeText(message, startPosX, startPosY);
             }
@@ -245,6 +273,16 @@ define("engine/GameArena", function () {
             );
         },
 
+        /**
+         * Draw a circle centered around the X & Y coordinates.
+         * @param  {Number} posX
+         * @param  {Number} posY
+         * @param  {Number} radius
+         * @param  {Object} newOptions
+         * @enum   {String} newOptions.color
+         * @enum   {String} newOptions.strokeColor
+         * @enum   {Number} newOptions.strokeWidth
+         */
         drawCircle: function (posX, posY, radius, newOptions) {
             posX = posX || 0;
             posY = posY || 0;
@@ -266,6 +304,31 @@ define("engine/GameArena", function () {
                 context.strokeStyle = options.strokeColor;
                 context.stroke();
             }
+        },
+
+        /**
+         * Adds a grid to the canvas.
+         * @param  {Number} [widthSpace=20]
+         * @param  {Number} [heightSpace=20]
+         */
+        drawDebugGrid: function (widthSpace, heightSpace) {
+            widthSpace = widthSpace || 20;
+            heightSpace = heightSpace || 20;
+
+            var x = 0;
+
+            for (; x <= this.width; x += widthSpace) {
+                this._canvas.moveTo(0.5 + x, 0);
+                this._canvas.lineTo(0.5 + x, this.height);
+            }
+
+            for (x = 0; x <= this.height; x += heightSpace) {
+                this._canvas.moveTo(0, 0.5 + x);
+                this._canvas.lineTo(this.width, 0.5 + x);
+            }
+
+            this._canvas.strokeStyle = "#AAA";
+            this._canvas.stroke();
         }
     };
 

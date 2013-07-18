@@ -1,9 +1,7 @@
 define("TimePilot.ControlInterface", [
-    "TimePilot.CONSTANTS",
-    "engine/helpers"
+    "TimePilot.CONSTANTS"
 ], function (
-    CONSTS,
-    helpers
+    CONSTS
 ) {
 
     /**
@@ -12,8 +10,11 @@ define("TimePilot.ControlInterface", [
      * @method
      * @returns {ControlInterface instance}
      */
-    var ControlInterface = function (player) {
+    var ControlInterface = function (player, ticker, hud, gameArena) {
         this._player = player;
+        this._ticker = ticker;
+        this._hud = hud;
+        this._gameArena = gameArena;
 
         this._rotationStep = (360 / CONSTS.player.rotationFrameCount);
     };
@@ -25,11 +26,7 @@ define("TimePilot.ControlInterface", [
          * @param   {Number} desiredHeading - Heading you wish to rotate to.
          */
         rotateToHeading: function (desiredHeading) {
-            var currentHeading = this._player.getData().heading;
-            this._player.setData(
-                "heading",
-                helpers.rotateTo(desiredHeading, currentHeading, this._rotationStep)
-            );
+            this._player.setData("newHeading", desiredHeading);
         },
 
         /**
@@ -40,10 +37,7 @@ define("TimePilot.ControlInterface", [
             var currentHeading = this._player.getData().heading,
                 desiredHeading = ((currentHeading + this._rotationStep) % 360);
 
-            this._player.setData(
-                "heading",
-                helpers.rotateTo(desiredHeading, currentHeading, this._rotationStep)
-            );
+            this._player.setData("newHeading", desiredHeading);
         },
 
         /**
@@ -54,12 +48,42 @@ define("TimePilot.ControlInterface", [
             var currentHeading = this._player.getData().heading,
                 desiredHeading = (currentHeading - this._rotationStep);
 
-            desiredHeading = (desiredHeading < 0) ? (360 + desiredHeading) : desiredHeading;
+            desiredHeading = ((desiredHeading < 0) ? (360 + desiredHeading) : desiredHeading);
 
-            this._player.setData(
-                "heading",
-                helpers.rotateTo(desiredHeading, currentHeading, this._rotationStep)
-            );
+            this._player.setData("newHeading", desiredHeading);
+        },
+
+        /**
+         * Stop rotating to last desired heading.
+         * @method
+         */
+        stop: function () {
+            this._player.setData("newHeading", false);
+        },
+
+        openMenu: function () {
+            window.console.log("Opening Menu");
+        },
+
+        startShooting: function () {
+            this._player.startShooting();
+        },
+
+        stopShooting: function () {
+            this._player.stopShooting();
+        },
+
+        toggleFullScreen: function () {
+            this._gameArena.toggleFullScreen();
+        },
+
+        togglePause: function () {
+            if (this._ticker.getState()) {
+                this._ticker.stop();
+                this._hud.pause();
+            } else {
+                this._ticker.start();
+            }
         },
 
         /**

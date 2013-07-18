@@ -107,25 +107,30 @@ define("engine/helpers", function () {
             return (dx * dx + dy * dy >= radius * radius);
         },
 
-        drawDebugGrid: function (gameArena, widthSpace, heightSpace) {
-            widthSpace = widthSpace || 20;
-            heightSpace = heightSpace || 20;
-            var x = 0;
+        /**
+         * Bind to a given list of events
+         * @method
+         * @param   {String|Array}  eventNames      - Either a space delimited string or an array of events to listen to
+         * @param   {Function}      callback        - Function to be run when the event is fired.
+         * @param   {DOM Node}      [element=body]  - Element to attach the listener too.
+         */
+        bind: function (eventNames, callback, element) {
+            element = element || document.documentElement;
 
-            for (; x <= gameArena.width; x += widthSpace) {
-                gameArena.getCanvas().moveTo(0.5 + x, 0);
-                gameArena.getCanvas().lineTo(0.5 + x, gameArena.height);
+            if (typeof eventNames === "string") {
+                eventNames = eventNames.split(" ");
             }
 
-            for (x = 0; x <= gameArena.height; x += heightSpace) {
-                gameArena.getCanvas().moveTo(0, 0.5 + x);
-                gameArena.getCanvas().lineTo(gameArena.width, 0.5 + x);
+            for (var i = 0, l = eventNames.length; i < l; ++i) {
+                if (typeof element.addEventListener === "function") {
+                    element.addEventListener(eventNames[i], callback, false);
+                } else if (!!element.attachEvent) {
+                    element.attachEvent("on" + eventNames[i], callback);
+                }
             }
+        },
 
-            gameArena.getCanvas().strokeStyle = "#AAA";
-            gameArena.getCanvas().stroke();
-
-        }
+        unbind: function () {}
 
     };
 

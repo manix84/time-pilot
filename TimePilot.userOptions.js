@@ -9,13 +9,13 @@ define("TimePilot.userOptions", function () {
             showHitboxes: true,
 
             /**
-             * Render corner points to show the sprite dimentions.
+             * Render corner points to show the sprite dimensions.
              * @type {Boolean}
              */
             showSpriteCorners: true,
 
             /**
-             * Render corner points to show the sprite dimentions.
+             * Render corner points to show the sprite dimensions.
              * @type {Boolean}
              */
             showSpriteCenters: true,
@@ -24,7 +24,13 @@ define("TimePilot.userOptions", function () {
              * Write the current player coordinates on screen.
              * @type {Boolean}
              */
-            showPlayerCoordinates: true
+            showPlayerCoordinates: true,
+
+            /**
+             * Make the player immortal.
+             * @type {boolean}
+             */
+            invincible: true
         },
 
         /**

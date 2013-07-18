@@ -49,13 +49,12 @@ define("TimePilot.Hud", [
         pause: function () {
             this._gameArena.renderText("Paused",
                 (this._gameArena.width / 2),
-                (this._gameArena.height / 2),
+                (this._gameArena.height / 2) + 25,
                 {
-                    size: 30,
+                    size: 25,
                     align: "center",
                     valign: "middle",
-                    color: "#FFF",
-                    stroke: "#000"
+                    color: "#FFF"
                 }
             );
         }
