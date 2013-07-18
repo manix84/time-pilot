@@ -3,6 +3,7 @@ define("TimePilot", [
     "engine/GameArena",
     "engine/helpers",
     "TimePilot.CONSTANTS",
+    "TimePilot.userOptions",
     "TimePilot.Player",
     "TimePilot.EnemyFactory",
     "TimePilot.BulletFactory",
@@ -13,6 +14,7 @@ define("TimePilot", [
     GameArena,
     helpers,
     CONST,
+    userOptions,
     Player,
     EnemyFactory,
     BulletFactory,
@@ -37,7 +39,7 @@ define("TimePilot", [
     TimePilot.prototype = {
 
         _options: {
-            baseUrl: ""
+            debug: false
         },
 
         _data: {
@@ -59,6 +61,8 @@ define("TimePilot", [
 
         _init: function () {
             var that = this;
+
+            userOptions.enableDebug = this._options.debug;
 
             this._gameArena = new GameArena(this._container);
             this._ticker = new Ticker(17);
