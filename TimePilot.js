@@ -8,7 +8,10 @@ define("TimePilot", [
     "TimePilot.EnemyFactory",
     "TimePilot.BulletFactory",
     "TimePilot.PropFactory",
-    "TimePilot.Hud"
+    "TimePilot.Hud",
+    "TimePilot.ControlInterface",
+
+    "TimePilot.Keyboard1"
 ], function (
     Ticker,
     GameArena,
@@ -19,7 +22,10 @@ define("TimePilot", [
     EnemyFactory,
     BulletFactory,
     PropFactory,
-    Hud
+    Hud,
+    ControlInterface,
+
+    Controller
 ) {
 
     var TimePilot = function (element, options) {
@@ -66,11 +72,16 @@ define("TimePilot", [
 
             this._gameArena = new GameArena(this._container);
             this._ticker = new Ticker(17);
-            this._player = new Player(this._gameArena, this._ticker);
+            this._bullets = new BulletFactory(this._gameArena);
+
+            this._player = new Player(this._gameArena, this._ticker, this._bullets);
             this._enemies = new EnemyFactory(this._gameArena, this._ticker, this._player);
-            this._bullets = new BulletFactory(this._gameArena, this._player);
             this._props = new PropFactory(this._gameArena, this._player);
             this._hud = new Hud(this._gameArena, this._player);
+
+
+            this._controlInterface = new ControlInterface(this._player, this._ticker, this._hud, this._gameArena);
+            this._currentController = new Controller(this._controlInterface);
 
             this._player.setData("level", 1);
             this._gameArena.renderText("Loading", 20, 10, {size: 30});
@@ -99,16 +110,8 @@ define("TimePilot", [
         _start: function () {
             var that = this;
 
-            this._elementContruction();
-            this._keyboardLock.focus();
 
             this._addRandomClouds();
-
-
-            this._ticker.addSchedule(function () {
-                that._gameArena.getCanvas().width = that._gameArena.getCanvas().width;
-                that._gameArena.getCanvas().style.background = CONST.levels[that._data.level].arena.backgroundColor;
-            }, 1);
 
             this._ticker.addSchedule(function () {
                 that.pauseGame();
@@ -122,15 +125,23 @@ define("TimePilot", [
                 that._props.reposition();
 
                 that._spawnEntities();
-                that.rotatePlayer();
             }, 1);
 
             this._ticker.addSchedule(function () {
+                that._player.rotate();
+                that._player.shoot();
+            }, 4);
+
+            this._ticker.addSchedule(function () {
+                that._gameArena.clear();
+                that._gameArena.setBackgroundColor(CONST.levels[that._data.level].arena.backgroundColor);
+
                 that._props.render(1);
 
-                that._player.render();
-                that._enemies.render();
                 that._bullets.render();
+                that._enemies.render();
+
+                that._player.render();
 
                 that._props.render(2);
                 that._hud.render();
@@ -153,40 +164,6 @@ define("TimePilot", [
             this.playGame();
         },
 
-        rotatePlayer: function () {
-            var playerData = this._player.getData();
-            /* THIS IS PART OF INTERFACE */
-            if ((this._ticker.getTicks() - this._data.player.lastFiredTick) > 10 && this._data.player.isFiring) {
-                this._data.player.lastFiredTick = this._ticker.getTicks();
-                this._bullets.create(
-                    (this._gameArena.width / 2),
-                    (this._gameArena.height / 2),
-                    playerData.heading
-                );
-            }
-            /* THIS IS PART OF INTERFACE */
-
-            // These tick delays don't work... They cause massive delay, to extreams of no movement/firing.
-            // @TODO: Investigate a better method of slowing rotation and weapons fire.
-            if ((this._ticker.getTicks() - this._data.player.lastMovedTick) > 4) {
-                this._data.player.lastMovedTick = this._ticker.getTicks();
-                switch (this._data.player.direction) {
-                case 38: // Up
-                    this._player.setData("heading", helpers.rotateTo(0, this._player.getData().heading, 22.5));
-                    break;
-                case 40: // Down
-                    this._player.setData("heading", helpers.rotateTo(180, this._player.getData().heading, 22.5));
-                    break;
-                case 37: // Left
-                    this._player.setData("heading", helpers.rotateTo(270, this._player.getData().heading, 22.5));
-                    break;
-                case 39: // Right
-                    this._player.setData("heading", helpers.rotateTo(90, this._player.getData().heading, 22.5));
-                    break;
-                }
-            }
-        },
-
         pauseGame: function () {
             if (this._ticker.getState()) {
                 window.console.info("Pausing");
@@ -197,7 +174,6 @@ define("TimePilot", [
 
         playGame: function () {
             if (!this._ticker.getState()) {
-                window.console.info("Continuing");
                 this._ticker.start();
             }
         },
@@ -210,64 +186,6 @@ define("TimePilot", [
             } else {
                 element["on" + eventName] = callback;
             }
-        },
-
-        _elementContruction: function () {
-            var that = this;
-
-            this._keyboardLock = document.createElement("input");
-            this._keyboardLock.setAttribute("style", "position:absolute;left:-999px;");
-            this._keyboardLock.setAttribute("type", "text");
-            this._addListener(this._gameArena.getCanvas(), "click", function () {
-                that._keyboardLock.focus();
-                that.playGame();
-            });
-            this._addListener(this._keyboardLock, "keydown", function (event) {
-                switch (event.keyCode) {
-                case 70: // "F"
-                    that._gameArena.toggleFullScreen();
-                    break;
-                case 80: // "P"
-                    if (that._ticker.getState()) {
-                        that.pauseGame();
-                    } else {
-                        that.playGame();
-                    }
-                    break;
-                case 37: // LEFT
-                case 38: // UP
-                case 39: // RIGHT
-                case 40: // DOWN
-                    event.preventDefault();
-                    if (!that._data.player.direction) {
-                        that._data.player.direction = event.keyCode;
-                    }
-                    break;
-                case 32: // SPACE BAR
-                    event.preventDefault();
-                    that._data.player.isFiring = true;
-                    break;
-                case 27: // ESC
-                    that.pauseGame();
-                    window.console.info("Stopping at users request.");
-                    break;
-                }
-            });
-            this._addListener(this._keyboardLock, "keyup", function (event) {
-                switch (event.keyCode) {
-                case 37: // LEFT
-                case 38: // UP
-                case 39: // RIGHT
-                case 40: // DOWN
-                    event.preventDefault();
-                    that._data.player.direction = false;
-                    break;
-                case 32: // SPACE BAR
-                    that._data.player.isFiring = false;
-                    break;
-                }
-            });
-            this._container.appendChild(this._keyboardLock);
         },
 
         _addRandomClouds: function () {

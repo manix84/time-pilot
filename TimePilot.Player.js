@@ -15,25 +15,27 @@ define("TimePilot.Player", [
      * @param   {Ticker Instance} ticker
      * @returns {Player Instance}
      */
-    var Player = function (gameArena, ticker) {
+    var Player = function (gameArena, ticker, bulletFactory) {
         this._gameArena = gameArena;
         this._ticker = ticker;
+        this._bulletFactory = bulletFactory;
 
         this._playerSprite = new Image();
         this._playerSprite.src = CONSTS.player.src;
 
+        this._rotationStep = (360 / CONSTS.player.rotationFrameCount);
+
         this._data = {
             isFiring: false,
             heading: 90,
+            newHeading: false,
             posX: 0,
             posY: 0,
             exploading: 0,
             continues: 0,
             lives: 1,
             score: 0,
-            level: 1,
-            invinsible: (userOptions.enableDebug && userOptions.debug.invinsible),
-            showHitboxes: (userOptions.enableDebug && userOptions.debug.showHitboxes)
+            level: 1
         };
     };
 
@@ -78,14 +80,43 @@ define("TimePilot.Player", [
          * @method
          */
         reposition: function () {
-            var player = this._data,
-                heading = this._data.heading,
+            var heading = this._data.heading,
                 velocity = this.getLevelData().velocity;
 
-            player.posX += helpers.float(Math.sin(heading * (Math.PI / 180)) * velocity);
-            player.posY -= helpers.float(Math.cos(heading * (Math.PI / 180)) * velocity);
+            this._data.posX += helpers.float(Math.sin(heading * (Math.PI / 180)) * velocity);
+            this._data.posY -= helpers.float(Math.cos(heading * (Math.PI / 180)) * velocity);
 
-            this._data.player = player;
+            this._gameArena.updatePosition(this._data.posX, this._data.posY);
+        },
+
+        /**
+         * If newHeading is set, update the current heading by one step towards it.
+         */
+        rotate: function () {
+            if (this._data.newHeading !== false) {
+                this._data.heading = helpers.rotateTo(this._data.newHeading, this._data.heading, this._rotationStep);
+            }
+        },
+
+        startShooting: function () {
+            this._data.isShooting = true;
+        },
+
+        stopShooting: function () {
+            this._data.isShooting = false;
+        },
+
+        /**
+         * Add bullets when this is tiggered.
+         */
+        shoot: function () {
+            if (this._data.isShooting) {
+                this._bulletFactory.create(
+                    (this._gameArena.width / 2),
+                    (this._gameArena.height / 2),
+                    this._data.heading
+                );
+            }
         },
 
         /**
@@ -134,19 +165,21 @@ define("TimePilot.Player", [
          * @method
          */
         render: function () {
+            var hitRadius = CONSTS.player.hitRadius,
+                color = "#F00",
+                invincible = (userOptions.enableDebug && userOptions.debug.invincible),
+                showHitboxes = (userOptions.enableDebug && userOptions.debug.showHitboxes);
+
             if (!this._data.deathTick) {
                 this._render();
             } else {
                 this._renderDeath();
             }
 
-            if (this._data.showHitboxes || this._data.invinsible) {
-                var hitRadius = CONSTS.player.hitRadius,
-                    color = "#F00";
-
-                if (this._data.invinsible) {
+            if (showHitboxes || invincible) {
+                if (invincible) {
                     color = "#FFD700";
-                    hitRadius = ((CONSTS.player.width + CONSTS.player.height) / 3);
+                    hitRadius = ((CONSTS.player.width + CONSTS.player.height) / 4) + (this._ticker % 3);
                 }
                 this._gameArena.drawCircle(
                     (this._gameArena.width / 2),
@@ -159,7 +192,7 @@ define("TimePilot.Player", [
         },
 
         kill: function () {
-            if (this._data.invinsible) {
+            if (userOptions.enableDebug && userOptions.debug.invincible) {
                 return;
             }
             this._data.deathTick = this._ticker.getTicks();

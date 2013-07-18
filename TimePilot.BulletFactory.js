@@ -12,9 +12,8 @@ define("TimePilot.BulletFactory", [
      * @param   {Player Instance} player - Player Instance
      * @returns {Bullet Factory Instance}
      */
-    var BulletFactory = function (gameArena, player) {
+    var BulletFactory = function (gameArena) {
         this._gameArena = gameArena;
-        this._player = player;
 
         this._bullets = [];
     };
@@ -29,7 +28,7 @@ define("TimePilot.BulletFactory", [
          */
         create: function (posX, posY, heading) {
             this._bullets.push(
-                new Bullet(this._gameArena, this._player, posX, posY, heading)
+                new Bullet(this._gameArena, posX, posY, heading)
             );
         },
 

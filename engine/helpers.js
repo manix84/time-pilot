@@ -107,25 +107,6 @@ define("engine/helpers", function () {
             return (dx * dx + dy * dy >= radius * radius);
         },
 
-        drawDebugGrid: function (gameArena, widthSpace, heightSpace) {
-            widthSpace = widthSpace || 20;
-            heightSpace = heightSpace || 20;
-            var x = 0;
-
-            for (; x <= gameArena.width; x += widthSpace) {
-                gameArena.getCanvas().moveTo(0.5 + x, 0);
-                gameArena.getCanvas().lineTo(0.5 + x, gameArena.height);
-            }
-
-            for (x = 0; x <= gameArena.height; x += heightSpace) {
-                gameArena.getCanvas().moveTo(0, 0.5 + x);
-                gameArena.getCanvas().lineTo(gameArena.width, 0.5 + x);
-            }
-
-            gameArena.getCanvas().strokeStyle = "#AAA";
-            gameArena.getCanvas().stroke();
-        },
-
         /**
          * Bind to a given list of events
          * @method
