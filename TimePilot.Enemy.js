@@ -31,8 +31,9 @@ define("TimePilot.Enemy", [
         this._data.heading = heading;
         this._data.level = 1;
         this._data.deathTick = false;
-        this._data.removeMe = false;
         this._data.tickOffset = Math.floor(Math.random() * 100);
+
+        this.removeMe = false;
 
         this._enemySprite = new Image();
         this._enemySprite.src = this.getLevelData().src;
@@ -162,16 +163,6 @@ define("TimePilot.Enemy", [
                 posX: (this._data.posX - this._player.getData().posX - (levelData.width / 2)),
                 posY: (this._data.posY - this._player.getData().posY - (levelData.height / 2))
             });
-
-            if (userOptions.enableDebug && userOptions.debug.showHitboxes) {
-                this._gameArena.drawCircle(
-                    (this._data.posX - this._player.getData().posX),
-                    (this._data.posY - this._player.getData().posY),
-                    levelData.hitRadius, {
-                        strokeColor: "#F00"
-                    }
-                );
-            }
         },
 
         /**
@@ -195,7 +186,7 @@ define("TimePilot.Enemy", [
             });
 
             if (frameX === explosionData.frames) {
-                this._data.removeMe = true;
+                this.removeMe = true;
             }
         },
 
@@ -204,10 +195,22 @@ define("TimePilot.Enemy", [
          * @method
          */
         render: function () {
+            var levelData = this.getLevelData();
+
             if (!this._data.deathTick) {
                 this._render();
             } else {
                 this._renderDeath();
+            }
+
+            if (userOptions.enableDebug && userOptions.debug.showHitboxes) {
+                this._gameArena.drawCircle(
+                    (this._data.posX - this._player.getData().posX),
+                    (this._data.posY - this._player.getData().posY),
+                    levelData.hitRadius, {
+                        strokeColor: "#F00"
+                    }
+                );
             }
         },
 

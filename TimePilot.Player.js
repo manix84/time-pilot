@@ -1,8 +1,10 @@
 define("TimePilot.Player", [
     "TimePilot.CONSTANTS",
+    "TimePilot.userOptions",
     "engine/helpers"
 ], function (
     CONSTS,
+    userOptions,
     helpers
 ) {
 
@@ -134,6 +136,16 @@ define("TimePilot.Player", [
                 this._render();
             } else {
                 this._renderDeath();
+            }
+
+            if (userOptions.enableDebug && userOptions.debug.showHitboxes) {
+                this._gameArena.drawCircle(
+                    (this._gameArena.width / 2),
+                    (this._gameArena.height / 2),
+                    CONSTS.player.hitRadius, {
+                        strokeColor: "#F00"
+                    }
+                );
             }
         },
 

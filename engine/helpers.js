@@ -124,8 +124,32 @@ define("engine/helpers", function () {
 
             gameArena.getCanvas().strokeStyle = "#AAA";
             gameArena.getCanvas().stroke();
+        },
 
-        }
+        /**
+         * Bind to a given list of events
+         * @method
+         * @param   {String|Array}  eventNames      - Either a space delimited string or an array of events to listen to
+         * @param   {Function}      callback        - Function to be run when the event is fired.
+         * @param   {DOM Node}      [element=body]  - Element to attach the listener too.
+         */
+        bind: function (eventNames, callback, element) {
+            element = element || document.documentElement;
+
+            if (typeof eventNames === "string") {
+                eventNames = eventNames.split(" ");
+            }
+
+            for (var i = 0, l = eventNames.length; i < l; ++i) {
+                if (typeof element.addEventListener === "function") {
+                    element.addEventListener(eventNames[i], callback, false);
+                } else if (!!element.attachEvent) {
+                    element.attachEvent("on" + eventNames[i], callback);
+                }
+            }
+        },
+
+        unbind: function () {}
 
     };
 
