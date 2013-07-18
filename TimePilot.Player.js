@@ -32,7 +32,8 @@ define("TimePilot.Player", [
             lives: 1,
             score: 0,
             level: 1,
-            invinsible: (userOptions.enableDebug && userOptions.debug.invinsible)
+            invinsible: (userOptions.enableDebug && userOptions.debug.invinsible),
+            showHitboxes: (userOptions.enableDebug && userOptions.debug.showHitboxes)
         };
     };
 
@@ -139,12 +140,19 @@ define("TimePilot.Player", [
                 this._renderDeath();
             }
 
-            if (userOptions.enableDebug && userOptions.debug.showHitboxes) {
+            if (this._data.showHitboxes || this._data.invinsible) {
+                var hitRadius = CONSTS.player.hitRadius,
+                    color = "#F00";
+
+                if (this._data.invinsible) {
+                    color = "#FFD700";
+                    hitRadius = ((CONSTS.player.width + CONSTS.player.height) / 3);
+                }
                 this._gameArena.drawCircle(
                     (this._gameArena.width / 2),
                     (this._gameArena.height / 2),
-                    CONSTS.player.hitRadius, {
-                        strokeColor: (this._data.invinsible) ? "#FFD700" : "#F00"
+                    hitRadius, {
+                        strokeColor: color
                     }
                 );
             }
