@@ -238,6 +238,7 @@ define("engine/GameArena", [
             context.fillText(message, startPosX, startPosY);
 
             if (options.stroke) {
+                context.lineWidth = options.strokeWidth;
                 context.strokeStyle = options.stroke;
                 context.strokeText(message, startPosX, startPosY);
             }
