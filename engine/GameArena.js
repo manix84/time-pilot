@@ -22,6 +22,9 @@ define("engine/GameArena", [
         this._oldWidth = this._containerElement.clientWidth;
         this._oldHeight = this._containerElement.clientHeight;
 
+        this.posX = 0;
+        this.posY = 0;
+
         helpers.bind("webkitfullscreenchange mozfullscreenchange fullscreenchange", function () {
             that._isInFullScreen = !that._isInFullScreen;
             if (that._isInFullScreen) {
@@ -50,6 +53,16 @@ define("engine/GameArena", [
 
             this._containerElement.appendChild(this._styles);
             this._containerElement.appendChild(this._canvas);
+        },
+
+        /**
+         * Update current viewport coordinates.
+         * @param  {Number} posX
+         * @param  {Number} posY
+         */
+        updatePosition: function (posX, posY) {
+            this.posX = posX;
+            this.posY = posY;
         },
 
         /**

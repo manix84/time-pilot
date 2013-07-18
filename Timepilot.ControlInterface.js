@@ -65,8 +65,12 @@ define("TimePilot.ControlInterface", [
             window.console.log("Opening Menu");
         },
 
-        shoot: function () {
-            this._player.shoot();
+        startShooting: function () {
+            this._player.startShooting();
+        },
+
+        stopShooting: function () {
+            this._player.stopShooting();
         },
 
         toggleFullScreen: function () {

@@ -72,9 +72,10 @@ define("TimePilot", [
 
             this._gameArena = new GameArena(this._container);
             this._ticker = new Ticker(17);
-            this._player = new Player(this._gameArena, this._ticker);
+            this._bullets = new BulletFactory(this._gameArena);
+
+            this._player = new Player(this._gameArena, this._ticker, this._bullets);
             this._enemies = new EnemyFactory(this._gameArena, this._ticker, this._player);
-            this._bullets = new BulletFactory(this._gameArena, this._player);
             this._props = new PropFactory(this._gameArena, this._player);
             this._hud = new Hud(this._gameArena, this._player);
 
@@ -128,6 +129,7 @@ define("TimePilot", [
 
             this._ticker.addSchedule(function () {
                 that._player.rotate();
+                that._player.shoot();
             }, 4);
 
             this._ticker.addSchedule(function () {
@@ -136,9 +138,10 @@ define("TimePilot", [
 
                 that._props.render(1);
 
-                that._player.render();
-                that._enemies.render();
                 that._bullets.render();
+                that._enemies.render();
+
+                that._player.render();
 
                 that._props.render(2);
                 that._hud.render();

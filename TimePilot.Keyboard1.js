@@ -8,11 +8,6 @@ define("TimePilot.Keyboard1", [
         this._controlInterface = controlInterface;
 
         this.connect();
-
-        this._data = {
-            lastRotationTick: 0,
-            lastShotTick: 0
-        };
     };
 
     Keyboard1.prototype = {
@@ -21,14 +16,6 @@ define("TimePilot.Keyboard1", [
             helpers.bind("keydown", function (event) {
 
                 switch (event.keyCode) {
-                case 27: // Escape-Key
-                    event.preventDefault();
-                    that._controlInterface.openMenu();
-                    break;
-                case 32: // Space-Bar
-                    event.preventDefault();
-                    that._controlInterface.shoot();
-                    break;
                 case 37: // Left-Key
                     event.preventDefault();
                     that._controlInterface.rotateToHeading(270);
@@ -45,9 +32,18 @@ define("TimePilot.Keyboard1", [
                     event.preventDefault();
                     that._controlInterface.rotateToHeading(180);
                     break;
+                case 32: // Space-Bar
+                    event.preventDefault();
+                    that._controlInterface.startShooting();
+                    break;
                 case 70: // "F"-Key
                     event.preventDefault();
                     that._controlInterface.toggleFullScreen();
+                    break;
+                case 27: // Escape-Key
+                    event.preventDefault();
+                    that._controlInterface.openMenu();
+                    that._controlInterface.togglePause();
                     break;
                 case 80: // "P"-Key
                     event.preventDefault();
@@ -60,7 +56,6 @@ define("TimePilot.Keyboard1", [
 
                 switch (event.keyCode) {
                 case 27: // Escape-Key
-                case 32: // Space-Bar
                 case 70: // "F"-Key
                 case 80: // "P"-Key
                     event.preventDefault();
@@ -71,6 +66,10 @@ define("TimePilot.Keyboard1", [
                 case 40: // Down-Key
                     event.preventDefault();
                     that._controlInterface.stop();
+                    break;
+                case 32: // Space-Bar
+                    event.preventDefault();
+                    that._controlInterface.stopShooting();
                     break;
                 }
             }, this._keyboardLock);

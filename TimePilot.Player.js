@@ -15,9 +15,10 @@ define("TimePilot.Player", [
      * @param   {Ticker Instance} ticker
      * @returns {Player Instance}
      */
-    var Player = function (gameArena, ticker) {
+    var Player = function (gameArena, ticker, bulletFactory) {
         this._gameArena = gameArena;
         this._ticker = ticker;
+        this._bulletFactory = bulletFactory;
 
         this._playerSprite = new Image();
         this._playerSprite.src = CONSTS.player.src;
@@ -94,6 +95,27 @@ define("TimePilot.Player", [
         rotate: function () {
             if (this._data.newHeading !== false) {
                 this._data.heading = helpers.rotateTo(this._data.newHeading, this._data.heading, this._rotationStep);
+            }
+        },
+
+        startShooting: function () {
+            this._data.isShooting = true;
+        },
+
+        stopShooting: function () {
+            this._data.isShooting = false;
+        },
+
+        /**
+         * Add bullets when this is tiggered.
+         */
+        shoot: function () {
+            if (this._data.isShooting) {
+                this._bulletFactory.create(
+                    (this._gameArena.width / 2),
+                    (this._gameArena.height / 2),
+                    this._data.heading
+                );
             }
         },
 
