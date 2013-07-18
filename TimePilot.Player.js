@@ -31,7 +31,8 @@ define("TimePilot.Player", [
             continues: 0,
             lives: 1,
             score: 0,
-            level: 1
+            level: 1,
+            invinsible: (userOptions.enableDebug && userOptions.debug.invinsible)
         };
     };
 
@@ -143,13 +144,16 @@ define("TimePilot.Player", [
                     (this._gameArena.width / 2),
                     (this._gameArena.height / 2),
                     CONSTS.player.hitRadius, {
-                        strokeColor: "#F00"
+                        strokeColor: (this._data.invinsible) ? "#FFD700" : "#F00"
                     }
                 );
             }
         },
 
         kill: function () {
+            if (this._data.invinsible) {
+                return;
+            }
             this._data.deathTick = this._ticker.getTicks();
         }
     };
