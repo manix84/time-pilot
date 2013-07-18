@@ -104,12 +104,6 @@ define("TimePilot", [
 
             this._addRandomClouds();
 
-
-            this._ticker.addSchedule(function () {
-                that._gameArena.getCanvas().width = that._gameArena.getCanvas().width;
-                that._gameArena.getCanvas().style.background = CONST.levels[that._data.level].arena.backgroundColor;
-            }, 1);
-
             this._ticker.addSchedule(function () {
                 that.pauseGame();
                 window.console.warn("Stopping: 50,000 ticks");
@@ -126,6 +120,9 @@ define("TimePilot", [
             }, 1);
 
             this._ticker.addSchedule(function () {
+                that._gameArena.clear();
+                that._gameArena.setBackgroundColor(CONST.levels[that._data.level].arena.backgroundColor);
+
                 that._props.render(1);
 
                 that._player.render();
@@ -218,10 +215,7 @@ define("TimePilot", [
             this._keyboardLock = document.createElement("input");
             this._keyboardLock.setAttribute("style", "position:absolute;left:-999px;");
             this._keyboardLock.setAttribute("type", "text");
-            this._addListener(this._gameArena.getCanvas(), "click", function () {
-                that._keyboardLock.focus();
-                that.playGame();
-            });
+
             this._addListener(this._keyboardLock, "keydown", function (event) {
                 switch (event.keyCode) {
                 case 70: // "F"
