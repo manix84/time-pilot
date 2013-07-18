@@ -187,14 +187,12 @@ define("engine/GameArena", [
                     loaded: ++loadedCount,
                     remaining: --remainingCount
                 });
-                window.console.info("Loaded: " + loadedCount + ", Remaining: " + remainingCount);
             };
             onerror = function () {
                 callback({
                     loaded: ++loadedCount,
                     remaining: --remainingCount
                 });
-                window.console.error("Loaded: " + loadedCount + ", Remaining: " + remainingCount);
             };
 
             for (; 0 < i; i--) {
