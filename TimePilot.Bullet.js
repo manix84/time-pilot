@@ -78,14 +78,19 @@ define("TimePilot.Bullet", [
          * Detect if the entity has left a given radius of the player.
          * @method
          * @protected
-         * @returns {Boolean} True = entity has left the area, False = entity is still in area.
          */
-        _detectAreaExit: function () {
-            return helpers.detectAreaExit({
+        _checkInArena: function () {
+            if (this.removeMe) {
+                return;
+            }
+
+            this.removeMe = helpers.detectAreaExit({
                     posX: this._gameArena.posX + ((this._gameArena.width / 2) - (this._data.size / 2)),
                     posY: this._gameArena.posY + ((this._gameArena.height / 2) - (this._data.size / 2))
+                }, {
+                    posX: this._data.posX,
+                    posY: this._data.posY
                 },
-                this._data,
                 CONSTS.limits.despawnRadius
             );
         },
@@ -101,9 +106,7 @@ define("TimePilot.Bullet", [
             this._data.posX += helpers.float(Math.sin(heading * (Math.PI / 180)) * velocity);
             this._data.posY -= helpers.float(Math.cos(heading * (Math.PI / 180)) * velocity);
 
-            if (this._detectAreaExit()) {
-                this.removeMe = true;
-            }
+            this._checkInArena();
         },
 
         /**

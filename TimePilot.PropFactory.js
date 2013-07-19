@@ -57,7 +57,7 @@ define("TimePilot.PropFactory", [
             var i;
 
             for (i in this._props) {
-                if (this._props.hasOwnProperty(i) && this._props[i].getData().removeMe) {
+                if (this._props.hasOwnProperty(i) && this._props[i].removeMe) {
                     this._despawn(i);
                 }
             }
