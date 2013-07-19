@@ -16,7 +16,8 @@ define("TimePilot.Prop", [
         this._data.level = 1;
         this._data.type = Math.floor(Math.random() * (CONSTS.levels[this._data.level].props.length));
         this._data.layer = CONSTS.levels[this._data.level].props[this._data.type].layer;
-        this._data.removeMe = false;
+
+        this.removeMe = false;
 
         this._propSprite = new Image();
         this._propSprite.src = this.getLevelData().src;
@@ -50,25 +51,21 @@ define("TimePilot.Prop", [
          * @returns {Boolean} True = entity has left the area, False = entity is still in area.
          */
         _checkInArena: function () {
-            var levelData = this.getLevelData(),
-                player = this._player.getData(),
-                removeProp = false;
+            var levelData = this.getLevelData();
 
-            if (this._data.removeMe) {
+            if (this.removeMe) {
                 return;
             }
 
-            removeProp = helpers.detectAreaExit({
-                    posX: player.posX + ((this._gameArena.width / 2) - (levelData.width / 2)),
-                    posY: player.posY + ((this._gameArena.height / 2) - (levelData.height / 2))
+            this.removeMe = helpers.detectAreaExit({
+                    posX: this._gameArena.posX + ((this._gameArena.width / 2) - (levelData.width / 2)),
+                    posY: this._gameArena.posY + ((this._gameArena.height / 2) - (levelData.height / 2))
                 }, {
                     posX: this._data.posX,
                     posY: this._data.posY
                 },
                 CONSTS.limits.despawnRadius
             );
-
-            this._data.removeMe = removeProp;
         },
 
         /**

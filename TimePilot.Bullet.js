@@ -16,23 +16,18 @@ define("TimePilot.Bullet", [
      * @returns {Bullet Instance}
      */
 
-    var Bullet = function (gameArena, posX, posY, heading, newOptions) {
-        newOptions = newOptions || {};
-
+    var Bullet = function (gameArena, posX, posY, heading, size, velocity, color) {
         this._gameArena = gameArena;
 
         this._data = {};
         this._data.posX = posX;
         this._data.posY = posY;
         this._data.heading = heading;
+        this._data.size = size;
+        this._data.velocity = velocity;
+        this._data.color = color;
 
-
-        this._data.options = {
-            size: newOptions.size || 4,
-            velocity: newOptions.velocity || 20,
-            color: newOptions.color || "#FFF"
-        };
-
+        this.removeMe = false;
     };
 
     Bullet.prototype = {
@@ -82,17 +77,22 @@ define("TimePilot.Bullet", [
         /**
          * Detect if the entity has left a given radius of the player.
          * @method
-         * @param   {Number} radius - Maximum radial from player before they are concidered outside the battle.
-         * @returns {Boolean} True = entity has left the area, False = entity is still in area.
+         * @protected
          */
-        detectAreaExit: function (radius) {
-            // return helpers.detectAreaExit({
-            //         posX: this._gameArena.posX + ((this._gameArena.width / 2) - (this._data.options.width / 2)),
-            //         posY: this._gameArena.posY + ((this._gameArena.height / 2) - (this._data.options.height / 2))
-            //     },
-            //     this.getData(),
-            //     radius
-            // );
+        _checkInArena: function () {
+            if (this.removeMe) {
+                return;
+            }
+
+            this.removeMe = helpers.detectAreaExit({
+                    posX: this._gameArena.posX + ((this._gameArena.width / 2) - (this._data.size / 2)),
+                    posY: this._gameArena.posY + ((this._gameArena.height / 2) - (this._data.size / 2))
+                }, {
+                    posX: this._data.posX,
+                    posY: this._data.posY
+                },
+                CONSTS.limits.despawnRadius
+            );
         },
 
         /**
@@ -100,11 +100,13 @@ define("TimePilot.Bullet", [
          * @method
          */
         reposition: function () {
-            var velocity = this._data.options.velocity,
+            var velocity = this._data.velocity,
                 heading = this._data.heading;
 
             this._data.posX += helpers.float(Math.sin(heading * (Math.PI / 180)) * velocity);
             this._data.posY -= helpers.float(Math.cos(heading * (Math.PI / 180)) * velocity);
+
+            this._checkInArena();
         },
 
         /**
@@ -112,8 +114,8 @@ define("TimePilot.Bullet", [
          * @method
          */
         render: function () {
-            var size = this._data.options.size,
-                color = this._data.options.color,
+            var size = this._data.size,
+                color = this._data.color,
                 context = this._gameArena.getContext();
 
             context.fillStyle = color;

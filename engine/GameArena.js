@@ -148,10 +148,8 @@ define("engine/GameArena", [
             window.console.log("this._isInFullScreen", this._isInFullScreen);
             if (this._isInFullScreen) {
                 this.exitFullScreen();
-                window.console.log("Exiting full-screen");
             } else {
                 this.enterFullScreen();
-                window.console.log("Entering full-screen");
             }
         },
 

@@ -98,26 +98,29 @@ define("TimePilot.Enemy", [
         },
 
         /**
-         * Detect if the entity has left a given radius of the entity.
+         * Detect if the entity has left a given radius of the player.
          * @method
+         * @protected
          * @param   {Number} radius - Maximum radial from player before they are concidered outside the battle.
          * @returns {Boolean} True = entity has left the area, False = entity is still in area.
          */
-        detectAreaExit: function (radius) {
-            var levelData = this.getLevelData(),
-                player = this._player.getData();
+        _checkInArena: function () {
+            var levelData = this.getLevelData();
 
-            return helpers.detectAreaExit({
-                    posX: player.posX + ((this._gameArena.width / 2) - (levelData.width / 2)),
-                    posY: player.posY + ((this._gameArena.height / 2) - (levelData.height / 2))
+            if (this.removeMe) {
+                return;
+            }
+
+            this.removeMe = helpers.detectAreaExit({
+                    posX: this._gameArena.posX + ((this._gameArena.width / 2) - (levelData.width / 2)),
+                    posY: this._gameArena.posY + ((this._gameArena.height / 2) - (levelData.height / 2))
                 }, {
                     posX: this._data.posX,
                     posY: this._data.posY
                 },
-                radius
+                CONSTS.limits.despawnRadius
             );
         },
-
         /**
          * Recalculate entity's current position and heading.
          * @method
@@ -135,11 +138,16 @@ define("TimePilot.Enemy", [
             enemy.posX += helpers.float(Math.sin(heading * (Math.PI / 180)) * levelData.velocity);
             enemy.posY -= helpers.float(Math.cos(heading * (Math.PI / 180)) * levelData.velocity);
 
-            if (tick % levelData.turnLimiter === 0) {
-                turnTo = helpers.findHeading(enemy, {
-                    posX: player.posX + ((gameArena.width / 2) - (levelData.width / 2)),
-                    posY: player.posY + ((gameArena.height / 2) - (levelData.height / 2))
-                });
+            this._checkInArena();
+
+            if (!this.removeMe && tick % levelData.turnLimiter === 0) {
+                turnTo = helpers.findHeading(
+                    this._data,
+                    {
+                        posX: player.posX + ((gameArena.width / 2) - (levelData.width / 2)),
+                        posY: player.posY + ((gameArena.height / 2) - (levelData.height / 2))
+                    }
+                );
                 turnTo = (Math.floor(turnTo / 22.5) * 22.5);
 
                 enemy.heading = helpers.rotateTo(turnTo, enemy.heading, 22.5);

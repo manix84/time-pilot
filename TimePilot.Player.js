@@ -111,10 +111,14 @@ define("TimePilot.Player", [
          */
         shoot: function () {
             if (this._data.isShooting) {
+                var levelData = this.getLevelData();
                 this._bulletFactory.create(
                     (this._gameArena.width / 2),
                     (this._gameArena.height / 2),
-                    this._data.heading
+                    this._data.heading,
+                    levelData.projectile.size,
+                    levelData.projectile.velocity,
+                    levelData.projectile.color
                 );
             }
         },
@@ -179,7 +183,7 @@ define("TimePilot.Player", [
             if (showHitboxes || invincible) {
                 if (invincible) {
                     color = "#FFD700";
-                    hitRadius = ((CONSTS.player.width + CONSTS.player.height) / 4) + (this._ticker % 3);
+                    hitRadius = ((CONSTS.player.width + CONSTS.player.height) / 4);
                 }
                 this._gameArena.drawCircle(
                     (this._gameArena.width / 2),
