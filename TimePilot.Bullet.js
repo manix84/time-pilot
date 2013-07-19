@@ -16,23 +16,16 @@ define("TimePilot.Bullet", [
      * @returns {Bullet Instance}
      */
 
-    var Bullet = function (gameArena, posX, posY, heading, newOptions) {
-        newOptions = newOptions || {};
-
+    var Bullet = function (gameArena, posX, posY, heading, size, velocity, color) {
         this._gameArena = gameArena;
 
         this._data = {};
         this._data.posX = posX;
         this._data.posY = posY;
         this._data.heading = heading;
-
-
-        this._data.options = {
-            size: newOptions.size || 4,
-            velocity: newOptions.velocity || 20,
-            color: newOptions.color || "#FFF"
-        };
-
+        this._data.size = size;
+        this._data.velocity = velocity;
+        this._data.color = color;
     };
 
     Bullet.prototype = {
@@ -87,8 +80,8 @@ define("TimePilot.Bullet", [
          */
         detectAreaExit: function (radius) {
             // return helpers.detectAreaExit({
-            //         posX: this._gameArena.posX + ((this._gameArena.width / 2) - (this._data.options.width / 2)),
-            //         posY: this._gameArena.posY + ((this._gameArena.height / 2) - (this._data.options.height / 2))
+            //         posX: this._gameArena.posX + ((this._gameArena.width / 2) - (this._data.size / 2)),
+            //         posY: this._gameArena.posY + ((this._gameArena.height / 2) - (this._data.size / 2))
             //     },
             //     this.getData(),
             //     radius
@@ -100,7 +93,7 @@ define("TimePilot.Bullet", [
          * @method
          */
         reposition: function () {
-            var velocity = this._data.options.velocity,
+            var velocity = this._data.velocity,
                 heading = this._data.heading;
 
             this._data.posX += helpers.float(Math.sin(heading * (Math.PI / 180)) * velocity);
@@ -112,8 +105,8 @@ define("TimePilot.Bullet", [
          * @method
          */
         render: function () {
-            var size = this._data.options.size,
-                color = this._data.options.color,
+            var size = this._data.size,
+                color = this._data.color,
                 context = this._gameArena.getContext();
 
             context.fillStyle = color;

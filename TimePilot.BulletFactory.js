@@ -26,9 +26,9 @@ define("TimePilot.BulletFactory", [
          * @param   {Number} posY    - Y coordinate to start from.
          * @param   {Number} heading - Heading to start from.
          */
-        create: function (posX, posY, heading) {
+        create: function (posX, posY, heading, size, velocity, color) {
             this._bullets.push(
-                new Bullet(this._gameArena, posX, posY, heading)
+                new Bullet(this._gameArena, posX, posY, heading, size, velocity, color)
             );
         },
 
