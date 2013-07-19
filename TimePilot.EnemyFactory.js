@@ -54,7 +54,7 @@ define("TimePilot.EnemyFactory", [
                 i = 0;
             for (i in this._enemies) {
                 if (this._enemies.hasOwnProperty(i)) {
-                    data.push(this._enemies[i].getData());
+                    data.pusvh(this._enemies[i].getData());
                 }
             }
             return data;
@@ -77,21 +77,6 @@ define("TimePilot.EnemyFactory", [
         },
 
         /**
-         * Run arena exit calculations on all entities.
-         * @method
-         */
-        detectArenaExit: function () {
-            var i;
-
-            for (i in this._enemies) {
-                if (this._enemies.hasOwnProperty(i) && this._enemies[i].detectAreaExit(500)) {
-                    this._despawn(i);
-                }
-            }
-
-        },
-
-        /**
          * If an entity declares it is to be removed, remove it.
          * @method
          */
@@ -101,9 +86,9 @@ define("TimePilot.EnemyFactory", [
             for (i in this._enemies) {
                 if (this._enemies.hasOwnProperty(i) && this._enemies[i].removeMe) {
                     this._despawn(i);
+                    console.log("despawning enemy " + i);
                 }
             }
-
         },
 
         /**

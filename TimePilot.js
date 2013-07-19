@@ -153,11 +153,8 @@ define("TimePilot", [
             }, 1);
 
             this._ticker.addSchedule(function () {
-                that._enemies.detectArenaExit();
-            }, 1);
-
-            this._ticker.addSchedule(function () {
                 that._enemies.cleanup();
+                that._bullets.cleanup();
                 that._props.cleanup();
             }, 1);
 

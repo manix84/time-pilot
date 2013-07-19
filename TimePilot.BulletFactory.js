@@ -58,6 +58,20 @@ define("TimePilot.BulletFactory", [
         },
 
         /**
+         * If an entity declares it is to be removed, remove it.
+         * @method
+         */
+        cleanup: function () {
+            var i;
+
+            for (i in this._bullets) {
+                if (this._bullets.hasOwnProperty(i) && this._bullets[i].removeMe) {
+                    this._despawn(i);
+                }
+            }
+        },
+
+        /**
          * Run all reposition logic.
          * @method
          */
@@ -67,9 +81,6 @@ define("TimePilot.BulletFactory", [
             for (i in this._bullets) {
                 if (this._bullets.hasOwnProperty(i)) {
                     this._bullets[i].reposition();
-                    if (this._bullets[i].detectAreaExit(500)) {
-                        this.despawn(i);
-                    }
                 }
             }
         },
@@ -93,7 +104,7 @@ define("TimePilot.BulletFactory", [
          * @method
          * @param   {Number} entityId - Index ID of entity you wish to remove.
          */
-        despawn: function (entityId) {
+        _despawn: function (entityId) {
             this._bullets.splice(entityId, 1);
         }
     };
