@@ -7,7 +7,6 @@ define("TimePilot.Player", [
     userOptions,
     helpers
 ) {
-
     /**
      * Player object.
      * @constructor
