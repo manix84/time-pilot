@@ -4,25 +4,38 @@ define("TimePilot.Menus.debug", [
     userOptions
 ) {
     var debug = {
-        showHitboxes: {
-            name: "Show Hit Boxes",
-            callback: function () {}
-        },
-        showSpriteCorners: {
-            name: "Show Sprite Corners",
-            callback: function () {}
-        },
-        showSpriteCenters: {
-            name: "Show Sprite Centers",
-            callback: function () {}
-        },
-        showPlayerCoordinates: {
-            name: "Show Player Coordinates",
-            callback: function () {}
-        },
-        invincible: {
-            name: "Invinicibility",
-            callback: function () {}
+        name: "Debug Options",
+        buttons: {
+            showHitboxes: {
+                name: "Show Hit Boxes",
+                type: "toggle",
+                setValue: function () {},
+                getValue: function () {}
+            },
+            showSpriteCorners: {
+                name: "Show Sprite Corners",
+                type: "toggle",
+                setValue: function () {},
+                getValue: function () {}
+            },
+            showSpriteCenters: {
+                name: "Show Sprite Centers",
+                type: "toggle",
+                setValue: function () {},
+                getValue: function () {}
+            },
+            showPlayerCoordinates: {
+                name: "Show Player Coordinates",
+                type: "toggle",
+                setValue: function () {},
+                getValue: function () {}
+            },
+            invincible: {
+                name: "Invinicibility",
+                type: "toggle",
+                setValue: function () {},
+                getValue: function () {}
+            }
         }
     };
 
