@@ -11,7 +11,7 @@ define("TimePilot", [
     "TimePilot.Hud",
     "TimePilot.ControlInterface",
 
-    "TimePilot.Keyboard1"
+    "TimePilot.Controller.Keyboard1"
 ], function (
     Ticker,
     GameArena,
