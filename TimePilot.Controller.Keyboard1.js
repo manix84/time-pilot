@@ -1,4 +1,4 @@
-define("TimePilot.Keyboard1", [
+define("TimePilot.Controller.Keyboard1", [
     "engine/helpers"
 ], function (
     helpers
