@@ -17,18 +17,22 @@ define("TimePilot.Controller.Keyboard1", [
 
                 switch (event.keyCode) {
                 case 37: // Left-Key
+                case 65: // "A"
                     event.preventDefault();
                     that._controlInterface.rotateToHeading(270);
                     break;
                 case 38: // Up-Key
+                case 87: // "W"
                     event.preventDefault();
                     that._controlInterface.rotateToHeading(0);
                     break;
                 case 39: // Right-Key
+                case 68: // "D"
                     event.preventDefault();
                     that._controlInterface.rotateToHeading(90);
                     break;
                 case 40: // Down-Key
+                case 83: // "S"
                     event.preventDefault();
                     that._controlInterface.rotateToHeading(180);
                     break;
@@ -64,6 +68,10 @@ define("TimePilot.Controller.Keyboard1", [
                 case 38: // Up-Key
                 case 39: // Right-Key
                 case 40: // Down-Key
+                case 65: // "A"
+                case 87: // "W"
+                case 68: // "D"
+                case 83: // "S"
                     event.preventDefault();
                     that._controlInterface.stop();
                     break;
