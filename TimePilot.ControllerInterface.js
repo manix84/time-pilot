@@ -1,16 +1,16 @@
-define("TimePilot.ControlInterface", [
+define("TimePilot.ControllerInterface", [
     "TimePilot.CONSTANTS"
 ], function (
     CONSTS
 ) {
 
     /**
-     * Create a ControlInterface instance
+     * Create a ControllerInterface instance
      * @constructor
      * @method
-     * @returns {ControlInterface instance}
+     * @returns {ControllerInterface instance}
      */
-    var ControlInterface = function (player, ticker, hud, gameArena) {
+    var ControllerInterface = function (player, ticker, hud, gameArena) {
         this._player = player;
         this._ticker = ticker;
         this._hud = hud;
@@ -19,7 +19,7 @@ define("TimePilot.ControlInterface", [
         this._rotationStep = (360 / CONSTS.player.rotationFrameCount);
     };
 
-    ControlInterface.prototype = {
+    ControllerInterface.prototype = {
         /**
          * Rotate to a specified heading, moving in steps.
          * @method
@@ -104,5 +104,5 @@ define("TimePilot.ControlInterface", [
 
     };
 
-    return ControlInterface;
+    return ControllerInterface;
 });

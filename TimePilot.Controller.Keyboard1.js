@@ -4,8 +4,8 @@ define("TimePilot.Controller.Keyboard1", [
     helpers
 ) {
 
-    var Keyboard1 = function (controlInterface) {
-        this._controlInterface = controlInterface;
+    var Keyboard1 = function (controllerInterface) {
+        this._controllerInterface = controllerInterface;
 
         this.connect();
     };
@@ -19,39 +19,39 @@ define("TimePilot.Controller.Keyboard1", [
                 case 37: // Left-Key
                 case 65: // "A"
                     event.preventDefault();
-                    that._controlInterface.rotateToHeading(270);
+                    that._controllerInterface.rotateToHeading(270);
                     break;
                 case 38: // Up-Key
                 case 87: // "W"
                     event.preventDefault();
-                    that._controlInterface.rotateToHeading(0);
+                    that._controllerInterface.rotateToHeading(0);
                     break;
                 case 39: // Right-Key
                 case 68: // "D"
                     event.preventDefault();
-                    that._controlInterface.rotateToHeading(90);
+                    that._controllerInterface.rotateToHeading(90);
                     break;
                 case 40: // Down-Key
                 case 83: // "S"
                     event.preventDefault();
-                    that._controlInterface.rotateToHeading(180);
+                    that._controllerInterface.rotateToHeading(180);
                     break;
                 case 32: // Space-Bar
                     event.preventDefault();
-                    that._controlInterface.startShooting();
+                    that._controllerInterface.startShooting();
                     break;
                 case 70: // "F"-Key
                     event.preventDefault();
-                    that._controlInterface.toggleFullScreen();
+                    that._controllerInterface.toggleFullScreen();
                     break;
                 case 27: // Escape-Key
                     event.preventDefault();
-                    that._controlInterface.openMenu();
-                    that._controlInterface.togglePause();
+                    that._controllerInterface.openMenu();
+                    that._controllerInterface.togglePause();
                     break;
                 case 80: // "P"-Key
                     event.preventDefault();
-                    that._controlInterface.togglePause();
+                    that._controllerInterface.togglePause();
                     break;
                 }
             }, this._keyboardLock);
@@ -73,11 +73,11 @@ define("TimePilot.Controller.Keyboard1", [
                 case 68: // "D"
                 case 83: // "S"
                     event.preventDefault();
-                    that._controlInterface.stop();
+                    that._controllerInterface.stop();
                     break;
                 case 32: // Space-Bar
                     event.preventDefault();
-                    that._controlInterface.stopShooting();
+                    that._controllerInterface.stopShooting();
                     break;
                 }
             }, this._keyboardLock);

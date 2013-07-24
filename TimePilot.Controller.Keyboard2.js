@@ -4,8 +4,8 @@ define("TimePilot.Controller.Keyboard2", [
     helpers
 ) {
 
-    var Keyboard2 = function (controlInterface) {
-        this._controlInterface = controlInterface;
+    var Keyboard2 = function (controllerInterface) {
+        this._controllerInterface = controllerInterface;
 
         this.connect();
     };
@@ -19,29 +19,29 @@ define("TimePilot.Controller.Keyboard2", [
                 case 37: // Left-Key
                 case 65: // "A"
                     event.preventDefault();
-                    that._controlInterface.rotateAntiClockwise();
+                    that._controllerInterface.rotateAntiClockwise();
                     break;
                 case 39: // Right-Key
                 case 68: // "D"
                     event.preventDefault();
-                    that._controlInterface.rotateClockwise();
+                    that._controllerInterface.rotateClockwise();
                     break;
                 case 32: // Space-Bar
                     event.preventDefault();
-                    that._controlInterface.startShooting();
+                    that._controllerInterface.startShooting();
                     break;
                 case 70: // "F"-Key
                     event.preventDefault();
-                    that._controlInterface.toggleFullScreen();
+                    that._controllerInterface.toggleFullScreen();
                     break;
                 case 27: // Escape-Key
                     event.preventDefault();
-                    that._controlInterface.openMenu();
-                    that._controlInterface.togglePause();
+                    that._controllerInterface.openMenu();
+                    that._controllerInterface.togglePause();
                     break;
                 case 80: // "P"-Key
                     event.preventDefault();
-                    that._controlInterface.togglePause();
+                    that._controllerInterface.togglePause();
                     break;
                 }
             }, this._keyboardLock);
@@ -59,11 +59,11 @@ define("TimePilot.Controller.Keyboard2", [
                 case 65: // "A"
                 case 68: // "D"
                     event.preventDefault();
-                    that._controlInterface.stop();
+                    that._controllerInterface.stop();
                     break;
                 case 32: // Space-Bar
                     event.preventDefault();
-                    that._controlInterface.stopShooting();
+                    that._controllerInterface.stopShooting();
                     break;
                 }
             }, this._keyboardLock);
