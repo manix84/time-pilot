@@ -9,9 +9,7 @@ define("TimePilot", [
     "TimePilot.BulletFactory",
     "TimePilot.PropFactory",
     "TimePilot.Hud",
-    "TimePilot.ControllerInterface",
-
-    "TimePilot.Controller.Keyboard1"
+    "TimePilot.ControllerInterface"
 ], function (
     Ticker,
     GameArena,
@@ -23,9 +21,7 @@ define("TimePilot", [
     BulletFactory,
     PropFactory,
     Hud,
-    ControllerInterface,
-
-    Controller
+    ControllerInterface
 ) {
 
     var TimePilot = function (element, options) {
@@ -81,7 +77,13 @@ define("TimePilot", [
 
 
             this._controllerInterface = new ControllerInterface(this._player, this._ticker, this._hud, this._gameArena);
-            this._currentController = new Controller(this._controllerInterface);
+            require([
+                "TimePilot.Controller." + userOptions.controllerType
+            ], function (
+                Controller
+            ) {
+                that._currentController = new Controller(that._controllerInterface);
+            });
 
             this._player.setData("level", 1);
             this._gameArena.renderText("Loading", 20, 10, {size: 30});
