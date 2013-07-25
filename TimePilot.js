@@ -9,9 +9,7 @@ define("TimePilot", [
     "TimePilot.BulletFactory",
     "TimePilot.PropFactory",
     "TimePilot.Hud",
-    "TimePilot.ControlInterface",
-
-    "TimePilot.Controller.Keyboard1"
+    "TimePilot.ControllerInterface"
 ], function (
     Ticker,
     GameArena,
@@ -23,9 +21,7 @@ define("TimePilot", [
     BulletFactory,
     PropFactory,
     Hud,
-    ControlInterface,
-
-    Controller
+    ControllerInterface
 ) {
 
     var TimePilot = function (element, options) {
@@ -80,8 +76,14 @@ define("TimePilot", [
             this._hud = new Hud(this._gameArena, this._player);
 
 
-            this._controlInterface = new ControlInterface(this._player, this._ticker, this._hud, this._gameArena);
-            this._currentController = new Controller(this._controlInterface);
+            this._controllerInterface = new ControllerInterface(this._player, this._ticker, this._hud, this._gameArena);
+            require([
+                "TimePilot.Controller." + userOptions.controllerType
+            ], function (
+                Controller
+            ) {
+                that._currentController = new Controller(that._controllerInterface);
+            });
 
             this._player.setData("level", 1);
             this._gameArena.renderText("Loading", 20, 10, {size: 30});
@@ -109,7 +111,6 @@ define("TimePilot", [
 
         _start: function () {
             var that = this;
-
 
             this._addRandomClouds();
 
@@ -172,16 +173,6 @@ define("TimePilot", [
         playGame: function () {
             if (!this._ticker.getState()) {
                 this._ticker.start();
-            }
-        },
-
-        _addListener: function (element, eventName, callback) {
-            if (typeof element.addEventListener === "function") {
-                element.addEventListener(eventName, callback, false);
-            } else if (!!element.attachEvent) {
-                element.attachEvent("on" + eventName, callback);
-            } else {
-                element["on" + eventName] = callback;
             }
         },
 

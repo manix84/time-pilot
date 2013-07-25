@@ -43,7 +43,7 @@ define("TimePilot.userOptions", function () {
          * Selected controller to be accessed on the controlInterface.
          * @type {String}
          */
-        controllerType: "keyboard1",
+        controllerType: "Keyboard1",
 
         /**
          * Set options in this object (userOptions), and store it so that the user doesn't have to set options each time
