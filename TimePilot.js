@@ -112,7 +112,6 @@ define("TimePilot", [
         _start: function () {
             var that = this;
 
-
             this._addRandomClouds();
 
             this._ticker.addSchedule(function () {
@@ -174,16 +173,6 @@ define("TimePilot", [
         playGame: function () {
             if (!this._ticker.getState()) {
                 this._ticker.start();
-            }
-        },
-
-        _addListener: function (element, eventName, callback) {
-            if (typeof element.addEventListener === "function") {
-                element.addEventListener(eventName, callback, false);
-            } else if (!!element.attachEvent) {
-                element.attachEvent("on" + eventName, callback);
-            } else {
-                element["on" + eventName] = callback;
             }
         },
 
