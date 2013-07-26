@@ -55,10 +55,7 @@ define("TimePilot", [
                 lives: 3
             },
             level: 1,
-            score: 0,
-
-
-            clouds: []
+            score: 0
         },
 
         _init: function () {
