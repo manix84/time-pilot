@@ -78,7 +78,7 @@ define("TimePilot.ControllerInterface", [
         },
 
         togglePause: function () {
-            if (this._ticker.getState()) {
+            if (this._ticker.isRunning) {
                 this._ticker.stop();
                 this._hud.pause();
             } else {

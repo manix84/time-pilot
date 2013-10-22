@@ -160,7 +160,7 @@ define("TimePilot", [
         },
 
         pauseGame: function () {
-            if (this._ticker.getState()) {
+            if (this._ticker.isRunning) {
                 window.console.info("Pausing");
                 this._ticker.stop();
                 this._hud.pause();
@@ -168,7 +168,7 @@ define("TimePilot", [
         },
 
         playGame: function () {
-            if (!this._ticker.getState()) {
+            if (!this._ticker.isRunning) {
                 this._ticker.start();
             }
         },
