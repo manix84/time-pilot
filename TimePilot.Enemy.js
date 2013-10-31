@@ -75,7 +75,7 @@ define("TimePilot.Enemy", [
         },
 
         /**
-         * Detect if this entity has collided with the entity.
+         * Detect if this entity has collided with the player.
          * @method
          * @returns {Boolean}
          */
