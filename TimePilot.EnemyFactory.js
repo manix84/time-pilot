@@ -54,7 +54,7 @@ define("TimePilot.EnemyFactory", [
                 i = 0;
             for (i in this._enemies) {
                 if (this._enemies.hasOwnProperty(i)) {
-                    data.pusvh(this._enemies[i].getData());
+                    data.push(this._enemies[i].getData());
                 }
             }
             return data;
