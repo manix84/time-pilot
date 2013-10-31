@@ -46,7 +46,7 @@ define("TimePilot.Controller.Keyboard1", [
                     break;
                 case 27: // Escape-Key
                     event.preventDefault();
-                    that._controllerInterface.openMenu();
+                    that._controllerInterface.toggleMenu();
                     that._controllerInterface.togglePause();
                     break;
                 case 80: // "P"-Key

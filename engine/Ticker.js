@@ -9,7 +9,7 @@ define("engine/Ticker", function () {
      * @method
      */
     var Ticker = function () {
-        this._ticks = 0;
+        this._frame = 0;
         this.isRunning = false;
         this._schedule = {};
         this._scheduleCount = 0;
@@ -17,7 +17,7 @@ define("engine/Ticker", function () {
 
     Ticker.prototype = {
         /**
-         * Start ticker.
+         * Start animation.
          * @method
          */
         start: function () {
@@ -26,7 +26,7 @@ define("engine/Ticker", function () {
         },
 
         /**
-         * Stop ticker.
+         * Stop animation.
          * @method
          */
         stop: function () {
@@ -40,13 +40,13 @@ define("engine/Ticker", function () {
         _step: function () {
             var that = this;
             requestAnimationFrame(function () {
-                that._ticks++;
+                that._frame++;
                 for (var eventId in that._schedule) {
                     if (
                         that._schedule.hasOwnProperty(eventId) &&
-                        (that._ticks % that._schedule[eventId].nthTick === 0)
+                        (that._frame % that._schedule[eventId].nthFrame === 0)
                     ) {
-                        that._schedule[eventId].callback(that._ticks);
+                        that._schedule[eventId].callback(that._frame);
                     }
                 }
                 if (that.isRunning) {
@@ -56,19 +56,19 @@ define("engine/Ticker", function () {
         },
 
         /**
-         * Add event callback to schedule. This runs a callback on each Nth tick.
+         * Add event callback to schedule. This runs a callback on each Nth frame.
          * @method
-         * @param   {Function} callback - Method to run on Nth ticks.
-         * @param   {Number}   nthTick  - Run this callback ever Nth tick.
+         * @param   {Function} callback - Method to run on Nth frames.
+         * @param   {Number}   nthFrame  - Run this callback ever Nth frame.
          * @returns {Number}   ID number for callback. Used in "removeSchedule".
          */
-        addSchedule: function (callback, nthTick) {
-            nthTick = nthTick;
+        addSchedule: function (callback, nthFrame) {
+            nthFrame = nthFrame;
 
             var eventId = ++this._scheduleCount;
             this._schedule[eventId] = {
                 callback: callback,
-                nthTick: nthTick
+                nthFrame: nthFrame
             };
 
             return eventId;
@@ -96,23 +96,23 @@ define("engine/Ticker", function () {
         },
 
         /**
-         * Reset ticks back to 0.
+         * Reset frame count back to 0.
          * @method
          * @returns {Boolean}
          */
         clearTicks: function () {
-            this._ticks = 0;
+            this._frame = 0;
 
-            return !this._ticks;
+            return !this._frame;
         },
 
         /**
-         * Get the current number of ticks that have occured since start.
+         * Get the current number of frames that have occured since start.
          * @method
          * @returns {Number}
          */
         getTicks: function () {
-            return this._ticks;
+            return this._frame;
         }
     };
 

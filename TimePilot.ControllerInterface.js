@@ -61,7 +61,7 @@ define("TimePilot.ControllerInterface", [
             this._player.setData("newHeading", false);
         },
 
-        openMenu: function () {
+        toggleMenu: function () {
             window.console.log("Opening Menu");
         },
 

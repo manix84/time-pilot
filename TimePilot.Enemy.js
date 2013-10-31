@@ -75,11 +75,11 @@ define("TimePilot.Enemy", [
         },
 
         /**
-         * Detect if this entity has collided with the entity.
+         * Detect if this entity has collided with the player.
          * @method
          * @returns {Boolean}
          */
-        detectPlayerCollision: function () {
+        detectCollision: function (objectPosX, objectPosY, objectHitRadius) {
             var levelData = this.getLevelData(),
                 player = this._player.getData();
 
