@@ -10,18 +10,18 @@ define("TimePilot.Bullet", [
      * Creates a bullet to add to render.
      * @constructor
      * @param   {Canvas Instance}   gameArena   - Canvas Instance.
-     * @param   {Number}            posX        - Spawning location on the X axis.
-     * @param   {Number}            posY        - Spawning location on the Y axis.
+     * @param   {Number}            originX     - Spawning location on the X axis.
+     * @param   {Number}            originY     - Spawning location on the Y axis.
      * @param   {Number}            heading     - Start heading (usually towards the player).
      * @returns {Bullet Instance}
      */
 
-    var Bullet = function (gameArena, posX, posY, heading, size, velocity, color) {
+    var Bullet = function (gameArena, originX, originY, heading, size, velocity, color) {
         this._gameArena = gameArena;
 
         this._data = {};
-        this._data.posX = posX;
-        this._data.posY = posY;
+        this._data.posX = originX;
+        this._data.posY = originY;
         this._data.heading = heading;
         this._data.size = size;
         this._data.velocity = velocity;
@@ -85,8 +85,8 @@ define("TimePilot.Bullet", [
             }
 
             this.removeMe = helpers.detectAreaExit({
-                    posX: this._gameArena.posX + ((this._gameArena.width / 2) - (this._data.size / 2)),
-                    posY: this._gameArena.posY + ((this._gameArena.height / 2) - (this._data.size / 2))
+                    posX: ((this._gameArena.width / 2) - (this._data.size / 2)),
+                    posY: ((this._gameArena.height / 2) - (this._data.size / 2))
                 }, {
                     posX: this._data.posX,
                     posY: this._data.posY

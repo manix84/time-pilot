@@ -9,9 +9,16 @@ define("TimePilot.Menus", [
 
     Menus.prototype = {
 
+        _renderButton: function () {
+            var context = this._gameArena.getContext();
+
+        },
+
         show: function () {},
 
-        hide: function () {}
+        hide: function () {},
+
+        render: function () {}
     };
 
     return Menus;

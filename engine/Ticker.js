@@ -1,13 +1,16 @@
 define("engine/Ticker", function () {
+    var requestAnimationFrame =
+            window.requestAnimationFrame ||
+            window.mozRequestAnimationFrame ||
+            window.webkitRequestAnimationFrame ||
+            window.msRequestAnimationFrame;
     /**
      * Creates an instance of a ticker object.
      * @method
-     * @param {Number} [interval=17] - Interval between ticks. Defaults to 60fps (17ms interval).
      */
-    var Ticker = function (interval) {
-        this._interval = interval || 17;
+    var Ticker = function () {
         this._ticks = 0;
-        this._isRunning = false;
+        this.isRunning = false;
         this._schedule = {};
         this._scheduleCount = 0;
     };
@@ -16,47 +19,56 @@ define("engine/Ticker", function () {
         /**
          * Start ticker.
          * @method
-         * @returns {Boolean}
          */
         start: function () {
-            var that = this;
-            this._theTicker = window.setInterval(function () {
-                that._ticks++;
-                for (var eventId in that._schedule) {
-                    if (that._schedule.hasOwnProperty(eventId) && that._ticks % that._schedule[eventId].nthTick === 0) {
-                        that._schedule[eventId].callback(that._ticks);
-                    }
-                }
-            }, this._interval);
-            this._isRunning = true;
-            return !!this._theTicker;
+            this.isRunning = true;
+            this._step();
         },
 
         /**
          * Stop ticker.
          * @method
-         * @returns {Boolean}
          */
         stop: function () {
-            window.clearInterval(this._theTicker);
-            this._isRunning = false;
-            return !this._theTicker;
+            this.isRunning = false;
+        },
+
+        /**
+         * Run a single animated step.
+         * @method
+         */
+        _step: function () {
+            var that = this;
+            requestAnimationFrame(function () {
+                that._ticks++;
+                for (var eventId in that._schedule) {
+                    if (
+                        that._schedule.hasOwnProperty(eventId) &&
+                        (that._ticks % that._schedule[eventId].nthTick === 0)
+                    ) {
+                        that._schedule[eventId].callback(that._ticks);
+                    }
+                }
+                if (that.isRunning) {
+                    that._step();
+                }
+            });
         },
 
         /**
          * Add event callback to schedule. This runs a callback on each Nth tick.
          * @method
-         * @param   {Function} callback  - Method to run on Nth ticks.
-         * @param   {Number}   [nthTick=interval] - Run this callback ever Nth tick.
+         * @param   {Function} callback - Method to run on Nth ticks.
+         * @param   {Number}   nthTick  - Run this callback ever Nth tick.
          * @returns {Number}   ID number for callback. Used in "removeSchedule".
          */
         addSchedule: function (callback, nthTick) {
-            nthTick = nthTick || this._interval;
+            nthTick = nthTick;
 
             var eventId = ++this._scheduleCount;
             this._schedule[eventId] = {
-                "callback": callback,
-                "nthTick": nthTick
+                callback: callback,
+                nthTick: nthTick
             };
 
             return eventId;
@@ -92,15 +104,6 @@ define("engine/Ticker", function () {
             this._ticks = 0;
 
             return !this._ticks;
-        },
-
-        /**
-         * Currently running state. 1 = running, 0 = stopped.
-         * @method
-         * @returns {Boolean}
-         */
-        getState: function () {
-            return this._isRunning;
         },
 
         /**
