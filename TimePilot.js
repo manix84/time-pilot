@@ -147,7 +147,7 @@ define("TimePilot", [
             }, 1);
 
             this._ticker.addSchedule(function () {
-                that._enemies.detectPlayerCollision();
+                that._enemies.detectCollision();
             }, 1);
 
             this._ticker.addSchedule(function () {

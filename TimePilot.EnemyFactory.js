@@ -64,16 +64,17 @@ define("TimePilot.EnemyFactory", [
          * Run player collision calculations on all entities.
          * @method
          */
-        detectPlayerCollision: function () {
+        detectCollision: function () {
             var i;
 
             for (i in this._enemies) {
-                if (this._enemies.hasOwnProperty(i) && this._enemies[i].detectPlayerCollision()) {
-                    this._enemies[i].kill();
-                    this._player.kill();
+                if (this._enemies.hasOwnProperty(i)) {
+                    if (this._enemies[i].detectCollision(this._player)) {
+                        this._enemies[i].kill();
+                        this._player.kill();
+                    }
                 }
             }
-
         },
 
         /**

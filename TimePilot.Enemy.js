@@ -79,7 +79,7 @@ define("TimePilot.Enemy", [
          * @method
          * @returns {Boolean}
          */
-        detectPlayerCollision: function () {
+        detectCollision: function (objectPosX, objectPosY, objectHitRadius) {
             var levelData = this.getLevelData(),
                 player = this._player.getData();
 
