@@ -64,7 +64,7 @@ define("TimePilot", [
             userOptions.enableDebug = this._options.debug;
 
             this._gameArena = new GameArena(this._container);
-            this._ticker = new Ticker(17);
+            this._ticker = new Ticker();
             this._bullets = new BulletFactory(this._gameArena);
 
             this._player = new Player(this._gameArena, this._ticker, this._bullets);
@@ -99,6 +99,7 @@ define("TimePilot", [
                 "./sprites/props/cloud2.png",
                 "./sprites/props/cloud3.png"
             ]);
+
             this._gameArena.preloadAssets(function (obj) {
                 if (!obj.remaining) {
                     that._start();
