@@ -1,3 +1,4 @@
+/* global define */
 define("engine/Ticker", function () {
     var requestAnimationFrame =
             window.requestAnimationFrame ||

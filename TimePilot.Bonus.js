@@ -1,3 +1,4 @@
+/* global define */
 define("TimePilot.Bonus", [
     "TimePilot.CONSTANTS",
     "engine/helpers"

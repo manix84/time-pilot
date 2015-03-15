@@ -1,3 +1,4 @@
+/* global define */
 define("TimePilot.ControllerInterface", [
     "TimePilot.CONSTANTS"
 ], function (

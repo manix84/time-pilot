@@ -1,3 +1,4 @@
+/* global define */
 define("TimePilot.Controller.Keyboard1", [
     "engine/helpers"
 ], function (

@@ -1,3 +1,4 @@
+/* global define */
 define("TimePilot.Player", [
     "TimePilot.CONSTANTS",
     "TimePilot.userOptions",

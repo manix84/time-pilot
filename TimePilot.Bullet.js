@@ -1,3 +1,4 @@
+/* global define */
 define("TimePilot.Bullet", [
     "TimePilot.CONSTANTS",
     "engine/helpers"

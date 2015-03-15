@@ -1,3 +1,4 @@
+/* global define */
 define("TimePilot.BulletFactory", [
     "engine/helpers",
     "TimePilot.Bullet"

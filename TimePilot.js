@@ -1,3 +1,4 @@
+/* global define */
 define("TimePilot", [
     "engine/Ticker",
     "engine/GameArena",

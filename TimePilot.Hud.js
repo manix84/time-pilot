@@ -1,3 +1,4 @@
+/* global define */
 define("TimePilot.Hud", [
     "TimePilot.userOptions"
 ], function (
