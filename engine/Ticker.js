@@ -30,8 +30,9 @@ define("engine/Ticker", function () {
          * Stop animation.
          * @method
          */
-        stop: function () {
+	stop: function (callback) {
             this.isRunning = false;
+	    this.killCallback = callback;
         },
 
         /**
@@ -52,6 +53,9 @@ define("engine/Ticker", function () {
                 }
                 if (that.isRunning) {
                     that._step();
+		} else if (that.killCallback) {
+		    that.killCallback();
+		    delete that.killCallback;
                 }
             });
         },

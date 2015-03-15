@@ -162,10 +162,13 @@ define("TimePilot", [
         },
 
         pauseGame: function () {
+	    var that = this;
             if (this._ticker.isRunning) {
                 window.console.info("Pausing");
-                this._ticker.stop();
-                this._hud.pause();
+		this._ticker.stop(function () {
+		    that._hud.pause();
+		});
+
             }
         },
 
