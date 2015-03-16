@@ -8,6 +8,7 @@ define("TimePilot.Player", [
     userOptions,
     helpers
 ) {
+    var playerConst = CONSTS.player;
     /**
      * Player object.
      * @constructor
@@ -21,11 +22,12 @@ define("TimePilot.Player", [
         this._bulletFactory = bulletFactory;
 
         this._playerSprite = new Image();
-        this._playerSprite.src = CONSTS.player.src;
+	this._playerSprite.src = playerConst.src;
 
-        this._rotationStep = (360 / CONSTS.player.rotationFrameCount);
+	this._rotationStep = (360 / playerConst.rotationFrameCount);
 
         this._data = {
+	    isAlive: true,
             isFiring: false,
             heading: 90,
             newHeading: false,
@@ -124,28 +126,12 @@ define("TimePilot.Player", [
         },
 
         /**
-         * Render the player.
-         * @method
-         */
-        _render: function () {
-            var player = CONSTS.player;
-            this._gameArena.renderSprite(this._playerSprite, {
-                frameWidth: player.width,
-                frameHeight: player.height,
-                frameX: Math.floor(this._data.heading / 22.5),
-                frameY: 0,
-                posX: ((this._gameArena.width / 2) - (player.width / 2)),
-                posY: ((this._gameArena.height / 2) - (player.height / 2))
-            });
-        },
-
-        /**
          * Render the death animation for the player.
          * @protected
          * @method
          */
-        _renderDeath: function () {
-            var explosionData = CONSTS.player.explosion,
+	_renderPlayerExplosion: function () {
+	    var explosionData = playerConst.explosion,
                 frameX = Math.floor((this._ticker.getTicks() - this._data.deathTick) / explosionData.frameLimiter);
 
             this._playerSprite.src = explosionData.src;
@@ -160,6 +146,7 @@ define("TimePilot.Player", [
             });
 
             if (frameX === explosionData.frames) {
+		this._data.isAlive = false;
                 this._data.removeMe = true;
             }
         },
@@ -169,26 +156,33 @@ define("TimePilot.Player", [
          * @method
          */
         render: function () {
-            var hitRadius = CONSTS.player.hitRadius,
-                color = "#F00",
+	    var color = "#F00",
                 invincible = (userOptions.enableDebug && userOptions.debug.invincible),
                 showHitboxes = (userOptions.enableDebug && userOptions.debug.showHitboxes);
 
-            if (!this._data.deathTick) {
-                this._render();
+	    if (!this._data.deathTick && this._data.isAlive) {
+		this._gameArena.renderSprite(this._playerSprite, {
+		    frameWidth: playerConst.width,
+		    frameHeight: playerConst.height,
+		    frameX: Math.floor(this._data.heading / 22.5),
+		    frameY: 0,
+		    posX: ((this._gameArena.width / 2) - (playerConst.width / 2)),
+		    posY: ((this._gameArena.height / 2) - (playerConst.height / 2))
+		});
             } else {
-                this._renderDeath();
+		this._renderPlayerExplosion();
             }
 
             if (showHitboxes || invincible) {
                 if (invincible) {
                     color = "#FFD700";
-                    hitRadius = ((CONSTS.player.width + CONSTS.player.height) / 4);
+		    playerConst.hitRadius = ((playerConst.width + playerConst.height) / 4);
                 }
                 this._gameArena.drawCircle(
                     (this._gameArena.width / 2),
                     (this._gameArena.height / 2),
-                    hitRadius, {
+		    playerConst.hitRadius,
+		    {
                         strokeColor: color
                     }
                 );
@@ -198,6 +192,8 @@ define("TimePilot.Player", [
         kill: function () {
             if (userOptions.enableDebug && userOptions.debug.invincible) {
                 return;
+	    } else if (!this._data.isAlive) {
+		return;
             }
             this._data.deathTick = this._ticker.getTicks();
         }
