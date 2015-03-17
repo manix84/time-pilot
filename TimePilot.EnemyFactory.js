@@ -20,7 +20,7 @@ define("TimePilot.EnemyFactory", [
         this._gameArena = gameArena;
         this._player = player;
         this._ticker = ticker;
-	this._level = level;
+        this._level = level;
 
         this._enemies = [];
     };
@@ -35,30 +35,30 @@ define("TimePilot.EnemyFactory", [
          */
         create: function (posX, posY, heading) {
             this._enemies.push(
-		new Enemy(this._gameArena, this._ticker, this._level, this._player, posX, posY, heading)
+                new Enemy(this._gameArena, this._ticker, this._level, this._player, posX, posY, heading)
             );
         },
 
         /**
-	 * Get current data for this level
-	 * @method
-	 * @param {String} [key] [description]
-	 * @returns {object}
-	 */
-	getLevelData: function (key) {
-	    var data = CONSTS.levels[this._level].enemies.basic;
-	    if (key) {
-		if (data[key]) {
-		    return data[key];
-		} else {
-		    return;
-		}
-	    } else {
-		return data;
-	    }
-	},
+         * Get current data for this level
+         * @method
+         * @param {String} [key] [description]
+         * @returns {object}
+         */
+        getLevelData: function (key) {
+            var data = CONSTS.levels[this._level].enemies.basic;
+            if (key) {
+                if (data[key]) {
+                    return data[key];
+                } else {
+                    return;
+                }
+            } else {
+                return data;
+            }
+        },
 
-	/**
+        /**
          * Get the current number of spawned entities.
          * @method
          * @returns {Number}
@@ -68,15 +68,15 @@ define("TimePilot.EnemyFactory", [
         },
 
         /**
-	 * Boolean flag reporting if there are spawns available for enemies.
-	 * @method
-	 * @returns {Boolean}
-	 */
-	isUnderLimit: function () {
-	    return this._enemies.length < this.getLevelData('spawnLimit');
-	},
+         * Boolean flag reporting if there are spawns available for enemies.
+         * @method
+         * @returns {Boolean}
+         */
+        isUnderLimit: function () {
+            return this._enemies.length < this.getLevelData('spawnLimit');
+        },
 
-	/**
+        /**
          * Return the data for all entities in an array.
          * @method
          * @returns {Array}
@@ -119,7 +119,7 @@ define("TimePilot.EnemyFactory", [
             for (i in this._enemies) {
                 if (this._enemies.hasOwnProperty(i) && this._enemies[i].removeMe) {
                     this._despawn(i);
-                    console.log("despawning enemy " + i);
+                    console.log("De-spawning enemy " + i);
                 }
             }
         },
@@ -153,12 +153,23 @@ define("TimePilot.EnemyFactory", [
         },
 
         /**
-         * Despawn specified entity.
+         * De-spawn specified entity.
          * @method
          * @param   {Number} entityId - Index ID of entity you wish to remove.
          */
         _despawn: function (entityId) {
             this._enemies.splice(entityId, 1);
+        },
+
+        /**
+         * Clear all enemies from memory.
+         */
+        clearAll: function () {
+            for (var i in this._enemies) {
+                if (this._enemies.hasOwnProperty(i)) {
+                    this._despawn(i);
+                }
+            }
         }
     };
 

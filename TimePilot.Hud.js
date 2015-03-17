@@ -58,6 +58,19 @@ define("TimePilot.Hud", [
                     color: "#FFF"
                 }
             );
+        },
+
+        restart: function () {
+            this._gameArena.renderText("Restarting",
+                (this._gameArena.width / 2),
+                (this._gameArena.height / 2),
+                {
+                    size: 50,
+                    align: "center",
+                    valign: "middle",
+                    color: "#FAA"
+                }
+            );
         }
 
 

@@ -30,7 +30,7 @@ define("TimePilot.Enemy", [
         this._data.posX = posX;
         this._data.posY = posY;
         this._data.heading = heading;
-	this._data.level = level || 1;
+        this._data.level = level || 1;
         this._data.deathTick = false;
         this._data.tickOffset = Math.floor(Math.random() * 100);
 

@@ -54,6 +54,10 @@ define("TimePilot.Controller.Keyboard1", [
                     event.preventDefault();
                     that._controllerInterface.togglePause();
                     break;
+                case 82: // "R"-Key
+                    event.preventDefault();
+                    that._controllerInterface.restart();
+                    break;
                 }
             }, this._keyboardLock);
 

@@ -22,12 +22,26 @@ define("TimePilot.Player", [
         this._bulletFactory = bulletFactory;
 
         this._playerSprite = new Image();
-	this._playerSprite.src = playerConst.src;
+        this._playerSprite.src = playerConst.src;
 
-	this._rotationStep = (360 / playerConst.rotationFrameCount);
+        this._rotationStep = (360 / playerConst.rotationFrameCount);
 
         this._data = {
-	    isAlive: true,
+            isAlive: true,
+            isFiring: false,
+            heading: 90,
+            newHeading: false,
+            posX: 0,
+            posY: 0,
+            exploading: 0,
+            continues: 0,
+            lives: 1,
+            score: 0,
+            level: 1
+        };
+
+        this._lastKnownGoodData = {
+            isAlive: true,
             isFiring: false,
             heading: 90,
             newHeading: false,
@@ -59,12 +73,26 @@ define("TimePilot.Player", [
          * @param   {Multi} value - Value to be set onto the key from the _data object.
          * @returns {Boolean} Success response.
          */
-        setData: function (key, value) {
+        setData: function (key, value, isLastKnownGood) {
             if (this._data[key] !== undefined) {
                 this._data[key] = value;
+                if (!!isLastKnownGood) {
+                    this._lastKnownGoodData[key] = value;
+                }
                 return (this._data[key] === value);
             } else {
                 return false;
+            }
+        },
+
+        /**
+         * Reset stored player data.
+         */
+        resetData: function () {
+            for (var property in this._lastKnownGoodData) {
+                if (this._lastKnownGoodData.hasOwnProperty(property)) {
+                    this._data[property] = this._lastKnownGoodData[property];
+                }
             }
         },
 
@@ -130,8 +158,8 @@ define("TimePilot.Player", [
          * @protected
          * @method
          */
-	_renderPlayerExplosion: function () {
-	    var explosionData = playerConst.explosion,
+        _renderPlayerExplosion: function () {
+            var explosionData = playerConst.explosion,
                 frameX = Math.floor((this._ticker.getTicks() - this._data.deathTick) / explosionData.frameLimiter);
 
             this._playerSprite.src = explosionData.src;
@@ -146,7 +174,7 @@ define("TimePilot.Player", [
             });
 
             if (frameX === explosionData.frames) {
-		this._data.isAlive = false;
+                this._data.isAlive = false;
                 this._data.removeMe = true;
             }
         },
@@ -156,33 +184,33 @@ define("TimePilot.Player", [
          * @method
          */
         render: function () {
-	    var color = "#F00",
+            var color = "#F00",
                 invincible = (userOptions.enableDebug && userOptions.debug.invincible),
                 showHitboxes = (userOptions.enableDebug && userOptions.debug.showHitboxes);
 
-	    if (!this._data.deathTick && this._data.isAlive) {
-		this._gameArena.renderSprite(this._playerSprite, {
-		    frameWidth: playerConst.width,
-		    frameHeight: playerConst.height,
-		    frameX: Math.floor(this._data.heading / 22.5),
-		    frameY: 0,
-		    posX: ((this._gameArena.width / 2) - (playerConst.width / 2)),
-		    posY: ((this._gameArena.height / 2) - (playerConst.height / 2))
-		});
+            if (!this._data.deathTick && this._data.isAlive) {
+                this._gameArena.renderSprite(this._playerSprite, {
+                    frameWidth: playerConst.width,
+                    frameHeight: playerConst.height,
+                    frameX: Math.floor(this._data.heading / 22.5),
+                    frameY: 0,
+                    posX: ((this._gameArena.width / 2) - (playerConst.width / 2)),
+                    posY: ((this._gameArena.height / 2) - (playerConst.height / 2))
+                });
             } else {
-		this._renderPlayerExplosion();
+                this._renderPlayerExplosion();
             }
 
             if (showHitboxes || invincible) {
                 if (invincible) {
                     color = "#FFD700";
-		    playerConst.hitRadius = ((playerConst.width + playerConst.height) / 4);
+                    playerConst.hitRadius = ((playerConst.width + playerConst.height) / 4);
                 }
                 this._gameArena.drawCircle(
                     (this._gameArena.width / 2),
                     (this._gameArena.height / 2),
-		    playerConst.hitRadius,
-		    {
+                    playerConst.hitRadius,
+                    {
                         strokeColor: color
                     }
                 );
@@ -192,8 +220,8 @@ define("TimePilot.Player", [
         kill: function () {
             if (userOptions.enableDebug && userOptions.debug.invincible) {
                 return;
-	    } else if (!this._data.isAlive) {
-		return;
+            } else if (!this._data.isAlive) {
+                return;
             }
             this._data.deathTick = this._ticker.getTicks();
         }

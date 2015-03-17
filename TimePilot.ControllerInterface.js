@@ -11,11 +11,15 @@ define("TimePilot.ControllerInterface", [
      * @method
      * @returns {ControllerInterface instance}
      */
-    var ControllerInterface = function (player, ticker, hud, gameArena) {
+    var ControllerInterface = function (player, ticker, hud, gameArena, commands) {
         this._player = player;
         this._ticker = ticker;
         this._hud = hud;
         this._gameArena = gameArena;
+        this._commands = {
+            restart: commands.restart || function () {},
+            pause: commands.pause || function () {}
+        }
 
         this._rotationStep = (360 / CONSTS.player.rotationFrameCount);
     };
@@ -79,14 +83,11 @@ define("TimePilot.ControllerInterface", [
         },
 
         togglePause: function () {
-	    var that = this;
-            if (this._ticker.isRunning) {
-		this._ticker.stop(function () {
-		    that._hud.pause();
-		});
-            } else {
-                this._ticker.start();
-            }
+            this._commands.pause();
+        },
+
+        restart: function () {
+            this._commands.restart();
         },
 
         /**
