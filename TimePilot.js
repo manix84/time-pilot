@@ -121,6 +121,7 @@ define("TimePilot", [
             this._gameArena.preloadAssets(function (obj) {
                 if (!obj.remaining) {
                     that._start();
+                    that._ticker.start();
                 }
             });
         },
