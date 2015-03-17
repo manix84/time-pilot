@@ -49,6 +49,7 @@ define("TimePilot.CONSTANTS", function () {
                         firingChance: 0.2,
                         hitRadius: 8,
                         canRotate: true,
+                        spawnLimit: 10,
                         projectile: {
                             velocity: 5,
                             size: 6,

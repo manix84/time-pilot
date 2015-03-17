@@ -45,22 +45,26 @@ define("TimePilot", [
             debug: false
         },
 
-        _data: {
-            theTicker: null,
-            player: {
+        _data: {},
+
+        _clearData: function () {
+            this._data.theTicker = null;
+            this._data.player = {
                 isFiring: false,
                 lastFiredTick: 0,
                 direction: false,
                 lastMovedTick: 0,
                 continues: 3,
                 lives: 3
-            },
-            level: 1,
-            score: 0
+            };
+            this._data.level = 1;
+            this._data.score = 0;
         },
 
         _init: function () {
             var that = this;
+
+            this._clearData();
 
             userOptions.enableDebug = this._options.debug;
 
@@ -69,12 +73,25 @@ define("TimePilot", [
             this._bullets = new BulletFactory(this._gameArena);
 
             this._player = new Player(this._gameArena, this._ticker, this._bullets);
-            this._enemies = new EnemyFactory(this._gameArena, this._ticker, this._player);
+            this._enemies = new EnemyFactory(this._gameArena, this._ticker, this._data.level, this._player);
             this._props = new PropFactory(this._gameArena, this._player);
             this._hud = new Hud(this._gameArena, this._player);
 
 
-            this._controllerInterface = new ControllerInterface(this._player, this._ticker, this._hud, this._gameArena);
+            this._controllerInterface = new ControllerInterface(
+                this._player,
+                this._ticker,
+                this._hud,
+                this._gameArena,
+                {
+                    restart: function () {
+                        that.restartGame();
+                    },
+                    pause: function () {
+                        that.pauseGame();
+                    }
+                }
+            );
             require([
                 "TimePilot.Controller." + userOptions.controllerType
             ], function (
@@ -91,10 +108,10 @@ define("TimePilot", [
                 "./sprites/player/player.png",
                 "./sprites/player/explosion.png",
                 "./sprites/enemies/basic/level1.png",
-                "./sprites/enemies/basic/level2.png",
-                "./sprites/enemies/basic/level3.png",
-                "./sprites/enemies/basic/level4.png",
-                "./sprites/enemies/basic/level5.png",
+                // "./sprites/enemies/basic/level2.png",
+                // "./sprites/enemies/basic/level3.png",
+                // "./sprites/enemies/basic/level4.png",
+                // "./sprites/enemies/basic/level5.png",
                 "./sprites/enemies/basic/explosion.png",
                 "./sprites/props/cloud1.png",
                 "./sprites/props/cloud2.png",
@@ -144,8 +161,8 @@ define("TimePilot", [
                 that._player.render();
 
                 that._props.render(2);
-                that._hud.render();
 
+                that._hud.render();
             }, 1);
 
             this._ticker.addSchedule(function () {
@@ -157,23 +174,37 @@ define("TimePilot", [
                 that._bullets.cleanup();
                 that._props.cleanup();
             }, 1);
-
-            this.playGame();
         },
 
-        pauseGame: function () {
-	    var that = this;
-            if (this._ticker.isRunning) {
+        restartGame: function () {
+            var that = this;
+            window.console.info("Restarting");
+            this._ticker.stop(function () {
+                that._hud.restart();
+
+                that._clearData();
+
+                that._ticker.clearTicks();
+                that._ticker.clearSchedule();
+                that._enemies.clearAll();
+                that._bullets.clearAll();
+                that._props.clearAll();
+                that._player.resetData();
+
+                that.setupGame();
+                that._ticker.start();
+            });
+        },
+
+        pauseGame: function (forcePause) {
+            var that = this;
+            if (this._ticker.isRunning || !!forcePause) {
                 window.console.info("Pausing");
-		this._ticker.stop(function () {
-		    that._hud.pause();
-		});
-
-            }
-        },
-
-        playGame: function () {
-            if (!this._ticker.isRunning) {
+                this._ticker.stop(function () {
+                    that._hud.pause();
+                });
+            } else {
+                window.console.info("Unpausing");
                 this._ticker.start();
             }
         },
@@ -193,7 +224,7 @@ define("TimePilot", [
             var data = {},
                 angle = 0,
                 randomTickInterval = (Math.floor(Math.random() * (1 - 200 + 1)) + 200);
-            if ((this._ticker.getTicks() % randomTickInterval === 0) && this._enemies.getCount() < 10)  {
+            if ((this._ticker.getTicks() % randomTickInterval === 0) && this._enemies.isUnderLimit()) {
                 // Enemies
                 data = helpers.getSpawnCoords(this._player.getData(), this._gameArena);
                 angle = helpers.findHeading({

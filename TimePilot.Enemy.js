@@ -21,7 +21,7 @@ define("TimePilot.Enemy", [
      * @returns {Enemy Instance}
      */
 
-    var Enemy = function (gameArena, ticker, player, posX, posY, heading) {
+    var Enemy = function (gameArena, ticker, level, player, posX, posY, heading) {
         this._gameArena = gameArena;
         this._player = player;
         this._ticker = ticker;
@@ -30,7 +30,7 @@ define("TimePilot.Enemy", [
         this._data.posX = posX;
         this._data.posY = posY;
         this._data.heading = heading;
-        this._data.level = 1;
+        this._data.level = level || 1;
         this._data.deathTick = false;
         this._data.tickOffset = Math.floor(Math.random() * 100);
 
@@ -66,6 +66,7 @@ define("TimePilot.Enemy", [
                 return false;
             }
         },
+
         /**
          * Get current data for this level
          * @method

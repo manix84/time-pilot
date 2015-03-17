@@ -110,6 +110,17 @@ define("TimePilot.BulletFactory", [
          */
         _despawn: function (entityId) {
             this._bullets.splice(entityId, 1);
+        },
+
+        /**
+         * Clear all bullets from memory.
+         */
+        clearAll: function () {
+            for (var i in this._bullets) {
+                if (this._bullets.hasOwnProperty(i)) {
+                    this._despawn(i);
+                }
+            }
         }
     };
 

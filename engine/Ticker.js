@@ -30,9 +30,9 @@ define("engine/Ticker", function () {
          * Stop animation.
          * @method
          */
-	stop: function (callback) {
+        stop: function (callback) {
             this.isRunning = false;
-	    this.killCallback = callback;
+            this.killCallback = callback || function () {};
         },
 
         /**
@@ -53,9 +53,9 @@ define("engine/Ticker", function () {
                 }
                 if (that.isRunning) {
                     that._step();
-		} else if (that.killCallback) {
-		    that.killCallback();
-		    delete that.killCallback;
+                } else if (that.killCallback) {
+                    that.killCallback();
+                    delete that.killCallback;
                 }
             });
         },

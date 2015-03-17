@@ -103,6 +103,17 @@ define("TimePilot.PropFactory", [
          */
         _despawn: function (entityId) {
             this._props.splice(entityId, 1);
+        },
+
+        /**
+         * Clear all props from memory.
+         */
+        clearAll: function () {
+            for (var i in this._props) {
+                if (this._props.hasOwnProperty(i)) {
+                    this._despawn(i);
+                }
+            }
         }
 
     };
