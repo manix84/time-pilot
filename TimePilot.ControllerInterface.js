@@ -1,3 +1,4 @@
+/* global define */
 define("TimePilot.ControllerInterface", [
     "TimePilot.CONSTANTS"
 ], function (
@@ -78,9 +79,11 @@ define("TimePilot.ControllerInterface", [
         },
 
         togglePause: function () {
+	    var that = this;
             if (this._ticker.isRunning) {
-                this._ticker.stop();
-                this._hud.pause();
+		this._ticker.stop(function () {
+		    that._hud.pause();
+		});
             } else {
                 this._ticker.start();
             }

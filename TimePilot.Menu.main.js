@@ -1,3 +1,4 @@
+/* global define */
 define("TimePilot.Menus.main", [
     "TimePilot.userOptions"
 ], function (

@@ -1,3 +1,4 @@
+/* global define */
 define("TimePilot.PropFactory", [
     "TimePilot.Prop"
 ], function (

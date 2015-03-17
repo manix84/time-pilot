@@ -1,3 +1,4 @@
+/* global define */
 define("TimePilot.userOptions", function () {
 
     var userOptions = {

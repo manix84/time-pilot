@@ -1,3 +1,4 @@
+/* global define */
 define("TimePilot.CONSTANTS", function () {
 
     var CONSTS = {

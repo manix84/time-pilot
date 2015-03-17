@@ -1,3 +1,4 @@
+/* global define */
 define("TimePilot.Prop", [
     "TimePilot.CONSTANTS",
     "engine/helpers"
