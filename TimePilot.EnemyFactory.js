@@ -1,9 +1,11 @@
 /* global define */
 define("TimePilot.EnemyFactory", [
     "engine/helpers",
+    "TimePilot.CONSTANTS",
     "TimePilot.Enemy"
 ], function (
     helpers,
+    CONSTS,
     Enemy
 ) {
     /**
@@ -14,10 +16,11 @@ define("TimePilot.EnemyFactory", [
      * @param   {Player Instance} player - Player Instance
      * @returns {Enemy Factory Instance}
      */
-    var EnemyFactory = function (gameArena, ticker, player) {
+    var EnemyFactory = function (gameArena, ticker, level, player) {
         this._gameArena = gameArena;
         this._player = player;
         this._ticker = ticker;
+	this._level = level;
 
         this._enemies = [];
     };
@@ -32,11 +35,30 @@ define("TimePilot.EnemyFactory", [
          */
         create: function (posX, posY, heading) {
             this._enemies.push(
-                new Enemy(this._gameArena, this._ticker, this._player, posX, posY, heading)
+		new Enemy(this._gameArena, this._ticker, this._level, this._player, posX, posY, heading)
             );
         },
 
         /**
+	 * Get current data for this level
+	 * @method
+	 * @param {String} [key] [description]
+	 * @returns {object}
+	 */
+	getLevelData: function (key) {
+	    var data = CONSTS.levels[this._level].enemies.basic;
+	    if (key) {
+		if (data[key]) {
+		    return data[key];
+		} else {
+		    return;
+		}
+	    } else {
+		return data;
+	    }
+	},
+
+	/**
          * Get the current number of spawned entities.
          * @method
          * @returns {Number}
@@ -46,6 +68,15 @@ define("TimePilot.EnemyFactory", [
         },
 
         /**
+	 * Boolean flag reporting if there are spawns available for enemies.
+	 * @method
+	 * @returns {Boolean}
+	 */
+	isUnderLimit: function () {
+	    return this._enemies.length < this.getLevelData('spawnLimit');
+	},
+
+	/**
          * Return the data for all entities in an array.
          * @method
          * @returns {Array}
