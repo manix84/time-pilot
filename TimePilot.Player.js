@@ -24,10 +24,14 @@ define("TimePilot.Player", [
         this._playerSprite = new Image();
         this._playerSprite.src = playerConst.src;
 
+        this._playerDeathSprite = new Image();
+        this._playerDeathSprite.src = playerConst.explosion.src;
+
         this._rotationStep = (360 / playerConst.rotationFrameCount);
 
         this._data = {
             isAlive: true,
+            deathTick: false,
             isFiring: false,
             heading: 90,
             newHeading: false,
@@ -42,6 +46,7 @@ define("TimePilot.Player", [
 
         this._lastKnownGoodData = {
             isAlive: true,
+            deathTick: false,
             isFiring: false,
             heading: 90,
             newHeading: false,
@@ -162,9 +167,7 @@ define("TimePilot.Player", [
             var explosionData = playerConst.explosion,
                 frameX = Math.floor((this._ticker.getTicks() - this._data.deathTick) / explosionData.frameLimiter);
 
-            this._playerSprite.src = explosionData.src;
-
-            this._gameArena.renderSprite(this._playerSprite, {
+            this._gameArena.renderSprite(this._playerDeathSprite, {
                 frameWidth: explosionData.width,
                 frameHeight: explosionData.height,
                 frameX: frameX,
