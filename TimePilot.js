@@ -192,7 +192,7 @@ define("TimePilot", [
                 that._props.clearAll();
                 that._player.resetData();
 
-                that.setupGame();
+                that._start();
                 that._ticker.start();
             });
         },
