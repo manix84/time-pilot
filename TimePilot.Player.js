@@ -22,10 +22,10 @@ define("TimePilot.Player", [
         this._bulletFactory = bulletFactory;
 
         this._playerSprite = new Image();
-        this._playerSprite.src = playerConst.src;
+        this._playerSprite.src = playerConst.sprite.src;
 
         this._playerDeathSprite = new Image();
-        this._playerDeathSprite.src = playerConst.explosion.src;
+        this._playerDeathSprite.src = playerConst.explosion.sprite.src;
 
         this._rotationStep = (360 / playerConst.rotationFrameCount);
 

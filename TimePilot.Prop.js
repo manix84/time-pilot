@@ -21,7 +21,7 @@ define("TimePilot.Prop", [
         this.removeMe = false;
 
         this._propSprite = new Image();
-        this._propSprite.src = this.getLevelData().src;
+        this._propSprite.src = this.getLevelData().sprite.src;
     };
 
     Prop.prototype = {

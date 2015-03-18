@@ -19,7 +19,7 @@ define("TimePilot.Bonus", [
         this._data.removeMe = false;
 
         this._bonusSprite = new Image();
-        this._bonusSprite.src = this.getLevelData().src;
+        this._bonusSprite.src = this.getLevelData().sprite.src;
     };
 
     Bonus.prototype = {
