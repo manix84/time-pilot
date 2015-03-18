@@ -2,10 +2,12 @@
 define("TimePilot.Player", [
     "TimePilot.CONSTANTS",
     "TimePilot.userOptions",
+    "engine/Sound",
     "engine/helpers"
 ], function (
     CONSTS,
     userOptions,
+    SoundEngine,
     helpers
 ) {
     var playerConst = CONSTS.player;
@@ -26,6 +28,8 @@ define("TimePilot.Player", [
 
         this._playerDeathSprite = new Image();
         this._playerDeathSprite.src = playerConst.explosion.sprite.src;
+
+        this._explosionSound = new SoundEngine(playerConst.explosion.sound.src);
 
         this._rotationStep = (360 / playerConst.rotationFrameCount);
 
@@ -226,6 +230,8 @@ define("TimePilot.Player", [
                 return;
             }
             this._data.deathTick = this._ticker.getTicks();
+            this._explosionSound.stop();
+            this._explosionSound.play();
         }
     };
 
