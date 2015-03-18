@@ -190,9 +190,7 @@ define("TimePilot.Player", [
          * @method
          */
         render: function () {
-            var color = "#F00",
-                invincible = (userOptions.enableDebug && userOptions.debug.invincible),
-                showHitboxes = (userOptions.enableDebug && userOptions.debug.showHitboxes);
+            var color = "#F00";
 
             if (!this._data.deathTick && this._data.isAlive) {
                 this._gameArena.renderSprite(this._playerSprite, {
@@ -207,8 +205,8 @@ define("TimePilot.Player", [
                 this._renderPlayerExplosion();
             }
 
-            if (showHitboxes || invincible) {
-                if (invincible) {
+            if (userOptions.enableDebug && (userOptions.debug.invincible || userOptions.debug.showHitboxes)) {
+                if (userOptions.debug.invincible) {
                     color = "#FFD700";
                     playerConst.hitRadius = ((playerConst.width + playerConst.height) / 4);
                 }
