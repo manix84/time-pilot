@@ -37,7 +37,7 @@ define("TimePilot.Enemy", [
         this.removeMe = false;
 
         this._enemySprite = new Image();
-        this._enemySprite.src = this.getLevelData().src;
+        this._enemySprite.src = this.getLevelData().sprite.src;
     };
 
     Enemy.prototype = {
@@ -184,7 +184,7 @@ define("TimePilot.Enemy", [
             var explosionData = this.getLevelData().explosion,
                 frameX = Math.floor((this._ticker.getTicks() - this._data.deathTick) / explosionData.frameLimiter);
 
-            this._enemySprite.src = explosionData.src;
+            this._enemySprite.src = explosionData.sprite.src;
 
             this._gameArena.renderSprite(this._enemySprite, {
                 frameWidth: explosionData.width,
