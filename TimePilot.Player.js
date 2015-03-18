@@ -128,7 +128,7 @@ define("TimePilot.Player", [
          * If newHeading is set, update the current heading by one step towards it.
          */
         rotate: function () {
-            if (this._data.newHeading !== false) {
+            if (this._data.isAlive && this._data.newHeading !== false) {
                 this._data.heading = helpers.rotateTo(this._data.newHeading, this._data.heading, this._rotationStep);
             }
         },
@@ -145,7 +145,7 @@ define("TimePilot.Player", [
          * Add bullets when this is tiggered.
          */
         shoot: function () {
-            if (this._data.isShooting) {
+            if (this._data.isAlive && this._data.isShooting) {
                 var levelData = this.getLevelData();
                 this._bulletFactory.create(
                     (this._gameArena.width / 2),

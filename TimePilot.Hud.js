@@ -41,6 +41,29 @@ define("TimePilot.Hud", [
                     {size: 15}
                 );
             }
+
+            if (!this._playerData.isAlive) {
+                this._gameArena.renderText("Game Over",
+                    (this._gameArena.width / 2),
+                    (this._gameArena.height / 2),
+                    {
+                        size: 30,
+                        align: "center",
+                        valign: "middle",
+                        color: "#FFF"
+                    }
+                );
+                this._gameArena.renderText("Press \"R\" to reset",
+                    (this._gameArena.width / 2),
+                    (this._gameArena.height / 2) + 30,
+                    {
+                        size: 20,
+                        align: "center",
+                        valign: "middle",
+                        color: "#FFF"
+                    }
+                );
+            }
         },
 
         /**
@@ -65,10 +88,10 @@ define("TimePilot.Hud", [
                 (this._gameArena.width / 2),
                 (this._gameArena.height / 2),
                 {
-                    size: 50,
+                    size: 30,
                     align: "center",
                     valign: "middle",
-                    color: "#FAA"
+                    color: "#FFF"
                 }
             );
         }
