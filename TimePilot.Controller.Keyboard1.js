@@ -67,16 +67,17 @@ define("TimePilot.Controller.Keyboard1", [
                 case 27: // Escape-Key
                 case 70: // "F"-Key
                 case 80: // "P"-Key
+                case 82: // "R"-Key
                     event.preventDefault();
                     break;
                 case 37: // Left-Key
                 case 38: // Up-Key
                 case 39: // Right-Key
                 case 40: // Down-Key
-                case 65: // "A"
-                case 87: // "W"
-                case 68: // "D"
-                case 83: // "S"
+                case 65: // "A"-Key
+                case 87: // "W"-Key
+                case 68: // "D"-Key
+                case 83: // "S"-Key
                     event.preventDefault();
                     that._controllerInterface.stop();
                     break;
