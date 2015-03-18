@@ -1,10 +1,14 @@
 /* global define */
 define("TimePilot.BulletFactory", [
-    "engine/helpers",
-    "TimePilot.Bullet"
+    "TimePilot.CONSTANTS",
+    "TimePilot.Bullet",
+    "engine/Sound",
+    "engine/helpers"
 ], function (
-    helpers,
-    Bullet
+    CONSTS,
+    Bullet,
+    SoundEngine,
+    helpers
 ) {
     /**
      * Construct an bullet factory for managing creation, movement, rendering and removal of bullets.
@@ -17,6 +21,7 @@ define("TimePilot.BulletFactory", [
         this._gameArena = gameArena;
 
         this._bullets = [];
+        this._bulletSound = new SoundEngine(CONSTS.levels[1].player.projectile.sound.src);
     };
 
     BulletFactory.prototype = {
@@ -34,6 +39,8 @@ define("TimePilot.BulletFactory", [
             this._bullets.push(
                 new Bullet(this._gameArena, originX, originY, heading, size, velocity, color)
             );
+            this._bulletSound.stop();
+            this._bulletSound.play();
         },
 
         /**
