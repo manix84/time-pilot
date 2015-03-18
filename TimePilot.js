@@ -106,6 +106,7 @@ define("TimePilot", [
             this._gameArena.registerAssets([
                 "./fonts/font.ttf",
                 "./sprites/player/player.png",
+                "./sounds/player/bullet.mp3",
                 "./sprites/player/explosion.png",
                 "./sprites/enemies/basic/level1.png",
                 // "./sprites/enemies/basic/level2.png",

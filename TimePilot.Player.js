@@ -2,10 +2,12 @@
 define("TimePilot.Player", [
     "TimePilot.CONSTANTS",
     "TimePilot.userOptions",
+    "engine/Sound",
     "engine/helpers"
 ], function (
     CONSTS,
     userOptions,
+    SoundEngine,
     helpers
 ) {
     var playerConst = CONSTS.player;
@@ -22,10 +24,12 @@ define("TimePilot.Player", [
         this._bulletFactory = bulletFactory;
 
         this._playerSprite = new Image();
-        this._playerSprite.src = playerConst.src;
+        this._playerSprite.src = playerConst.sprite.src;
 
         this._playerDeathSprite = new Image();
-        this._playerDeathSprite.src = playerConst.explosion.src;
+        this._playerDeathSprite.src = playerConst.explosion.sprite.src;
+
+        this._explosionSound = new SoundEngine(playerConst.explosion.sound.src);
 
         this._rotationStep = (360 / playerConst.rotationFrameCount);
 
@@ -146,14 +150,13 @@ define("TimePilot.Player", [
          */
         shoot: function () {
             if (this._data.isAlive && this._data.isShooting) {
-                var levelData = this.getLevelData();
                 this._bulletFactory.create(
                     (this._gameArena.width / 2),
                     (this._gameArena.height / 2),
                     this._data.heading,
-                    levelData.projectile.size,
-                    levelData.projectile.velocity,
-                    levelData.projectile.color
+                    playerConst.projectile.size,
+                    playerConst.projectile.velocity,
+                    playerConst.projectile.color
                 );
             }
         },
@@ -227,6 +230,8 @@ define("TimePilot.Player", [
                 return;
             }
             this._data.deathTick = this._ticker.getTicks();
+            this._explosionSound.stop();
+            this._explosionSound.play();
         }
     };
 

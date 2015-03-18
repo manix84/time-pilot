@@ -1,3 +1,4 @@
+/* global define */
 define("engine/GameArena", [
     "engine/helpers"
 ], function (
@@ -25,7 +26,7 @@ define("engine/GameArena", [
         this.posX = 0;
         this.posY = 0;
 
-        helpers.bind("webkitfullscreenchange mozfullscreenchange fullscreenchange", function () {
+        helpers.bind("fullscreenchange webkitfullscreenchange mozfullscreenchange msfullscreenchange", function () {
             that._isInFullScreen = !that._isInFullScreen;
             if (that._isInFullScreen) {
                 that.resize(screen.width, screen.height);

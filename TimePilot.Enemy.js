@@ -34,10 +34,11 @@ define("TimePilot.Enemy", [
         this._data.deathTick = false;
         this._data.tickOffset = Math.floor(Math.random() * 100);
 
+        this.hasDied = false;
         this.removeMe = false;
 
         this._enemySprite = new Image();
-        this._enemySprite.src = this.getLevelData().src;
+        this._enemySprite.src = this.getLevelData().sprite.src;
     };
 
     Enemy.prototype = {
@@ -187,7 +188,7 @@ define("TimePilot.Enemy", [
             var explosionData = this.getLevelData().explosion,
                 frameX = Math.floor((this._ticker.getTicks() - this._data.deathTick) / explosionData.frameLimiter);
 
-            this._enemySprite.src = explosionData.src;
+            this._enemySprite.src = explosionData.sprite.src;
 
             this._gameArena.renderSprite(this._enemySprite, {
                 frameWidth: explosionData.width,
@@ -228,6 +229,7 @@ define("TimePilot.Enemy", [
         },
 
         kill: function () {
+            this.hasDied = true;
             this._data.deathTick = this._ticker.getTicks();
         }
     };

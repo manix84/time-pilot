@@ -1,13 +1,16 @@
 /* global define */
 define("TimePilot.EnemyFactory", [
-    "engine/helpers",
     "TimePilot.CONSTANTS",
-    "TimePilot.Enemy"
+    "TimePilot.Enemy",
+    "engine/Sound",
+    "engine/helpers"
 ], function (
-    helpers,
     CONSTS,
-    Enemy
+    Enemy,
+    SoundEngine,
+    helpers
 ) {
+
     /**
      * Construct an enemy factory for managing creation, movement, rendering and removal of enemies.
      * @constructor
@@ -21,6 +24,8 @@ define("TimePilot.EnemyFactory", [
         this._player = player;
         this._ticker = ticker;
         this._level = level;
+
+        this._explosionSound = new SoundEngine(this.getLevelData().explosion.sound.src);
 
         this._enemies = [];
     };
@@ -101,8 +106,11 @@ define("TimePilot.EnemyFactory", [
 
             for (i in this._enemies) {
                 if (this._enemies.hasOwnProperty(i)) {
-                    if (this._enemies[i].detectCollision(this._player)) {
+                    if (!this._enemies[i].hasDied && this._enemies[i].detectCollision(this._player)) {
                         this._enemies[i].kill();
+                        this._explosionSound.stop();
+                        this._explosionSound.play();
+
                         this._player.kill();
                     }
                 }
