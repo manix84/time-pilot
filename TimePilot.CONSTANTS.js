@@ -68,6 +68,9 @@ define("TimePilot.CONSTANTS", function () {
                             sprite: {
                                 src: "./sprites/enemies/basic/explosion.png"
                             },
+                            sound: {
+                                src: "./sounds/enemies/basic/explosion.mp3"
+                            },
                             width: 32,
                             height: 32,
                             frames: 4,
