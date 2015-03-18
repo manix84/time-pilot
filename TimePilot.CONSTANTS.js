@@ -40,7 +40,10 @@ define("TimePilot.CONSTANTS", function () {
                     projectile: {
                         velocity: 7,
                         size: 4,
-                        color: "#FFF"
+                        color: "#FFF",
+                        sound: {
+                            src: "./sounds/player/bullet.mp3"
+                        }
                     }
                 },
                 enemies: {
