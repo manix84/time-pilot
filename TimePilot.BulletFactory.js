@@ -21,7 +21,7 @@ define("TimePilot.BulletFactory", [
         this._gameArena = gameArena;
 
         this._bullets = [];
-        this._bulletSound = new SoundEngine(CONSTS.levels[1].player.projectile.sound.src);
+        this._bulletSound = new SoundEngine(CONSTS.player.projectile.sound.src);
     };
 
     BulletFactory.prototype = {

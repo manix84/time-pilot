@@ -18,6 +18,14 @@ define("TimePilot.CONSTANTS", function () {
                 height: 32,
                 frames: 4,
                 frameLimiter: 8
+            },
+            projectile: {
+                velocity: 7,
+                size: 4,
+                color: "#FFF",
+                sound: {
+                    src: "./sounds/player/bullet.mp3"
+                }
             }
         },
         limits: {
@@ -36,15 +44,7 @@ define("TimePilot.CONSTANTS", function () {
                 },
                 player: {
                     velocity: 5,
-                    turnInterval: 5,
-                    projectile: {
-                        velocity: 7,
-                        size: 4,
-                        color: "#FFF",
-                        sound: {
-                            src: "./sounds/player/bullet.mp3"
-                        }
-                    }
+                    turnInterval: 5
                 },
                 enemies: {
                     basic: {

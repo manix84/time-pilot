@@ -34,6 +34,7 @@ define("TimePilot.Enemy", [
         this._data.deathTick = false;
         this._data.tickOffset = Math.floor(Math.random() * 100);
 
+        this.hasDied = false;
         this.removeMe = false;
 
         this._enemySprite = new Image();
@@ -228,6 +229,7 @@ define("TimePilot.Enemy", [
         },
 
         kill: function () {
+            this.hasDied = true;
             this._data.deathTick = this._ticker.getTicks();
         }
     };
