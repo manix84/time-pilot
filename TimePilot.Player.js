@@ -151,8 +151,8 @@ define("TimePilot.Player", [
         shoot: function () {
             if (this._data.isAlive && this._data.isShooting) {
                 this._bulletFactory.create(
-                    (this._gameArena.width / 2),
-                    (this._gameArena.height / 2),
+                    0,
+                    0,
                     this._data.heading,
                     playerConst.projectile.size,
                     playerConst.projectile.velocity,
@@ -175,8 +175,8 @@ define("TimePilot.Player", [
                 frameHeight: explosionData.height,
                 frameX: frameX,
                 frameY: 0,
-                posX: ((this._gameArena.width / 2) - (explosionData.width / 2)),
-                posY: ((this._gameArena.height / 2) - (explosionData.height / 2))
+                posX: -(explosionData.width / 2),
+                posY: -(explosionData.height / 2)
             });
 
             if (frameX === explosionData.frames) {
@@ -198,8 +198,8 @@ define("TimePilot.Player", [
                     frameHeight: playerConst.height,
                     frameX: Math.floor(this._data.heading / 22.5),
                     frameY: 0,
-                    posX: ((this._gameArena.width / 2) - (playerConst.width / 2)),
-                    posY: ((this._gameArena.height / 2) - (playerConst.height / 2))
+                    posX: -(playerConst.width / 2),
+                    posY: -(playerConst.height / 2)
                 });
             } else {
                 this._renderPlayerExplosion();
@@ -211,8 +211,8 @@ define("TimePilot.Player", [
                     playerConst.hitRadius = ((playerConst.width + playerConst.height) / 4);
                 }
                 this._gameArena.drawCircle(
-                    (this._gameArena.width / 2),
-                    (this._gameArena.height / 2),
+                    0,
+                    0,
                     playerConst.hitRadius,
                     {
                         strokeColor: color

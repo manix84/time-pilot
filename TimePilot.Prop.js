@@ -59,8 +59,8 @@ define("TimePilot.Prop", [
             }
 
             this.removeMe = helpers.detectAreaExit({
-                    posX: this._gameArena.posX + ((this._gameArena.width / 2) - (levelData.width / 2)),
-                    posY: this._gameArena.posY + ((this._gameArena.height / 2) - (levelData.height / 2))
+                    posX: this._gameArena.posX + (levelData.width / 2),
+                    posY: this._gameArena.posY + (levelData.height / 2)
                 }, {
                     posX: this._data.posX,
                     posY: this._data.posY
