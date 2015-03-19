@@ -38,6 +38,7 @@ define("TimePilot.Bullet", [
         /**
          * Get data for the player.
          * @method
+         * @param {String} [key] Key to return when requesting data. If no key is provided, it returns the object.
          * @returns {Object}
          */
         getData: function (key) {
