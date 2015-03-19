@@ -98,18 +98,18 @@ define("engine/GameArena", [
          * @returns {Canvas Context}
          */
         getContext: function (dimentions) {
-            var context;
-
-            switch (dimentions) {
-            case "3D":
-            case "3d":
-            case 3:
-                context = this._canvas.getContext("3d");
-                break;
-            default:
-                context = this._canvas.getContext("2d");
+            if (!this._context) {
+                switch (dimentions) {
+                case "3D":
+                case "3d":
+                case 3:
+                    this._context = this._canvas.getContext("3d");
+                    break;
+                default:
+                    this._context = this._canvas.getContext("2d");
+                }
             }
-            return context;
+            return this._context;
         },
 
         /**
@@ -167,6 +167,7 @@ define("engine/GameArena", [
          */
         clear: function () {
             this._canvas.width = this._canvas.width;
+            this._context.translate((this.width / 2), (this.height / 2));
         },
 
         /**

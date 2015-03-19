@@ -24,28 +24,28 @@ define("TimePilot.Hud", [
          */
         render: function () {
             this._gameArena.renderText(this._playerData.score,
-                20,
-                10,
+                (-(this._gameArena.width / 2) + 20),
+                (-(this._gameArena.height / 2) + 10),
                 { size: 30 }
             );
 
             if (userOptions.enableDebug && userOptions.debug.showPlayerCoordinates) {
                 this._gameArena.renderText(this._playerData.posX.toFixed(2) + " x " + this._playerData.posY.toFixed(2),
-                    20,
-                    40,
+                    (-(this._gameArena.width / 2) + 20),
+                    (-(this._gameArena.height / 2) + 40),
                     {size: 15}
                 );
                 this._gameArena.renderText(this._playerData.heading + "°",
-                    20,
-                    55,
+                    (-(this._gameArena.width / 2) + 20),
+                    (-(this._gameArena.height / 2) + 55),
                     {size: 15}
                 );
             }
 
             if (!this._playerData.isAlive) {
                 this._gameArena.renderText("Game Over",
-                    (this._gameArena.width / 2),
-                    (this._gameArena.height / 2),
+                    0,
+                    0,
                     {
                         size: 30,
                         align: "center",
@@ -54,8 +54,8 @@ define("TimePilot.Hud", [
                     }
                 );
                 this._gameArena.renderText("Press \"R\" to reset",
-                    (this._gameArena.width / 2),
-                    (this._gameArena.height / 2) + 30,
+                    0,
+                    30,
                     {
                         size: 20,
                         align: "center",
@@ -72,8 +72,8 @@ define("TimePilot.Hud", [
          */
         pause: function () {
             this._gameArena.renderText("Paused",
-                (this._gameArena.width / 2),
-                (this._gameArena.height / 2) + 25,
+                0,
+                25,
                 {
                     size: 25,
                     align: "center",
@@ -85,8 +85,8 @@ define("TimePilot.Hud", [
 
         restart: function () {
             this._gameArena.renderText("Restarting",
-                (this._gameArena.width / 2),
-                (this._gameArena.height / 2),
+                0,
+                0,
                 {
                     size: 30,
                     align: "center",

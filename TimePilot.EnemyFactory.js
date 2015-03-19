@@ -21,9 +21,9 @@ define("TimePilot.EnemyFactory", [
      */
     var EnemyFactory = function (gameArena, ticker, level, player) {
         this._gameArena = gameArena;
-        this._player = player;
         this._ticker = ticker;
         this._level = level;
+        this._player = player;
 
         this._explosionSound = new SoundEngine(this.getLevelData().explosion.sound.src);
 
@@ -102,11 +102,15 @@ define("TimePilot.EnemyFactory", [
          * @method
          */
         detectCollision: function () {
-            var i;
+            var playerData = this._player.getData();
 
-            for (i in this._enemies) {
-                if (this._enemies.hasOwnProperty(i)) {
-                    if (!this._enemies[i].hasDied && this._enemies[i].detectCollision(this._player)) {
+            for (var i in this._enemies) {
+                if (this._enemies.hasOwnProperty(i) && !this._enemies[i].hasDied) {
+                    if (this._enemies[i].detectCollision(
+                        playerData.posX,
+                        playerData.posY,
+                        CONSTS.player.hitRadius
+                    )) {
                         this._enemies[i].kill();
                         this._explosionSound.stop();
                         this._explosionSound.play();

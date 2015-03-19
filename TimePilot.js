@@ -224,23 +224,24 @@ define("TimePilot", [
 
         _spawnEntities: function () {
             var data = {},
-                angle = 0,
+                heading = 0,
                 randomTickInterval = (Math.floor(Math.random() * (1 - 200 + 1)) + 200);
             if ((this._ticker.getTicks() % randomTickInterval === 0) && this._enemies.isUnderLimit()) {
                 // Enemies
-                data = helpers.getSpawnCoords(this._player.getData(), this._gameArena);
-                angle = helpers.findHeading({
-                    posX: data.posX,
-                    posY: data.posY
-                }, {
-                    posX: this._player.getData().posX,
-                    posY: this._player.getData().posY
-                });
-                this._enemies.create(data.posX, data.posY, angle);
+                data = helpers.getSpawnCoords(this._player.getData());
+                heading = helpers.findHeading({
+                        posX: data.posX,
+                        posY: data.posY
+                    }, {
+                        posX: this._player.getData().posX,
+                        posY: this._player.getData().posY
+                    }
+                );
+                this._enemies.create(data.posX, data.posY, heading);
             }
             if (this._props.getCount() < 20) {
                 // Clouds
-                data = helpers.getSpawnCoords(this._player.getData(), this._gameArena);
+                data = helpers.getSpawnCoords(this._player.getData());
                 this._props.create(data.posX, data.posY);
             }
         }

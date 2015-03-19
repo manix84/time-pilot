@@ -83,24 +83,17 @@ define("TimePilot.Enemy", [
          * @returns {Boolean}
          */
         detectCollision: function (objectPosX, objectPosY, objectHitRadius) {
-            var levelData = this.getLevelData(),
-                player = this._player.getData();
+            var levelData = this.getLevelData();
 
-            if (!player.isAlive) {
-                return;
-            }
-            var hasExistedArea = helpers.detectCollision({
-                    posX: player.posX + ((this._gameArena.width / 2) - (levelData.width / 2)),
-                    posY: player.posY + ((this._gameArena.height / 2) - (levelData.height / 2)),
-                    radius: CONSTS.player.hitRadius
-                }, {
-                    posX: (this._data.posX - (CONSTS.player.width / 2)),
-                    posY: (this._data.posY - (CONSTS.player.height / 2)),
-                    radius: levelData.hitRadius
-                }
-            );
-
-            return hasExistedArea;
+            return helpers.detectCollision({
+                posX: objectPosX,
+                posY: objectPosY,
+                radius: objectHitRadius
+            }, {
+                posX: this._data.posX,
+                posY: this._data.posY,
+                radius: levelData.hitRadius
+            });
         },
 
         /**
@@ -118,8 +111,8 @@ define("TimePilot.Enemy", [
             }
 
             this.removeMe = helpers.detectAreaExit({
-                    posX: this._gameArena.posX + ((this._gameArena.width / 2) - (levelData.width / 2)),
-                    posY: this._gameArena.posY + ((this._gameArena.height / 2) - (levelData.height / 2))
+                    posX: this._gameArena.posX + ((levelData.width / 2)),
+                    posY: this._gameArena.posY + ((levelData.height / 2))
                 }, {
                     posX: this._data.posX,
                     posY: this._data.posY
@@ -150,8 +143,8 @@ define("TimePilot.Enemy", [
                 turnTo = helpers.findHeading(
                     this._data,
                     {
-                        posX: player.posX + ((gameArena.width / 2) - (levelData.width / 2)),
-                        posY: player.posY + ((gameArena.height / 2) - (levelData.height / 2))
+                        posX: player.posX + ((levelData.width / 2)),
+                        posY: player.posY + ((levelData.height / 2))
                     }
                 );
                 turnTo = (Math.floor(turnTo / 22.5) * 22.5);

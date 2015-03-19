@@ -1,9 +1,11 @@
 /* global define */
 define("TimePilot.Bullet", [
     "TimePilot.CONSTANTS",
+    "TimePilot.userOptions",
     "engine/helpers"
 ], function (
     CONSTS,
+    userOptions,
     helpers
 ) {
 
@@ -86,8 +88,8 @@ define("TimePilot.Bullet", [
             }
 
             this.removeMe = helpers.detectAreaExit({
-                    posX: ((this._gameArena.width / 2) - (this._data.size / 2)),
-                    posY: ((this._gameArena.height / 2) - (this._data.size / 2))
+                    posX: (this._data.size / 2),
+                    posY: (this._data.size / 2)
                 }, {
                     posX: this._data.posX,
                     posY: this._data.posY
@@ -125,6 +127,16 @@ define("TimePilot.Bullet", [
                 this._data.posY - (size / 2),
                 size, size
             );
+
+            if (userOptions.enableDebug && userOptions.debug.showHitboxes) {
+                this._gameArena.drawCircle(
+                    this._data.posX,
+                    this._data.posY,
+                    this._data.size, {
+                        strokeColor: "#0F0"
+                    }
+                );
+            }
         }
     };
 

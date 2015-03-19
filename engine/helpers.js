@@ -42,10 +42,9 @@ define("engine/helpers", function () {
          * @param   {Number} target.heading     - Heading of the target.
          * @param   {Number} target.posX        - X position of the target.
          * @param   {Number} target.posY        - Y position of the target.
-         * @param   {Canvas Instance} gameArena    - [description]
          * @returns {Object}
          */
-        getSpawnCoords: function (target, gameArena) {
+        getSpawnCoords: function (target) {
             var data = {},
                 spawnRadius = 450,
                 spawnArc = 80,
@@ -53,8 +52,8 @@ define("engine/helpers", function () {
 
             heading = ((target.heading - (spawnArc / 2)) + Math.floor(Math.random() * spawnArc));
 
-            data.posX = target.posX + (gameArena.width / 2);
-            data.posY = target.posY + (gameArena.height / 2);
+            data.posX = target.posX;
+            data.posY = target.posY;
 
             data.posX += this.float(Math.sin(heading * (Math.PI / 180)) * spawnRadius);
             data.posY -= this.float(Math.cos(heading * (Math.PI / 180)) * spawnRadius);
@@ -65,11 +64,15 @@ define("engine/helpers", function () {
         /**
          *
          * @method
-         * @param   {Object} targetA - Object containing posX and posY
-         * @param   {Object} targetB - Object containing posX and posY
+         * @param   {Object}  targetA  - Object containing posX and posY
+         * @param   {Object} [targetB] - Object containing posX and posY
          * @returns {Float} The number of degrees to turn (+/-) to be pointing towards targetA.
          */
         findHeading: function (targetA, targetB) {
+            targetB = targetB || {
+                posX: 0,
+                posY: 0
+            };
             var heading = Math.atan2(
                 (targetA.posX - targetB.posX),
                 (targetA.posY - targetB.posY)
