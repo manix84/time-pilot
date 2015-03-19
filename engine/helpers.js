@@ -30,7 +30,7 @@ define("engine/helpers", function () {
             } else if (direction < 0) {
                 currentAngle -= stepSize;
             }
-            currentAngle += currentAngle >= 360 ? -360 : (currentAngle < 0 ? 360 : 0);
+            currentAngle += ((currentAngle >= 360) ? -360 : ((currentAngle < 0) ? 360 : 0));
 
             return currentAngle;
         },
@@ -108,7 +108,7 @@ define("engine/helpers", function () {
                 dy = target.posY - origin.posY,
                 dist = target.radius + origin.radius;
 
-            return (dx * dx + dy * dy <= dist * dist);
+            return ((dx * dx) + (dy * dy) <= (dist * dist));
         },
 
         /**
@@ -127,7 +127,7 @@ define("engine/helpers", function () {
             var dx = radialCenter.posX - target.posX,
                 dy = radialCenter.posY - target.posY;
 
-            return (dx * dx + dy * dy >= radius * radius);
+            return ((dx * dx) + (dy * dy) >= (radius * radius));
         },
 
         /**
