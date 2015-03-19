@@ -108,7 +108,7 @@ define("TimePilot.EnemyFactory", [
                 playerData = this._player.getData();
 
             for (var i in this._enemies) {
-                if (this._enemies.hasOwnProperty(i) && !this._enemies[i].hasDied) {
+                if (this._enemies.hasOwnProperty(i) && this._enemies[i].isAlive && playerData.isAlive) {
                     if (this._enemies[i].detectCollision(
                         playerData.posX,
                         playerData.posY,
@@ -147,7 +147,6 @@ define("TimePilot.EnemyFactory", [
             for (i in this._enemies) {
                 if (this._enemies.hasOwnProperty(i) && this._enemies[i].removeMe) {
                     this._despawn(i);
-                    console.log("De-spawning enemy " + i);
                 }
             }
         },
