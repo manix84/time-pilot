@@ -31,8 +31,13 @@ define("TimePilot.Prop", [
          * @method
          * @returns {Object}
          */
-        getData: function () {
-            return this._data;
+        getData: function (key) {
+            if (!key) {
+                return this._data;
+            } else if (this._data.hasOwnProperty(key)) {
+                return this._data[key];
+            }
+            return;
         },
 
         /**
