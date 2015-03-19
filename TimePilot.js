@@ -164,8 +164,10 @@ define("TimePilot", [
 
             this._ticker.addSchedule(function () {
                 that._player.rotate();
+            }, 3);
+            this._ticker.addSchedule(function () {
                 that._player.shoot();
-            }, 4);
+            }, 5);
 
             this._ticker.addSchedule(function () {
                 that._gameArena.clear();

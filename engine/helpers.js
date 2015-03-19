@@ -30,7 +30,7 @@ define("engine/helpers", function () {
             } else if (direction < 0) {
                 currentAngle -= stepSize;
             }
-            currentAngle += currentAngle >= 360 ? -360 : (currentAngle < 0 ? 360 : 0);
+            currentAngle += ((currentAngle >= 360) ? -360 : ((currentAngle < 0) ? 360 : 0));
 
             return currentAngle;
         },
@@ -38,10 +38,10 @@ define("engine/helpers", function () {
         /**
          * Takes the player's position and heading then returns a random spawning location within that.
          * @method
-         * @param   {Object} target
-         * @param   {Number} target.heading     - Heading of the target.
-         * @param   {Number} target.posX        - X position of the target.
-         * @param   {Number} target.posY        - Y position of the target.
+         * @param     {Object} target
+         * @property  {Number} target.heading     - Heading of the target.
+         * @property  {Number} target.posX        - X position of the target.
+         * @property  {Number} target.posY        - Y position of the target.
          * @returns {Object}
          */
         getSpawnCoords: function (target) {
@@ -64,18 +64,24 @@ define("engine/helpers", function () {
         /**
          *
          * @method
-         * @param   {Object}  targetA  - Object containing posX and posY
-         * @param   {Object} [targetB] - Object containing posX and posY
-         * @returns {Float} The number of degrees to turn (+/-) to be pointing towards targetA.
+         * @param     {Object} target               - Object containing posX and posY
+         * @property  {Number} target.posX          - X position of the target.
+         * @property  {Number} target.posY          - Y position of the target.
+         * @property  {Number} target.heading       - Heading of the target.
+         * @param     {Object} [origin]             - Object containing posX and posY
+         * @property  {Number} [origin.posX]        - X position of the origin.
+         * @property  {Number} [origin.posY]        - Y position of the origin.
+         * @property  {Number} [origin.heading]     - Heading of the origin.
+         * @returns {Float} The number of degrees to turn (+/-) to be pointing towards target.
          */
-        findHeading: function (targetA, targetB) {
-            targetB = targetB || {
+        findHeading: function (target, origin) {
+            origin = origin || {
                 posX: 0,
                 posY: 0
             };
             var heading = Math.atan2(
-                (targetA.posX - targetB.posX),
-                (targetA.posY - targetB.posY)
+                (target.posX - origin.posX),
+                (target.posY - origin.posY)
             ) * (180 / Math.PI);
             return ((heading > 0) ? (360 - heading) : Math.abs(heading));
         },
@@ -83,31 +89,45 @@ define("engine/helpers", function () {
         /**
          * Detect if two object impact each other.
          * @method
-         * @param   {Object} targetA - Object containing posX, posY, and Radius.
-         * @param   {Object} targetB - Object containing posX, posY, and Radius.
+         * @param     {Object} target               - Object containing posX, posY, and Radius of the target.
+         * @property  {Number} target.posX          - X position of the target.
+         * @property  {Number} target.posY          - Y position of the target.
+         * @property  {Number} target.radius        - Radius of the target.
+         * @param     {Object} [origin]             - Object containing posX, posY and Radius of the origin.
+         * @property  {Number} [origin.posX]        - X position of the origin.
+         * @property  {Number} [origin.posY]        - Y position of the origin.
+         * @property  {Number} [origin.radius]      - Radius of the origin.
          * @returns {Boolean}
          */
-        detectCollision: function (targetA, targetB) {
-            var dx = targetA.posX - targetB.posX,
-                dy = targetA.posY - targetB.posY,
-                dist = targetA.radius + targetB.radius;
+        detectCollision: function (target, origin) {
+            origin = origin || {
+                posX: 0,
+                posY: 0
+            };
+            var dx = target.posX - origin.posX,
+                dy = target.posY - origin.posY,
+                dist = target.radius + origin.radius;
 
-            return (dx * dx + dy * dy <= dist * dist);
+            return ((dx * dx) + (dy * dy) <= (dist * dist));
         },
 
         /**
          * Detect if a point is within a specified distance of a radial center.
          * @method
-         * @param   {Object} radialCenter Object containing posX and posY.
-         * @param   {Object} target       Object containing posX and posY.
-         * @param   {Number} radius       Distance from the radial center to be considered inside.
-         * @returns {Boolean}
+         * @param     {Object} radialCenter         - Object containing posX and posY.
+         * @property  {Number} radialCenter.posX    - X position of the radialCenter.
+         * @property  {Number} radialCenter.posY    - Y position of the radialCenter.
+         * @param     {Object} target               - Object containing posX and posY.
+         * @property  {Number} target.posX          - X position of the target.
+         * @property  {Number} target.posY          - Y position of the target.
+         * @param     {Number} radius               - Distance from the radial center to be considered inside.
+         * @returns   {Boolean}
          */
         detectAreaExit: function (radialCenter, target, radius) {
             var dx = radialCenter.posX - target.posX,
                 dy = radialCenter.posY - target.posY;
 
-            return (dx * dx + dy * dy >= radius * radius);
+            return ((dx * dx) + (dy * dy) >= (radius * radius));
         },
 
         /**
