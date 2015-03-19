@@ -72,10 +72,26 @@ define("TimePilot", [
             this._ticker = new Ticker();
             this._bullets = new BulletFactory(this._gameArena);
 
-            this._player = new Player(this._gameArena, this._ticker, this._bullets);
-            this._enemies = new EnemyFactory(this._gameArena, this._ticker, this._data.level, this._player);
-            this._props = new PropFactory(this._gameArena, this._player);
-            this._hud = new Hud(this._gameArena, this._player);
+            this._player = new Player(
+                this._gameArena,
+                this._ticker,
+                this._bullets
+            );
+            this._enemies = new EnemyFactory(
+                this._gameArena,
+                this._ticker,
+                this._data.level,
+                this._player,
+                this._bullets
+            );
+            this._props = new PropFactory(
+                this._gameArena,
+                this._player
+            );
+            this._hud = new Hud(
+                this._gameArena,
+                this._player
+            );
 
 
             this._controllerInterface = new ControllerInterface(

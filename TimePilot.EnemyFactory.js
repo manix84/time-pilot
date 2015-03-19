@@ -17,13 +17,15 @@ define("TimePilot.EnemyFactory", [
      * @param   {Canvas Instance} gameArena - Canvas Instance
      * @param   {Ticker Instance} ticker - Ticker Instance
      * @param   {Player Instance} player - Player Instance
+     * @param   {bulletFactory Instance} bulletFactory - bulletFactory Instance
      * @returns {Enemy Factory Instance}
      */
-    var EnemyFactory = function (gameArena, ticker, level, player) {
+    var EnemyFactory = function (gameArena, ticker, level, player, bulletFactory) {
         this._gameArena = gameArena;
         this._ticker = ticker;
         this._level = level;
         this._player = player;
+        this._bullets = bulletFactory;
 
         this._explosionSound = new SoundEngine(this.getLevelData().explosion.sound.src);
 
@@ -102,7 +104,8 @@ define("TimePilot.EnemyFactory", [
          * @method
          */
         detectCollision: function () {
-            var playerData = this._player.getData();
+            var bullets = this._bullets.getData(),
+                playerData = this._player.getData();
 
             for (var i in this._enemies) {
                 if (this._enemies.hasOwnProperty(i) && !this._enemies[i].hasDied) {
@@ -116,6 +119,19 @@ define("TimePilot.EnemyFactory", [
                         this._explosionSound.play();
 
                         this._player.kill();
+                    }
+                    for (var j in bullets) {
+                        if (bullets.hasOwnProperty(j) &&
+                            this._enemies[i].detectCollision(
+                                bullets[j].posX + this._player.getData().posX,
+                                bullets[j].posY + this._player.getData().posY,
+                                CONSTS.player.projectile.size
+                            )
+                        ) {
+                            this._enemies[i].kill();
+                            this._explosionSound.stop();
+                            this._explosionSound.play();
+                        }
                     }
                 }
             }
