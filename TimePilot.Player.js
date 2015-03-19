@@ -185,7 +185,6 @@ define("TimePilot.Player", [
             });
 
             if (frameX === explosionData.frames) {
-                this._data.isAlive = false;
                 this._data.removeMe = true;
             }
         },
@@ -232,6 +231,7 @@ define("TimePilot.Player", [
             } else if (!this._data.isAlive) {
                 return;
             }
+            this._data.isAlive = false;
             this._data.deathTick = this._ticker.getTicks();
             this._explosionSound.stop();
             this._explosionSound.play();

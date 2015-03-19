@@ -34,7 +34,7 @@ define("TimePilot.Enemy", [
         this._data.deathTick = false;
         this._data.tickOffset = Math.floor(Math.random() * 100);
 
-        this.hasDied = false;
+        this.isAlive = true;
         this.removeMe = false;
 
         this._enemySprite = new Image();
@@ -232,7 +232,7 @@ define("TimePilot.Enemy", [
         },
 
         kill: function () {
-            this.hasDied = true;
+            this.isAlive = false;
             this._data.deathTick = this._ticker.getTicks();
             this._player.setData("score",
                 (this._player.getData("score") + this.getLevelData("deathValue"))
