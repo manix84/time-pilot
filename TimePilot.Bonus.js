@@ -44,6 +44,11 @@ define("TimePilot.Bonus", [
             this._checkInArena();
         },
 
+        /**
+         * Draw the bonus item sprite on the page.
+         * @method render
+         * @return {[type]}
+         */
         render: function () {
             var levelData = this.getLevelData();
             this._canvas.renderSprite(this._bonusSprite, {
