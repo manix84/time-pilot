@@ -51,6 +51,7 @@ define("TimePilot.CONSTANTS", function () {
                 },
                 enemies: {
                     basic: {
+                        deathValue: 100,
                         sprite: {
                             src: "./sprites/enemies/basic/level1.png"
                         },

@@ -48,12 +48,17 @@ define("TimePilot.Enemy", [
          * @method
          * @returns {Object}
          */
-        getData: function () {
-            return this._data;
+        getData: function (key) {
+            if (!key) {
+                return this._data;
+            } else if (this._data.hasOwnProperty(key)) {
+                return this._data[key];
+            }
+            return;
         },
 
         /**
-         * Set data in the entity's data object.
+         * Set data in the entity"s data object.
          * @method
          * @param   {String} key  - Key from _data object
          * @param   {Multi} value - Value to be set onto the key from the _data object.
@@ -73,8 +78,13 @@ define("TimePilot.Enemy", [
          * @method
          * @returns {object}
          */
-        getLevelData: function () {
-            return CONSTS.levels[this._data.level].enemies.basic;
+        getLevelData: function (key) {
+            if (!key) {
+                return CONSTS.levels[this._data.level].enemies.basic;
+            } else if (CONSTS.levels[this._data.level].enemies.basic.hasOwnProperty(key)) {
+                return CONSTS.levels[this._data.level].enemies.basic[key];
+            }
+            return;
         },
 
         /**
@@ -224,6 +234,9 @@ define("TimePilot.Enemy", [
         kill: function () {
             this.hasDied = true;
             this._data.deathTick = this._ticker.getTicks();
+            this._player.setData("score",
+                (this._player.getData("score") + this.getLevelData("deathValue"))
+            );
         }
     };
 
