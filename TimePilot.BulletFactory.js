@@ -13,13 +13,9 @@ define("TimePilot.BulletFactory", [
     /**
      * Construct an bullet factory for managing creation, movement, rendering and removal of bullets.
      * @constructor
-     * @param   {Canvas Instance} gameArena - Canvas Instance
-     * @param   {Player Instance} player - Player Instance
      * @returns {Bullet Factory Instance}
      */
-    var BulletFactory = function (gameArena) {
-        this._gameArena = gameArena;
-
+    var BulletFactory = function () {
         this._bullets = [];
         this._bulletSound = new SoundEngine(CONSTS.player.projectile.sound.src);
     };
@@ -37,7 +33,7 @@ define("TimePilot.BulletFactory", [
          */
         create: function (originX, originY, heading, size, velocity, color) {
             this._bullets.push(
-                new Bullet(this._gameArena, originX, originY, heading, size, velocity, color)
+                new Bullet(originX, originY, heading, size, velocity, color)
             );
             this._bulletSound.stop();
             this._bulletSound.play();

@@ -1,15 +1,17 @@
 /* global define */
 define("TimePilot.Prop", [
     "TimePilot.CONSTANTS",
+    "TimePilot.dataStore",
     "engine/helpers"
 ], function (
     CONSTS,
+    dataStore,
     helpers
 ) {
 
-    var Prop = function (gameArena, player, posX, posY) {
-        this._gameArena = gameArena;
-        this._player = player;
+    var Prop = function (posX, posY) {
+        this._gameArena = dataStore._gameArena;
+        this._player = dataStore._player;
 
         this._data = {};
         this._data.posX = posX;

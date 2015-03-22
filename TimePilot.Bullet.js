@@ -1,10 +1,12 @@
 /* global define */
 define("TimePilot.Bullet", [
     "TimePilot.CONSTANTS",
+    "TimePilot.dataStore",
     "TimePilot.userOptions",
     "engine/helpers"
 ], function (
     CONSTS,
+    dataStore,
     userOptions,
     helpers
 ) {
@@ -12,15 +14,14 @@ define("TimePilot.Bullet", [
     /**
      * Creates a bullet to add to render.
      * @constructor
-     * @param   {Canvas Instance}   gameArena   - Canvas Instance.
      * @param   {Number}            originX     - Spawning location on the X axis.
      * @param   {Number}            originY     - Spawning location on the Y axis.
      * @param   {Number}            heading     - Start heading (usually towards the player).
      * @returns {Bullet Instance}
      */
 
-    var Bullet = function (gameArena, originX, originY, heading, size, velocity, color) {
-        this._gameArena = gameArena;
+    var Bullet = function (originX, originY, heading, size, velocity, color) {
+        this._gameArena = dataStore._gameArena;
 
         this._data = {};
         this._data.posX = originX;

@@ -4,6 +4,7 @@ define("TimePilot", [
     "engine/GameArena",
     "engine/helpers",
     "TimePilot.CONSTANTS",
+    "TimePilot.dataStore",
     "TimePilot.userOptions",
     "TimePilot.Player",
     "TimePilot.EnemyFactory",
@@ -16,6 +17,7 @@ define("TimePilot", [
     GameArena,
     helpers,
     CONST,
+    dataStore,
     userOptions,
     Player,
     EnemyFactory,
@@ -35,6 +37,7 @@ define("TimePilot", [
                 this._options[property] = options[property];
             }
         }
+        dataStore._level = 1;
 
         this._init();
     };
@@ -47,79 +50,40 @@ define("TimePilot", [
 
         _data: {},
 
-        _clearData: function () {
-            this._data.theTicker = null;
-            this._data.player = {
-                isFiring: false,
-                lastFiredTick: 0,
-                direction: false,
-                lastMovedTick: 0,
-                continues: 3,
-                lives: 3
-            };
-            this._data.level = 1;
-            this._data.score = 0;
-        },
-
         _init: function () {
             var that = this;
 
-            this._clearData();
-
             userOptions.enableDebug = this._options.debug;
 
-            this._gameArena = new GameArena(this._container);
-            this._ticker = new Ticker();
-            this._bullets = new BulletFactory(this._gameArena);
-
-            this._player = new Player(
-                this._gameArena,
-                this._ticker,
-                this._bullets
-            );
-            this._enemies = new EnemyFactory(
-                this._gameArena,
-                this._ticker,
-                this._data.level,
-                this._player,
-                this._bullets
-            );
-            this._props = new PropFactory(
-                this._gameArena,
-                this._player
-            );
-            this._hud = new Hud(
-                this._gameArena,
-                this._player
-            );
+            dataStore._gameArena = new GameArena(this._container);
+            dataStore._ticker = new Ticker();
+            dataStore._bullets = new BulletFactory();
+            dataStore._player = new Player();
+            dataStore._enemies = new EnemyFactory();
+            dataStore._props = new PropFactory();
+            dataStore._hud = new Hud();
 
 
-            this._controllerInterface = new ControllerInterface(
-                this._player,
-                this._ticker,
-                this._hud,
-                this._gameArena,
-                {
-                    restart: function () {
-                        that.restartGame();
-                    },
-                    pause: function () {
-                        that.pauseGame();
-                    }
+            var controllerInterface = new ControllerInterface({
+                restart: function () {
+                    that.restartGame();
+                },
+                pause: function () {
+                    that.pauseGame();
                 }
-            );
+            });
             require([
                 "TimePilot.Controller." + userOptions.controllerType
             ], function (
                 Controller
             ) {
-                that._currentController = new Controller(that._controllerInterface);
+                dataStore._currentController = new Controller(controllerInterface);
             });
 
-            this._player.setData("level", 1);
-            this._gameArena.renderText("Loading", 20, 10, {size: 30});
+            dataStore._player.setData("level", 1);
+            dataStore._gameArena.renderText("Loading", 20, 10, {size: 30});
 
-            this._gameArena.registerAssets([
+            dataStore._gameArena.registerAssets([
                 "./fonts/font.ttf",
                 "./sprites/player/player.png",
                 "./sounds/player/bullet.mp3",
@@ -135,10 +99,10 @@ define("TimePilot", [
                 "./sprites/props/cloud3.png"
             ]);
 
-            this._gameArena.preloadAssets(function (obj) {
+            dataStore._gameArena.preloadAssets(function (obj) {
                 if (!obj.remaining) {
                     that._start();
-                    that._ticker.start();
+                    dataStore._ticker.start();
                 }
             });
         },
@@ -148,84 +112,84 @@ define("TimePilot", [
 
             this._addRandomClouds();
 
-            this._ticker.addSchedule(function () {
+            dataStore._ticker.addSchedule(function () {
                 that.pauseGame();
                 window.console.warn("Stopping: 50,000 ticks");
             }, 50000);
 
-            this._ticker.addSchedule(function () {
-                that._player.reposition();
-                that._enemies.reposition();
-                that._bullets.reposition();
-                that._props.reposition();
+            dataStore._ticker.addSchedule(function () {
+                dataStore._player.reposition();
+                dataStore._enemies.reposition();
+                dataStore._bullets.reposition();
+                dataStore._props.reposition();
 
                 that._spawnEntities();
             }, 1);
 
-            this._ticker.addSchedule(function () {
-                that._player.rotate();
+            dataStore._ticker.addSchedule(function () {
+                dataStore._player.rotate();
             }, 3);
-            this._ticker.addSchedule(function () {
-                that._player.shoot();
+            dataStore._ticker.addSchedule(function () {
+                dataStore._player.shoot();
             }, 5);
 
-            this._ticker.addSchedule(function () {
-                that._gameArena.clear();
-                that._gameArena.setBackgroundColor(CONST.levels[that._data.level].arena.backgroundColor);
+            dataStore._ticker.addSchedule(function () {
+                dataStore._gameArena.clear();
+                dataStore._gameArena.setBackgroundColor(CONST.levels[dataStore._level].arena.backgroundColor);
 
-                that._props.render(1);
+                dataStore._props.render(1);
 
-                that._bullets.render();
-                that._enemies.render();
+                dataStore._bullets.render();
+                dataStore._enemies.render();
 
-                that._player.render();
+                dataStore._player.render();
+                dataStore._explosions.render();
 
-                that._props.render(2);
+                dataStore._props.render(2);
 
-                that._hud.render();
+                dataStore._hud.render();
             }, 1);
 
-            this._ticker.addSchedule(function () {
-                that._enemies.detectCollision();
+            dataStore._ticker.addSchedule(function () {
+                dataStore._enemies.detectCollision();
             }, 1);
 
-            this._ticker.addSchedule(function () {
-                that._enemies.cleanup();
-                that._bullets.cleanup();
-                that._props.cleanup();
+            dataStore._ticker.addSchedule(function () {
+                dataStore._enemies.cleanup();
+                dataStore._bullets.cleanup();
+                dataStore._explosions.cleanup();
+                dataStore._props.cleanup();
             }, 1);
         },
 
         restartGame: function () {
             var that = this;
             window.console.info("Restarting");
-            this._ticker.stop(function () {
-                that._hud.restart();
+            dataStore._ticker.stop(function () {
+                dataStore._hud.restart();
 
-                that._clearData();
-
-                that._ticker.clearTicks();
-                that._ticker.clearSchedule();
-                that._enemies.clearAll();
-                that._bullets.clearAll();
-                that._props.clearAll();
-                that._player.resetData();
+                dataStore._ticker.clearTicks();
+                dataStore._ticker.clearSchedule();
+                dataStore._enemies.clearAll();
+                dataStore._bullets.clearAll();
+                dataStore._props.clearAll();
+                dataStore._player.resetData();
 
                 that._start();
-                that._ticker.start();
+                dataStore._ticker.start();
             });
         },
 
         pauseGame: function (forcePause) {
             var that = this;
-            if (this._ticker.isRunning || !!forcePause) {
+            if (dataStore._ticker.isRunning || !!forcePause) {
                 window.console.info("Pausing");
-                this._ticker.stop(function () {
-                    that._hud.pause();
+                dataStore._ticker.stop(function () {
+                    dataStore._hud.pause();
                 });
             } else {
                 window.console.info("Unpausing");
-                this._ticker.start();
+                dataStore._ticker.start();
             }
         },
 
@@ -233,9 +197,9 @@ define("TimePilot", [
             var i = 0;
             for (; i < 20; i++) {
                 // Clouds
-                this._props.create(
-                    Math.floor(Math.random() * this._gameArena.width),
-                    Math.floor(Math.random() * this._gameArena.height)
+                dataStore._props.create(
+                    Math.floor(Math.random() * dataStore._gameArena.width),
+                    Math.floor(Math.random() * dataStore._gameArena.height)
                 );
             }
         },
@@ -244,23 +208,23 @@ define("TimePilot", [
             var data = {},
                 heading = 0,
                 randomTickInterval = (Math.floor(Math.random() * (1 - 200 + 1)) + 200);
-            if ((this._ticker.getTicks() % randomTickInterval === 0) && this._enemies.isUnderLimit()) {
+            if ((dataStore._ticker.getTicks() % randomTickInterval === 0) && dataStore._enemies.isUnderLimit()) {
                 // Enemies
-                data = helpers.getSpawnCoords(this._player.getData());
+                data = helpers.getSpawnCoords(dataStore._player.getData());
                 heading = helpers.findHeading({
                         posX: data.posX,
                         posY: data.posY
                     }, {
-                        posX: this._player.getData().posX,
-                        posY: this._player.getData().posY
+                        posX: dataStore._player.getData().posX,
+                        posY: dataStore._player.getData().posY
                     }
                 );
-                this._enemies.create(data.posX, data.posY, heading);
+                dataStore._enemies.create(data.posX, data.posY, heading);
             }
-            if (this._props.getCount() < 20) {
+            if (dataStore._props.getCount() < 20) {
                 // Clouds
-                data = helpers.getSpawnCoords(this._player.getData());
-                this._props.create(data.posX, data.posY);
+                data = helpers.getSpawnCoords(dataStore._player.getData());
+                dataStore._props.create(data.posX, data.posY);
             }
         }
     };
