@@ -1,11 +1,13 @@
 /* global define */
 define("TimePilot.Player", [
     "TimePilot.CONSTANTS",
+    "TimePilot.dataStore",
     "TimePilot.userOptions",
     "engine/Sound",
     "engine/helpers"
 ], function (
     CONSTS,
+    dataStore,
     userOptions,
     SoundEngine,
     helpers
@@ -18,10 +20,10 @@ define("TimePilot.Player", [
      * @param   {Ticker Instance} ticker
      * @returns {Player Instance}
      */
-    var Player = function (gameArena, ticker, bulletFactory) {
-        this._gameArena = gameArena;
-        this._ticker = ticker;
-        this._bulletFactory = bulletFactory;
+    var Player = function () {
+        this._gameArena = dataStore._gameArena;
+        this._ticker = dataStore._ticker;
+        this._bulletFactory = dataStore._bullets;
 
         this._playerSprite = new Image();
         this._playerSprite.src = playerConst.sprite.src;

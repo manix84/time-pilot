@@ -1,11 +1,13 @@
 /* global define */
 define("TimePilot.EnemyFactory", [
     "TimePilot.CONSTANTS",
+    "TimePilot.dataStore",
     "TimePilot.Enemy",
     "engine/Sound",
     "engine/helpers"
 ], function (
     CONSTS,
+    dataStore,
     Enemy,
     SoundEngine,
     helpers
@@ -14,18 +16,12 @@ define("TimePilot.EnemyFactory", [
     /**
      * Construct an enemy factory for managing creation, movement, rendering and removal of enemies.
      * @constructor
-     * @param   {Canvas Instance} gameArena - Canvas Instance
-     * @param   {Ticker Instance} ticker - Ticker Instance
-     * @param   {Player Instance} player - Player Instance
-     * @param   {bulletFactory Instance} bulletFactory - bulletFactory Instance
      * @returns {Enemy Factory Instance}
      */
-    var EnemyFactory = function (gameArena, ticker, level, player, bulletFactory) {
-        this._gameArena = gameArena;
-        this._ticker = ticker;
-        this._level = level;
-        this._player = player;
-        this._bullets = bulletFactory;
+    var EnemyFactory = function () {
+        this._level = dataStore._level;
+        this._player = dataStore._player;
+        this._bullets = dataStore._bullets;
 
         this._explosionSound = new SoundEngine(this.getLevelData().explosion.sound.src);
 
@@ -42,7 +38,7 @@ define("TimePilot.EnemyFactory", [
          */
         create: function (posX, posY, heading) {
             this._enemies.push(
-                new Enemy(this._gameArena, this._ticker, this._level, this._player, posX, posY, heading)
+                new Enemy(posX, posY, heading)
             );
         },
 

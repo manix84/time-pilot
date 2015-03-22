@@ -1,8 +1,10 @@
 /* global define */
 define("TimePilot.ControllerInterface", [
-    "TimePilot.CONSTANTS"
+    "TimePilot.CONSTANTS",
+    "TimePilot.dataStore"
 ], function (
-    CONSTS
+    CONSTS,
+    dataStore
 ) {
 
     /**
@@ -11,11 +13,12 @@ define("TimePilot.ControllerInterface", [
      * @method
      * @returns {ControllerInterface instance}
      */
-    var ControllerInterface = function (player, ticker, hud, gameArena, commands) {
-        this._player = player;
-        this._ticker = ticker;
-        this._hud = hud;
-        this._gameArena = gameArena;
+    var ControllerInterface = function (commands) {
+        this._player = dataStore._player;
+        this._ticker = dataStore._ticker;
+        this._hud = dataStore._hud;
+        this._gameArena = dataStore._gameArena;
+
         this._commands = {
             restart: commands.restart || function () {},
             pause: commands.pause || function () {}

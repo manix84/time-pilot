@@ -1,20 +1,20 @@
 /* global define */
 define("TimePilot.Hud", [
-    "TimePilot.userOptions"
+    "TimePilot.userOptions",
+    "TimePilot.dataStore"
 ], function (
-    userOptions
+    userOptions,
+    dataStore
 ) {
 
     /**
      * Create a hud instance to be rendered on the gameArena
      * @constructor
-     * @param   {Canvas Instance} gameArena
-     * @param   {Player Instance} player
      * @returns {Hud Instance}
      */
-    var Hud = function (gameArena, player) {
-        this._gameArena = gameArena;
-        this._playerData = player.getData();
+    var Hud = function () {
+        this._gameArena = dataStore._gameArena;
+        this._playerData = dataStore._player.getData();
     };
 
     Hud.prototype = {

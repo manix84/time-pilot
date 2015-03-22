@@ -1,10 +1,12 @@
 /* global define */
 define("TimePilot.Enemy", [
     "TimePilot.CONSTANTS",
+    "TimePilot.dataStore",
     "TimePilot.userOptions",
     "engine/helpers"
 ], function (
     CONSTS,
+    dataStore,
     userOptions,
     helpers
 ) {
@@ -12,25 +14,22 @@ define("TimePilot.Enemy", [
     /**
      * Creates an enemy to add to the page.
      * @constructor
-     * @param   {Canvas Instance}   gameArena      - Canvas Instance.
-     * @param   {Ticker Instance}   ticker      - Ticker Instance.
-     * @param   {Player Instance}   player      - Player Instance.
      * @param   {Number}            posX        - Spawning location on the X axis.
      * @param   {Number}            posY        - Spawning location on the Y axis.
      * @param   {Number}            heading     - Start heading (usually towards the player).
      * @returns {Enemy Instance}
      */
 
-    var Enemy = function (gameArena, ticker, level, player, posX, posY, heading) {
-        this._gameArena = gameArena;
-        this._player = player;
-        this._ticker = ticker;
+    var Enemy = function (posX, posY, heading) {
+        this._gameArena = dataStore._gameArena;
+        this._player = dataStore._player;
+        this._ticker = dataStore._ticker;
 
         this._data = {};
         this._data.posX = posX;
         this._data.posY = posY;
         this._data.heading = heading;
-        this._data.level = level || 1;
+        this._data.level = dataStore._level || 1;
         this._data.deathTick = false;
         this._data.tickOffset = Math.floor(Math.random() * 100);
 
@@ -141,15 +140,15 @@ define("TimePilot.Enemy", [
                 player = this._player.getData(),
                 gameArena = this._gameArena,
                 tick = (this._ticker.getTicks() - this._data.tickOffset),
+                canTurn = (!this.removeMe && tick % levelData.turnLimiter === 0),
                 turnTo;
 
-            // Per-Enemy Data
             enemy.posX += helpers.float(Math.sin(heading * (Math.PI / 180)) * levelData.velocity);
             enemy.posY -= helpers.float(Math.cos(heading * (Math.PI / 180)) * levelData.velocity);
 
             this._checkInArena();
 
-            if (!this.removeMe && tick % levelData.turnLimiter === 0) {
+            if (canTurn) {
                 turnTo = helpers.findHeading(
                     this._data,
                     {
