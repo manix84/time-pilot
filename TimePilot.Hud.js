@@ -81,6 +81,16 @@ define("TimePilot.Hud", [
                     color: "#FFF"
                 }
             );
+            this._gameArena.renderText("Press \"P\" to continue",
+                0,
+                45,
+                {
+                    size: 20,
+                    align: "center",
+                    valign: "middle",
+                    color: "#FFF"
+                }
+            );
         },
 
         restart: function () {
