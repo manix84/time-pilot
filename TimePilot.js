@@ -156,7 +156,6 @@ define("TimePilot", [
             dataStore._ticker.addSchedule(function () {
                 dataStore._enemies.cleanup();
                 dataStore._bullets.cleanup();
-                dataStore._explosions.cleanup();
                 dataStore._props.cleanup();
             }, 1);
         },
