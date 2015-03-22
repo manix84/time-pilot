@@ -143,7 +143,6 @@ define("TimePilot", [
                 dataStore._enemies.render();
 
                 dataStore._player.render();
-                dataStore._explosions.render();
 
                 dataStore._props.render(2);
 
