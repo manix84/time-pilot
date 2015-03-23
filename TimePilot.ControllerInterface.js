@@ -34,7 +34,7 @@ define("TimePilot.ControllerInterface", [
          * @param   {Number} desiredHeading - Heading you wish to rotate to.
          */
         rotateToHeading: function (desiredHeading) {
-            this._player.setData("newHeading", desiredHeading);
+            this._player.setData("newHeading", (Math.floor(desiredHeading / 22.5) * 22.5));
         },
 
         /**
