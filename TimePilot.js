@@ -72,12 +72,18 @@ define("TimePilot", [
                     that.pauseGame();
                 }
             });
+
+            dataStore._currentController = [];
             require([
-                "TimePilot.Controller." + userOptions.controllerType
+                // "TimePilot.Controller." + userOptions.controllerType
+                "TimePilot.Controller.Keyboard1",
+                "TimePilot.Controller.Gamepad"
             ], function (
-                Controller
+                Keyboard,
+                Gamepad
             ) {
-                dataStore._currentController = new Controller(controllerInterface);
+                dataStore._currentController.push(new Keyboard(controllerInterface));
+                dataStore._currentController.push(new Gamepad(controllerInterface));
             });
 
             dataStore._player.setData("level", 1);
