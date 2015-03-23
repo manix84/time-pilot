@@ -14,15 +14,6 @@ define("TimePilot.Controller.Gamepad", [
 
     Gamepad.prototype = {
 
-        /**
-         * [_listener description]
-         * @method _listener
-         * @param  {Event Object}  event
-         */
-        _listener: function (event) {
-            this._gameLoop();
-        },
-
         _gameLoop: function () {
             var gamepads = navigator.getGamepads ? navigator.getGamepads() : (navigator.webkitGetGamepads ? navigator.webkitGetGamepads : []);
             for (var playerIndex = 0; playerIndex < gamepads.length; playerIndex++) {
@@ -43,6 +34,13 @@ define("TimePilot.Controller.Gamepad", [
                         this._controllerInterface.togglePause();
                     } else if (!gamepad.buttons[9].pressed) {
                         this._isPausePressed = false;
+                    }
+
+                    if (gamepad.buttons[8].pressed && !this._isRestartPressed) {
+                        this._isRestartPressed = true;
+                        this._controllerInterface.restart();
+                    } else if (!gamepad.buttons[8].pressed) {
+                        this._isRestartPressed = false;
                     }
 
                     if (gamepad.axes[0] || gamepad.axes[1]) {
@@ -72,7 +70,6 @@ define("TimePilot.Controller.Gamepad", [
          */
         disconnect: function () {
             window.console.log("Disconnecting");
-            window.removeEventListener("gamepadconnected", this._listener.bind(this), false);
         }
     };
 
