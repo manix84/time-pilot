@@ -7,40 +7,56 @@ define("TimePilot.Controller.Gamepad", [
 
     var Gamepad = function (controllerInterface) {
         this._controllerInterface = controllerInterface;
-        window.console.log("Gamepad Interface");
 
         this.connect();
     };
 
     Gamepad.prototype = {
+        /**
+         * Is the fire button pressed on the Gamepad.
+         * @type {Boolean}
+         */
+        _isFireButtonPressed: false,
+        /**
+         * Is the pause button pressed on the Gamepad.
+         * @type {Boolean}
+         */
+        _isPauseButtonPressed: false,
+        /**
+         * Is the restart button pressed on the Gamepad.
+         * @type {Boolean}
+         */
+        _isRestartButtonPressed: false,
 
+        /**
+         * Looping to check for gamepad data.
+         * @method _gameLoop
+         */
         _gameLoop: function () {
             var gamepads = navigator.getGamepads ? navigator.getGamepads() : (navigator.webkitGetGamepads ? navigator.webkitGetGamepads : []);
             for (var playerIndex = 0; playerIndex < gamepads.length; playerIndex++) {
                 var gamepad = gamepads[playerIndex];
                 if (gamepad) {
-                    if (gamepad.buttons[0].pressed && !this._isShooting) {
-                        this._isShooting = true;
+                    if (gamepad.buttons[0].pressed && !this._isFireButtonPressed) {
+                        this._isFireButtonPressed = true;
                         this._controllerInterface.startShooting();
-                        window.console.log("start shooting");
-                    } else if (!gamepad.buttons[0].pressed && this._isShooting) {
-                        this._isShooting = false;
+                    } else if (!gamepad.buttons[0].pressed && this._isFireButtonPressed) {
+                        this._isFireButtonPressed = false;
                         this._controllerInterface.stopShooting();
-                        window.console.log("stop shooting");
                     }
 
-                    if (gamepad.buttons[9].pressed && !this._isPausePressed) {
-                        this._isPausePressed = true;
+                    if (gamepad.buttons[9].pressed && !this._isPauseButtonPressed) {
+                        this._isPauseButtonPressed = true;
                         this._controllerInterface.togglePause();
                     } else if (!gamepad.buttons[9].pressed) {
-                        this._isPausePressed = false;
+                        this._isPauseButtonPressed = false;
                     }
 
-                    if (gamepad.buttons[8].pressed && !this._isRestartPressed) {
-                        this._isRestartPressed = true;
+                    if (gamepad.buttons[8].pressed && !this._isRestartButtonPressed) {
+                        this._isRestartButtonPressed = true;
                         this._controllerInterface.restart();
                     } else if (!gamepad.buttons[8].pressed) {
-                        this._isRestartPressed = false;
+                        this._isRestartButtonPressed = false;
                     }
 
                     if (gamepad.axes[0] || gamepad.axes[1]) {
@@ -56,20 +72,18 @@ define("TimePilot.Controller.Gamepad", [
         },
 
         /**
-         * [connect description]
+         * Connecting the Gamepad controller interface
          * @method connect
          */
         connect: function () {
-            window.console.log("Connecting");
             this._gameLoop();
         },
 
         /**
-         * [disconnect description]
+         * Disconnecting the Gamepad controller interface.
          * @method disconnect
          */
         disconnect: function () {
-            window.console.log("Disconnecting");
         }
     };
 
