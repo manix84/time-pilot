@@ -36,6 +36,13 @@ define("TimePilot.Controller.Gamepad", [
                         this._isPausePressed = false;
                     }
 
+                    if (gamepad.buttons[8].pressed && !this._isRestartPressed) {
+                        this._isRestartPressed = true;
+                        this._controllerInterface.restart();
+                    } else if (!gamepad.buttons[8].pressed) {
+                        this._isRestartPressed = false;
+                    }
+
                     if (gamepad.axes[0] || gamepad.axes[1]) {
                         var heading = helpers.findHeading({
                             posX: -(gamepad.axes[0]),
