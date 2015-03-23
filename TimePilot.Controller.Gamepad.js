@@ -14,15 +14,6 @@ define("TimePilot.Controller.Gamepad", [
 
     Gamepad.prototype = {
 
-        /**
-         * [_listener description]
-         * @method _listener
-         * @param  {Event Object}  event
-         */
-        _listener: function (event) {
-            this._gameLoop();
-        },
-
         _gameLoop: function () {
             var gamepads = navigator.getGamepads ? navigator.getGamepads() : (navigator.webkitGetGamepads ? navigator.webkitGetGamepads : []);
             for (var playerIndex = 0; playerIndex < gamepads.length; playerIndex++) {
@@ -72,7 +63,6 @@ define("TimePilot.Controller.Gamepad", [
          */
         disconnect: function () {
             window.console.log("Disconnecting");
-            window.removeEventListener("gamepadconnected", this._listener.bind(this), false);
         }
     };
 
