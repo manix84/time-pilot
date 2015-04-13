@@ -153,7 +153,13 @@ define("engine/helpers", function () {
             }
         },
 
-        unbind: function () {}
+        unbind: function () {},
+
+        getRandomColor: function () {
+            var colors = 16777215;
+
+            return "#" + Math.floor(Math.random() * colors).toString(16);
+        }
 
     };
 

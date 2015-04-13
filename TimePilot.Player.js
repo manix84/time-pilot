@@ -213,7 +213,7 @@ define("TimePilot.Player", [
 
             if (userOptions.enableDebug && (userOptions.debug.invincible || userOptions.debug.showHitboxes)) {
                 if (userOptions.debug.invincible) {
-                    color = "#FFD700";
+                    color = helpers.getRandomColor();
                     playerConst.hitRadius = ((playerConst.width + playerConst.height) / 4);
                 }
                 this._gameArena.drawCircle(
