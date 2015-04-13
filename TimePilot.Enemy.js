@@ -23,7 +23,7 @@ define("TimePilot.Enemy", [
     var Enemy = function (posX, posY, heading) {
         this._gameArena = dataStore._gameArena;
         this._player = dataStore._player;
-        this._ticker = dataStore._ticker;
+        this._gameTicker = dataStore._gameTicker;
 
         this._data = {};
         this._data.posX = posX;
@@ -139,7 +139,7 @@ define("TimePilot.Enemy", [
                 levelData = this.getLevelData(),
                 player = this._player.getData(),
                 gameArena = this._gameArena,
-                tick = (this._ticker.getTicks() - this._data.tickOffset),
+                tick = (this._gameTicker.getTicks() - this._data.tickOffset),
                 canTurn = (!this.removeMe && tick % levelData.turnLimiter === 0),
                 turnTo;
 
@@ -175,7 +175,7 @@ define("TimePilot.Enemy", [
                 frameWidth: levelData.width,
                 frameHeight: levelData.height,
                 frameX: Math.floor(this._data.heading / 22.5),
-                frameY: (Math.floor(this._ticker.getTicks() / 10) % 2),
+                frameY: (Math.floor(this._gameTicker.getTicks() / 10) % 2),
                 posX: (this._data.posX - this._player.getData().posX - (levelData.width / 2)),
                 posY: (this._data.posY - this._player.getData().posY - (levelData.height / 2))
             });
@@ -188,7 +188,7 @@ define("TimePilot.Enemy", [
          */
         _renderDeath: function () {
             var explosionData = this.getLevelData().explosion,
-                frameX = Math.floor((this._ticker.getTicks() - this._data.deathTick) / explosionData.frameLimiter);
+                frameX = Math.floor((this._gameTicker.getTicks() - this._data.deathTick) / explosionData.frameLimiter);
 
             this._enemySprite.src = explosionData.sprite.src;
 
@@ -232,7 +232,7 @@ define("TimePilot.Enemy", [
 
         kill: function () {
             this.isAlive = false;
-            this._data.deathTick = this._ticker.getTicks();
+            this._data.deathTick = this._gameTicker.getTicks();
             this._player.setData("score",
                 (this._player.getData("score") + this.getLevelData("deathValue"))
             );

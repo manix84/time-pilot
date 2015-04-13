@@ -56,7 +56,8 @@ define("TimePilot", [
             userOptions.enableDebug = this._options.debug;
 
             dataStore._gameArena = new GameArena(this._container);
-            dataStore._ticker = new Ticker();
+            dataStore._renderTicker = new Ticker();
+            dataStore._gameTicker = new Ticker();
             dataStore._bullets = new BulletFactory();
             dataStore._player = new Player();
             dataStore._enemies = new EnemyFactory();
@@ -108,7 +109,8 @@ define("TimePilot", [
             dataStore._gameArena.preloadAssets(function (obj) {
                 if (!obj.remaining) {
                     that._start();
-                    dataStore._ticker.start();
+                    dataStore._gameTicker.start();
+                    dataStore._renderTicker.start();
                 }
             });
         },
@@ -118,12 +120,12 @@ define("TimePilot", [
 
             this._addRandomClouds();
 
-            dataStore._ticker.addSchedule(function () {
+            dataStore._gameTicker.addSchedule(function () {
                 that.pauseGame();
                 window.console.warn("Stopping: 50,000 ticks");
             }, 50000);
 
-            dataStore._ticker.addSchedule(function () {
+            dataStore._gameTicker.addSchedule(function () {
                 dataStore._player.reposition();
                 dataStore._enemies.reposition();
                 dataStore._bullets.reposition();
@@ -132,14 +134,14 @@ define("TimePilot", [
                 that._spawnEntities();
             }, 1);
 
-            dataStore._ticker.addSchedule(function () {
+            dataStore._gameTicker.addSchedule(function () {
                 dataStore._player.rotate();
             }, 3);
-            dataStore._ticker.addSchedule(function () {
+            dataStore._gameTicker.addSchedule(function () {
                 dataStore._player.shoot();
             }, 5);
 
-            dataStore._ticker.addSchedule(function () {
+            dataStore._renderTicker.addSchedule(function () {
                 dataStore._gameArena.clear();
                 dataStore._gameArena.setBackgroundColor(CONST.levels[dataStore._level].arena.backgroundColor);
 
@@ -155,11 +157,11 @@ define("TimePilot", [
                 dataStore._hud.render();
             }, 1);
 
-            dataStore._ticker.addSchedule(function () {
+            dataStore._gameTicker.addSchedule(function () {
                 dataStore._enemies.detectCollision();
             }, 1);
 
-            dataStore._ticker.addSchedule(function () {
+            dataStore._gameTicker.addSchedule(function () {
                 dataStore._enemies.cleanup();
                 dataStore._bullets.cleanup();
                 dataStore._props.cleanup();
@@ -169,31 +171,29 @@ define("TimePilot", [
         restartGame: function () {
             var that = this;
             window.console.info("Restarting");
-            dataStore._ticker.stop(function () {
+            dataStore._gameTicker.stop(function () {
                 dataStore._hud.restart();
 
-                dataStore._ticker.clearTicks();
-                dataStore._ticker.clearSchedule();
+                dataStore._gameTicker.clearTicks();
+                dataStore._gameTicker.clearSchedule();
                 dataStore._enemies.clearAll();
                 dataStore._bullets.clearAll();
                 dataStore._props.clearAll();
                 dataStore._player.resetData();
 
                 that._start();
-                dataStore._ticker.start();
+                dataStore._gameTicker.start();
             });
         },
 
         pauseGame: function (forcePause) {
             var that = this;
-            if (dataStore._ticker.isRunning || !!forcePause) {
+            if (dataStore._gameTicker.isRunning || !!forcePause) {
                 window.console.info("Pausing");
-                dataStore._ticker.stop(function () {
-                    dataStore._hud.pause();
-                });
+                dataStore._gameTicker.stop();
             } else {
                 window.console.info("Unpausing");
-                dataStore._ticker.start();
+                dataStore._gameTicker.start();
             }
         },
 
@@ -212,7 +212,7 @@ define("TimePilot", [
             var data = {},
                 heading = 0,
                 randomTickInterval = (Math.floor(Math.random() * (1 - 200 + 1)) + 200);
-            if ((dataStore._ticker.getTicks() % randomTickInterval === 0) && dataStore._enemies.isUnderLimit()) {
+            if ((dataStore._gameTicker.getTicks() % randomTickInterval === 0) && dataStore._enemies.isUnderLimit()) {
                 // Enemies
                 data = helpers.getSpawnCoords(dataStore._player.getData());
                 heading = helpers.findHeading({

@@ -64,6 +64,28 @@ define("TimePilot.Hud", [
                     }
                 );
             }
+            if (!dataStore._gameTicker.isRunning) {
+                this._gameArena.renderText("Paused",
+                    0,
+                    25,
+                    {
+                        size: 25,
+                        align: "center",
+                        valign: "middle",
+                        color: "#FFF"
+                    }
+                );
+                this._gameArena.renderText("Press \"P\" to continue",
+                    0,
+                    45,
+                    {
+                        size: 20,
+                        align: "center",
+                        valign: "middle",
+                        color: "#FFF"
+                    }
+                );
+            }
         },
 
         /**
@@ -71,26 +93,6 @@ define("TimePilot.Hud", [
          * @method
          */
         pause: function () {
-            this._gameArena.renderText("Paused",
-                0,
-                25,
-                {
-                    size: 25,
-                    align: "center",
-                    valign: "middle",
-                    color: "#FFF"
-                }
-            );
-            this._gameArena.renderText("Press \"P\" to continue",
-                0,
-                45,
-                {
-                    size: 20,
-                    align: "center",
-                    valign: "middle",
-                    color: "#FFF"
-                }
-            );
         },
 
         restart: function () {

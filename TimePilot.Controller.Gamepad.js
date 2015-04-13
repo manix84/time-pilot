@@ -33,7 +33,9 @@ define("TimePilot.Controller.Gamepad", [
          * @method _gameLoop
          */
         _gameLoop: function () {
-            var gamepads = navigator.getGamepads ? navigator.getGamepads() : (navigator.webkitGetGamepads ? navigator.webkitGetGamepads : []);
+            var gamepads = navigator.getGamepads ? navigator.getGamepads() : (
+                    navigator.webkitGetGamepads ? navigator.webkitGetGamepads : []
+                );
             for (var playerIndex = 0; playerIndex < gamepads.length; playerIndex++) {
                 var gamepad = gamepads[playerIndex];
                 if (gamepad) {
