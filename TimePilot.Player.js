@@ -22,7 +22,7 @@ define("TimePilot.Player", [
      */
     var Player = function () {
         this._gameArena = dataStore._gameArena;
-        this._ticker = dataStore._ticker;
+        this._gameTicker = dataStore._gameTicker;
         this._bulletFactory = dataStore._bullets;
 
         this._playerSprite = new Image();
@@ -175,7 +175,7 @@ define("TimePilot.Player", [
          */
         _renderPlayerExplosion: function () {
             var explosionData = playerConst.explosion,
-                frameX = Math.floor((this._ticker.getTicks() - this._data.deathTick) / explosionData.frameLimiter);
+                frameX = Math.floor((this._gameTicker.getTicks() - this._data.deathTick) / explosionData.frameLimiter);
 
             this._gameArena.renderSprite(this._playerDeathSprite, {
                 frameWidth: explosionData.width,
@@ -234,7 +234,7 @@ define("TimePilot.Player", [
                 return;
             }
             this._data.isAlive = false;
-            this._data.deathTick = this._ticker.getTicks();
+            this._data.deathTick = this._gameTicker.getTicks();
             this._explosionSound.stop();
             this._explosionSound.play();
         }

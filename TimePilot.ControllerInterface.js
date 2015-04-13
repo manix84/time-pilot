@@ -15,7 +15,7 @@ define("TimePilot.ControllerInterface", [
      */
     var ControllerInterface = function (commands) {
         this._player = dataStore._player;
-        this._ticker = dataStore._ticker;
+        this._gameTicker = dataStore._gameTicker;
         this._hud = dataStore._hud;
         this._gameArena = dataStore._gameArena;
 
@@ -45,7 +45,7 @@ define("TimePilot.ControllerInterface", [
             var currentHeading = this._player.getData().heading,
                 desiredHeading = ((currentHeading + this._rotationStep) % 360);
 
-            this._player.setData("newHeading", desiredHeading);
+            this._player.setData("newHeading", (Math.floor(desiredHeading / 22.5) * 22.5));
         },
 
         /**
@@ -58,7 +58,7 @@ define("TimePilot.ControllerInterface", [
 
             desiredHeading = ((desiredHeading < 0) ? (360 + desiredHeading) : desiredHeading);
 
-            this._player.setData("newHeading", desiredHeading);
+            this._player.setData("newHeading", (Math.floor(desiredHeading / 22.5) * 22.5));
         },
 
         /**
