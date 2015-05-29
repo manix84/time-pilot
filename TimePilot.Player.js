@@ -45,7 +45,7 @@ define("TimePilot.Player", [
             posY: 0,
             exploading: 0,
             continues: 0,
-            lives: 1,
+            lives: 3,
             score: 0,
             level: 1
         };

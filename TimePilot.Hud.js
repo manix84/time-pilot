@@ -1,9 +1,11 @@
 /* global define */
 define("TimePilot.Hud", [
     "TimePilot.userOptions",
+    "TimePilot.CONSTANTS",
     "TimePilot.dataStore"
 ], function (
     userOptions,
+    CONSTS,
     dataStore
 ) {
 
@@ -15,6 +17,13 @@ define("TimePilot.Hud", [
     var Hud = function () {
         this._gameArena = dataStore._gameArena;
         this._playerData = dataStore._player.getData();
+
+        this._playerSprite = new Image();
+        this._playerSprite.src = CONSTS.player.sprite.src;
+        this._playerSprite.frameWidth = CONSTS.player.width;
+        this._playerSprite.frameHeight = CONSTS.player.height;
+        this._playerSprite.frameX = 0;
+        this._playerSprite.frameY = 0;
     };
 
     Hud.prototype = {
@@ -86,13 +95,19 @@ define("TimePilot.Hud", [
                     }
                 );
             }
-        },
 
-        /**
-         * Render paused message.
-         * @method
-         */
-        pause: function () {
+            if (this._playerData.lives) {
+                for (var i = 0; i < this._playerData.lives; ++i) {
+                    this._gameArena.renderSprite(this._playerSprite, {
+                        frameWidth: this._playerSprite.frameWidth,
+                        frameHeight: this._playerSprite.frameHeight,
+                        frameX: this._playerSprite.frameX,
+                        frameY: this._playerSprite.frameY,
+                        posX: ((this._gameArena.width / 2) - (CONSTS.player.width) - ((CONSTS.player.width + 10) * i) - 10),
+                        posY: -((this._gameArena.height / 2) - 10)
+                    });
+                }
+            }
         },
 
         restart: function () {
