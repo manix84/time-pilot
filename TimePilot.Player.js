@@ -50,20 +50,7 @@ define("TimePilot.Player", [
             level: 1
         };
 
-        this._lastKnownGoodData = {
-            isAlive: true,
-            deathTick: false,
-            isFiring: false,
-            heading: 90,
-            newHeading: false,
-            posX: 0,
-            posY: 0,
-            exploading: 0,
-            continues: 0,
-            lives: 1,
-            score: 0,
-            level: 1
-        };
+        this._dataDefaults = helpers.cloneObject(this._data);
     };
 
     Player.prototype = {
@@ -93,7 +80,7 @@ define("TimePilot.Player", [
             if (this._data[key] !== undefined) {
                 this._data[key] = value;
                 if (!!isLastKnownGood) {
-                    this._lastKnownGoodData[key] = value;
+                    this._dataDefaults[key] = value;
                 }
                 return (this._data[key] === value);
             } else {
@@ -105,11 +92,7 @@ define("TimePilot.Player", [
          * Reset stored player data.
          */
         resetData: function () {
-            for (var property in this._lastKnownGoodData) {
-                if (this._lastKnownGoodData.hasOwnProperty(property)) {
-                    this._data[property] = this._lastKnownGoodData[property];
-                }
-            }
+            this._data = helpers.cloneObject(this._dataDefaults);
         },
 
         /**

@@ -153,12 +153,40 @@ define("engine/helpers", function () {
             }
         },
 
+        /**
+         * Unbind event.
+         * @method unbind
+         * @unused
+         */
         unbind: function () {},
 
+        /**
+         * Generate a random HEX colour value.
+         * @method getRandomColor
+         * @return {String} #0-F(6)
+         */
         getRandomColor: function () {
             var colors = 16777215;
 
             return "#" + Math.floor(Math.random() * colors).toString(16);
+        },
+
+        /**
+         * Clone the object passed in and respond with a copy. Note that this is not a linked object.
+         * @method cloneObject
+         * @param  {Object}    oldObject The object you want to be cloned.
+         * @return {Object}    The new cloned object.
+         */
+        cloneObject: function (oldObject) {
+            var newObject = {};
+            for (var prop in oldObject) {
+                if (typeof oldObject[prop] !== "object") {
+                    newObject[prop] = oldObject[prop];
+                } else {
+                    newObject[prop] = this.cloneObject(oldObject[prop]);
+                }
+            }
+            return newObject;
         }
 
     };
