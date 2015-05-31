@@ -280,30 +280,30 @@ define("engine/GameArena", [
          * @param  {Number} posX
          * @param  {Number} posY
          * @param  {Number} radius
-         * @param  {Object} newOptions
-         * @enum   {String} newOptions.color
-         * @enum   {String} newOptions.strokeColor
-         * @enum   {Number} newOptions.strokeWidth
+         * @param  {Object} options
+         * @enum   {String} options.backgroundColor
+         * @enum   {String} options.borderColor
+         * @enum   {Number} options.borderWidth
          */
-        drawCircle: function (posX, posY, radius, newOptions) {
+        drawCircle: function (posX, posY, radius, options) {
             posX = posX || 0;
             posY = posY || 0;
 
-            var options = {
-                color: newOptions.color || "transparent",
-                strokeColor: newOptions.strokeColor || false,
-                strokeWidth: newOptions.strokeWidth || 1
+            options = {
+                backgroundColor: options.backgroundColor || "transparent",
+                borderColor: options.borderColor || false,
+                borderWidth: options.borderWidth || 1
             },
             context = this.getContext();
 
             context.beginPath();
             context.arc(posX, posY, radius, 0, 2 * Math.PI, false);
-            context.fillStyle = options.color;
+            context.fillStyle = options.backgroundColor;
             context.fill();
 
-            if (options.strokeColor) {
-                context.lineWidth = options.strokeWidth;
-                context.strokeStyle = options.strokeColor;
+            if (options.borderColor) {
+                context.lineWidth = options.borderWidth;
+                context.strokeStyle = options.borderColor;
                 context.stroke();
             }
         },

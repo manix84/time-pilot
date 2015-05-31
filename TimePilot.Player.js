@@ -204,7 +204,7 @@ define("TimePilot.Player", [
                     0,
                     playerConst.hitRadius,
                     {
-                        strokeColor: color
+                        borderColor: color
                     }
                 );
             }
