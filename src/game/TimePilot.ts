@@ -54,10 +54,10 @@ TimePilot.prototype = {
     dataStore._hud = new Hud();
 
     var controllerInterface = new ControllerInterface({
-      restart: function () {
+      restart: () => {
         that.restartGame();
       },
-      pause: function () {
+      pause: () => {
         that.pauseGame();
       },
     });
@@ -85,7 +85,7 @@ TimePilot.prototype = {
       "/sprites/props/cloud3.png",
     ]);
 
-    dataStore._gameArena.preloadAssets(function (obj) {
+    dataStore._gameArena.preloadAssets((obj) => {
       if (!obj.remaining) {
         that._start();
         dataStore._gameTicker.start();
@@ -99,12 +99,12 @@ TimePilot.prototype = {
 
     this._addRandomClouds();
 
-    dataStore._gameTicker.addSchedule(function () {
+    dataStore._gameTicker.addSchedule(() => {
       that.pauseGame();
       window.console.warn("Stopping: 50,000 ticks");
     }, 50000);
 
-    dataStore._gameTicker.addSchedule(function () {
+    dataStore._gameTicker.addSchedule(() => {
       dataStore._player.reposition();
       dataStore._enemies.reposition();
       dataStore._bullets.reposition();
@@ -113,14 +113,14 @@ TimePilot.prototype = {
       that._spawnEntities();
     }, 1);
 
-    dataStore._gameTicker.addSchedule(function () {
+    dataStore._gameTicker.addSchedule(() => {
       dataStore._player.rotate();
     }, 3);
-    dataStore._gameTicker.addSchedule(function () {
+    dataStore._gameTicker.addSchedule(() => {
       dataStore._player.shoot();
     }, 5);
 
-    dataStore._renderTicker.addSchedule(function () {
+    dataStore._renderTicker.addSchedule(() => {
       dataStore._gameArena.clear();
       dataStore._gameArena.setBackgroundColor(
         CONST.levels[dataStore._level].arena.backgroundColor
@@ -138,11 +138,11 @@ TimePilot.prototype = {
       dataStore._hud.render();
     }, 1);
 
-    dataStore._gameTicker.addSchedule(function () {
+    dataStore._gameTicker.addSchedule(() => {
       dataStore._enemies.detectCollision();
     }, 1);
 
-    dataStore._gameTicker.addSchedule(function () {
+    dataStore._gameTicker.addSchedule(() => {
       dataStore._enemies.cleanup();
       dataStore._bullets.cleanup();
       dataStore._props.cleanup();
@@ -152,7 +152,7 @@ TimePilot.prototype = {
   restartGame: function () {
     var that = this;
     window.console.info("Restarting");
-    dataStore._gameTicker.stop(function () {
+    dataStore._gameTicker.stop(() => {
       dataStore._hud.restart();
 
       dataStore._gameTicker.clearTicks();
@@ -179,7 +179,7 @@ TimePilot.prototype = {
       dataStore._renderTicker.clearTicks();
     }
     if (dataStore._currentController && dataStore._currentController.length) {
-      dataStore._currentController.forEach(function (controller) {
+      dataStore._currentController.forEach((controller) => {
         if (controller && typeof controller.disconnect === "function") {
           controller.disconnect();
         }

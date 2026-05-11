@@ -9,11 +9,11 @@ Menus.prototype = {
     var context = this._gameArena.getContext();
   },
 
-  show: function () {},
+  show: () => {},
 
-  hide: function () {},
+  hide: () => {},
 
-  render: function () {},
+  render: () => {},
 };
 
 export default Menus;

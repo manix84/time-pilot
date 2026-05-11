@@ -31,7 +31,7 @@ Ticker.prototype = {
    */
   stop: function (callback) {
     this.isRunning = false;
-    this.killCallback = callback || function () {};
+    this.killCallback = callback || (() => {});
   },
 
   /**
@@ -40,7 +40,7 @@ Ticker.prototype = {
    */
   _step: function () {
     var that = this;
-    requestAnimationFrame(function () {
+    requestAnimationFrame(() => {
       that._frame++;
       for (var eventId in that._schedule) {
         if (

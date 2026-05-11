@@ -24,7 +24,7 @@ var GameArena = function (containerElement) {
 
   helpers.bind(
     "fullscreenchange webkitfullscreenchange mozfullscreenchange msfullscreenchange",
-    function () {
+    () => {
       that._isInFullScreen = !that._isInFullScreen;
       if (that._isInFullScreen) {
         that.resize(screen.width, screen.height);
@@ -189,7 +189,7 @@ GameArena.prototype = {
    * @param   {Function} callback - Callback is run on each completed asset.
    */
   preloadAssets: function (callback) {
-    callback = callback || function () {};
+    callback = callback || (() => {});
     var loadedCount = 0,
       remainingCount = this._assets.length - 1,
       i = remainingCount,
@@ -197,13 +197,13 @@ GameArena.prototype = {
       onload,
       onerror;
 
-    onload = function () {
+    onload = () => {
       callback({
         loaded: ++loadedCount,
         remaining: --remainingCount,
       });
     };
-    onerror = function () {
+    onerror = () => {
       callback({
         loaded: ++loadedCount,
         remaining: --remainingCount,

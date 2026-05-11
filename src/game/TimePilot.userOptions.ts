@@ -48,12 +48,12 @@ var userOptions = {
    * Set options in this object (userOptions), and store it so that the user doesn't have to set options each time
    * @method
    */
-  setOption: function () {},
+  setOption: () => {},
 };
 
 /**
  * Gather overrides the user has set.
  */
-(function () {})();
+(() => {})();
 
 export default userOptions;

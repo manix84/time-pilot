@@ -15,8 +15,8 @@ var ControllerInterface = function (commands) {
   this._gameArena = dataStore._gameArena;
 
   this._commands = {
-    restart: commands.restart || function () {},
-    pause: commands.pause || function () {},
+    restart: commands.restart || (() => {}),
+    pause: commands.pause || (() => {}),
   };
 
   this._rotationStep = 360 / CONSTS.player.rotationFrameCount;

@@ -12,7 +12,7 @@ Keyboard2.prototype = {
     var that = this;
     helpers.bind(
       "keydown",
-      function (event) {
+      (event) => {
         switch (event.keyCode) {
           case 37: // Left-Key
           case 65: // "A"
@@ -48,7 +48,7 @@ Keyboard2.prototype = {
 
     helpers.bind(
       "keyup",
-      function (event) {
+      (event) => {
         switch (event.keyCode) {
           case 27: // Escape-Key
           case 70: // "F"-Key

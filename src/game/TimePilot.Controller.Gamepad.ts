@@ -84,7 +84,7 @@ Gamepad.prototype = {
    * Disconnecting the Gamepad controller interface.
    * @method disconnect
    */
-  disconnect: function () {},
+  disconnect: () => {},
 };
 
 export default Gamepad;

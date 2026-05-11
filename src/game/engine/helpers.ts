@@ -165,7 +165,7 @@ var helpers: any = {
    * @method unbind
    * @unused
    */
-  unbind: function () {},
+  unbind: () => {},
 
   /**
    * Generate a random HEX colour value.

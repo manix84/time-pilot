@@ -6,7 +6,7 @@ var main = {
     start: {
       name: "Start 1 Player",
       type: "button",
-      callback: function () {},
+      callback: () => {},
     },
     controllerType: {
       name: "Contoller",
@@ -17,8 +17,8 @@ var main = {
         joystick: "Joystick/Gamepad",
         touch: "Touch Screen",
       },
-      getValue: function () {},
-      setValue: function () {},
+      getValue: () => {},
+      setValue: () => {},
     },
   },
 };
