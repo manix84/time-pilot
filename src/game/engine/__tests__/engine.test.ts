@@ -60,6 +60,22 @@ describe("engine modules", () => {
     expect(ticker.clearTicks()).toBe(true);
   });
 
+  it("can throttle scheduled work to a fixed simulation frame rate", async () => {
+    const ticker = new Ticker({ fps: 30 });
+    const scheduled = vi.fn();
+
+    ticker.addSchedule(scheduled, 1);
+    ticker.start();
+
+    await new Promise((resolve) => window.setTimeout(resolve, 10));
+    expect(scheduled).not.toHaveBeenCalled();
+
+    await new Promise((resolve) => window.setTimeout(resolve, 40));
+    expect(scheduled).toHaveBeenCalled();
+
+    ticker.stop();
+  });
+
   it("creates playable sounds", () => {
     const sound = new Sound("/sounds/player/bullet.mp3", { autoplay: false });
 

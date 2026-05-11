@@ -15,6 +15,10 @@ interface TickerScheduleItem {
   nthFrame: number;
 }
 
+interface TickerOptions {
+  fps?: number;
+}
+
 const animationWindow = window as LegacyAnimationWindow;
 const requestAnimationFrame =
   animationWindow.requestAnimationFrame ||
@@ -24,14 +28,25 @@ const requestAnimationFrame =
 
 class Ticker implements TickerInstance {
   private _frame = 0;
+  private readonly _frameInterval?: number;
+  private _lastStepTime: number | null = null;
   private _schedule: Record<number, TickerScheduleItem> = {};
   private _scheduleCount = 0;
   private killCallback?: () => void;
 
   isRunning = false;
 
+  constructor(options: TickerOptions = {}) {
+    this._frameInterval = options.fps ? 1000 / options.fps : undefined;
+  }
+
   start(): void {
+    if (this.isRunning) {
+      return;
+    }
+
     this.isRunning = true;
+    this._lastStepTime = null;
     this._step();
   }
 
@@ -41,8 +56,19 @@ class Ticker implements TickerInstance {
   }
 
   private _step(): void {
-    requestAnimationFrame(() => {
+    requestAnimationFrame((timestamp) => {
+      if (!this.isRunning) {
+        this.runKillCallback();
+        return;
+      }
+
+      if (!this.shouldRunFrame(timestamp)) {
+        this._step();
+        return;
+      }
+
       this._frame++;
+      this._lastStepTime = timestamp;
 
       for (const eventId in this._schedule) {
         if (
@@ -55,11 +81,30 @@ class Ticker implements TickerInstance {
 
       if (this.isRunning) {
         this._step();
-      } else if (this.killCallback) {
-        this.killCallback();
-        delete this.killCallback;
+      } else {
+        this.runKillCallback();
       }
     });
+  }
+
+  private runKillCallback(): void {
+    if (this.killCallback) {
+      this.killCallback();
+      delete this.killCallback;
+    }
+  }
+
+  private shouldRunFrame(timestamp: number): boolean {
+    if (!this._frameInterval) {
+      return true;
+    }
+
+    if (this._lastStepTime === null) {
+      this._lastStepTime = timestamp;
+      return false;
+    }
+
+    return timestamp - this._lastStepTime >= this._frameInterval;
   }
 
   addSchedule(callback: TickerScheduleCallback, nthFrame: number): number {

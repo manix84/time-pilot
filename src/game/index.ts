@@ -107,7 +107,7 @@ export class TimePilot {
 
     this.context._gameArena = new GameArena(this.container);
     this.context._renderTicker = new Ticker();
-    this.context._gameTicker = new Ticker();
+    this.context._gameTicker = new Ticker({ fps: 30 });
     this.context._bullets = new BulletFactory(this.context);
     this.context._player = new Player(this.context);
     this.context._enemies = new EnemyFactory(this.context);
