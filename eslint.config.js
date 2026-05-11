@@ -75,6 +75,14 @@ export default tseslint.config(
     },
   },
   {
+    files: ["scripts/**/*.mjs"],
+    languageOptions: {
+      globals: {
+        ...globals.node,
+      },
+    },
+  },
+  {
     files: ["src/game/**/*.ts"],
     rules: {
       "@typescript-eslint/ban-ts-comment": "off",

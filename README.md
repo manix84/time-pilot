@@ -1,38 +1,157 @@
-# Time Pilot (React + TypeScript)
+# 🕹️ Time Pilot
 
-A modernized version of the original Time Pilot prototype, now running as a React component in a TypeScript + Vite app.
+**Time Pilot** is a modernized React + TypeScript rebuild of an older browser-game prototype. The game still renders through a canvas-driven engine, but it now lives inside a Vite application with typed game modules, React lifecycle integration, CI checks, GitHub Pages deployment, and release automation.
 
-## Quick Start
+## ✨ Highlights
 
-1. Install dependencies:
+- 🎮 Canvas-based arcade gameplay hosted inside React.
+- ⚛️ Thin React integration via `useTimePilot`.
+- 🧠 Typed game engine modules with explicit game context injection.
+- 🧱 Feature-oriented source layout under `src/game`.
+- ✅ PR checks for tests, lint, and type checking.
+- 🚀 Automatic GitHub Pages deployment from `main`.
+- 🏷️ Automatic GitHub Release creation from the current package version.
+- 🔢 Local pre-commit version bumping based on staged changes.
 
-   npm install
+## 🚀 Quick Start
 
-2. Run the development server:
+Install dependencies:
 
-   npm run dev
+```bash
+npm install
+```
 
-3. Build for production:
+Run the development server:
 
-   npm run build
+```bash
+npm run dev
+```
 
-## What Changed
+Build for production:
 
-- Migrated legacy AMD modules into ESM TypeScript modules under src/game.
-- Added a reusable React component at src/components/TimePilotGame.tsx.
-- Added a Vite + React + TypeScript toolchain.
-- Moved runtime asset serving to Vite public assets (fonts, sprites, sounds).
+```bash
+npm run build
+```
 
-## Component Usage
+Preview the production build:
 
-Use the game component directly in React:
+```bash
+npm run preview
+```
 
+## 🧪 Quality Checks
+
+Run the same checks used by CI:
+
+```bash
+npm test
+npm run lint
+npm run typecheck
+npm run build
+```
+
+`npm test` currently detects test files and exits cleanly when none exist. Once Vitest or Jest tests are added, the script will run the installed runner automatically.
+
+## ⚛️ React Usage
+
+Use the game as a regular React component:
+
+```tsx
 import TimePilotGame from "./components/TimePilotGame";
 
 function App() {
-return <TimePilotGame debug />;
+  return <TimePilotGame debug />;
 }
+```
 
-## Notes
+The component delegates engine lifecycle to the hook:
 
-- The initial migration prioritizes behavior parity. Legacy game modules are currently marked with @ts-nocheck and can be typed incrementally in follow-up passes.
+```ts
+const { setContainerElement, pause, resume, restart, destroy } =
+  useTimePilot({ debug: true });
+```
+
+React owns mounting and cleanup. The game engine owns simulation, rendering, input, and timing.
+
+## 🧭 Project Structure
+
+```text
+src/
+  components/
+    TimePilotGame.tsx       React host component
+  game/
+    index.ts                TimePilot engine orchestrator
+    use-time-pilot.ts       React bridge hook
+    types.ts                Shared game contracts
+    constants.ts            Game tuning and asset constants
+    controller/             Keyboard and gamepad input adapters
+    engine/                 Canvas arena, ticker, sound, helpers
+    menus/                  Menu definitions
+    *.ts                    Entities, factories, HUD, options
+```
+
+## 🧠 Architecture
+
+The current design keeps React out of the game loop. This is deliberate.
+
+- React handles lifecycle, layout, and app composition.
+- `useTimePilot` creates and destroys the game instance.
+- `TimePilot` owns the game context and wires systems together.
+- Entities and factories receive explicit context instead of reading a global singleton.
+- Rendering stays canvas-based for predictable frame-by-frame control.
+
+## 🔁 CI/CD
+
+GitHub Actions are configured for:
+
+- **Run Tests** on pull requests to `main`.
+- **Run Lint** on pull requests to `main`.
+- **Run TypeCheck** on pull requests to `main`.
+- **Deploy to GitHub Pages** on pushes to `main`.
+- **Release Current Version** on pushes to `main`.
+
+GitHub Pages builds with:
+
+```bash
+VITE_BASE_PATH=/time-pilot/ npm run build
+```
+
+## 🔢 Versioning
+
+The repo includes a pre-commit hook at `.githooks/pre-commit`.
+
+Enable it in a fresh checkout:
+
+```bash
+git config core.hooksPath .githooks
+```
+
+The hook runs:
+
+```bash
+node scripts/smart-version-bump.mjs
+npm run typecheck
+npm run lint
+npm test
+```
+
+The version bump script inspects staged changes:
+
+- **major** for public API removals, deletions, or explicit breaking-change signals.
+- **minor** for new source, assets, dependency changes, exports, or game feature code.
+- **patch** for smaller implementation/config fixes.
+- **none** for docs-only changes.
+
+Override the heuristic when needed:
+
+```bash
+TIME_PILOT_VERSION_BUMP=major git commit
+TIME_PILOT_VERSION_BUMP=minor git commit
+TIME_PILOT_VERSION_BUMP=patch git commit
+TIME_PILOT_VERSION_BUMP=none git commit
+```
+
+## 🗒️ Milestones
+
+See [WHATSNEW.md](./WHATSNEW.md) for major project milestones and migration history.
+
