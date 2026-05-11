@@ -1,5 +1,5 @@
 /* Converted from TimePilot.userOptions.js (AMD) to ESM TypeScript. */
-import type { UserOptions } from "./types";
+import type { ControllerType, UserOptions } from "./types";
 
 var userOptions: UserOptions = {
   debug: {
@@ -44,13 +44,20 @@ var userOptions: UserOptions = {
    * Selected controller to be accessed on the controlInterface.
    * @type {String}
    */
-  controllerType: "Keyboard1",
+  controllerType: "keyboard1" as ControllerType,
+
+  /**
+   * Poll the browser Gamepad API alongside the selected keyboard layout.
+   */
+  gamepadEnabled: true,
 
   /**
    * Set options in this object (userOptions), and store it so that the user doesn't have to set options each time
    * @method
    */
-  setOption: () => {},
+  setOption: (key, value) => {
+    userOptions[key] = value;
+  },
 };
 
 /**

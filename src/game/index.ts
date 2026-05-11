@@ -3,6 +3,7 @@ import Ticker from "./engine/Ticker";
 import BulletFactory from "./bullet-factory";
 import Gamepad from "./controller/gamepad";
 import Keyboard1 from "./controller/keyboard1";
+import Keyboard2 from "./controller/keyboard2";
 import ControllerInterface from "./controller-interface";
 import EnemyFactory from "./enemy-factory";
 import Hud from "./hud";
@@ -16,13 +17,16 @@ import type {
   AssetProgress,
   CollisionSystemInstance,
   Controller,
+  ControllerType,
   GameDataStore,
   RenderingSystemInstance,
   SpawningSystemInstance,
 } from "./types";
 
 export interface TimePilotOptions {
+  controllerType?: ControllerType;
   debug?: boolean;
+  gamepadEnabled?: boolean;
 }
 
 export class TimePilot {
@@ -36,7 +40,9 @@ export class TimePilot {
   constructor(element: HTMLElement, options: TimePilotOptions = {}) {
     this.container = element;
     this.options = {
+      controllerType: options.controllerType ?? userOptions.controllerType,
       debug: options.debug ?? false,
+      gamepadEnabled: options.gamepadEnabled ?? userOptions.gamepadEnabled,
     };
 
     this.context._level = 1;
@@ -96,6 +102,8 @@ export class TimePilot {
 
   private init(): void {
     userOptions.enableDebug = this.options.debug;
+    userOptions.setOption("controllerType", this.options.controllerType);
+    userOptions.setOption("gamepadEnabled", this.options.gamepadEnabled);
 
     this.context._gameArena = new GameArena(this.container);
     this.context._renderTicker = new Ticker();
@@ -119,9 +127,12 @@ export class TimePilot {
     });
 
     this.context._currentController = [
-      new Keyboard1(controllerInterface),
-      new Gamepad(controllerInterface),
+      this.createKeyboardController(controllerInterface),
     ];
+
+    if (this.options.gamepadEnabled) {
+      this.context._currentController.push(new Gamepad(controllerInterface));
+    }
 
     this.context._player.setData("level", 1);
     this.context._gameArena.renderText("Loading", 20, 10, { size: 30 });
@@ -189,6 +200,16 @@ export class TimePilot {
       this.context._bullets.cleanup();
       this.context._props.cleanup();
     }, 1);
+  }
+
+  private createKeyboardController(
+    controllerInterface: ControllerInterface
+  ): Controller {
+    if (this.options.controllerType === "keyboard2") {
+      return new Keyboard2(controllerInterface);
+    }
+
+    return new Keyboard1(controllerInterface);
   }
 }
 

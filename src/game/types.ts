@@ -91,6 +91,8 @@ export interface ControllerCommands {
   pause?: () => void;
 }
 
+export type ControllerType = "keyboard1" | "keyboard2";
+
 export interface Controller {
   disconnect?: () => void;
 }
@@ -392,6 +394,7 @@ export interface UserOptions {
     invincible: boolean;
   };
   enableDebug: boolean;
-  controllerType: string;
-  setOption: () => void;
+  controllerType: ControllerType;
+  gamepadEnabled: boolean;
+  setOption: <K extends keyof UserOptions>(key: K, value: UserOptions[K]) => void;
 }

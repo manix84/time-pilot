@@ -9,6 +9,7 @@
 - 🧠 Typed game engine modules with explicit game context injection.
 - 🧱 Feature-oriented source layout under `src/game`.
 - 🧪 Vitest coverage for engine helpers, controllers, menus, factories, the game host, and React integration.
+- 🎛️ In-app keyboard layout and gamepad configuration.
 - ✅ PR checks for tests, lint, and type checking.
 - 🚀 Automatic GitHub Pages deployment from `main`.
 - 🏷️ Automatic GitHub Release creation from the current package version.
@@ -82,6 +83,12 @@ const { setContainerElement, pause, resume, restart, destroy } =
 ```
 
 React owns mounting and cleanup. The game engine owns simulation, rendering, input, and timing.
+
+`TimePilotGame` includes controller settings for:
+
+- **Directional keyboard**: arrow keys or WASD point directly up, right, down, or left.
+- **Rotate keyboard**: left/right rotate the player around the current heading.
+- **Gamepad**: enables or disables browser Gamepad API polling.
 
 ## 🧭 Project Structure
 

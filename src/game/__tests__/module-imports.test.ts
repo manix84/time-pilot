@@ -42,7 +42,7 @@ describe("game module imports", () => {
     expect(Player).toBeTypeOf("function");
     expect(Prop).toBeTypeOf("function");
     expect(PropFactory).toBeTypeOf("function");
-    expect(userOptions.controllerType).toBe("Keyboard1");
+    expect(userOptions.controllerType).toBe("keyboard1");
+    expect(userOptions.gamepadEnabled).toBe(true);
   });
 });
-

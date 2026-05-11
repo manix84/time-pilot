@@ -33,5 +33,32 @@ describe("TimePilotGame", () => {
     expect(container.querySelector(".time-pilot-stage")).toBeTruthy();
     expect(container.querySelector("canvas")).toBeInstanceOf(HTMLCanvasElement);
   });
-});
 
+  it("renders controller settings and accepts configuration changes", async () => {
+    await act(async () => {
+      root.render(<TimePilotGame debug />);
+      await new Promise((resolve) => window.setTimeout(resolve, 5));
+    });
+
+    const rotateKeyboard = container.querySelector<HTMLInputElement>(
+      'input[value="keyboard2"]'
+    );
+    const gamepadToggle = container.querySelector<HTMLInputElement>(
+      '.gamepad-toggle input[type="checkbox"]'
+    );
+
+    expect(rotateKeyboard).toBeInstanceOf(HTMLInputElement);
+    expect(gamepadToggle).toBeInstanceOf(HTMLInputElement);
+    expect(gamepadToggle?.checked).toBe(true);
+
+    await act(async () => {
+      rotateKeyboard?.click();
+      gamepadToggle?.click();
+      await new Promise((resolve) => window.setTimeout(resolve, 5));
+    });
+
+    expect(rotateKeyboard?.checked).toBe(true);
+    expect(gamepadToggle?.checked).toBe(false);
+    expect(container.querySelector("canvas")).toBeInstanceOf(HTMLCanvasElement);
+  });
+});

@@ -25,6 +25,7 @@
 - Added `useTimePilot` as the React lifecycle bridge.
 - Converted the remaining prototype-style runtime modules into class-based entities, factories, controllers, engine wrappers, HUD, and menu systems.
 - Split collision handling, entity spawning, and frame rendering into dedicated systems.
+- Added an in-app controller configuration UI for keyboard layout selection and gamepad polling.
 - Fixed gamepad cleanup so animation frames are cancelled on disconnect.
 
 ## ✅ Automation
@@ -43,5 +44,4 @@
 
 ## 🔜 Next Milestones
 
-- Add keyboard/gamepad configuration UI.
 - Expand gameplay levels, enemies, bonuses, and sound controls.
