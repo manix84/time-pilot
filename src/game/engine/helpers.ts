@@ -89,7 +89,9 @@ var helpers: Helpers = {
    * @property  {Number} target.posY        - Y position of the target.
    * @returns {Object}
    */
-  getSpawnCoords: function (target: Coordinates & { heading: Heading }): Coordinates {
+  getSpawnCoords: function (
+    target: Coordinates & { heading: Heading }
+  ): Coordinates {
     var data: Coordinates = {
       posX: target.posX,
       posY: target.posY,
@@ -223,9 +225,9 @@ var helpers: Helpers = {
    * @return {String} #0-F(6)
    */
   getRandomColor: function (): string {
-    var colors = 16777215;
+    var colors = Math.floor(Math.random() * 0x1000000);
 
-    return "#" + Math.floor(Math.random() * colors).toString(16);
+    return "#" + colors.toString(16).padStart(6, "0");
   },
 
   /**

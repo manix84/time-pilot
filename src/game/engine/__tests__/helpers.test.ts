@@ -41,6 +41,13 @@ describe("engine/helpers", () => {
     expect(callback).toHaveBeenCalledTimes(2);
   });
 
+  it("generates valid six-digit CSS hex colors", () => {
+    vi.spyOn(Math, "random").mockReturnValueOnce(0).mockReturnValueOnce(0.999999);
+
+    expect(helpers.getRandomColor()).toBe("#000000");
+    expect(helpers.getRandomColor()).toMatch(/^#[0-9a-f]{6}$/);
+  });
+
   it("clones nested objects without retaining references", () => {
     const original = { a: 1, nested: { b: 2 } };
     const clone = helpers.cloneObject(original);
