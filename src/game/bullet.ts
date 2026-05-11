@@ -1,9 +1,8 @@
 /* Converted from TimePilot.Bullet.js (AMD) to ESM TypeScript. */
 import CONSTS from "./constants";
-import dataStore from "./data-store";
 import userOptions from "./user-options";
 import helpers from "./engine/helpers";
-import type { BulletData, BulletInstance, Heading } from "./types";
+import type { BulletData, BulletInstance, GameDataStore, Heading } from "./types";
 
 /**
  * Creates a bullet to add to render.
@@ -15,6 +14,7 @@ import type { BulletData, BulletInstance, Heading } from "./types";
  */
 
 var Bullet = function (
+  context: GameDataStore,
   originX: number,
   originY: number,
   heading: Heading,
@@ -22,7 +22,7 @@ var Bullet = function (
   velocity: number,
   color: string
 ) {
-  this._gameArena = dataStore._gameArena;
+  this._gameArena = context._gameArena;
 
   this._data = {
     posX: originX,
@@ -36,6 +36,7 @@ var Bullet = function (
   this.removeMe = false;
 } as unknown as {
   new (
+    context: GameDataStore,
     originX: number,
     originY: number,
     heading: Heading,

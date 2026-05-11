@@ -1,5 +1,4 @@
-/* Converted from TimePilot.js (AMD) to ESM TypeScript. */
-import GameArena from "./engine/GameArena";
+import GameArena from "./engine/arena";
 import helpers from "./engine/helpers";
 import Ticker from "./engine/Ticker";
 import BulletFactory from "./bullet-factory";
@@ -7,75 +6,118 @@ import CONST from "./constants";
 import Gamepad from "./controller/gamepad";
 import Keyboard1 from "./controller/keyboard1";
 import ControllerInterface from "./controller-interface";
-import dataStore from "./data-store";
 import EnemyFactory from "./enemy-factory";
 import Hud from "./hud";
 import Player from "./player";
 import PropFactory from "./prop-factory";
 import userOptions from "./user-options";
-import type { AssetProgress, Controller, Coordinates } from "./types";
+import type {
+  AssetProgress,
+  Controller,
+  Coordinates,
+  GameDataStore,
+} from "./types";
 
-interface TimePilotOptions {
+export interface TimePilotOptions {
   debug?: boolean;
-  [key: string]: boolean | undefined;
 }
 
-var TimePilot = function (element: HTMLElement, options: TimePilotOptions = {}) {
-  this._container = element;
+export class TimePilot {
+  private readonly container: HTMLElement;
+  private readonly options: Required<TimePilotOptions>;
+  private readonly context = {} as GameDataStore;
 
-  var property = null;
+  constructor(element: HTMLElement, options: TimePilotOptions = {}) {
+    this.container = element;
+    this.options = {
+      debug: options.debug ?? false,
+    };
 
-  for (property in options) {
-    if (
-      options.hasOwnProperty(property) &&
-      this._options.hasOwnProperty(property)
-    ) {
-      this._options[property] = options[property];
+    this.context._level = 1;
+    this.init();
+  }
+
+  restartGame(): void {
+    window.console.info("Restarting");
+    this.context._gameTicker.stop(() => {
+      this.context._hud.restart();
+
+      this.context._gameTicker.clearTicks();
+      this.context._gameTicker.clearSchedule();
+      this.context._enemies.clearAll();
+      this.context._bullets.clearAll();
+      this.context._props.clearAll();
+      this.context._player.resetData();
+
+      this.start();
+      this.context._gameTicker.start();
+    });
+  }
+
+  destroyGame(): void {
+    this.context._gameTicker.stop();
+    this.context._gameTicker.clearSchedule();
+    this.context._gameTicker.clearTicks();
+
+    this.context._renderTicker.stop();
+    this.context._renderTicker.clearSchedule();
+    this.context._renderTicker.clearTicks();
+
+    this.context._currentController.forEach((controller: Controller) => {
+      if (typeof controller.disconnect === "function") {
+        controller.disconnect();
+      }
+    });
+    this.context._currentController = [];
+  }
+
+  pauseGame(forcePause?: boolean): void {
+    if (this.context._gameTicker.isRunning || !!forcePause) {
+      window.console.info("Pausing");
+      this.context._gameTicker.stop();
+    } else {
+      window.console.info("Unpausing");
+      this.context._gameTicker.start();
     }
   }
-  dataStore._level = 1;
 
-  this._init();
-};
+  resumeGame(): void {
+    if (!this.context._gameTicker.isRunning) {
+      window.console.info("Unpausing");
+      this.context._gameTicker.start();
+    }
+  }
 
-TimePilot.prototype = {
-  _options: {
-    debug: false,
-  },
+  private init(): void {
+    userOptions.enableDebug = this.options.debug;
 
-  _data: {},
+    this.context._gameArena = new GameArena(this.container);
+    this.context._renderTicker = new Ticker();
+    this.context._gameTicker = new Ticker();
+    this.context._bullets = new BulletFactory(this.context);
+    this.context._player = new Player(this.context);
+    this.context._enemies = new EnemyFactory(this.context);
+    this.context._props = new PropFactory(this.context);
+    this.context._hud = new Hud(this.context);
 
-  _init: function () {
-    var that = this;
-
-    userOptions.enableDebug = this._options.debug;
-
-    dataStore._gameArena = new GameArena(this._container);
-    dataStore._renderTicker = new Ticker();
-    dataStore._gameTicker = new Ticker();
-    dataStore._bullets = new BulletFactory();
-    dataStore._player = new Player();
-    dataStore._enemies = new EnemyFactory();
-    dataStore._props = new PropFactory();
-    dataStore._hud = new Hud();
-
-    var controllerInterface = new ControllerInterface({
+    const controllerInterface = new ControllerInterface(this.context, {
       restart: () => {
-        that.restartGame();
+        this.restartGame();
       },
       pause: () => {
-        that.pauseGame();
+        this.pauseGame();
       },
     });
 
-    dataStore._currentController = [];
-    dataStore._currentController.push(new Keyboard1(controllerInterface));
-    dataStore._currentController.push(new Gamepad(controllerInterface));
+    this.context._currentController = [
+      new Keyboard1(controllerInterface),
+      new Gamepad(controllerInterface),
+    ];
 
-    dataStore._player.setData("level", 1);
-    dataStore._gameArena.renderText("Loading", 20, 10, { size: 30 });
+    this.context._player.setData("level", 1);
+    this.context._gameArena.renderText("Loading", 20, 10, { size: 30 });
 
-    dataStore._gameArena.registerAssets([
+    this.context._gameArena.registerAssets([
       "/fonts/font.ttf",
       "/sprites/player/player.png",
       "/sounds/player/bullet.mp3",
@@ -91,158 +133,95 @@ TimePilot.prototype = {
       "/sprites/props/cloud3.png",
     ]);
 
-    dataStore._gameArena.preloadAssets((obj: AssetProgress) => {
-      if (!obj.remaining) {
-        that._start();
-        dataStore._gameTicker.start();
-        dataStore._renderTicker.start();
+    this.context._gameArena.preloadAssets((progress: AssetProgress) => {
+      if (!progress.remaining) {
+        this.start();
+        this.context._gameTicker.start();
+        this.context._renderTicker.start();
       }
     });
-  },
+  }
 
-  _start: function () {
-    var that = this;
+  private start(): void {
+    this.addRandomClouds();
 
-    this._addRandomClouds();
-
-    dataStore._gameTicker.addSchedule(() => {
-      that.pauseGame();
+    this.context._gameTicker.addSchedule(() => {
+      this.pauseGame();
       window.console.warn("Stopping: 50,000 ticks");
     }, 50000);
 
-    dataStore._gameTicker.addSchedule(() => {
-      dataStore._player.reposition();
-      dataStore._enemies.reposition();
-      dataStore._bullets.reposition();
-      dataStore._props.reposition();
+    this.context._gameTicker.addSchedule(() => {
+      this.context._player.reposition();
+      this.context._enemies.reposition();
+      this.context._bullets.reposition();
+      this.context._props.reposition();
 
-      that._spawnEntities();
+      this.spawnEntities();
     }, 1);
 
-    dataStore._gameTicker.addSchedule(() => {
-      dataStore._player.rotate();
+    this.context._gameTicker.addSchedule(() => {
+      this.context._player.rotate();
     }, 3);
-    dataStore._gameTicker.addSchedule(() => {
-      dataStore._player.shoot();
+
+    this.context._gameTicker.addSchedule(() => {
+      this.context._player.shoot();
     }, 5);
 
-    dataStore._renderTicker.addSchedule(() => {
-      dataStore._gameArena.clear();
-      dataStore._gameArena.setBackgroundColor(
-        CONST.levels[dataStore._level].arena.backgroundColor
+    this.context._renderTicker.addSchedule(() => {
+      this.context._gameArena.clear();
+      this.context._gameArena.setBackgroundColor(
+        CONST.levels[this.context._level].arena.backgroundColor
       );
 
-      dataStore._props.render(1);
-
-      dataStore._bullets.render();
-      dataStore._enemies.render();
-
-      dataStore._player.render();
-
-      dataStore._props.render(2);
-
-      dataStore._hud.render();
+      this.context._props.render(1);
+      this.context._bullets.render();
+      this.context._enemies.render();
+      this.context._player.render();
+      this.context._props.render(2);
+      this.context._hud.render();
     }, 1);
 
-    dataStore._gameTicker.addSchedule(() => {
-      dataStore._enemies.detectCollision();
+    this.context._gameTicker.addSchedule(() => {
+      this.context._enemies.detectCollision();
     }, 1);
 
-    dataStore._gameTicker.addSchedule(() => {
-      dataStore._enemies.cleanup();
-      dataStore._bullets.cleanup();
-      dataStore._props.cleanup();
+    this.context._gameTicker.addSchedule(() => {
+      this.context._enemies.cleanup();
+      this.context._bullets.cleanup();
+      this.context._props.cleanup();
     }, 1);
-  },
+  }
 
-  restartGame: function () {
-    var that = this;
-    window.console.info("Restarting");
-    dataStore._gameTicker.stop(() => {
-      dataStore._hud.restart();
-
-      dataStore._gameTicker.clearTicks();
-      dataStore._gameTicker.clearSchedule();
-      dataStore._enemies.clearAll();
-      dataStore._bullets.clearAll();
-      dataStore._props.clearAll();
-      dataStore._player.resetData();
-
-      that._start();
-      dataStore._gameTicker.start();
-    });
-  },
-
-  destroyGame: function () {
-    if (dataStore._gameTicker) {
-      dataStore._gameTicker.stop();
-      dataStore._gameTicker.clearSchedule();
-      dataStore._gameTicker.clearTicks();
-    }
-    if (dataStore._renderTicker) {
-      dataStore._renderTicker.stop();
-      dataStore._renderTicker.clearSchedule();
-      dataStore._renderTicker.clearTicks();
-    }
-    if (dataStore._currentController && dataStore._currentController.length) {
-      dataStore._currentController.forEach((controller: Controller) => {
-        if (controller && typeof controller.disconnect === "function") {
-          controller.disconnect();
-        }
-      });
-      dataStore._currentController = [];
-    }
-  },
-
-  pauseGame: function (forcePause?: boolean) {
-    if (dataStore._gameTicker.isRunning || !!forcePause) {
-      window.console.info("Pausing");
-      dataStore._gameTicker.stop();
-    } else {
-      window.console.info("Unpausing");
-      dataStore._gameTicker.start();
-    }
-  },
-
-  _addRandomClouds: function () {
-    var i = 0;
-    for (; i < 20; i++) {
-      // Clouds
-      dataStore._props.create(
-        Math.floor(Math.random() * dataStore._gameArena.width),
-        Math.floor(Math.random() * dataStore._gameArena.height)
+  private addRandomClouds(): void {
+    for (let i = 0; i < 20; i++) {
+      this.context._props.create(
+        Math.floor(Math.random() * this.context._gameArena.width),
+        Math.floor(Math.random() * this.context._gameArena.height)
       );
     }
-  },
+  }
 
-  _spawnEntities: function () {
-    var data: Coordinates = { posX: 0, posY: 0 },
-      heading = 0,
-      randomTickInterval = Math.floor(Math.random() * (1 - 200 + 1)) + 200;
+  private spawnEntities(): void {
+    let data: Coordinates = { posX: 0, posY: 0 };
+    const randomTickInterval = Math.floor(Math.random() * (1 - 200 + 1)) + 200;
+
     if (
-      dataStore._gameTicker.getTicks() % randomTickInterval === 0 &&
-      dataStore._enemies.isUnderLimit()
+      this.context._gameTicker.getTicks() % randomTickInterval === 0 &&
+      this.context._enemies.isUnderLimit()
     ) {
-      // Enemies
-      data = helpers.getSpawnCoords(dataStore._player.getData());
-      heading = helpers.findHeading(
-        {
-          posX: data.posX,
-          posY: data.posY,
-        },
-        {
-          posX: dataStore._player.getData().posX,
-          posY: dataStore._player.getData().posY,
-        }
-      );
-      dataStore._enemies.create(data.posX, data.posY, heading);
+      data = helpers.getSpawnCoords(this.context._player.getData());
+      const heading = helpers.findHeading(data, {
+        posX: this.context._player.getData().posX,
+        posY: this.context._player.getData().posY,
+      });
+      this.context._enemies.create(data.posX, data.posY, heading);
     }
-    if (dataStore._props.getCount() < 20) {
-      // Clouds
-      data = helpers.getSpawnCoords(dataStore._player.getData());
-      dataStore._props.create(data.posX, data.posY);
+
+    if (this.context._props.getCount() < 20) {
+      data = helpers.getSpawnCoords(this.context._player.getData());
+      this.context._props.create(data.posX, data.posY);
     }
-  },
-};
+  }
+}
 
 export default TimePilot;

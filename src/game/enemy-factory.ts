@@ -1,13 +1,13 @@
 /* Converted from TimePilot.EnemyFactory.js (AMD) to ESM TypeScript. */
 import CONSTS from "./constants";
 import Enemy from "./enemy";
-import dataStore from "./data-store";
 import SoundEngine from "./engine/Sound";
 import type {
   EnemyConfig,
   EnemyData,
   EnemyFactoryInstance,
   EnemyInstance,
+  GameDataStore,
   Heading,
 } from "./types";
 
@@ -16,10 +16,11 @@ import type {
  * @constructor
  * @returns {Enemy Factory Instance}
  */
-var EnemyFactory = function () {
-  this._level = dataStore._level;
-  this._player = dataStore._player;
-  this._bullets = dataStore._bullets;
+var EnemyFactory = function (context: GameDataStore) {
+  this._context = context;
+  this._level = context._level;
+  this._player = context._player;
+  this._bullets = context._bullets;
 
   this._explosionSound = new SoundEngine(
     this.getLevelData().explosion.sound.src
@@ -27,7 +28,7 @@ var EnemyFactory = function () {
 
   this._enemies = [] as EnemyInstance[];
 } as unknown as {
-  new (): EnemyFactoryInstance;
+  new (context: GameDataStore): EnemyFactoryInstance;
   prototype: Record<string, unknown>;
 };
 
@@ -40,7 +41,7 @@ EnemyFactory.prototype = {
    * @param   {Number} heading - Heading to start from.
    */
   create: function (posX: number, posY: number, heading: Heading): void {
-    this._enemies.push(new Enemy(posX, posY, heading));
+    this._enemies.push(new Enemy(this._context, posX, posY, heading));
   },
 
   /**

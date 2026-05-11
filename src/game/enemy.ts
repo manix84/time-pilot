@@ -1,12 +1,12 @@
 /* Converted from TimePilot.Enemy.js (AMD) to ESM TypeScript. */
 import CONSTS from "./constants";
-import dataStore from "./data-store";
 import userOptions from "./user-options";
 import helpers from "./engine/helpers";
 import type {
   EnemyConfig,
   EnemyData,
   EnemyInstance,
+  GameDataStore,
   Heading,
 } from "./types";
 
@@ -19,16 +19,21 @@ import type {
  * @returns {Enemy Instance}
  */
 
-var Enemy = function (posX: number, posY: number, heading: Heading) {
-  this._gameArena = dataStore._gameArena;
-  this._player = dataStore._player;
-  this._gameTicker = dataStore._gameTicker;
+var Enemy = function (
+  context: GameDataStore,
+  posX: number,
+  posY: number,
+  heading: Heading
+) {
+  this._gameArena = context._gameArena;
+  this._player = context._player;
+  this._gameTicker = context._gameTicker;
 
   this._data = {
     posX: posX,
     posY: posY,
     heading: heading,
-    level: dataStore._level || 1,
+    level: context._level || 1,
     deathTick: false,
     tickOffset: Math.floor(Math.random() * 100),
   } satisfies EnemyData;
@@ -39,7 +44,12 @@ var Enemy = function (posX: number, posY: number, heading: Heading) {
   this._enemySprite = new Image();
   this._enemySprite.src = this.getLevelData().sprite.src;
 } as unknown as {
-  new (posX: number, posY: number, heading: Heading): EnemyInstance;
+  new (
+    context: GameDataStore,
+    posX: number,
+    posY: number,
+    heading: Heading
+  ): EnemyInstance;
   prototype: Record<string, unknown>;
 };
 

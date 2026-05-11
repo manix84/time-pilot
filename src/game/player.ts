@@ -1,10 +1,9 @@
 /* Converted from TimePilot.Player.js (AMD) to ESM TypeScript. */
 import CONSTS from "./constants";
-import dataStore from "./data-store";
 import userOptions from "./user-options";
 import SoundEngine from "./engine/Sound";
 import helpers from "./engine/helpers";
-import type { PlayerData, PlayerInstance } from "./types";
+import type { GameDataStore, PlayerData, PlayerInstance } from "./types";
 
 var playerConst = CONSTS.player;
 /**
@@ -14,10 +13,10 @@ var playerConst = CONSTS.player;
  * @param   {Ticker Instance} ticker
  * @returns {Player Instance}
  */
-var Player = function () {
-  this._gameArena = dataStore._gameArena;
-  this._gameTicker = dataStore._gameTicker;
-  this._bulletFactory = dataStore._bullets;
+var Player = function (context: GameDataStore) {
+  this._gameArena = context._gameArena;
+  this._gameTicker = context._gameTicker;
+  this._bulletFactory = context._bullets;
 
   this._playerSprite = new Image();
   this._playerSprite.src = playerConst.sprite.src;
@@ -46,7 +45,7 @@ var Player = function () {
 
   this._dataDefaults = helpers.cloneObject(this._data);
 } as unknown as {
-  new (): PlayerInstance;
+  new (context: GameDataStore): PlayerInstance;
   prototype: Record<string, unknown>;
 };
 

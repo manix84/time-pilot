@@ -6,6 +6,7 @@ import type {
   BulletData,
   BulletFactoryInstance,
   BulletInstance,
+  GameDataStore,
   Heading,
 } from "./types";
 
@@ -14,11 +15,12 @@ import type {
  * @constructor
  * @returns {Bullet Factory Instance}
  */
-var BulletFactory = function () {
+var BulletFactory = function (context: GameDataStore) {
+  this._context = context;
   this._bullets = [] as BulletInstance[];
   this._bulletSound = new SoundEngine(CONSTS.player.projectile.sound.src);
 } as unknown as {
-  new (): BulletFactoryInstance;
+  new (context: GameDataStore): BulletFactoryInstance;
   prototype: Record<string, unknown>;
 };
 
@@ -42,7 +44,7 @@ BulletFactory.prototype = {
     color: string
   ): void {
     this._bullets.push(
-      new Bullet(originX, originY, heading, size, velocity, color)
+      new Bullet(this._context, originX, originY, heading, size, velocity, color)
     );
     this._bulletSound.stop();
     this._bulletSound.play();

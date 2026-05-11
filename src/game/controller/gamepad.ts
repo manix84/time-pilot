@@ -4,6 +4,8 @@ import type { Controller, ControllerInterfaceInstance } from "../types";
 
 var Gamepad = function (controllerInterface: ControllerInterfaceInstance) {
   this._controllerInterface = controllerInterface;
+  this._isConnected = false;
+  this._animationFrame = null;
 
   this.connect();
 } as unknown as {
@@ -33,6 +35,10 @@ Gamepad.prototype = {
    * @method _gameLoop
    */
   _gameLoop: function () {
+    if (!this._isConnected) {
+      return;
+    }
+
     var navigatorWithGamepads = navigator as Navigator & {
       webkitGetGamepads?: () => (Gamepad | null)[];
     };
@@ -75,7 +81,9 @@ Gamepad.prototype = {
         }
       }
     }
-    window.requestAnimationFrame(this._gameLoop.bind(this));
+    this._animationFrame = window.requestAnimationFrame(
+      this._gameLoop.bind(this)
+    );
   },
 
   /**
@@ -83,6 +91,11 @@ Gamepad.prototype = {
    * @method connect
    */
   connect: function () {
+    if (this._isConnected) {
+      return;
+    }
+
+    this._isConnected = true;
     this._gameLoop();
   },
 
@@ -90,7 +103,14 @@ Gamepad.prototype = {
    * Disconnecting the Gamepad controller interface.
    * @method disconnect
    */
-  disconnect: () => {},
+  disconnect: function () {
+    this._isConnected = false;
+
+    if (this._animationFrame !== null) {
+      window.cancelAnimationFrame(this._animationFrame);
+      this._animationFrame = null;
+    }
+  },
 };
 
 export default Gamepad;

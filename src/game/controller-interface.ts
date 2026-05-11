@@ -1,9 +1,9 @@
 /* Converted from TimePilot.ControllerInterface.js (AMD) to ESM TypeScript. */
 import CONSTS from "./constants";
-import dataStore from "./data-store";
 import type {
   ControllerCommands,
   ControllerInterfaceInstance,
+  GameDataStore,
   Heading,
 } from "./types";
 
@@ -13,11 +13,14 @@ import type {
  * @method
  * @returns {ControllerInterface instance}
  */
-var ControllerInterface = function (commands: ControllerCommands) {
-  this._player = dataStore._player;
-  this._gameTicker = dataStore._gameTicker;
-  this._hud = dataStore._hud;
-  this._gameArena = dataStore._gameArena;
+var ControllerInterface = function (
+  context: GameDataStore,
+  commands: ControllerCommands
+) {
+  this._player = context._player;
+  this._gameTicker = context._gameTicker;
+  this._hud = context._hud;
+  this._gameArena = context._gameArena;
 
   this._commands = {
     restart: commands.restart || (() => {}),
@@ -26,7 +29,10 @@ var ControllerInterface = function (commands: ControllerCommands) {
 
   this._rotationStep = 360 / CONSTS.player.rotationFrameCount;
 } as unknown as {
-  new (commands: ControllerCommands): ControllerInterfaceInstance;
+  new (
+    context: GameDataStore,
+    commands: ControllerCommands
+  ): ControllerInterfaceInstance;
   prototype: Record<string, unknown>;
 };
 

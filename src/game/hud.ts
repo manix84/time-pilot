@@ -1,17 +1,17 @@
 /* Converted from TimePilot.Hud.js (AMD) to ESM TypeScript. */
 import CONSTS from "./constants";
-import dataStore from "./data-store";
 import userOptions from "./user-options";
-import type { HudInstance, PlayerData, SpriteImage } from "./types";
+import type { GameDataStore, HudInstance, PlayerData, SpriteImage } from "./types";
 
 /**
  * Create a hud instance to be rendered on the gameArena
  * @constructor
  * @returns {Hud Instance}
  */
-var Hud = function () {
-  this._gameArena = dataStore._gameArena;
-  this._playerData = dataStore._player.getData() as PlayerData;
+var Hud = function (context: GameDataStore) {
+  this._context = context;
+  this._gameArena = context._gameArena;
+  this._playerData = context._player.getData() as PlayerData;
 
   this._playerSprite = new Image() as SpriteImage;
   this._playerSprite.src = CONSTS.player.sprite.src;
@@ -20,7 +20,7 @@ var Hud = function () {
   this._playerSprite.frameX = 0;
   this._playerSprite.frameY = 0;
 } as unknown as {
-  new (): HudInstance;
+  new (context: GameDataStore): HudInstance;
   prototype: Record<string, unknown>;
 };
 
@@ -68,7 +68,7 @@ Hud.prototype = {
         color: "#FFF",
       });
     }
-    if (!dataStore._gameTicker.isRunning) {
+    if (!this._context._gameTicker.isRunning) {
       this._gameArena.renderText("Paused", 0, 25, {
         size: 25,
         align: "center",

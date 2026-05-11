@@ -1,12 +1,11 @@
 /* Converted from TimePilot.Prop.js (AMD) to ESM TypeScript. */
 import CONSTS from "./constants";
-import dataStore from "./data-store";
 import helpers from "./engine/helpers";
-import type { PropData, PropInstance } from "./types";
+import type { GameDataStore, PropData, PropInstance } from "./types";
 
-var Prop = function (posX: number, posY: number) {
-  this._gameArena = dataStore._gameArena;
-  this._player = dataStore._player;
+var Prop = function (context: GameDataStore, posX: number, posY: number) {
+  this._gameArena = context._gameArena;
+  this._player = context._player;
 
   var level = 1 as const;
   var type = Math.floor(Math.random() * CONSTS.levels[level].props.length);
@@ -23,7 +22,7 @@ var Prop = function (posX: number, posY: number) {
   this._propSprite = new Image();
   this._propSprite.src = this.getLevelData().sprite.src;
 } as unknown as {
-  new (posX: number, posY: number): PropInstance;
+  new (context: GameDataStore, posX: number, posY: number): PropInstance;
   prototype: Record<string, unknown>;
 };
 

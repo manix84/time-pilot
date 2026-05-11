@@ -1,15 +1,17 @@
 /* Converted from TimePilot.PropFactory.js (AMD) to ESM TypeScript. */
 import Prop from "./prop";
 import type {
+  GameDataStore,
   PropData,
   PropFactoryInstance,
   PropInstance,
 } from "./types";
 
-var PropFactory = function () {
+var PropFactory = function (context: GameDataStore) {
+  this._context = context;
   this._props = [] as PropInstance[];
 } as unknown as {
-  new (): PropFactoryInstance;
+  new (context: GameDataStore): PropFactoryInstance;
   prototype: Record<string, unknown>;
 };
 
@@ -21,7 +23,7 @@ PropFactory.prototype = {
    * @param   {Number} posY    - Y coordinate to start from.
    */
   create: function (posX: number, posY: number): void {
-    this._props.push(new Prop(posX, posY));
+    this._props.push(new Prop(this._context, posX, posY));
   },
 
   /**
