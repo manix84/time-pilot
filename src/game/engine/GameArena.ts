@@ -1,13 +1,12 @@
-// @ts-nocheck
 /* Converted from engine/GameArena.js (AMD) to ESM TypeScript. */
 import helpers from "./helpers";
 
 /**
-     * Create a GameArena instance to run the game in.
-     * @constructor
-     * @param   {HTML Element} containerElement - Element to load the canvas into.
-     * @returns {GameArena Instance}
-     */
+ * Create a GameArena instance to run the game in.
+ * @constructor
+ * @param   {HTML Element} containerElement - Element to load the canvas into.
+ * @returns {GameArena Instance}
+ */
 var GameArena = function (containerElement) {
   var that = this;
   this._containerElement = containerElement;
@@ -23,52 +22,56 @@ var GameArena = function (containerElement) {
   this.posX = 0;
   this.posY = 0;
 
-  helpers.bind("fullscreenchange webkitfullscreenchange mozfullscreenchange msfullscreenchange", function () {
-    that._isInFullScreen = !that._isInFullScreen;
-    if (that._isInFullScreen) {
-      that.resize(screen.width, screen.height);
-      window.console.log("Entered Full-Screen");
-    } else {
-      that.resize(that._oldWidth, that._oldHeight);
-      window.console.log("Exited Full-Screen");
+  helpers.bind(
+    "fullscreenchange webkitfullscreenchange mozfullscreenchange msfullscreenchange",
+    function () {
+      that._isInFullScreen = !that._isInFullScreen;
+      if (that._isInFullScreen) {
+        that.resize(screen.width, screen.height);
+        window.console.log("Entered Full-Screen");
+      } else {
+        that.resize(that._oldWidth, that._oldHeight);
+        window.console.log("Exited Full-Screen");
+      }
     }
-  });
+  );
 
   this._init();
 };
 
 GameArena.prototype = {
   /**
-         * Initialising canvas.
-         * @method
-         */
+   * Initialising canvas.
+   * @method
+   */
   _init: function () {
     this._styles = document.createElement("style");
-    this._styles.innerText = "@font-face {" +
-                "font-family: 'theFont';" +
-                "src: url('/fonts/font.ttf');" +
-            " }";
+    this._styles.innerText =
+      "@font-face {" +
+      "font-family: 'theFont';" +
+      "src: url('/fonts/font.ttf');" +
+      " }";
 
     this._containerElement.appendChild(this._styles);
     this._containerElement.appendChild(this._canvas);
   },
 
   /**
-         * Update current viewport coordinates.
-         * @param  {Number} posX
-         * @param  {Number} posY
-         */
+   * Update current viewport coordinates.
+   * @param  {Number} posX
+   * @param  {Number} posY
+   */
   updatePosition: function (posX, posY) {
     this.posX = posX;
     this.posY = posY;
   },
 
   /**
-         * Resize the canvas to specified height and width. Defaults to the container elements current dimentions.
-         * @method
-         * @param   {Number} width
-         * @param   {Number} height
-         */
+   * Resize the canvas to specified height and width. Defaults to the container elements current dimentions.
+   * @method
+   * @param   {Number} width
+   * @param   {Number} height
+   */
   resize: function (width, height) {
     width = width || this._containerElement.clientWidth;
     height = height || this._containerElement.clientHeight;
@@ -89,11 +92,11 @@ GameArena.prototype = {
   },
 
   /**
-         * Return 2D or 3D canvas context.
-         * @method
-         * @param   {String} dimentions - Canvas context you want back (2D or 3D).
-         * @returns {Canvas Context}
-         */
+   * Return 2D or 3D canvas context.
+   * @method
+   * @param   {String} dimentions - Canvas context you want back (2D or 3D).
+   * @returns {Canvas Context}
+   */
   getContext: function (dimentions) {
     if (!this._context) {
       switch (dimentions) {
@@ -110,38 +113,39 @@ GameArena.prototype = {
   },
 
   /**
-         * Enter full-screen, using the full-screen api.
-         * @method
-         */
+   * Enter full-screen, using the full-screen api.
+   * @method
+   */
   enterFullScreen: function () {
-    var element = this._canvas;
+    var element = this._canvas as any;
     if (element.requestFullscreen) {
       element.requestFullscreen();
     } else if (element.mozRequestFullScreen) {
       element.mozRequestFullScreen();
     } else if (element.webkitRequestFullscreen) {
-      element.webkitRequestFullscreen(Element.ALLOW_KEYBOARD_INPUT);
+      element.webkitRequestFullscreen((Element as any).ALLOW_KEYBOARD_INPUT);
     }
   },
 
   /**
-         * Exit full-screen mode.
-         * @method
-         */
+   * Exit full-screen mode.
+   * @method
+   */
   exitFullScreen: function () {
-    if (document.cancelFullScreen) {
-      document.cancelFullScreen();
-    } else if (document.mozCancelFullScreen) {
-      document.mozCancelFullScreen();
-    } else if (document.webkitCancelFullScreen) {
-      document.webkitCancelFullScreen();
+    var doc = document as any;
+    if (doc.cancelFullScreen) {
+      doc.cancelFullScreen();
+    } else if (doc.mozCancelFullScreen) {
+      doc.mozCancelFullScreen();
+    } else if (doc.webkitCancelFullScreen) {
+      doc.webkitCancelFullScreen();
     }
   },
 
   /**
-         * Toggle full-screen mode.
-         * @method
-         */
+   * Toggle full-screen mode.
+   * @method
+   */
   toggleFullScreen: function () {
     window.console.log("this._isInFullScreen", this._isInFullScreen);
     if (this._isInFullScreen) {
@@ -152,26 +156,26 @@ GameArena.prototype = {
   },
 
   /**
-         * Set the canvas background-color.
-         * @param  {String} color - Background-color to be set.
-         */
+   * Set the canvas background-color.
+   * @param  {String} color - Background-color to be set.
+   */
   setBackgroundColor: function (color) {
     this._canvas.style.background = color;
   },
 
   /**
-         * Clear entire games arena.
-         */
+   * Clear entire games arena.
+   */
   clear: function () {
     this._canvas.width = this._canvas.width;
-    this._context.translate((this.width / 2), (this.height / 2));
+    this._context.translate(this.width / 2, this.height / 2);
   },
 
   /**
-         * Register assets to be preloaded.
-         * @method
-         * @param   {String/Array} assets - Assets to be preloaded.
-         */
+   * Register assets to be preloaded.
+   * @method
+   * @param   {String/Array} assets - Assets to be preloaded.
+   */
   registerAssets: function (assets) {
     if (typeof assets === "string") {
       assets = [assets];
@@ -180,28 +184,29 @@ GameArena.prototype = {
   },
 
   /**
-         * Begin preloading registered assets. Callback is run each time an asset is loaded.
-         * @method
-         * @param   {Function} callback - Callback is run on each completed asset.
-         */
+   * Begin preloading registered assets. Callback is run each time an asset is loaded.
+   * @method
+   * @param   {Function} callback - Callback is run on each completed asset.
+   */
   preloadAssets: function (callback) {
     callback = callback || function () {};
     var loadedCount = 0,
-      remainingCount = (this._assets.length - 1),
+      remainingCount = this._assets.length - 1,
       i = remainingCount,
       img = [],
-      onload, onerror;
+      onload,
+      onerror;
 
     onload = function () {
       callback({
         loaded: ++loadedCount,
-        remaining: --remainingCount
+        remaining: --remainingCount,
       });
     };
     onerror = function () {
       callback({
         loaded: ++loadedCount,
-        remaining: --remainingCount
+        remaining: --remainingCount,
       });
     };
 
@@ -215,18 +220,18 @@ GameArena.prototype = {
   },
 
   /**
-         * Render text.
-         * @method
-         * @param   {String} message            - Text to be rendered
-         * @param   {Number} [startPosX]        - X coordinate to render
-         * @param   {Number} [startPosY]        - Y coordinate to render
-         * @param   {Object} [newOptions]
-         * @enum    {String} [newOptions.align] - Text alignment
-         * @enum    {Number} [newOptions.size]  - Text size
-         * @enum    {String} [newOptions.color] - Text color
-         * @enum    {String} [newOptions.font]  - Font type
-         * @enum    {String} [newOptions.stroke]  - Stroke color. If not set, it won't show.
-         */
+   * Render text.
+   * @method
+   * @param   {String} message            - Text to be rendered
+   * @param   {Number} [startPosX]        - X coordinate to render
+   * @param   {Number} [startPosY]        - Y coordinate to render
+   * @param   {Object} [newOptions]
+   * @enum    {String} [newOptions.align] - Text alignment
+   * @enum    {Number} [newOptions.size]  - Text size
+   * @enum    {String} [newOptions.color] - Text color
+   * @enum    {String} [newOptions.font]  - Font type
+   * @enum    {String} [newOptions.stroke]  - Stroke color. If not set, it won't show.
+   */
   renderText: function (message, startPosX, startPosY, newOptions) {
     startPosX = startPosX || 0;
     startPosY = startPosY || 0;
@@ -237,7 +242,7 @@ GameArena.prototype = {
         color: newOptions.color || "#fff",
         font: newOptions.font || "theFont",
         stroke: newOptions.stroke || false,
-        strokeWidth: newOptions.strokeWidth || 1
+        strokeWidth: newOptions.strokeWidth || 1,
       },
       context = this.getContext();
 
@@ -255,33 +260,37 @@ GameArena.prototype = {
   },
 
   /**
-         * Render sprite
-         * @method
-         * @param   {Image Sprite} sprite   - Image sprite to be rendered
-         * @param   {Object} spriteData     - Object containing coordinates and sprite positions.
-         */
+   * Render sprite
+   * @method
+   * @param   {Image Sprite} sprite   - Image sprite to be rendered
+   * @param   {Object} spriteData     - Object containing coordinates and sprite positions.
+   */
   renderSprite: function (sprite, spriteData) {
     var context = this.getContext();
 
     context.drawImage(
       sprite,
-      (spriteData.frameX * spriteData.frameWidth), (spriteData.frameY * spriteData.frameHeight),
-      spriteData.frameWidth, spriteData.frameHeight,
-      spriteData.posX, spriteData.posY,
-      spriteData.frameWidth, spriteData.frameHeight
+      spriteData.frameX * spriteData.frameWidth,
+      spriteData.frameY * spriteData.frameHeight,
+      spriteData.frameWidth,
+      spriteData.frameHeight,
+      spriteData.posX,
+      spriteData.posY,
+      spriteData.frameWidth,
+      spriteData.frameHeight
     );
   },
 
   /**
-         * Draw a circle centered around the X & Y coordinates.
-         * @param  {Number} posX
-         * @param  {Number} posY
-         * @param  {Number} radius
-         * @param  {Object} options
-         * @enum   {String} options.backgroundColor
-         * @enum   {String} options.borderColor
-         * @enum   {Number} options.borderWidth
-         */
+   * Draw a circle centered around the X & Y coordinates.
+   * @param  {Number} posX
+   * @param  {Number} posY
+   * @param  {Number} radius
+   * @param  {Object} options
+   * @enum   {String} options.backgroundColor
+   * @enum   {String} options.borderColor
+   * @enum   {Number} options.borderWidth
+   */
   drawCircle: function (posX, posY, radius, options) {
     posX = posX || 0;
     posY = posY || 0;
@@ -289,9 +298,9 @@ GameArena.prototype = {
     options = {
       backgroundColor: options.backgroundColor || "transparent",
       borderColor: options.borderColor || false,
-      borderWidth: options.borderWidth || 1
-    },
-    context = this.getContext();
+      borderWidth: options.borderWidth || 1,
+    };
+    var context = this.getContext();
 
     context.beginPath();
     context.arc(posX, posY, radius, 0, 2 * Math.PI, false);
@@ -306,10 +315,10 @@ GameArena.prototype = {
   },
 
   /**
-         * Adds a grid to the canvas.
-         * @param  {Number} [widthSpace=20]
-         * @param  {Number} [heightSpace=20]
-         */
+   * Adds a grid to the canvas.
+   * @param  {Number} [widthSpace=20]
+   * @param  {Number} [heightSpace=20]
+   */
   drawDebugGrid: function (widthSpace, heightSpace) {
     widthSpace = widthSpace || 20;
     heightSpace = heightSpace || 20;
@@ -328,7 +337,7 @@ GameArena.prototype = {
 
     this._canvas.strokeStyle = "#AAA";
     this._canvas.stroke();
-  }
+  },
 };
 
 export default GameArena;

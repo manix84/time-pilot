@@ -1,6 +1,4 @@
-// @ts-nocheck
 /* Converted from TimePilot.Menu.main.js (AMD) to ESM TypeScript. */
-import userOptions from "./TimePilot.userOptions";
 
 var main = {
   name: "Welcome",
@@ -8,7 +6,7 @@ var main = {
     start: {
       name: "Start 1 Player",
       type: "button",
-      callback: function () {}
+      callback: function () {},
     },
     controllerType: {
       name: "Contoller",
@@ -17,12 +15,12 @@ var main = {
         keyboard1: "Keyboard Set 1",
         keyboard2: "Keyboard Set 2",
         joystick: "Joystick/Gamepad",
-        touch: "Touch Screen"
+        touch: "Touch Screen",
       },
       getValue: function () {},
-      setValue: function () {}
-    }
-  }
+      setValue: function () {},
+    },
+  },
 };
 
 export default main;

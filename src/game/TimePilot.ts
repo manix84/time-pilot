@@ -1,4 +1,3 @@
-// @ts-nocheck
 /* Converted from TimePilot.js (AMD) to ESM TypeScript. */
 import GameArena from "./engine/GameArena";
 import helpers from "./engine/helpers";
@@ -211,7 +210,7 @@ TimePilot.prototype = {
   },
 
   _spawnEntities: function () {
-    var data = {},
+    var data: any = {},
       heading = 0,
       randomTickInterval = Math.floor(Math.random() * (1 - 200 + 1)) + 200;
     if (

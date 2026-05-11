@@ -1,4 +1,3 @@
-// @ts-nocheck
 /* Converted from TimePilot.Bullet.js (AMD) to ESM TypeScript. */
 import CONSTS from "./TimePilot.CONSTANTS";
 import dataStore from "./TimePilot.dataStore";
@@ -6,13 +5,13 @@ import userOptions from "./TimePilot.userOptions";
 import helpers from "./engine/helpers";
 
 /**
-     * Creates a bullet to add to render.
-     * @constructor
-     * @param   {Number}            originX     - Spawning location on the X axis.
-     * @param   {Number}            originY     - Spawning location on the Y axis.
-     * @param   {Number}            heading     - Start heading (usually towards the player).
-     * @returns {Bullet Instance}
-     */
+ * Creates a bullet to add to render.
+ * @constructor
+ * @param   {Number}            originX     - Spawning location on the X axis.
+ * @param   {Number}            originY     - Spawning location on the Y axis.
+ * @param   {Number}            heading     - Start heading (usually towards the player).
+ * @returns {Bullet Instance}
+ */
 
 var Bullet = function (originX, originY, heading, size, velocity, color) {
   this._gameArena = dataStore._gameArena;
@@ -29,13 +28,12 @@ var Bullet = function (originX, originY, heading, size, velocity, color) {
 };
 
 Bullet.prototype = {
-
   /**
-         * Get data for the player.
-         * @method
-         * @param {String} [key] Key to return when requesting data. If no key is provided, it returns the object.
-         * @returns {Object}
-         */
+   * Get data for the player.
+   * @method
+   * @param {String} [key] Key to return when requesting data. If no key is provided, it returns the object.
+   * @returns {Object}
+   */
   getData: function (key) {
     if (!key) {
       return this._data;
@@ -46,77 +44,83 @@ Bullet.prototype = {
   },
 
   /**
-         * Set data in the player's data object.
-         * @method
-         * @param   {String} key  - Key from _data object
-         * @param   {Multi} value - Value to be set onto the key from the _data object.
-         * @returns {Boolean} Success response.
-         */
+   * Set data in the player's data object.
+   * @method
+   * @param   {String} key  - Key from _data object
+   * @param   {Multi} value - Value to be set onto the key from the _data object.
+   * @returns {Boolean} Success response.
+   */
   setData: function (key, value) {
     if (this._data[key] !== undefined) {
       this._data[key] = value;
-      return (this._data[key] === value);
+      return this._data[key] === value;
     } else {
       return false;
     }
   },
 
   /**
-         * The current level.
-         * @type {Number}
-         */
+   * The current level.
+   * @type {Number}
+   */
   _level: 1,
 
   /**
-         * Set current level.
-         * @method
-         * @param   {Number} level - Level number to be set.
-         * @returns {Boolean}
-         */
+   * Set current level.
+   * @method
+   * @param   {Number} level - Level number to be set.
+   * @returns {Boolean}
+   */
   setLevel: function (level) {
     this._level = level;
-    return (this._level === level);
+    return this._level === level;
   },
 
   /**
-         * Detect if the entity has left a given radius of the player.
-         * @method
-         * @protected
-         */
+   * Detect if the entity has left a given radius of the player.
+   * @method
+   * @protected
+   */
   _checkInArena: function () {
     if (this.removeMe) {
       return;
     }
 
-    this.removeMe = helpers.detectAreaExit({
-      posX: (this._data.size / 2),
-      posY: (this._data.size / 2)
-    }, {
-      posX: this._data.posX,
-      posY: this._data.posY
-    },
-    CONSTS.limits.despawnRadius
+    this.removeMe = helpers.detectAreaExit(
+      {
+        posX: this._data.size / 2,
+        posY: this._data.size / 2,
+      },
+      {
+        posX: this._data.posX,
+        posY: this._data.posY,
+      },
+      CONSTS.limits.despawnRadius
     );
   },
 
   /**
-         * Reposition the entity.
-         * @method
-         */
+   * Reposition the entity.
+   * @method
+   */
   reposition: function () {
     var velocity = this._data.velocity,
       heading = this._data.heading;
 
-    this._data.posX += helpers.float(Math.sin(heading * (Math.PI / 180)) * velocity);
-    this._data.posY -= helpers.float(Math.cos(heading * (Math.PI / 180)) * velocity);
+    this._data.posX += helpers.float(
+      Math.sin(heading * (Math.PI / 180)) * velocity
+    );
+    this._data.posY -= helpers.float(
+      Math.cos(heading * (Math.PI / 180)) * velocity
+    );
 
     this._checkInArena();
   },
 
   /**
-         * Render the entity.
-         * @method
-         */
+   * Render the entity.
+   * @method
+   */
   render: function () {
     var size = this._data.size,
       color = this._data.color,
@@ -124,21 +128,23 @@ Bullet.prototype = {
 
     context.fillStyle = color;
     context.fillRect(
-      this._data.posX - (size / 2),
-      this._data.posY - (size / 2),
-      size, size
+      this._data.posX - size / 2,
+      this._data.posY - size / 2,
+      size,
+      size
     );
 
     if (userOptions.enableDebug && userOptions.debug.showHitboxes) {
       this._gameArena.drawCircle(
         this._data.posX,
         this._data.posY,
-        this._data.size, {
-          strokeColor: "#0F0"
+        this._data.size,
+        {
+          strokeColor: "#0F0",
         }
       );
     }
-  }
+  },
 };
 
 export default Bullet;

@@ -1,46 +1,44 @@
-// @ts-nocheck
 /* Converted from TimePilot.EnemyFactory.js (AMD) to ESM TypeScript. */
 import CONSTS from "./TimePilot.CONSTANTS";
-import dataStore from "./TimePilot.dataStore";
 import Enemy from "./TimePilot.Enemy";
+import dataStore from "./TimePilot.dataStore";
 import SoundEngine from "./engine/Sound";
-import helpers from "./engine/helpers";
 
 /**
-     * Construct an enemy factory for managing creation, movement, rendering and removal of enemies.
-     * @constructor
-     * @returns {Enemy Factory Instance}
-     */
+ * Construct an enemy factory for managing creation, movement, rendering and removal of enemies.
+ * @constructor
+ * @returns {Enemy Factory Instance}
+ */
 var EnemyFactory = function () {
   this._level = dataStore._level;
   this._player = dataStore._player;
   this._bullets = dataStore._bullets;
 
-  this._explosionSound = new SoundEngine(this.getLevelData().explosion.sound.src);
+  this._explosionSound = new SoundEngine(
+    this.getLevelData().explosion.sound.src
+  );
 
   this._enemies = [];
 };
 
 EnemyFactory.prototype = {
   /**
-         * Create an enemy instance and keep a record of it in the factory.
-         * @method
-         * @param   {Number} posX    - X coordinate to start from.
-         * @param   {Number} posY    - Y coordinate to start from.
-         * @param   {Number} heading - Heading to start from.
-         */
+   * Create an enemy instance and keep a record of it in the factory.
+   * @method
+   * @param   {Number} posX    - X coordinate to start from.
+   * @param   {Number} posY    - Y coordinate to start from.
+   * @param   {Number} heading - Heading to start from.
+   */
   create: function (posX, posY, heading) {
-    this._enemies.push(
-      new Enemy(posX, posY, heading)
-    );
+    this._enemies.push(new Enemy(posX, posY, heading));
   },
 
   /**
-         * Get current data for this level
-         * @method
-         * @param {String} [key] [description]
-         * @returns {object}
-         */
+   * Get current data for this level
+   * @method
+   * @param {String} [key] [description]
+   * @returns {object}
+   */
   getLevelData: function (key) {
     var data = CONSTS.levels[this._level].enemies.basic;
     if (key) {
@@ -55,31 +53,31 @@ EnemyFactory.prototype = {
   },
 
   /**
-         * Get the current number of spawned entities.
-         * @method
-         * @returns {Number}
-         */
+   * Get the current number of spawned entities.
+   * @method
+   * @returns {Number}
+   */
   getCount: function () {
     return this._enemies.length;
   },
 
   /**
-         * Boolean flag reporting if there are spawns available for enemies.
-         * @method
-         * @returns {Boolean}
-         */
+   * Boolean flag reporting if there are spawns available for enemies.
+   * @method
+   * @returns {Boolean}
+   */
   isUnderLimit: function () {
-    return this._enemies.length < this.getLevelData('spawnLimit');
+    return this._enemies.length < this.getLevelData("spawnLimit");
   },
 
   /**
-         * Return the data for all entities in an array.
-         * @method
-         * @returns {Array}
-         */
+   * Return the data for all entities in an array.
+   * @method
+   * @returns {Array}
+   */
   getData: function () {
     var data = [],
-      i = 0;
+      i: any = 0;
     for (i in this._enemies) {
       if (this._enemies.hasOwnProperty(i)) {
         data.push(this._enemies[i].getData());
@@ -89,20 +87,26 @@ EnemyFactory.prototype = {
   },
 
   /**
-         * Run player collision calculations on all entities.
-         * @method
-         */
+   * Run player collision calculations on all entities.
+   * @method
+   */
   detectCollision: function () {
     var bullets = this._bullets.getData(),
       playerData = this._player.getData();
 
     for (var i in this._enemies) {
-      if (this._enemies.hasOwnProperty(i) && this._enemies[i].isAlive && playerData.isAlive) {
-        if (this._enemies[i].detectCollision(
-          playerData.posX,
-          playerData.posY,
-          CONSTS.player.hitRadius
-        )) {
+      if (
+        this._enemies.hasOwnProperty(i) &&
+        this._enemies[i].isAlive &&
+        playerData.isAlive
+      ) {
+        if (
+          this._enemies[i].detectCollision(
+            playerData.posX,
+            playerData.posY,
+            CONSTS.player.hitRadius
+          )
+        ) {
           this._enemies[i].kill();
           this._explosionSound.stop();
           this._explosionSound.play();
@@ -110,12 +114,13 @@ EnemyFactory.prototype = {
           this._player.kill();
         }
         for (var j in bullets) {
-          if (bullets.hasOwnProperty(j) &&
-                            this._enemies[i].detectCollision(
-                              bullets[j].posX + this._player.getData().posX,
-                              bullets[j].posY + this._player.getData().posY,
-                              CONSTS.player.projectile.size
-                            )
+          if (
+            bullets.hasOwnProperty(j) &&
+            this._enemies[i].detectCollision(
+              bullets[j].posX + this._player.getData().posX,
+              bullets[j].posY + this._player.getData().posY,
+              CONSTS.player.projectile.size
+            )
           ) {
             this._enemies[i].kill();
             this._explosionSound.stop();
@@ -127,9 +132,9 @@ EnemyFactory.prototype = {
   },
 
   /**
-         * If an entity declares it is to be removed, remove it.
-         * @method
-         */
+   * If an entity declares it is to be removed, remove it.
+   * @method
+   */
   cleanup: function () {
     var i;
 
@@ -141,9 +146,9 @@ EnemyFactory.prototype = {
   },
 
   /**
-         * Run all reposition logic.
-         * @method
-         */
+   * Run all reposition logic.
+   * @method
+   */
   reposition: function () {
     var i;
 
@@ -155,11 +160,11 @@ EnemyFactory.prototype = {
   },
 
   /**
-         * Render all enemies on the gameArena.
-         * @method
-         */
+   * Render all enemies on the gameArena.
+   * @method
+   */
   render: function () {
-    var i = 0;
+    var i: any = 0;
 
     for (i in this._enemies) {
       if (this._enemies.hasOwnProperty(i)) {
@@ -169,24 +174,24 @@ EnemyFactory.prototype = {
   },
 
   /**
-         * De-spawn specified entity.
-         * @method
-         * @param   {Number} entityId - Index ID of entity you wish to remove.
-         */
+   * De-spawn specified entity.
+   * @method
+   * @param   {Number} entityId - Index ID of entity you wish to remove.
+   */
   _despawn: function (entityId) {
     this._enemies.splice(entityId, 1);
   },
 
   /**
-         * Clear all enemies from memory.
-         */
+   * Clear all enemies from memory.
+   */
   clearAll: function () {
     for (var i in this._enemies) {
       if (this._enemies.hasOwnProperty(i)) {
         this._despawn(i);
       }
     }
-  }
+  },
 };
 
 export default EnemyFactory;

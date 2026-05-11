@@ -1,4 +1,3 @@
-// @ts-nocheck
 /* Converted from TimePilot.Controller.Gamepad.js (AMD) to ESM TypeScript. */
 import helpers from "./engine/helpers";
 
@@ -10,29 +9,32 @@ var Gamepad = function (controllerInterface) {
 
 Gamepad.prototype = {
   /**
-         * Is the fire button pressed on the Gamepad.
-         * @type {Boolean}
-         */
+   * Is the fire button pressed on the Gamepad.
+   * @type {Boolean}
+   */
   _isFireButtonPressed: false,
   /**
-         * Is the pause button pressed on the Gamepad.
-         * @type {Boolean}
-         */
+   * Is the pause button pressed on the Gamepad.
+   * @type {Boolean}
+   */
   _isPauseButtonPressed: false,
   /**
-         * Is the restart button pressed on the Gamepad.
-         * @type {Boolean}
-         */
+   * Is the restart button pressed on the Gamepad.
+   * @type {Boolean}
+   */
   _isRestartButtonPressed: false,
 
   /**
-         * Looping to check for gamepad data.
-         * @method _gameLoop
-         */
+   * Looping to check for gamepad data.
+   * @method _gameLoop
+   */
   _gameLoop: function () {
-    var gamepads = navigator.getGamepads ? navigator.getGamepads() : (
-      navigator.webkitGetGamepads ? navigator.webkitGetGamepads : []
-    );
+    var navigatorWithGamepads = navigator as any;
+    var gamepads = navigator.getGamepads
+      ? navigator.getGamepads()
+      : navigatorWithGamepads.webkitGetGamepads
+        ? navigatorWithGamepads.webkitGetGamepads()
+        : [];
     for (var playerIndex = 0; playerIndex < gamepads.length; playerIndex++) {
       var gamepad = gamepads[playerIndex];
       if (gamepad) {
@@ -60,8 +62,8 @@ Gamepad.prototype = {
 
         if (gamepad.axes[0] || gamepad.axes[1]) {
           var heading = helpers.findHeading({
-            posX: -(gamepad.axes[0]),
-            posY: -(gamepad.axes[1])
+            posX: -gamepad.axes[0],
+            posY: -gamepad.axes[1],
           });
           this._controllerInterface.rotateToHeading(heading);
         }
@@ -71,19 +73,18 @@ Gamepad.prototype = {
   },
 
   /**
-         * Connecting the Gamepad controller interface
-         * @method connect
-         */
+   * Connecting the Gamepad controller interface
+   * @method connect
+   */
   connect: function () {
     this._gameLoop();
   },
 
   /**
-         * Disconnecting the Gamepad controller interface.
-         * @method disconnect
-         */
-  disconnect: function () {
-  }
+   * Disconnecting the Gamepad controller interface.
+   * @method disconnect
+   */
+  disconnect: function () {},
 };
 
 export default Gamepad;

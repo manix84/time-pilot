@@ -1,4 +1,3 @@
-// @ts-nocheck
 /* Converted from TimePilot.PropFactory.js (AMD) to ESM TypeScript. */
 import Prop from "./TimePilot.Prop";
 
@@ -8,34 +7,32 @@ var PropFactory = function () {
 
 PropFactory.prototype = {
   /**
-         * Create a prop instance and keep a record of it in the factory.
-         * @method
-         * @param   {Number} posX    - X coordinate to start from.
-         * @param   {Number} posY    - Y coordinate to start from.
-         */
+   * Create a prop instance and keep a record of it in the factory.
+   * @method
+   * @param   {Number} posX    - X coordinate to start from.
+   * @param   {Number} posY    - Y coordinate to start from.
+   */
   create: function (posX, posY) {
-    this._props.push(
-      new Prop(posX, posY)
-    );
+    this._props.push(new Prop(posX, posY));
   },
 
   /**
-         * Get the current number of spawned entities.
-         * @method
-         * @returns {Number}
-         */
+   * Get the current number of spawned entities.
+   * @method
+   * @returns {Number}
+   */
   getCount: function () {
     return this._props.length;
   },
 
   /**
-         * Return the data for all prop entities in an array.
-         * @method
-         * @returns {Array}
-         */
+   * Return the data for all prop entities in an array.
+   * @method
+   * @returns {Array}
+   */
   getData: function () {
     var data = [],
-      i = 0;
+      i: any = 0;
     for (i in this._props) {
       if (this._props.hasOwnProperty(i)) {
         data.push(this._props[i].getData());
@@ -45,9 +42,9 @@ PropFactory.prototype = {
   },
 
   /**
-         * If an entity declares it is to be removed, remove it.
-         * @method
-         */
+   * If an entity declares it is to be removed, remove it.
+   * @method
+   */
   cleanup: function () {
     var i;
 
@@ -56,13 +53,12 @@ PropFactory.prototype = {
         this._despawn(i);
       }
     }
-
   },
 
   /**
-         * Run all reposition logic.
-         * @method
-         */
+   * Run all reposition logic.
+   * @method
+   */
   reposition: function () {
     var i;
 
@@ -74,12 +70,12 @@ PropFactory.prototype = {
   },
 
   /**
-         * Render all entities on the gameArena.
-         * @method
-         */
+   * Render all entities on the gameArena.
+   * @method
+   */
   render: function (layer) {
     layer = layer || false;
-    var i = 0;
+    var i: any = 0;
 
     for (i in this._props) {
       if (this._props.hasOwnProperty(i)) {
@@ -91,25 +87,24 @@ PropFactory.prototype = {
   },
 
   /**
-         * Despawn specified entity.
-         * @method
-         * @param   {Number} entityId - Index ID of entity you wish to remove.
-         */
+   * Despawn specified entity.
+   * @method
+   * @param   {Number} entityId - Index ID of entity you wish to remove.
+   */
   _despawn: function (entityId) {
     this._props.splice(entityId, 1);
   },
 
   /**
-         * Clear all props from memory.
-         */
+   * Clear all props from memory.
+   */
   clearAll: function () {
     for (var i in this._props) {
       if (this._props.hasOwnProperty(i)) {
         this._despawn(i);
       }
     }
-  }
-
+  },
 };
 
 export default PropFactory;

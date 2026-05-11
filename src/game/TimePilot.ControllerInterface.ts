@@ -1,14 +1,13 @@
-// @ts-nocheck
 /* Converted from TimePilot.ControllerInterface.js (AMD) to ESM TypeScript. */
 import CONSTS from "./TimePilot.CONSTANTS";
 import dataStore from "./TimePilot.dataStore";
 
 /**
-     * Create a ControllerInterface instance
-     * @constructor
-     * @method
-     * @returns {ControllerInterface instance}
-     */
+ * Create a ControllerInterface instance
+ * @constructor
+ * @method
+ * @returns {ControllerInterface instance}
+ */
 var ControllerInterface = function (commands) {
   this._player = dataStore._player;
   this._gameTicker = dataStore._gameTicker;
@@ -17,50 +16,59 @@ var ControllerInterface = function (commands) {
 
   this._commands = {
     restart: commands.restart || function () {},
-    pause: commands.pause || function () {}
-  }
+    pause: commands.pause || function () {},
+  };
 
-  this._rotationStep = (360 / CONSTS.player.rotationFrameCount);
+  this._rotationStep = 360 / CONSTS.player.rotationFrameCount;
 };
 
 ControllerInterface.prototype = {
   /**
-         * Rotate to a specified heading, moving in steps.
-         * @method
-         * @param   {Number} desiredHeading - Heading you wish to rotate to.
-         */
+   * Rotate to a specified heading, moving in steps.
+   * @method
+   * @param   {Number} desiredHeading - Heading you wish to rotate to.
+   */
   rotateToHeading: function (desiredHeading) {
-    this._player.setData("newHeading", (Math.floor(desiredHeading / 22.5) * 22.5));
+    this._player.setData(
+      "newHeading",
+      Math.floor(desiredHeading / 22.5) * 22.5
+    );
   },
 
   /**
-         * Rotate the player clockwise.
-         * @method
-         */
+   * Rotate the player clockwise.
+   * @method
+   */
   rotateClockwise: function () {
     var currentHeading = this._player.getData().heading,
-      desiredHeading = ((currentHeading + this._rotationStep) % 360);
+      desiredHeading = (currentHeading + this._rotationStep) % 360;
 
-    this._player.setData("newHeading", (Math.floor(desiredHeading / 22.5) * 22.5));
+    this._player.setData(
+      "newHeading",
+      Math.floor(desiredHeading / 22.5) * 22.5
+    );
   },
 
   /**
-         * Rotate the player anti-clockwise.
-         * @method
-         */
+   * Rotate the player anti-clockwise.
+   * @method
+   */
   rotateAntiClockwise: function () {
     var currentHeading = this._player.getData().heading,
-      desiredHeading = (currentHeading - this._rotationStep);
+      desiredHeading = currentHeading - this._rotationStep;
 
-    desiredHeading = ((desiredHeading < 0) ? (360 + desiredHeading) : desiredHeading);
+    desiredHeading = desiredHeading < 0 ? 360 + desiredHeading : desiredHeading;
 
-    this._player.setData("newHeading", (Math.floor(desiredHeading / 22.5) * 22.5));
+    this._player.setData(
+      "newHeading",
+      Math.floor(desiredHeading / 22.5) * 22.5
+    );
   },
 
   /**
-         * Stop rotating to last desired heading.
-         * @method
-         */
+   * Stop rotating to last desired heading.
+   * @method
+   */
   stop: function () {
     this._player.setData("newHeading", false);
   },
@@ -90,21 +98,25 @@ ControllerInterface.prototype = {
   },
 
   /**
-         * An alias for rotateAntiClockwise
-         */
-  rotateCounterClockwise: this.rotateAntiClockwise,
+   * An alias for rotateAntiClockwise
+   */
+  rotateCounterClockwise: function () {
+    this.rotateAntiClockwise();
+  },
 
   /**
-         * An alias for rotateClockwise.
-         */
-  rotateRight: this.rotateClockwise,
+   * An alias for rotateClockwise.
+   */
+  rotateRight: function () {
+    this.rotateClockwise();
+  },
 
   /**
-         * An alias for rotateAntiClockwise
-         */
-  rotateLeft: this.rotateAntiClockwise
-
-
+   * An alias for rotateAntiClockwise
+   */
+  rotateLeft: function () {
+    this.rotateAntiClockwise();
+  },
 };
 
 export default ControllerInterface;

@@ -1,5 +1,4 @@
-// @ts-nocheck
 /* Converted from TimePilot.dataStore.js (AMD) to ESM TypeScript. */
-var dataStore = {};
+var dataStore: Record<string, any> = {};
 
 export default dataStore;
