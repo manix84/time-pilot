@@ -83,6 +83,8 @@ function createContext(): GameDataStore {
   context._props = new PropFactory(context);
   context._hud = new Hud(context);
   context._menus = {
+    adjust: vi.fn(),
+    captureKey: vi.fn(() => false),
     isActive: vi.fn(() => false),
     showStart: vi.fn(),
     hide: vi.fn(),
@@ -185,8 +187,8 @@ describe("context-backed game modules", () => {
     controls.restart();
     controls.handlePointer?.({ posX: 0, posY: 0, type: "click" });
 
-    expect(context._menus.next).toHaveBeenCalledTimes(2);
-    expect(context._menus.previous).toHaveBeenCalledTimes(2);
+    expect(context._menus.adjust).toHaveBeenCalledWith(1);
+    expect(context._menus.adjust).toHaveBeenCalledWith(-1);
     expect(context._menus.activate).toHaveBeenCalledTimes(3);
     expect(context._menus.handlePointer).toHaveBeenCalledWith({
       posX: 0,

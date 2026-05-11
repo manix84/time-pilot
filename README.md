@@ -10,7 +10,7 @@
 - 🧱 Feature-oriented source layout under `src/game`.
 - 🧪 Vitest coverage for engine helpers, controllers, menus, factories, the game host, and React integration.
 - 🎛️ In-app keyboard layout and gamepad configuration.
-- 🧭 Canvas-rendered start menu with keyboard, gamepad, and mouse interaction.
+- 🧭 Canvas-rendered start/options menus with keyboard, gamepad, and mouse interaction.
 - ✅ PR checks for tests, lint, and type checking.
 - 🚀 Automatic GitHub Pages deployment from `main`.
 - 🏷️ Automatic GitHub Release creation from the current package version.
@@ -91,9 +91,11 @@ React owns mounting and cleanup. The game engine owns simulation, rendering, inp
 - **Rotate keyboard**: left/right rotate the player around the current heading.
 - **Gamepad**: enables or disables browser Gamepad API polling.
 
-The game also renders its start menu inside the canvas. Keyboard and gamepad
-commands move and activate menu items through the same controller interface used
-for gameplay, while mouse input is limited to menu interaction.
+The game also renders its start and options menus inside the canvas. Keyboard
+and gamepad commands move, adjust, and activate menu items through the same
+controller interface used for gameplay, while mouse input is limited to menu
+interaction. Options currently include volume levels, controller style, and
+custom keyboard bindings.
 
 ## 🧭 Project Structure
 

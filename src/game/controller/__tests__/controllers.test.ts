@@ -4,6 +4,7 @@ import Keyboard1 from "../keyboard1";
 import Keyboard2 from "../keyboard2";
 import Mouse from "../mouse";
 import type { ControllerInterfaceInstance } from "../../types";
+import userOptions from "../../user-options";
 
 function createControls(): ControllerInterfaceInstance {
   return {
@@ -28,6 +29,7 @@ function createControls(): ControllerInterfaceInstance {
 describe("controller modules", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    userOptions.setOption("controllerType", "keyboard1");
   });
 
   it("maps keyboard set 1 keys to controller actions", () => {
@@ -47,6 +49,7 @@ describe("controller modules", () => {
 
   it("maps keyboard set 2 keys to rotational controls", () => {
     const controls = createControls();
+    userOptions.setOption("controllerType", "keyboard2");
     const keyboard = new Keyboard2(controls);
 
     document.documentElement.dispatchEvent(new KeyboardEvent("keydown", { keyCode: 37 }));

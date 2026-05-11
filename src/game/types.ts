@@ -93,6 +93,18 @@ export interface ControllerCommands {
 
 export type ControllerType = "keyboard1" | "keyboard2";
 
+export interface KeyboardBindings {
+  down: number[];
+  fire: number[];
+  fullscreen: number[];
+  left: number[];
+  menu: number[];
+  pause: number[];
+  restart: number[];
+  right: number[];
+  up: number[];
+}
+
 export interface Controller {
   disconnect?: () => void;
 }
@@ -254,6 +266,7 @@ export interface ControllerInterfaceInstance {
   rotateRight: () => void;
   rotateLeft: () => void;
   handlePointer?: (pointer: MenuPointerData) => void;
+  captureKey?: (keyCode: number) => boolean;
 }
 
 export interface GameDataStore {
@@ -288,6 +301,8 @@ export interface MenuSystemCommands {
 }
 
 export interface MenuSystemInstance {
+  adjust: (direction: -1 | 1) => void;
+  captureKey: (keyCode: number) => boolean;
   isActive: () => boolean;
   showStart: () => void;
   hide: () => void;
@@ -418,5 +433,9 @@ export interface UserOptions {
   enableDebug: boolean;
   controllerType: ControllerType;
   gamepadEnabled: boolean;
+  keyboardBindings: KeyboardBindings;
+  masterVolume: number;
+  musicVolume: number;
+  effectsVolume: number;
   setOption: <K extends keyof UserOptions>(key: K, value: UserOptions[K]) => void;
 }

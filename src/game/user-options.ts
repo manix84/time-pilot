@@ -51,6 +51,22 @@ var userOptions: UserOptions = {
    */
   gamepadEnabled: true,
 
+  keyboardBindings: {
+    left: [37, 65],
+    up: [38, 87],
+    right: [39, 68],
+    down: [40, 83],
+    fire: [32],
+    fullscreen: [70],
+    menu: [27],
+    pause: [80],
+    restart: [82],
+  },
+
+  masterVolume: 10,
+  musicVolume: 8,
+  effectsVolume: 8,
+
   /**
    * Set options in this object (userOptions), and store it so that the user doesn't have to set options each time
    * @method

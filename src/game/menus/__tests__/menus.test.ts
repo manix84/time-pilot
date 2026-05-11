@@ -1,6 +1,7 @@
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import Menus from "../../menus";
 import type { GameArenaInstance } from "../../types";
+import userOptions from "../../user-options";
 import debugMenu from "../debug";
 import mainMenu from "../main";
 import pauseMenu from "../pause";
@@ -28,6 +29,12 @@ const createArena = (): GameArenaInstance => ({
 });
 
 describe("menu definitions", () => {
+  afterEach(() => {
+    userOptions.setOption("controllerType", "keyboard1");
+    userOptions.setOption("masterVolume", 10);
+    userOptions.keyboardBindings.up = [38, 87];
+  });
+
   it("defines the main menu controls", () => {
     expect(mainMenu.name).toBe("Welcome");
     expect(mainMenu.buttons.start.callback?.()).toBeUndefined();
@@ -52,14 +59,12 @@ describe("menu definitions", () => {
     menus.showStart();
     menus.render();
     menus.activate();
+    const context = vi.mocked(arena.getContext).mock.results[0]
+      .value as CanvasRenderingContext2D;
 
     expect(menus.isActive()).toBe(true);
-    expect(arena.renderText).toHaveBeenCalledWith(
-      "Time Pilot",
-      0,
-      -96,
-      expect.objectContaining({ align: "center" })
-    );
+    expect(context.strokeText).toHaveBeenCalledWith("TIME PILOT", 5, 7);
+    expect(context.fillText).toHaveBeenCalledWith("TIME PILOT", -3, -5);
     expect(start).toHaveBeenCalled();
   });
 
@@ -68,10 +73,46 @@ describe("menu definitions", () => {
     const menus = new Menus(createArena(), { start });
 
     menus.showStart();
-    menus.handlePointer({ posX: 0, posY: 62, type: "move" });
+    menus.handlePointer({ posX: 0, posY: 0, type: "move" });
     expect(start).not.toHaveBeenCalled();
 
-    menus.handlePointer({ posX: 0, posY: 62, type: "click" });
+    menus.handlePointer({ posX: 0, posY: 0, type: "click" });
     expect(start).toHaveBeenCalled();
+  });
+
+  it("opens options and adjusts volume and controller type", () => {
+    const menus = new Menus(createArena(), { start: vi.fn() });
+    userOptions.setOption("masterVolume", 5);
+    userOptions.setOption("controllerType", "keyboard1");
+
+    menus.showStart();
+    menus.next();
+    menus.activate();
+
+    menus.adjust(1);
+    expect(userOptions.masterVolume).toBe(6);
+
+    menus.next();
+    menus.next();
+    menus.next();
+    menus.adjust(1);
+    expect(userOptions.controllerType).toBe("keyboard2");
+  });
+
+  it("captures a replacement keyboard binding", () => {
+    const menus = new Menus(createArena(), { start: vi.fn() });
+
+    menus.showStart();
+    menus.next();
+    menus.activate();
+
+    for (let i = 0; i < 4; i++) {
+      menus.next();
+    }
+
+    menus.activate();
+    expect(menus.captureKey(73)).toBe(true);
+    expect(userOptions.keyboardBindings.up).toEqual([73]);
+    expect(menus.captureKey(74)).toBe(false);
   });
 });

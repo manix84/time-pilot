@@ -39,10 +39,14 @@ class ControllerInterface implements ControllerInterfaceInstance {
 
   rotateToHeading(desiredHeading: Heading): void {
     if (this._menus.isActive()) {
-      if (desiredHeading === 0 || desiredHeading === 270) {
+      if (desiredHeading === 0) {
         this._menus.previous();
-      } else {
+      } else if (desiredHeading === 180) {
         this._menus.next();
+      } else if (desiredHeading === 270) {
+        this._menus.adjust(-1);
+      } else {
+        this._menus.adjust(1);
       }
       return;
     }
@@ -55,7 +59,7 @@ class ControllerInterface implements ControllerInterfaceInstance {
 
   rotateClockwise(): void {
     if (this._menus.isActive()) {
-      this._menus.next();
+      this._menus.adjust(1);
       return;
     }
 
@@ -70,7 +74,7 @@ class ControllerInterface implements ControllerInterfaceInstance {
 
   rotateAntiClockwise(): void {
     if (this._menus.isActive()) {
-      this._menus.previous();
+      this._menus.adjust(-1);
       return;
     }
 
@@ -150,6 +154,10 @@ class ControllerInterface implements ControllerInterfaceInstance {
 
   handlePointer(pointer: MenuPointerData): void {
     this._menus.handlePointer(pointer);
+  }
+
+  captureKey(keyCode: number): boolean {
+    return this._menus.captureKey(keyCode);
   }
 }
 

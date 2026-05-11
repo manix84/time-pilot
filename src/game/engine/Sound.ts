@@ -1,4 +1,6 @@
 /* Converted from engine/Sound.js (AMD) to ESM TypeScript. */
+import userOptions from "../user-options";
+
 interface SoundOptions {
   loop?: boolean;
   autoplay?: boolean;
@@ -51,6 +53,7 @@ class Sound {
   play(): void {
     this._theSound.loop = false;
     if (this._theSound.canPlay) {
+      this.applyVolume();
       this._theSound.play();
     }
   }
@@ -58,6 +61,7 @@ class Sound {
   loop(): void {
     this._theSound.loop = true;
     if (this._theSound.canPlay) {
+      this.applyVolume();
       this._theSound.play();
     }
   }
@@ -76,6 +80,11 @@ class Sound {
   destroy(): void {
     this.stop();
     this._theSound.removeEventListener("canplay", canPlayListener, false);
+  }
+
+  private applyVolume(): void {
+    this._theSound.volume =
+      (userOptions.masterVolume / 10) * (userOptions.effectsVolume / 10);
   }
 }
 

@@ -1,5 +1,6 @@
 /* Converted from TimePilot.Controller.Keyboard1.js (AMD) to ESM TypeScript. */
 import helpers from "../engine/helpers";
+import userOptions from "../user-options";
 import type { Controller, ControllerInterfaceInstance } from "../types";
 
 class Keyboard1 implements Controller {
@@ -14,48 +15,53 @@ class Keyboard1 implements Controller {
     helpers.bind(
       "keydown",
       (event: KeyboardEvent) => {
-        switch (event.keyCode) {
-          case 37:
-          case 65:
-            event.preventDefault();
+        if (this._controllerInterface.captureKey?.(event.keyCode)) {
+          event.preventDefault();
+          return;
+        }
+
+        const bindings = userOptions.keyboardBindings;
+
+        if (bindings.left.includes(event.keyCode)) {
+          event.preventDefault();
+          if (userOptions.controllerType === "keyboard2") {
+            this._controllerInterface.rotateAntiClockwise();
+          } else {
             this._controllerInterface.rotateToHeading(270);
-            break;
-          case 38:
-          case 87:
-            event.preventDefault();
+          }
+        } else if (bindings.up.includes(event.keyCode)) {
+          event.preventDefault();
+          if (userOptions.controllerType === "keyboard1") {
             this._controllerInterface.rotateToHeading(0);
-            break;
-          case 39:
-          case 68:
-            event.preventDefault();
+          }
+        } else if (bindings.right.includes(event.keyCode)) {
+          event.preventDefault();
+          if (userOptions.controllerType === "keyboard2") {
+            this._controllerInterface.rotateClockwise();
+          } else {
             this._controllerInterface.rotateToHeading(90);
-            break;
-          case 40:
-          case 83:
-            event.preventDefault();
+          }
+        } else if (bindings.down.includes(event.keyCode)) {
+          event.preventDefault();
+          if (userOptions.controllerType === "keyboard1") {
             this._controllerInterface.rotateToHeading(180);
-            break;
-          case 32:
-            event.preventDefault();
-            this._controllerInterface.startShooting();
-            break;
-          case 70:
-            event.preventDefault();
-            this._controllerInterface.toggleFullScreen();
-            break;
-          case 27:
-            event.preventDefault();
-            this._controllerInterface.toggleMenu();
-            this._controllerInterface.togglePause();
-            break;
-          case 80:
-            event.preventDefault();
-            this._controllerInterface.togglePause();
-            break;
-          case 82:
-            event.preventDefault();
-            this._controllerInterface.restart();
-            break;
+          }
+        } else if (bindings.fire.includes(event.keyCode)) {
+          event.preventDefault();
+          this._controllerInterface.startShooting();
+        } else if (bindings.fullscreen.includes(event.keyCode)) {
+          event.preventDefault();
+          this._controllerInterface.toggleFullScreen();
+        } else if (bindings.menu.includes(event.keyCode)) {
+          event.preventDefault();
+          this._controllerInterface.toggleMenu();
+          this._controllerInterface.togglePause();
+        } else if (bindings.pause.includes(event.keyCode)) {
+          event.preventDefault();
+          this._controllerInterface.togglePause();
+        } else if (bindings.restart.includes(event.keyCode)) {
+          event.preventDefault();
+          this._controllerInterface.restart();
         }
       },
     );
@@ -63,28 +69,26 @@ class Keyboard1 implements Controller {
     helpers.bind(
       "keyup",
       (event: KeyboardEvent) => {
-        switch (event.keyCode) {
-          case 27:
-          case 70:
-          case 80:
-          case 82:
-            event.preventDefault();
-            break;
-          case 37:
-          case 38:
-          case 39:
-          case 40:
-          case 65:
-          case 87:
-          case 68:
-          case 83:
-            event.preventDefault();
-            this._controllerInterface.stop();
-            break;
-          case 32:
-            event.preventDefault();
-            this._controllerInterface.stopShooting();
-            break;
+        const bindings = userOptions.keyboardBindings;
+
+        if (
+          bindings.menu.includes(event.keyCode) ||
+          bindings.fullscreen.includes(event.keyCode) ||
+          bindings.pause.includes(event.keyCode) ||
+          bindings.restart.includes(event.keyCode)
+        ) {
+          event.preventDefault();
+        } else if (
+          bindings.left.includes(event.keyCode) ||
+          bindings.up.includes(event.keyCode) ||
+          bindings.right.includes(event.keyCode) ||
+          bindings.down.includes(event.keyCode)
+        ) {
+          event.preventDefault();
+          this._controllerInterface.stop();
+        } else if (bindings.fire.includes(event.keyCode)) {
+          event.preventDefault();
+          this._controllerInterface.stopShooting();
         }
       },
     );
