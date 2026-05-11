@@ -1,14 +1,14 @@
 {
   "name": "time-pilot",
   "private": true,
-  "version": "1.0.0",
+  "version": "1.1.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit --noImplicitAny true",
-    "test": "node scripts/check-tests.mjs",
+    "test": "vitest run",
     "version:bump": "node scripts/smart-version-bump.mjs",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix"
@@ -27,8 +27,10 @@
     "eslint-plugin-react-hooks": "^7.1.1",
     "eslint-plugin-react-refresh": "^0.5.2",
     "globals": "^17.6.0",
+    "jsdom": "^29.1.1",
     "typescript": "^5.6.3",
     "typescript-eslint": "^8.59.2",
-    "vite": "^5.4.8"
+    "vite": "^5.4.8",
+    "vitest": "^4.1.6"
   }
 }

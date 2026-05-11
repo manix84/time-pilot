@@ -50,7 +50,7 @@ npm run typecheck
 npm run build
 ```
 
-`npm test` currently detects test files and exits cleanly when none exist. Once Vitest or Jest tests are added, the script will run the installed runner automatically.
+`npm test` runs the Vitest suite in jsdom.
 
 ## ⚛️ React Usage
 
@@ -154,4 +154,3 @@ TIME_PILOT_VERSION_BUMP=none git commit
 ## 🗒️ Milestones
 
 See [WHATSNEW.md](./WHATSNEW.md) for major project milestones and migration history.
-
