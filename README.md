@@ -8,6 +8,7 @@
 - ⚛️ Thin React integration via `useTimePilot`.
 - 🧠 Typed game engine modules with explicit game context injection.
 - 🧱 Feature-oriented source layout under `src/game`.
+- 🧪 Vitest coverage for engine helpers, controllers, menus, factories, the game host, and React integration.
 - ✅ PR checks for tests, lint, and type checking.
 - 🚀 Automatic GitHub Pages deployment from `main`.
 - 🏷️ Automatic GitHub Release creation from the current package version.
@@ -52,6 +53,15 @@ npm run build
 
 `npm test` runs the Vitest suite in jsdom.
 
+The test suite covers:
+
+- Engine helpers, collision checks, object cloning, headings, and rotation math.
+- Canvas arena, ticker, and sound wrappers using browser API shims.
+- Keyboard and gamepad controller adapters.
+- Menu definitions and state callbacks.
+- Game entities, factories, HUD wiring, and context-backed modules.
+- The `TimePilot` orchestrator and React `TimePilotGame` host component.
+
 ## ⚛️ React Usage
 
 Use the game as a regular React component:
@@ -84,10 +94,13 @@ src/
     use-time-pilot.ts       React bridge hook
     types.ts                Shared game contracts
     constants.ts            Game tuning and asset constants
+    __tests__/              Game module test coverage
     controller/             Keyboard and gamepad input adapters
     engine/                 Canvas arena, ticker, sound, helpers
     menus/                  Menu definitions
     *.ts                    Entities, factories, HUD, options
+  test/
+    setup.ts                Vitest jsdom/browser API shims
 ```
 
 ## 🧠 Architecture

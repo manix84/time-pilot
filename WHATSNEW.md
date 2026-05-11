@@ -32,11 +32,16 @@
 - Added release automation based on the current `package.json` version.
 - Added a pre-commit hook for smart semantic version bumping.
 
+## 🧪 Test Coverage
+
+- Added Vitest with jsdom for fast local and CI test runs.
+- Added browser API shims for canvas, media, animation frames, and gamepads.
+- Covered core engine helpers, arena behavior, ticker timing, sound wrappers, controllers, menus, factories, entities, HUD wiring, the `TimePilot` class, and the React host component.
+- Replaced the previous placeholder test script with a real `npm test` suite.
+
 ## 🔜 Next Milestones
 
-- Add a real test suite with Vitest.
 - Convert remaining prototype-style modules into classes or focused systems.
 - Split collision, spawning, and rendering into dedicated systems.
 - Add keyboard/gamepad configuration UI.
 - Expand gameplay levels, enemies, bonuses, and sound controls.
-
