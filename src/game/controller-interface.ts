@@ -1,11 +1,11 @@
 /* Converted from TimePilot.ControllerInterface.js (AMD) to ESM TypeScript. */
-import CONSTS from "./TimePilot.CONSTANTS";
-import dataStore from "./TimePilot.dataStore";
+import CONSTS from "./constants";
+import dataStore from "./data-store";
 import type {
   ControllerCommands,
   ControllerInterfaceInstance,
   Heading,
-} from "./TimePilot.types";
+} from "./types";
 
 /**
  * Create a ControllerInterface instance

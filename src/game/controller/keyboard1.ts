@@ -1,8 +1,8 @@
-/* Converted from TimePilot.Controller.Keyboard2.js (AMD) to ESM TypeScript. */
-import helpers from "./engine/helpers";
-import type { Controller, ControllerInterfaceInstance } from "./TimePilot.types";
+/* Converted from TimePilot.Controller.Keyboard1.js (AMD) to ESM TypeScript. */
+import helpers from "../engine/helpers";
+import type { Controller, ControllerInterfaceInstance } from "../types";
 
-var Keyboard2 = function (controllerInterface: ControllerInterfaceInstance) {
+var Keyboard1 = function (controllerInterface: ControllerInterfaceInstance) {
   this._controllerInterface = controllerInterface;
 
   this.connect();
@@ -11,7 +11,7 @@ var Keyboard2 = function (controllerInterface: ControllerInterfaceInstance) {
   prototype: Record<string, unknown>;
 };
 
-Keyboard2.prototype = {
+Keyboard1.prototype = {
   connect: function () {
     var that = this;
     helpers.bind(
@@ -21,12 +21,22 @@ Keyboard2.prototype = {
           case 37: // Left-Key
           case 65: // "A"
             event.preventDefault();
-            that._controllerInterface.rotateAntiClockwise();
+            that._controllerInterface.rotateToHeading(270);
+            break;
+          case 38: // Up-Key
+          case 87: // "W"
+            event.preventDefault();
+            that._controllerInterface.rotateToHeading(0);
             break;
           case 39: // Right-Key
           case 68: // "D"
             event.preventDefault();
-            that._controllerInterface.rotateClockwise();
+            that._controllerInterface.rotateToHeading(90);
+            break;
+          case 40: // Down-Key
+          case 83: // "S"
+            event.preventDefault();
+            that._controllerInterface.rotateToHeading(180);
             break;
           case 32: // Space-Bar
             event.preventDefault();
@@ -38,12 +48,16 @@ Keyboard2.prototype = {
             break;
           case 27: // Escape-Key
             event.preventDefault();
-            that._controllerInterface.openMenu();
+            that._controllerInterface.toggleMenu();
             that._controllerInterface.togglePause();
             break;
           case 80: // "P"-Key
             event.preventDefault();
             that._controllerInterface.togglePause();
+            break;
+          case 82: // "R"-Key
+            event.preventDefault();
+            that._controllerInterface.restart();
             break;
         }
       },
@@ -57,12 +71,17 @@ Keyboard2.prototype = {
           case 27: // Escape-Key
           case 70: // "F"-Key
           case 80: // "P"-Key
+          case 82: // "R"-Key
             event.preventDefault();
             break;
           case 37: // Left-Key
+          case 38: // Up-Key
           case 39: // Right-Key
-          case 65: // "A"
-          case 68: // "D"
+          case 40: // Down-Key
+          case 65: // "A"-Key
+          case 87: // "W"-Key
+          case 68: // "D"-Key
+          case 83: // "S"-Key
             event.preventDefault();
             that._controllerInterface.stop();
             break;
@@ -82,4 +101,4 @@ Keyboard2.prototype = {
   },
 };
 
-export default Keyboard2;
+export default Keyboard1;

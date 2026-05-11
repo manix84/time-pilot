@@ -1,7 +1,7 @@
 /* Converted from TimePilot.EnemyFactory.js (AMD) to ESM TypeScript. */
-import CONSTS from "./TimePilot.CONSTANTS";
-import Enemy from "./TimePilot.Enemy";
-import dataStore from "./TimePilot.dataStore";
+import CONSTS from "./constants";
+import Enemy from "./enemy";
+import dataStore from "./data-store";
 import SoundEngine from "./engine/Sound";
 import type {
   EnemyConfig,
@@ -9,7 +9,7 @@ import type {
   EnemyFactoryInstance,
   EnemyInstance,
   Heading,
-} from "./TimePilot.types";
+} from "./types";
 
 /**
  * Construct an enemy factory for managing creation, movement, rendering and removal of enemies.

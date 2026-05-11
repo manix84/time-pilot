@@ -1,10 +1,10 @@
 /* Converted from TimePilot.PropFactory.js (AMD) to ESM TypeScript. */
-import Prop from "./TimePilot.Prop";
+import Prop from "./prop";
 import type {
   PropData,
   PropFactoryInstance,
   PropInstance,
-} from "./TimePilot.types";
+} from "./types";
 
 var PropFactory = function () {
   this._props = [] as PropInstance[];

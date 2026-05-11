@@ -1,14 +1,14 @@
 /* Converted from TimePilot.Enemy.js (AMD) to ESM TypeScript. */
-import CONSTS from "./TimePilot.CONSTANTS";
-import dataStore from "./TimePilot.dataStore";
-import userOptions from "./TimePilot.userOptions";
+import CONSTS from "./constants";
+import dataStore from "./data-store";
+import userOptions from "./user-options";
 import helpers from "./engine/helpers";
 import type {
   EnemyConfig,
   EnemyData,
   EnemyInstance,
   Heading,
-} from "./TimePilot.types";
+} from "./types";
 
 /**
  * Creates an enemy to add to the page.

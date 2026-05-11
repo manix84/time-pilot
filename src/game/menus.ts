@@ -1,5 +1,5 @@
 /* Converted from TimePilot.Menu.js (AMD) to ESM TypeScript. */
-import type { GameArenaInstance } from "./TimePilot.types";
+import type { GameArenaInstance } from "./types";
 
 var Menus = function (gameArena: GameArenaInstance) {
   this._gameArena = gameArena;

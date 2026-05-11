@@ -1,9 +1,9 @@
 /* Converted from TimePilot.Bullet.js (AMD) to ESM TypeScript. */
-import CONSTS from "./TimePilot.CONSTANTS";
-import dataStore from "./TimePilot.dataStore";
-import userOptions from "./TimePilot.userOptions";
+import CONSTS from "./constants";
+import dataStore from "./data-store";
+import userOptions from "./user-options";
 import helpers from "./engine/helpers";
-import type { BulletData, BulletInstance, Heading } from "./TimePilot.types";
+import type { BulletData, BulletInstance, Heading } from "./types";
 
 /**
  * Creates a bullet to add to render.

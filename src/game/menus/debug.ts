@@ -1,5 +1,5 @@
 /* Converted from TimePilot.Menu.debug.js (AMD) to ESM TypeScript. */
-import type { MenuDefinition } from "./TimePilot.types";
+import type { MenuDefinition } from "../types";
 
 var debug: MenuDefinition = {
   name: "Debug Options",

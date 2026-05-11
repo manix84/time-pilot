@@ -1,8 +1,8 @@
 /* Converted from TimePilot.Hud.js (AMD) to ESM TypeScript. */
-import CONSTS from "./TimePilot.CONSTANTS";
-import dataStore from "./TimePilot.dataStore";
-import userOptions from "./TimePilot.userOptions";
-import type { HudInstance, PlayerData, SpriteImage } from "./TimePilot.types";
+import CONSTS from "./constants";
+import dataStore from "./data-store";
+import userOptions from "./user-options";
+import type { HudInstance, PlayerData, SpriteImage } from "./types";
 
 /**
  * Create a hud instance to be rendered on the gameArena

@@ -5,7 +5,7 @@ import type {
   GameArenaInstance,
   RenderTextOptions,
   SpriteFrame,
-} from "../TimePilot.types";
+} from "../types";
 import helpers from "./helpers";
 
 type CanvasContext = CanvasRenderingContext2D | WebGLRenderingContext;

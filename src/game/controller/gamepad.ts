@@ -1,6 +1,6 @@
 /* Converted from TimePilot.Controller.Gamepad.js (AMD) to ESM TypeScript. */
-import helpers from "./engine/helpers";
-import type { Controller, ControllerInterfaceInstance } from "./TimePilot.types";
+import helpers from "../engine/helpers";
+import type { Controller, ControllerInterfaceInstance } from "../types";
 
 var Gamepad = function (controllerInterface: ControllerInterfaceInstance) {
   this._controllerInterface = controllerInterface;

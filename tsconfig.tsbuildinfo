@@ -1,1 +1,35 @@
-{"root":["./src/app.tsx","./src/index.ts","./src/main.tsx","./src/components/timepilotgame.tsx","./src/game/timepilot.bonus.ts","./src/game/timepilot.bullet.ts","./src/game/timepilot.bulletfactory.ts","./src/game/timepilot.constants.ts","./src/game/timepilot.controller.gamepad.ts","./src/game/timepilot.controller.keyboard1.ts","./src/game/timepilot.controller.keyboard2.ts","./src/game/timepilot.controllerinterface.ts","./src/game/timepilot.enemy.ts","./src/game/timepilot.enemyfactory.ts","./src/game/timepilot.hud.ts","./src/game/timepilot.menus.debug.ts","./src/game/timepilot.menus.main.ts","./src/game/timepilot.menus.pause.ts","./src/game/timepilot.menus.ts","./src/game/timepilot.player.ts","./src/game/timepilot.prop.ts","./src/game/timepilot.propfactory.ts","./src/game/timepilot.datastore.ts","./src/game/timepilot.ts","./src/game/timepilot.types.ts","./src/game/timepilot.useroptions.ts","./src/game/engine/gamearena.ts","./src/game/engine/sound.ts","./src/game/engine/ticker.ts","./src/game/engine/helpers.ts"],"version":"5.9.3"}
+{
+  "root": [
+    "./src/app.tsx",
+    "./src/index.ts",
+    "./src/main.tsx",
+    "./src/components/timepilotgame.tsx",
+    "./src/game/bonus.ts",
+    "./src/game/bullet-factory.ts",
+    "./src/game/bullet.ts",
+    "./src/game/constants.ts",
+    "./src/game/controller-interface.ts",
+    "./src/game/data-store.ts",
+    "./src/game/enemy-factory.ts",
+    "./src/game/enemy.ts",
+    "./src/game/hud.ts",
+    "./src/game/index.ts",
+    "./src/game/menus.ts",
+    "./src/game/player.ts",
+    "./src/game/prop-factory.ts",
+    "./src/game/prop.ts",
+    "./src/game/types.ts",
+    "./src/game/user-options.ts",
+    "./src/game/controller/gamepad.ts",
+    "./src/game/controller/keyboard1.ts",
+    "./src/game/controller/keyboard2.ts",
+    "./src/game/engine/gamearena.ts",
+    "./src/game/engine/sound.ts",
+    "./src/game/engine/ticker.ts",
+    "./src/game/engine/helpers.ts",
+    "./src/game/menus/debug.ts",
+    "./src/game/menus/main.ts",
+    "./src/game/menus/pause.ts"
+  ],
+  "version": "5.9.3"
+}

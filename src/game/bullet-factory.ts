@@ -1,13 +1,13 @@
 /* Converted from TimePilot.BulletFactory.js (AMD) to ESM TypeScript. */
-import Bullet from "./TimePilot.Bullet";
-import CONSTS from "./TimePilot.CONSTANTS";
+import Bullet from "./bullet";
+import CONSTS from "./constants";
 import SoundEngine from "./engine/Sound";
 import type {
   BulletData,
   BulletFactoryInstance,
   BulletInstance,
   Heading,
-} from "./TimePilot.types";
+} from "./types";
 
 /**
  * Construct an bullet factory for managing creation, movement, rendering and removal of bullets.

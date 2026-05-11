@@ -1,11 +1,11 @@
 /* Converted from TimePilot.Bonus.js (AMD) to ESM TypeScript. */
-import CONSTS from "./TimePilot.CONSTANTS";
+import CONSTS from "./constants";
 import helpers from "./engine/helpers";
 import type {
   BonusData,
   GameArenaInstance,
   PlayerInstance,
-} from "./TimePilot.types";
+} from "./types";
 
 var Bonus = function (
   canvas: GameArenaInstance,

@@ -1,5 +1,5 @@
 /* Converted from TimePilot.userOptions.js (AMD) to ESM TypeScript. */
-import type { UserOptions } from "./TimePilot.types";
+import type { UserOptions } from "./types";
 
 var userOptions: UserOptions = {
   debug: {

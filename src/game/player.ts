@@ -1,10 +1,10 @@
 /* Converted from TimePilot.Player.js (AMD) to ESM TypeScript. */
-import CONSTS from "./TimePilot.CONSTANTS";
-import dataStore from "./TimePilot.dataStore";
-import userOptions from "./TimePilot.userOptions";
+import CONSTS from "./constants";
+import dataStore from "./data-store";
+import userOptions from "./user-options";
 import SoundEngine from "./engine/Sound";
 import helpers from "./engine/helpers";
-import type { PlayerData, PlayerInstance } from "./TimePilot.types";
+import type { PlayerData, PlayerInstance } from "./types";
 
 var playerConst = CONSTS.player;
 /**

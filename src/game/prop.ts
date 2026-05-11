@@ -1,8 +1,8 @@
 /* Converted from TimePilot.Prop.js (AMD) to ESM TypeScript. */
-import CONSTS from "./TimePilot.CONSTANTS";
-import dataStore from "./TimePilot.dataStore";
+import CONSTS from "./constants";
+import dataStore from "./data-store";
 import helpers from "./engine/helpers";
-import type { PropData, PropInstance } from "./TimePilot.types";
+import type { PropData, PropInstance } from "./types";
 
 var Prop = function (posX: number, posY: number) {
   this._gameArena = dataStore._gameArena;

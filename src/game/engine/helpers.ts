@@ -1,5 +1,5 @@
 /* Converted from engine/helpers.js (AMD) to ESM TypeScript. */
-import type { Coordinates, Heading, PositionedRadius } from "../TimePilot.types";
+import type { Coordinates, Heading, PositionedRadius } from "../types";
 
 interface LegacyEventTarget extends EventTarget {
   attachEvent?: (eventName: string, callback: EventListener) => void;

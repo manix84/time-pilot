@@ -2,18 +2,18 @@
 import GameArena from "./engine/GameArena";
 import helpers from "./engine/helpers";
 import Ticker from "./engine/Ticker";
-import BulletFactory from "./TimePilot.BulletFactory";
-import CONST from "./TimePilot.CONSTANTS";
-import Gamepad from "./TimePilot.Controller.Gamepad";
-import Keyboard1 from "./TimePilot.Controller.Keyboard1";
-import ControllerInterface from "./TimePilot.ControllerInterface";
-import dataStore from "./TimePilot.dataStore";
-import EnemyFactory from "./TimePilot.EnemyFactory";
-import Hud from "./TimePilot.Hud";
-import Player from "./TimePilot.Player";
-import PropFactory from "./TimePilot.PropFactory";
-import userOptions from "./TimePilot.userOptions";
-import type { AssetProgress, Controller, Coordinates } from "./TimePilot.types";
+import BulletFactory from "./bullet-factory";
+import CONST from "./constants";
+import Gamepad from "./controller/gamepad";
+import Keyboard1 from "./controller/keyboard1";
+import ControllerInterface from "./controller-interface";
+import dataStore from "./data-store";
+import EnemyFactory from "./enemy-factory";
+import Hud from "./hud";
+import Player from "./player";
+import PropFactory from "./prop-factory";
+import userOptions from "./user-options";
+import type { AssetProgress, Controller, Coordinates } from "./types";
 
 interface TimePilotOptions {
   debug?: boolean;

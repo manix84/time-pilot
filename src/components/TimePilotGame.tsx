@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import TimePilot from "../game/TimePilot";
+import TimePilot from "../game/index";
 
 type TimePilotGameProps = {
   debug?: boolean;
