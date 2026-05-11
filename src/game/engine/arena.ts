@@ -9,6 +9,12 @@ import type {
 import helpers from "./helpers";
 
 type CanvasContext = CanvasRenderingContext2D | WebGLRenderingContext;
+type CanvasWithDebugGrid = HTMLCanvasElement & {
+  moveTo?: CanvasRenderingContext2D["moveTo"];
+  lineTo?: CanvasRenderingContext2D["lineTo"];
+  stroke?: CanvasRenderingContext2D["stroke"];
+  strokeStyle?: string;
+};
 type FullscreenCanvas = HTMLCanvasElement & {
   mozRequestFullScreen?: () => void;
   webkitRequestFullscreen?: (keyboardInput?: number) => void;
@@ -19,53 +25,47 @@ type FullscreenDocument = Document & {
   webkitCancelFullScreen?: () => void;
 };
 
-/**
- * Create a GameArena instance to run the game in.
- * @constructor
- * @param   {HTML Element} containerElement - Element to load the canvas into.
- * @returns {GameArena Instance}
- */
-var GameArena = function (containerElement: HTMLElement) {
-  var that = this;
-  this._containerElement = containerElement;
-  this._canvas = document.createElement("canvas");
-  this.resize();
+class GameArena implements GameArenaInstance {
+  private _assets: string[] = [];
+  private _canvas: CanvasWithDebugGrid;
+  private _containerElement: HTMLElement & { width?: number; height?: number };
+  private _context?: CanvasContext | null;
+  private _isInFullScreen = false;
+  private _oldHeight: number;
+  private _oldWidth: number;
+  private _styles?: HTMLStyleElement;
 
-  this._isInFullScreen = false;
-  this._assets = [];
+  height = 0;
+  posX = 0;
+  posY = 0;
+  width = 0;
 
-  this._oldWidth = this._containerElement.clientWidth;
-  this._oldHeight = this._containerElement.clientHeight;
+  constructor(containerElement: HTMLElement) {
+    this._containerElement = containerElement;
+    this._canvas = document.createElement("canvas");
+    this.resize();
 
-  this.posX = 0;
-  this.posY = 0;
+    this._oldWidth = this._containerElement.clientWidth;
+    this._oldHeight = this._containerElement.clientHeight;
 
-  helpers.bind(
-    "fullscreenchange webkitfullscreenchange mozfullscreenchange msfullscreenchange",
-    () => {
-      that._isInFullScreen = !that._isInFullScreen;
-      if (that._isInFullScreen) {
-        that.resize(screen.width, screen.height);
-        window.console.log("Entered Full-Screen");
-      } else {
-        that.resize(that._oldWidth, that._oldHeight);
-        window.console.log("Exited Full-Screen");
+    helpers.bind(
+      "fullscreenchange webkitfullscreenchange mozfullscreenchange msfullscreenchange",
+      () => {
+        this._isInFullScreen = !this._isInFullScreen;
+        if (this._isInFullScreen) {
+          this.resize(screen.width, screen.height);
+          window.console.log("Entered Full-Screen");
+        } else {
+          this.resize(this._oldWidth, this._oldHeight);
+          window.console.log("Exited Full-Screen");
+        }
       }
-    }
-  );
+    );
 
-  this._init();
-} as unknown as {
-  new (containerElement: HTMLElement): GameArenaInstance;
-  prototype: Record<string, unknown>;
-};
+    this._init();
+  }
 
-GameArena.prototype = {
-  /**
-   * Initialising canvas.
-   * @method
-   */
-  _init: function () {
+  private _init(): void {
     this._styles = document.createElement("style");
     this._styles.innerText =
       "@font-face {" +
@@ -75,85 +75,70 @@ GameArena.prototype = {
 
     this._containerElement.appendChild(this._styles);
     this._containerElement.appendChild(this._canvas);
-  },
+  }
 
-  /**
-   * Update current viewport coordinates.
-   * @param  {Number} posX
-   * @param  {Number} posY
-   */
-  updatePosition: function (posX: number, posY: number): void {
+  updatePosition(posX: number, posY: number): void {
     this.posX = posX;
     this.posY = posY;
-  },
+  }
 
-  /**
-   * Resize the canvas to specified height and width. Defaults to the container elements current dimentions.
-   * @method
-   * @param   {Number} width
-   * @param   {Number} height
-   */
-  resize: function (width?: number, height?: number): void {
-    width = width || this._containerElement.clientWidth;
-    height = height || this._containerElement.clientHeight;
+  resize(width?: number, height?: number): void {
+    const nextWidth = width || this._containerElement.clientWidth;
+    const nextHeight = height || this._containerElement.clientHeight;
 
     if (this._oldWidth !== this.width && this._oldHeight !== this.height) {
       this._oldWidth = this.width;
       this._oldHeight = this.height;
     }
 
-    this._canvas.width = width;
-    this._canvas.height = height;
+    this._canvas.width = nextWidth;
+    this._canvas.height = nextHeight;
 
-    this._containerElement.width = width;
-    this._containerElement.height = height;
+    this._containerElement.width = nextWidth;
+    this._containerElement.height = nextHeight;
 
-    this.width = width;
-    this.height = height;
-  },
+    this.width = nextWidth;
+    this.height = nextHeight;
+  }
 
-  /**
-   * Return 2D or 3D canvas context.
-   * @method
-   * @param   {String} dimentions - Canvas context you want back (2D or 3D).
-   * @returns {Canvas Context}
-   */
-  getContext: function (dimentions?: "2D" | "2d" | "3D" | "3d" | 2 | 3): CanvasContext {
+  getContext(
+    dimensions?: "2D" | "2d" | "3D" | "3d" | 2 | 3
+  ): CanvasContext {
     if (!this._context) {
-      switch (dimentions) {
+      switch (dimensions) {
         case "3D":
         case "3d":
         case 3:
-          this._context = this._canvas.getContext("3d");
+          this._context = this._canvas.getContext("webgl") as CanvasContext | null;
           break;
         default:
-          this._context = this._canvas.getContext("2d");
+          this._context = this._canvas.getContext("2d") as CanvasContext | null;
       }
     }
-    return this._context;
-  },
 
-  /**
-   * Enter full-screen, using the full-screen api.
-   * @method
-   */
-  enterFullScreen: function () {
-    var element = this._canvas as FullscreenCanvas;
+    if (!this._context) {
+      throw new Error("Unable to create canvas context.");
+    }
+
+    return this._context;
+  }
+
+  enterFullScreen(): void {
+    const element = this._canvas as FullscreenCanvas;
     if (element.requestFullscreen) {
       element.requestFullscreen();
     } else if (element.mozRequestFullScreen) {
       element.mozRequestFullScreen();
     } else if (element.webkitRequestFullscreen) {
-      element.webkitRequestFullscreen((Element as unknown as { ALLOW_KEYBOARD_INPUT?: number }).ALLOW_KEYBOARD_INPUT);
+      element.webkitRequestFullscreen(
+        (Element as unknown as { ALLOW_KEYBOARD_INPUT?: number })
+          .ALLOW_KEYBOARD_INPUT
+      );
     }
-  },
+  }
 
-  /**
-   * Exit full-screen mode.
-   * @method
-   */
-  exitFullScreen: function () {
-    var doc = document as FullscreenDocument;
+  exitFullScreen(): void {
+    const doc = document as FullscreenDocument;
     if (doc.cancelFullScreen) {
       doc.cancelFullScreen();
     } else if (doc.mozCancelFullScreen) {
@@ -161,107 +146,62 @@ GameArena.prototype = {
     } else if (doc.webkitCancelFullScreen) {
       doc.webkitCancelFullScreen();
     }
-  },
+  }
 
-  /**
-   * Toggle full-screen mode.
-   * @method
-   */
-  toggleFullScreen: function () {
+  toggleFullScreen(): void {
     window.console.log("this._isInFullScreen", this._isInFullScreen);
     if (this._isInFullScreen) {
       this.exitFullScreen();
     } else {
       this.enterFullScreen();
     }
-  },
+  }
 
-  /**
-   * Set the canvas background-color.
-   * @param  {String} color - Background-color to be set.
-   */
-  setBackgroundColor: function (color: string): void {
+  setBackgroundColor(color: string): void {
     this._canvas.style.background = color;
-  },
+  }
 
-  /**
-   * Clear entire games arena.
-   */
-  clear: function () {
+  clear(): void {
     this._canvas.width = this._canvas.width;
-    this._context.translate(this.width / 2, this.height / 2);
-  },
+    (this.getContext() as CanvasRenderingContext2D).translate(
+      this.width / 2,
+      this.height / 2
+    );
+  }
 
-  /**
-   * Register assets to be preloaded.
-   * @method
-   * @param   {String/Array} assets - Assets to be preloaded.
-   */
-  registerAssets: function (assets: string | string[]): void {
-    if (typeof assets === "string") {
-      assets = [assets];
-    }
-    this._assets = [].concat(this._assets, assets);
-  },
+  registerAssets(assets: string | string[]): void {
+    this._assets = this._assets.concat(
+      typeof assets === "string" ? [assets] : assets
+    );
+  }
 
-  /**
-   * Begin preloading registered assets. Callback is run each time an asset is loaded.
-   * @method
-   * @param   {Function} callback - Callback is run on each completed asset.
-   */
-  preloadAssets: function (callback?: (progress: AssetProgress) => void): void {
-    callback = callback || (() => {});
-    var loadedCount = 0,
-      remainingCount = this._assets.length - 1,
-      i = remainingCount,
-      img: HTMLImageElement[] = [],
-      onload: () => void,
-      onerror: () => void;
-
-    onload = () => {
-      callback({
-        loaded: ++loadedCount,
-        remaining: --remainingCount,
-      });
-    };
-    onerror = () => {
+  preloadAssets(callback: (progress: AssetProgress) => void = () => {}): void {
+    let loadedCount = 0;
+    let remainingCount = this._assets.length - 1;
+    const images: HTMLImageElement[] = [];
+    const completeAsset = () => {
       callback({
         loaded: ++loadedCount,
         remaining: --remainingCount,
       });
     };
 
-    for (; 0 < i; i--) {
-      img[i] = new Image();
-      img[i].src = this._assets[i];
-      img[i].onload = onload;
-      img[i].onerror = onerror;
+    for (let i = remainingCount; 0 < i; i--) {
+      images[i] = new Image();
+      images[i].src = this._assets[i];
+      images[i].onload = completeAsset;
+      images[i].onerror = completeAsset;
       this._assets.splice(i, 1);
     }
-  },
+  }
 
-  /**
-   * Render text.
-   * @method
-   * @param   {String} message            - Text to be rendered
-   * @param   {Number} [startPosX]        - X coordinate to render
-   * @param   {Number} [startPosY]        - Y coordinate to render
-   * @param   {Object} [newOptions]
-   * @enum    {String} [newOptions.align] - Text alignment
-   * @enum    {Number} [newOptions.size]  - Text size
-   * @enum    {String} [newOptions.color] - Text color
-   * @enum    {String} [newOptions.font]  - Font type
-   * @enum    {String} [newOptions.stroke]  - Stroke color. If not set, it won't show.
-   */
-  renderText: function (
+  renderText(
     message: string | number,
-    startPosX?: number,
-    startPosY?: number,
+    startPosX = 0,
+    startPosY = 0,
     newOptions: RenderTextOptions = {}
   ): void {
-    startPosX = startPosX || 0;
-    startPosY = startPosY || 0;
-    var options: Required<RenderTextOptions> = {
+    const options: Required<RenderTextOptions> = {
       size: newOptions.size || 12,
       align: newOptions.align || "left",
       valign: newOptions.valign || "top",
@@ -270,10 +210,10 @@ GameArena.prototype = {
       stroke: newOptions.stroke || false,
       strokeWidth: newOptions.strokeWidth || 1,
     };
-    var context = this.getContext() as CanvasRenderingContext2D;
+    const context = this.getContext() as CanvasRenderingContext2D;
 
     context.fillStyle = options.color;
-    context.font = options.size + "px " + options.font;
+    context.font = `${options.size}px ${options.font}`;
     context.textAlign = options.align;
     context.textBaseline = options.valign;
     context.fillText(String(message), startPosX, startPosY);
@@ -283,16 +223,10 @@ GameArena.prototype = {
       context.strokeStyle = options.stroke;
       context.strokeText(String(message), startPosX, startPosY);
     }
-  },
+  }
 
-  /**
-   * Render sprite
-   * @method
-   * @param   {Image Sprite} sprite   - Image sprite to be rendered
-   * @param   {Object} spriteData     - Object containing coordinates and sprite positions.
-   */
-  renderSprite: function (sprite: CanvasImageSource, spriteData: SpriteFrame): void {
-    var context = this.getContext() as CanvasRenderingContext2D;
+  renderSprite(sprite: CanvasImageSource, spriteData: SpriteFrame): void {
+    const context = this.getContext() as CanvasRenderingContext2D;
 
     context.drawImage(
       sprite,
@@ -305,70 +239,53 @@ GameArena.prototype = {
       spriteData.frameWidth,
       spriteData.frameHeight
     );
-  },
+  }
 
-  /**
-   * Draw a circle centered around the X & Y coordinates.
-   * @param  {Number} posX
-   * @param  {Number} posY
-   * @param  {Number} radius
-   * @param  {Object} options
-   * @enum   {String} options.backgroundColor
-   * @enum   {String} options.borderColor
-   * @enum   {Number} options.borderWidth
-   */
-  drawCircle: function (
-    posX: number,
-    posY: number,
+  drawCircle(
+    posX = 0,
+    posY = 0,
     radius: number,
     options: CircleOptions = {}
   ): void {
-    posX = posX || 0;
-    posY = posY || 0;
-
-    options = {
+    const circleOptions: {
+      backgroundColor: string;
+      borderColor: string | false;
+      borderWidth: number;
+    } = {
       backgroundColor: options.backgroundColor || "transparent",
       borderColor: options.borderColor || false,
       borderWidth: options.borderWidth || 1,
     };
-    var context = this.getContext() as CanvasRenderingContext2D;
+    const context = this.getContext() as CanvasRenderingContext2D;
 
     context.beginPath();
     context.arc(posX, posY, radius, 0, 2 * Math.PI, false);
-    context.fillStyle = options.backgroundColor;
+    context.fillStyle = circleOptions.backgroundColor;
     context.fill();
 
-    if (options.borderColor) {
-      context.lineWidth = options.borderWidth;
-      context.strokeStyle = options.borderColor;
+    if (circleOptions.borderColor) {
+      context.lineWidth = circleOptions.borderWidth;
+      context.strokeStyle = circleOptions.borderColor;
       context.stroke();
     }
-  },
+  }
 
-  /**
-   * Adds a grid to the canvas.
-   * @param  {Number} [widthSpace=20]
-   * @param  {Number} [heightSpace=20]
-   */
-  drawDebugGrid: function (widthSpace?: number, heightSpace?: number): void {
-    widthSpace = widthSpace || 20;
-    heightSpace = heightSpace || 20;
+  drawDebugGrid(widthSpace = 20, heightSpace = 20): void {
+    const context = this.getContext() as CanvasRenderingContext2D;
 
-    var x = 0;
-
-    for (; x <= this.width; x += widthSpace) {
-      this._canvas.moveTo(0.5 + x, 0);
-      this._canvas.lineTo(0.5 + x, this.height);
+    for (let x = 0; x <= this.width; x += widthSpace) {
+      context.moveTo(0.5 + x, 0);
+      context.lineTo(0.5 + x, this.height);
     }
 
-    for (x = 0; x <= this.height; x += heightSpace) {
-      this._canvas.moveTo(0, 0.5 + x);
-      this._canvas.lineTo(this.width, 0.5 + x);
+    for (let x = 0; x <= this.height; x += heightSpace) {
+      context.moveTo(0, 0.5 + x);
+      context.lineTo(this.width, 0.5 + x);
     }
 
-    this._canvas.strokeStyle = "#AAA";
-    this._canvas.stroke();
-  },
-};
+    context.strokeStyle = "#AAA";
+    context.stroke();
+  }
+}
 
 export default GameArena;

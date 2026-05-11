@@ -23,6 +23,7 @@
 - Removed the global game data-store singleton.
 - Introduced explicit game context injection for entities, factories, HUD, and input systems.
 - Added `useTimePilot` as the React lifecycle bridge.
+- Converted the remaining prototype-style runtime modules into class-based entities, factories, controllers, engine wrappers, HUD, and menu systems.
 - Fixed gamepad cleanup so animation frames are cancelled on disconnect.
 
 ## ✅ Automation
@@ -41,7 +42,6 @@
 
 ## 🔜 Next Milestones
 
-- Convert remaining prototype-style modules into classes or focused systems.
 - Split collision, spawning, and rendering into dedicated systems.
 - Add keyboard/gamepad configuration UI.
 - Expand gameplay levels, enemies, bonuses, and sound controls.

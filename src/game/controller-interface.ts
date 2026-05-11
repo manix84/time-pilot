@@ -3,73 +3,56 @@ import CONSTS from "./constants";
 import type {
   ControllerCommands,
   ControllerInterfaceInstance,
+  GameArenaInstance,
   GameDataStore,
   Heading,
+  HudInstance,
+  PlayerInstance,
+  TickerInstance,
 } from "./types";
 
-/**
- * Create a ControllerInterface instance
- * @constructor
- * @method
- * @returns {ControllerInterface instance}
- */
-var ControllerInterface = function (
-  context: GameDataStore,
-  commands: ControllerCommands
-) {
-  this._player = context._player;
-  this._gameTicker = context._gameTicker;
-  this._hud = context._hud;
-  this._gameArena = context._gameArena;
+class ControllerInterface implements ControllerInterfaceInstance {
+  private _commands: Required<ControllerCommands>;
+  private _gameArena: GameArenaInstance;
+  private _gameTicker: TickerInstance;
+  private _hud: HudInstance;
+  private _player: PlayerInstance;
+  private _rotationStep: number;
 
-  this._commands = {
-    restart: commands.restart || (() => {}),
-    pause: commands.pause || (() => {}),
-  };
+  constructor(context: GameDataStore, commands: ControllerCommands) {
+    this._player = context._player;
+    this._gameTicker = context._gameTicker;
+    this._hud = context._hud;
+    this._gameArena = context._gameArena;
 
-  this._rotationStep = 360 / CONSTS.player.rotationFrameCount;
-} as unknown as {
-  new (
-    context: GameDataStore,
-    commands: ControllerCommands
-  ): ControllerInterfaceInstance;
-  prototype: Record<string, unknown>;
-};
+    this._commands = {
+      restart: commands.restart || (() => {}),
+      pause: commands.pause || (() => {}),
+    };
 
-ControllerInterface.prototype = {
-  /**
-   * Rotate to a specified heading, moving in steps.
-   * @method
-   * @param   {Number} desiredHeading - Heading you wish to rotate to.
-   */
-  rotateToHeading: function (desiredHeading: Heading): void {
+    this._rotationStep = 360 / CONSTS.player.rotationFrameCount;
+  }
+
+  rotateToHeading(desiredHeading: Heading): void {
     this._player.setData(
       "newHeading",
       Math.floor(desiredHeading / 22.5) * 22.5
     );
-  },
+  }
 
-  /**
-   * Rotate the player clockwise.
-   * @method
-   */
-  rotateClockwise: function () {
-    var currentHeading = this._player.getData().heading,
-      desiredHeading = (currentHeading + this._rotationStep) % 360;
+  rotateClockwise(): void {
+    const currentHeading = this._player.getData().heading;
+    const desiredHeading = (currentHeading + this._rotationStep) % 360;
 
     this._player.setData(
       "newHeading",
       Math.floor(desiredHeading / 22.5) * 22.5
     );
-  },
+  }
 
-  /**
-   * Rotate the player anti-clockwise.
-   * @method
-   */
-  rotateAntiClockwise: function () {
-    var currentHeading = this._player.getData().heading,
-      desiredHeading = currentHeading - this._rotationStep;
+  rotateAntiClockwise(): void {
+    const currentHeading = this._player.getData().heading;
+    let desiredHeading = currentHeading - this._rotationStep;
 
     desiredHeading = desiredHeading < 0 ? 360 + desiredHeading : desiredHeading;
 
@@ -77,60 +60,51 @@ ControllerInterface.prototype = {
       "newHeading",
       Math.floor(desiredHeading / 22.5) * 22.5
     );
-  },
+  }
 
-  /**
-   * Stop rotating to last desired heading.
-   * @method
-   */
-  stop: function () {
+  stop(): void {
     this._player.setData("newHeading", false);
-  },
+  }
 
-  toggleMenu: function () {
+  toggleMenu(): void {
     window.console.log("Opening Menu");
-  },
+  }
 
-  startShooting: function () {
+  openMenu(): void {
+    this.toggleMenu();
+  }
+
+  startShooting(): void {
     this._player.startShooting();
-  },
+  }
 
-  stopShooting: function () {
+  stopShooting(): void {
     this._player.stopShooting();
-  },
+  }
 
-  toggleFullScreen: function () {
+  toggleFullScreen(): void {
     this._gameArena.toggleFullScreen();
-  },
+  }
 
-  togglePause: function () {
+  togglePause(): void {
     this._commands.pause();
-  },
+  }
 
-  restart: function () {
+  restart(): void {
     this._commands.restart();
-  },
+  }
 
-  /**
-   * An alias for rotateAntiClockwise
-   */
-  rotateCounterClockwise: function () {
+  rotateCounterClockwise(): void {
     this.rotateAntiClockwise();
-  },
+  }
 
-  /**
-   * An alias for rotateClockwise.
-   */
-  rotateRight: function () {
+  rotateRight(): void {
     this.rotateClockwise();
-  },
+  }
 
-  /**
-   * An alias for rotateAntiClockwise
-   */
-  rotateLeft: function () {
+  rotateLeft(): void {
     this.rotateAntiClockwise();
-  },
-};
+  }
+}
 
 export default ControllerInterface;

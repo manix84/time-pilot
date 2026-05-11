@@ -8,16 +8,6 @@ type LegacyAnimationWindow = Window &
     msRequestAnimationFrame?: typeof window.requestAnimationFrame;
   };
 
-var animationWindow = window as LegacyAnimationWindow;
-var requestAnimationFrame =
-  animationWindow.requestAnimationFrame ||
-  animationWindow.mozRequestAnimationFrame ||
-  animationWindow.webkitRequestAnimationFrame ||
-  animationWindow.msRequestAnimationFrame;
-/**
- * Creates an instance of a ticker object.
- * @method
- */
 type TickerScheduleCallback = (frame: number) => void;
 
 interface TickerScheduleItem {
@@ -25,119 +15,84 @@ interface TickerScheduleItem {
   nthFrame: number;
 }
 
-var Ticker = function () {
-  this._frame = 0;
-  this.isRunning = false;
-  this._schedule = {} as Record<number, TickerScheduleItem>;
-  this._scheduleCount = 0;
-} as unknown as {
-  new (): TickerInstance;
-  prototype: Record<string, unknown>;
-};
+const animationWindow = window as LegacyAnimationWindow;
+const requestAnimationFrame =
+  animationWindow.requestAnimationFrame ||
+  animationWindow.mozRequestAnimationFrame ||
+  animationWindow.webkitRequestAnimationFrame ||
+  animationWindow.msRequestAnimationFrame;
 
-Ticker.prototype = {
-  /**
-   * Start animation.
-   * @method
-   */
-  start: function () {
+class Ticker implements TickerInstance {
+  private _frame = 0;
+  private _schedule: Record<number, TickerScheduleItem> = {};
+  private _scheduleCount = 0;
+  private killCallback?: () => void;
+
+  isRunning = false;
+
+  start(): void {
     this.isRunning = true;
     this._step();
-  },
+  }
 
-  /**
-   * Stop animation.
-   * @method
-   */
-  stop: function (callback?: () => void): void {
+  stop(callback?: () => void): void {
     this.isRunning = false;
     this.killCallback = callback || (() => {});
-  },
+  }
 
-  /**
-   * Run a single animated step.
-   * @method
-   */
-  _step: function () {
-    var that = this;
+  private _step(): void {
     requestAnimationFrame(() => {
-      that._frame++;
-      for (var eventId in that._schedule) {
+      this._frame++;
+
+      for (const eventId in this._schedule) {
         if (
-          that._schedule.hasOwnProperty(eventId) &&
-          that._frame % that._schedule[eventId].nthFrame === 0
+          Object.prototype.hasOwnProperty.call(this._schedule, eventId) &&
+          this._frame % this._schedule[eventId].nthFrame === 0
         ) {
-          that._schedule[eventId].callback(that._frame);
+          this._schedule[eventId].callback(this._frame);
         }
       }
-      if (that.isRunning) {
-        that._step();
-      } else if (that.killCallback) {
-        that.killCallback();
-        delete that.killCallback;
+
+      if (this.isRunning) {
+        this._step();
+      } else if (this.killCallback) {
+        this.killCallback();
+        delete this.killCallback;
       }
     });
-  },
+  }
 
-  /**
-   * Add event callback to schedule. This runs a callback on each Nth frame.
-   * @method
-   * @param   {Function} callback - Method to run on Nth frames.
-   * @param   {Number}   nthFrame  - Run this callback ever Nth frame.
-   * @returns {Number}   ID number for callback. Used in "removeSchedule".
-   */
-  addSchedule: function (callback: TickerScheduleCallback, nthFrame: number): number {
-    nthFrame = nthFrame;
-
-    var eventId = ++this._scheduleCount;
+  addSchedule(callback: TickerScheduleCallback, nthFrame: number): number {
+    const eventId = ++this._scheduleCount;
     this._schedule[eventId] = {
-      callback: callback,
-      nthFrame: nthFrame,
+      callback,
+      nthFrame,
     };
 
     return eventId;
-  },
+  }
 
-  /**
-   * Remove scheduled event, based on ID returned from "addSchedule" method.
-   * @method
-   * @param   {Number} eventId - ID to remove, passed back from "addSchedule".
-   * @returns {Boolean} Boolean of if the removal sucessful. If the ID did not exist, this is still successful.
-   */
-  removeSchedule: function (eventId: number): boolean {
+  removeSchedule(eventId: number): boolean {
     if (this._schedule[eventId]) {
       delete this._schedule[eventId];
     }
+
     return !this._schedule[eventId];
-  },
+  }
 
-  /**
-   * Empty Schedule of all events.
-   * @method
-   */
-  clearSchedule: function (): void {
+  clearSchedule(): void {
     this._schedule = {};
-  },
+  }
 
-  /**
-   * Reset frame count back to 0.
-   * @method
-   * @returns {Boolean}
-   */
-  clearTicks: function (): boolean {
+  clearTicks(): boolean {
     this._frame = 0;
 
     return !this._frame;
-  },
+  }
 
-  /**
-   * Get the current number of frames that have occured since start.
-   * @method
-   * @returns {Number}
-   */
-  getTicks: function (): number {
+  getTicks(): number {
     return this._frame;
-  },
-};
+  }
+}
 
 export default Ticker;

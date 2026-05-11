@@ -3,75 +3,77 @@ import CONSTS from "./constants";
 import userOptions from "./user-options";
 import SoundEngine from "./engine/Sound";
 import helpers from "./engine/helpers";
-import type { GameDataStore, PlayerData, PlayerInstance } from "./types";
+import type {
+  BulletFactoryInstance,
+  GameArenaInstance,
+  GameDataStore,
+  LevelConfig,
+  PlayerConfig,
+  PlayerData,
+  PlayerInstance,
+  TickerInstance,
+} from "./types";
 
-var playerConst = CONSTS.player;
-/**
- * Player object.
- * @constructor
- * @param   {Canvas Instance} gameArena
- * @param   {Ticker Instance} ticker
- * @returns {Player Instance}
- */
-var Player = function (context: GameDataStore) {
-  this._gameArena = context._gameArena;
-  this._gameTicker = context._gameTicker;
-  this._bulletFactory = context._bullets;
+const playerConst = CONSTS.player;
 
-  this._playerSprite = new Image();
-  this._playerSprite.src = playerConst.sprite.src;
+class Player implements PlayerInstance {
+  private _bulletFactory: BulletFactoryInstance;
+  private _data: PlayerData;
+  private _dataDefaults: PlayerData;
+  private _explosionSound: SoundEngine;
+  private _gameArena: GameArenaInstance;
+  private _gameTicker: TickerInstance;
+  private _playerDeathSprite: HTMLImageElement;
+  private _playerSprite: HTMLImageElement;
+  private _rotationStep: number;
 
-  this._playerDeathSprite = new Image();
-  this._playerDeathSprite.src = playerConst.explosion.sprite.src;
+  constructor(context: GameDataStore) {
+    this._gameArena = context._gameArena;
+    this._gameTicker = context._gameTicker;
+    this._bulletFactory = context._bullets;
 
-  this._explosionSound = new SoundEngine(playerConst.explosion.sound.src);
+    this._playerSprite = new Image();
+    this._playerSprite.src = playerConst.sprite.src;
 
-  this._rotationStep = 360 / playerConst.rotationFrameCount;
+    this._playerDeathSprite = new Image();
+    this._playerDeathSprite.src = playerConst.explosion.sprite.src;
 
-  this._data = {
-    isAlive: true,
-    deathTick: false,
-    isFiring: false,
-    heading: 90,
-    newHeading: false,
-    posX: 0,
-    posY: 0,
-    exploading: 0,
-    continues: 0,
-    lives: 3,
-    score: 0,
-    level: 1,
-  } satisfies PlayerData;
+    this._explosionSound = new SoundEngine(playerConst.explosion.sound.src);
+    this._rotationStep = 360 / playerConst.rotationFrameCount;
 
-  this._dataDefaults = helpers.cloneObject(this._data);
-} as unknown as {
-  new (context: GameDataStore): PlayerInstance;
-  prototype: Record<string, unknown>;
-};
+    this._data = {
+      isAlive: true,
+      deathTick: false,
+      isFiring: false,
+      heading: 90,
+      newHeading: false,
+      posX: 0,
+      posY: 0,
+      exploading: 0,
+      continues: 0,
+      lives: 3,
+      score: 0,
+      level: 1,
+    };
 
-Player.prototype = {
-  /**
-   * Get data for the player.
-   * @method
-   * @returns {Object}
-   */
-  getData: function (key?: keyof PlayerData) {
+    this._dataDefaults = helpers.cloneObject(this._data);
+  }
+
+  getData(): PlayerData;
+  getData<K extends keyof PlayerData>(key: K): PlayerData[K] | undefined;
+  getData<K extends keyof PlayerData>(key?: K) {
     if (!key) {
       return this._data;
-    } else if (this._data.hasOwnProperty(key)) {
+    }
+
+    if (Object.prototype.hasOwnProperty.call(this._data, key)) {
       return this._data[key];
     }
-    return;
-  },
 
-  /**
-   * Set data in the player's data object.
-   * @method
-   * @param   {String} key  - Key from _data object
-   * @param   {Multi} value - Value to be set onto the key from the _data object.
-   * @returns {Boolean} Success response.
-   */
-  setData: function <K extends keyof PlayerData>(
+    return undefined;
+  }
+
+  setData<K extends keyof PlayerData>(
     key: K,
     value: PlayerData[K],
     isLastKnownGood?: boolean
@@ -82,34 +84,22 @@ Player.prototype = {
         this._dataDefaults[key] = value;
       }
       return this._data[key] === value;
-    } else {
-      return false;
     }
-  },
 
-  /**
-   * Reset stored player data.
-   */
-  resetData: function () {
+    return false;
+  }
+
+  resetData(): void {
     this._data = helpers.cloneObject(this._dataDefaults);
-  },
+  }
 
-  /**
-   * Get current data for this level
-   * @method
-   * @returns {[type]}
-   */
-  getLevelData: function () {
-    return CONSTS.levels[(this._data as PlayerData).level].player;
-  },
+  private getLevelData(): LevelConfig["player"] {
+    return CONSTS.levels[this._data.level].player;
+  }
 
-  /**
-   * Recalculate player's current position and heading.
-   * @method
-   */
-  reposition: function () {
-    var heading = this._data.heading,
-      velocity = this.getLevelData().velocity;
+  reposition(): void {
+    const { heading } = this._data;
+    const velocity = this.getLevelData().velocity ?? 0;
 
     this._data.posX += helpers.float(
       Math.sin(heading * (Math.PI / 180)) * velocity
@@ -119,12 +109,9 @@ Player.prototype = {
     );
 
     this._gameArena.updatePosition(this._data.posX, this._data.posY);
-  },
+  }
 
-  /**
-   * If newHeading is set, update the current heading by one step towards it.
-   */
-  rotate: function () {
+  rotate(): void {
     if (this._data.isAlive && this._data.newHeading !== false) {
       this._data.heading = helpers.rotateTo(
         this._data.newHeading,
@@ -132,20 +119,17 @@ Player.prototype = {
         this._rotationStep
       );
     }
-  },
+  }
 
-  startShooting: function () {
+  startShooting(): void {
     this._data.isShooting = true;
-  },
+  }
 
-  stopShooting: function () {
+  stopShooting(): void {
     this._data.isShooting = false;
-  },
+  }
 
-  /**
-   * Add bullets when this is tiggered.
-   */
-  shoot: function () {
+  shoot(): void {
     if (this._data.isAlive && this._data.isShooting) {
       this._bulletFactory.create(
         0,
@@ -156,24 +140,23 @@ Player.prototype = {
         playerConst.projectile.color
       );
     }
-  },
+  }
 
-  /**
-   * Render the death animation for the player.
-   * @protected
-   * @method
-   */
-  _renderPlayerExplosion: function () {
-    var explosionData = playerConst.explosion,
-      frameX = Math.floor(
-        (this._gameTicker.getTicks() - this._data.deathTick) /
-          explosionData.frameLimiter
-      );
+  private _renderPlayerExplosion(): void {
+    if (this._data.deathTick === false) {
+      return;
+    }
+
+    const explosionData = playerConst.explosion;
+    const frameX = Math.floor(
+      (this._gameTicker.getTicks() - this._data.deathTick) /
+        explosionData.frameLimiter
+    );
 
     this._gameArena.renderSprite(this._playerDeathSprite, {
       frameWidth: explosionData.width,
       frameHeight: explosionData.height,
-      frameX: frameX,
+      frameX,
       frameY: 0,
       posX: -(explosionData.width / 2),
       posY: -(explosionData.height / 2),
@@ -182,14 +165,10 @@ Player.prototype = {
     if (frameX === explosionData.frames) {
       this._data.removeMe = true;
     }
-  },
+  }
 
-  /**
-   * Render the player.
-   * @method
-   */
-  render: function () {
-    var color = "#F00";
+  render(): void {
+    let color = "#F00";
 
     if (!this._data.deathTick && this._data.isAlive) {
       this._gameArena.renderSprite(this._playerSprite, {
@@ -216,19 +195,22 @@ Player.prototype = {
         borderColor: color,
       });
     }
-  },
+  }
 
-  kill: function () {
+  kill(): void {
     if (userOptions.enableDebug && userOptions.debug.invincible) {
       return;
-    } else if (!this._data.isAlive) {
+    }
+
+    if (!this._data.isAlive) {
       return;
     }
+
     this._data.isAlive = false;
     this._data.deathTick = this._gameTicker.getTicks();
     this._explosionSound.stop();
     this._explosionSound.play();
-  },
-};
+  }
+}
 
 export default Player;

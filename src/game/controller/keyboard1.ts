@@ -2,103 +2,98 @@
 import helpers from "../engine/helpers";
 import type { Controller, ControllerInterfaceInstance } from "../types";
 
-var Keyboard1 = function (controllerInterface: ControllerInterfaceInstance) {
-  this._controllerInterface = controllerInterface;
+class Keyboard1 implements Controller {
+  private _controllerInterface: ControllerInterfaceInstance;
 
-  this.connect();
-} as unknown as {
-  new (controllerInterface: ControllerInterfaceInstance): Controller;
-  prototype: Record<string, unknown>;
-};
+  constructor(controllerInterface: ControllerInterfaceInstance) {
+    this._controllerInterface = controllerInterface;
+    this.connect();
+  }
 
-Keyboard1.prototype = {
-  connect: function () {
-    var that = this;
+  connect(): void {
     helpers.bind(
       "keydown",
       (event: KeyboardEvent) => {
         switch (event.keyCode) {
-          case 37: // Left-Key
-          case 65: // "A"
+          case 37:
+          case 65:
             event.preventDefault();
-            that._controllerInterface.rotateToHeading(270);
+            this._controllerInterface.rotateToHeading(270);
             break;
-          case 38: // Up-Key
-          case 87: // "W"
+          case 38:
+          case 87:
             event.preventDefault();
-            that._controllerInterface.rotateToHeading(0);
+            this._controllerInterface.rotateToHeading(0);
             break;
-          case 39: // Right-Key
-          case 68: // "D"
+          case 39:
+          case 68:
             event.preventDefault();
-            that._controllerInterface.rotateToHeading(90);
+            this._controllerInterface.rotateToHeading(90);
             break;
-          case 40: // Down-Key
-          case 83: // "S"
+          case 40:
+          case 83:
             event.preventDefault();
-            that._controllerInterface.rotateToHeading(180);
+            this._controllerInterface.rotateToHeading(180);
             break;
-          case 32: // Space-Bar
+          case 32:
             event.preventDefault();
-            that._controllerInterface.startShooting();
+            this._controllerInterface.startShooting();
             break;
-          case 70: // "F"-Key
+          case 70:
             event.preventDefault();
-            that._controllerInterface.toggleFullScreen();
+            this._controllerInterface.toggleFullScreen();
             break;
-          case 27: // Escape-Key
+          case 27:
             event.preventDefault();
-            that._controllerInterface.toggleMenu();
-            that._controllerInterface.togglePause();
+            this._controllerInterface.toggleMenu();
+            this._controllerInterface.togglePause();
             break;
-          case 80: // "P"-Key
+          case 80:
             event.preventDefault();
-            that._controllerInterface.togglePause();
+            this._controllerInterface.togglePause();
             break;
-          case 82: // "R"-Key
+          case 82:
             event.preventDefault();
-            that._controllerInterface.restart();
+            this._controllerInterface.restart();
             break;
         }
       },
-      this._keyboardLock
     );
 
     helpers.bind(
       "keyup",
       (event: KeyboardEvent) => {
         switch (event.keyCode) {
-          case 27: // Escape-Key
-          case 70: // "F"-Key
-          case 80: // "P"-Key
-          case 82: // "R"-Key
+          case 27:
+          case 70:
+          case 80:
+          case 82:
             event.preventDefault();
             break;
-          case 37: // Left-Key
-          case 38: // Up-Key
-          case 39: // Right-Key
-          case 40: // Down-Key
-          case 65: // "A"-Key
-          case 87: // "W"-Key
-          case 68: // "D"-Key
-          case 83: // "S"-Key
+          case 37:
+          case 38:
+          case 39:
+          case 40:
+          case 65:
+          case 87:
+          case 68:
+          case 83:
             event.preventDefault();
-            that._controllerInterface.stop();
+            this._controllerInterface.stop();
             break;
-          case 32: // Space-Bar
+          case 32:
             event.preventDefault();
-            that._controllerInterface.stopShooting();
+            this._controllerInterface.stopShooting();
             break;
         }
       },
-      this._keyboardLock
     );
-  },
+  }
 
-  disconnect: function () {
+  disconnect(): void {
     helpers.unbind("keydown");
     helpers.unbind("keyup");
-  },
-};
+  }
+}
 
 export default Keyboard1;

@@ -6,112 +6,91 @@ import type {
   EnemyConfig,
   EnemyData,
   EnemyInstance,
+  GameArenaInstance,
   GameDataStore,
   Heading,
+  PlayerInstance,
+  TickerInstance,
 } from "./types";
 
-/**
- * Creates an enemy to add to the page.
- * @constructor
- * @param   {Number}            posX        - Spawning location on the X axis.
- * @param   {Number}            posY        - Spawning location on the Y axis.
- * @param   {Number}            heading     - Start heading (usually towards the player).
- * @returns {Enemy Instance}
- */
+class Enemy implements EnemyInstance {
+  private _data: EnemyData;
+  private _enemySprite: HTMLImageElement;
+  private _gameArena: GameArenaInstance;
+  private _gameTicker: TickerInstance;
+  private _player: PlayerInstance;
 
-var Enemy = function (
-  context: GameDataStore,
-  posX: number,
-  posY: number,
-  heading: Heading
-) {
-  this._gameArena = context._gameArena;
-  this._player = context._player;
-  this._gameTicker = context._gameTicker;
+  isAlive = true;
+  removeMe = false;
 
-  this._data = {
-    posX: posX,
-    posY: posY,
-    heading: heading,
-    level: context._level || 1,
-    deathTick: false,
-    tickOffset: Math.floor(Math.random() * 100),
-  } satisfies EnemyData;
-
-  this.isAlive = true;
-  this.removeMe = false;
-
-  this._enemySprite = new Image();
-  this._enemySprite.src = this.getLevelData().sprite.src;
-} as unknown as {
-  new (
+  constructor(
     context: GameDataStore,
     posX: number,
     posY: number,
     heading: Heading
-  ): EnemyInstance;
-  prototype: Record<string, unknown>;
-};
+  ) {
+    this._gameArena = context._gameArena;
+    this._player = context._player;
+    this._gameTicker = context._gameTicker;
 
-Enemy.prototype = {
-  /**
-   * Get data for the entity.
-   * @method
-   * @returns {Object}
-   */
-  getData: function (key?: keyof EnemyData) {
+    this._data = {
+      posX,
+      posY,
+      heading,
+      level: context._level || 1,
+      deathTick: false,
+      tickOffset: Math.floor(Math.random() * 100),
+    };
+
+    this._enemySprite = new Image();
+    this._enemySprite.src = this.getLevelData().sprite.src;
+  }
+
+  getData(): EnemyData;
+  getData<K extends keyof EnemyData>(key: K): EnemyData[K] | undefined;
+  getData<K extends keyof EnemyData>(key?: K) {
     if (!key) {
       return this._data;
-    } else if (this._data.hasOwnProperty(key)) {
+    }
+
+    if (Object.prototype.hasOwnProperty.call(this._data, key)) {
       return this._data[key];
     }
-    return;
-  },
 
-  /**
-   * Set data in the entity"s data object.
-   * @method
-   * @param   {String} key  - Key from _data object
-   * @param   {Multi} value - Value to be set onto the key from the _data object.
-   * @returns {Boolean} Success response.
-   */
-  setData: function (key: keyof EnemyData, value: EnemyData[keyof EnemyData]): boolean {
+    return undefined;
+  }
+
+  setData<K extends keyof EnemyData>(key: K, value: EnemyData[K]): boolean {
     if (this._data[key] !== undefined) {
       this._data[key] = value;
       return this._data[key] === value;
-    } else {
-      return false;
     }
-  },
 
-  /**
-   * Get current data for this level
-   * @method
-   * @returns {object}
-   */
-  getLevelData: function (key?: keyof EnemyConfig) {
-    var data = this._data as EnemyData;
+    return false;
+  }
+
+  getLevelData(): EnemyConfig;
+  getLevelData<K extends keyof EnemyConfig>(key: K): EnemyConfig[K] | undefined;
+  getLevelData<K extends keyof EnemyConfig>(key?: K) {
+    const levelData = CONSTS.levels[this._data.level].enemies.basic;
+
     if (!key) {
-      return CONSTS.levels[data.level].enemies.basic;
-    } else if (
-      CONSTS.levels[data.level].enemies.basic.hasOwnProperty(key)
-    ) {
-      return CONSTS.levels[data.level].enemies.basic[key];
+      return levelData;
     }
-    return;
-  },
 
-  /**
-   * Detect if this entity has collided with the player.
-   * @method
-   * @returns {Boolean}
-   */
-  detectCollision: function (
+    if (Object.prototype.hasOwnProperty.call(levelData, key)) {
+      return levelData[key];
+    }
+
+    return undefined;
+  }
+
+  detectCollision(
     objectPosX: number,
     objectPosY: number,
     objectHitRadius: number
   ): boolean {
-    var levelData = this.getLevelData();
+    const levelData = this.getLevelData();
 
     return helpers.detectCollision(
       {
@@ -125,17 +104,10 @@ Enemy.prototype = {
         radius: levelData.hitRadius,
       }
     );
-  },
+  }
 
-  /**
-   * Detect if the entity has left a given radius of the player.
-   * @method
-   * @protected
-   * @param   {Number} radius - Maximum radial from player before they are concidered outside the battle.
-   * @returns {Boolean} True = entity has left the area, False = entity is still in area.
-   */
-  _checkInArena: function () {
-    var levelData = this.getLevelData();
+  private _checkInArena(): void {
+    const levelData = this.getLevelData();
 
     if (this.removeMe) {
       return;
@@ -152,20 +124,15 @@ Enemy.prototype = {
       },
       CONSTS.limits.despawnRadius
     );
-  },
-  /**
-   * Recalculate entity's current position and heading.
-   * @method
-   */
-  reposition: function () {
-    var enemy = this._data,
-      heading = this._data.heading,
-      levelData = this.getLevelData(),
-      player = this._player.getData(),
-      gameArena = this._gameArena,
-      tick = this._gameTicker.getTicks() - this._data.tickOffset,
-      canTurn = !this.removeMe && tick % levelData.turnLimiter === 0,
-      turnTo;
+  }
+
+  reposition(): void {
+    const enemy = this._data;
+    const { heading } = this._data;
+    const levelData = this.getLevelData();
+    const player = this._player.getData();
+    const tick = this._gameTicker.getTicks() - this._data.tickOffset;
+    const canTurn = !this.removeMe && tick % levelData.turnLimiter === 0;
 
     enemy.posX += helpers.float(
       Math.sin(heading * (Math.PI / 180)) * levelData.velocity
@@ -177,7 +144,7 @@ Enemy.prototype = {
     this._checkInArena();
 
     if (canTurn) {
-      turnTo = helpers.findHeading(this._data, {
+      let turnTo = helpers.findHeading(this._data, {
         posX: player.posX + levelData.width / 2,
         posY: player.posY + levelData.height / 2,
       });
@@ -185,15 +152,10 @@ Enemy.prototype = {
 
       enemy.heading = helpers.rotateTo(turnTo, enemy.heading, 22.5);
     }
-  },
+  }
 
-  /**
-   * Render the entity normally.
-   * @protected
-   * @method
-   */
-  _render: function () {
-    var levelData = this.getLevelData();
+  private _render(): void {
+    const levelData = this.getLevelData();
 
     this._gameArena.renderSprite(this._enemySprite, {
       frameWidth: levelData.width,
@@ -204,26 +166,25 @@ Enemy.prototype = {
       posY:
         this._data.posY - this._player.getData().posY - levelData.height / 2,
     });
-  },
+  }
 
-  /**
-   * Render the death animation for the entity.
-   * @protected
-   * @method
-   */
-  _renderDeath: function () {
-    var explosionData = this.getLevelData().explosion,
-      frameX = Math.floor(
-        (this._gameTicker.getTicks() - this._data.deathTick) /
-          explosionData.frameLimiter
-      );
+  private _renderDeath(): void {
+    if (this._data.deathTick === false) {
+      return;
+    }
+
+    const explosionData = this.getLevelData().explosion;
+    const frameX = Math.floor(
+      (this._gameTicker.getTicks() - this._data.deathTick) /
+        explosionData.frameLimiter
+    );
 
     this._enemySprite.src = explosionData.sprite.src;
 
     this._gameArena.renderSprite(this._enemySprite, {
       frameWidth: explosionData.width,
       frameHeight: explosionData.height,
-      frameX: frameX,
+      frameX,
       frameY: 0,
       posX:
         this._data.posX - this._player.getData().posX - explosionData.width / 2,
@@ -236,14 +197,10 @@ Enemy.prototype = {
     if (frameX === explosionData.frames) {
       this.removeMe = true;
     }
-  },
+  }
 
-  /**
-   * Render the entity.
-   * @method
-   */
-  render: function () {
-    var levelData = this.getLevelData();
+  render(): void {
+    const levelData = this.getLevelData();
 
     if (!this._data.deathTick) {
       this._render();
@@ -261,16 +218,16 @@ Enemy.prototype = {
         }
       );
     }
-  },
+  }
 
-  kill: function () {
+  kill(): void {
     this.isAlive = false;
     this._data.deathTick = this._gameTicker.getTicks();
     this._player.setData(
       "score",
-      this._player.getData("score") + this.getLevelData("deathValue")
+      this._player.getData("score") + this.getLevelData("deathValue")!
     );
-  },
-};
+  }
+}
 
 export default Enemy;

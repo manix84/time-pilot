@@ -2,115 +2,91 @@
 import helpers from "../engine/helpers";
 import type { Controller, ControllerInterfaceInstance } from "../types";
 
-var Gamepad = function (controllerInterface: ControllerInterfaceInstance) {
-  this._controllerInterface = controllerInterface;
-  this._isConnected = false;
-  this._animationFrame = null;
-
-  this.connect();
-} as unknown as {
-  new (controllerInterface: ControllerInterfaceInstance): Controller;
-  prototype: Record<string, unknown>;
+type NavigatorWithGamepads = Navigator & {
+  webkitGetGamepads?: () => (globalThis.Gamepad | null)[];
 };
 
-Gamepad.prototype = {
-  /**
-   * Is the fire button pressed on the Gamepad.
-   * @type {Boolean}
-   */
-  _isFireButtonPressed: false,
-  /**
-   * Is the pause button pressed on the Gamepad.
-   * @type {Boolean}
-   */
-  _isPauseButtonPressed: false,
-  /**
-   * Is the restart button pressed on the Gamepad.
-   * @type {Boolean}
-   */
-  _isRestartButtonPressed: false,
+class Gamepad implements Controller {
+  private _animationFrame: number | null = null;
+  private _controllerInterface: ControllerInterfaceInstance;
+  private _isConnected = false;
+  private _isFireButtonPressed = false;
+  private _isPauseButtonPressed = false;
+  private _isRestartButtonPressed = false;
 
-  /**
-   * Looping to check for gamepad data.
-   * @method _gameLoop
-   */
-  _gameLoop: function () {
+  constructor(controllerInterface: ControllerInterfaceInstance) {
+    this._controllerInterface = controllerInterface;
+    this.connect();
+  }
+
+  private _gameLoop(): void {
     if (!this._isConnected) {
       return;
     }
 
-    var navigatorWithGamepads = navigator as Navigator & {
-      webkitGetGamepads?: () => (Gamepad | null)[];
-    };
-    var gamepads = navigator.getGamepads
+    const navigatorWithGamepads = navigator as NavigatorWithGamepads;
+    const gamepads = navigator.getGamepads
       ? navigator.getGamepads()
       : navigatorWithGamepads.webkitGetGamepads
         ? navigatorWithGamepads.webkitGetGamepads()
         : [];
-    for (var playerIndex = 0; playerIndex < gamepads.length; playerIndex++) {
-      var gamepad = gamepads[playerIndex];
-      if (gamepad) {
-        if (gamepad.buttons[0].pressed && !this._isFireButtonPressed) {
-          this._isFireButtonPressed = true;
-          this._controllerInterface.startShooting();
-        } else if (!gamepad.buttons[0].pressed && this._isFireButtonPressed) {
-          this._isFireButtonPressed = false;
-          this._controllerInterface.stopShooting();
-        }
 
-        if (gamepad.buttons[9].pressed && !this._isPauseButtonPressed) {
-          this._isPauseButtonPressed = true;
-          this._controllerInterface.togglePause();
-        } else if (!gamepad.buttons[9].pressed) {
-          this._isPauseButtonPressed = false;
-        }
+    for (const gamepad of gamepads) {
+      if (!gamepad) {
+        continue;
+      }
 
-        if (gamepad.buttons[8].pressed && !this._isRestartButtonPressed) {
-          this._isRestartButtonPressed = true;
-          this._controllerInterface.restart();
-        } else if (!gamepad.buttons[8].pressed) {
-          this._isRestartButtonPressed = false;
-        }
+      if (gamepad.buttons[0].pressed && !this._isFireButtonPressed) {
+        this._isFireButtonPressed = true;
+        this._controllerInterface.startShooting();
+      } else if (!gamepad.buttons[0].pressed && this._isFireButtonPressed) {
+        this._isFireButtonPressed = false;
+        this._controllerInterface.stopShooting();
+      }
 
-        if (gamepad.axes[0] || gamepad.axes[1]) {
-          var heading = helpers.findHeading({
-            posX: -gamepad.axes[0],
-            posY: -gamepad.axes[1],
-          });
-          this._controllerInterface.rotateToHeading(heading);
-        }
+      if (gamepad.buttons[9].pressed && !this._isPauseButtonPressed) {
+        this._isPauseButtonPressed = true;
+        this._controllerInterface.togglePause();
+      } else if (!gamepad.buttons[9].pressed) {
+        this._isPauseButtonPressed = false;
+      }
+
+      if (gamepad.buttons[8].pressed && !this._isRestartButtonPressed) {
+        this._isRestartButtonPressed = true;
+        this._controllerInterface.restart();
+      } else if (!gamepad.buttons[8].pressed) {
+        this._isRestartButtonPressed = false;
+      }
+
+      if (gamepad.axes[0] || gamepad.axes[1]) {
+        const heading = helpers.findHeading({
+          posX: -gamepad.axes[0],
+          posY: -gamepad.axes[1],
+        });
+        this._controllerInterface.rotateToHeading(heading);
       }
     }
-    this._animationFrame = window.requestAnimationFrame(
-      this._gameLoop.bind(this)
-    );
-  },
 
-  /**
-   * Connecting the Gamepad controller interface
-   * @method connect
-   */
-  connect: function () {
+    this._animationFrame = window.requestAnimationFrame(() => this._gameLoop());
+  }
+
+  connect(): void {
     if (this._isConnected) {
       return;
     }
 
     this._isConnected = true;
     this._gameLoop();
-  },
+  }
 
-  /**
-   * Disconnecting the Gamepad controller interface.
-   * @method disconnect
-   */
-  disconnect: function () {
+  disconnect(): void {
     this._isConnected = false;
 
     if (this._animationFrame !== null) {
       window.cancelAnimationFrame(this._animationFrame);
       this._animationFrame = null;
     }
-  },
-};
+  }
+}
 
 export default Gamepad;

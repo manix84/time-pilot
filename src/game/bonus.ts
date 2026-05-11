@@ -2,65 +2,78 @@
 import CONSTS from "./constants";
 import helpers from "./engine/helpers";
 import type {
+  BonusConfig,
   BonusData,
   GameArenaInstance,
   PlayerInstance,
 } from "./types";
 
-var Bonus = function (
-  canvas: GameArenaInstance,
-  player: PlayerInstance,
-  posX: number,
-  posY: number
-) {
-  this._canvas = canvas;
-  this._player = player;
+class Bonus {
+  private _bonusSprite: HTMLImageElement;
+  private _canvas: GameArenaInstance;
+  private _data: BonusData;
+  private _player: PlayerInstance;
 
-  this._data = {
-    posX: posX,
-    posY: posY,
-    level: 1,
-    layer: CONSTS.levels[1].props[0].layer,
-    removeMe: false,
-  } satisfies BonusData;
+  constructor(
+    canvas: GameArenaInstance,
+    player: PlayerInstance,
+    posX: number,
+    posY: number
+  ) {
+    this._canvas = canvas;
+    this._player = player;
 
-  this._bonusSprite = new Image();
-  this._bonusSprite.src = this.getLevelData().sprite.src;
-};
+    this._data = {
+      posX,
+      posY,
+      level: 1,
+      layer: CONSTS.levels[1].props[0].layer,
+      removeMe: false,
+    };
 
-Bonus.prototype = {
-  /**
-   * Recalculate prop's current position and heading.
-   * @method
-   */
-  reposition: function () {
-    var data = this._data as BonusData;
-    var levelData = this.getLevelData(),
-      player = this._player.getData(),
-      playerVelocity = CONSTS.levels[data.level].player.velocity,
-      heading = levelData.reversed
-        ? (player.heading + 180) % 360
-        : player.heading,
-      velocity = playerVelocity * levelData.relativeVelocity,
-      canvas = this._canvas,
-      turnTo;
+    this._bonusSprite = new Image();
+    this._bonusSprite.src = this.getLevelData().sprite.src;
+  }
+
+  private getLevelData(): BonusConfig {
+    return CONSTS.levels[this._data.level].bonus;
+  }
+
+  private _checkInArena(): void {
+    if (this._data.removeMe) {
+      return;
+    }
+
+    this._data.removeMe = helpers.detectAreaExit(
+      {
+        posX: this._canvas.posX + this.getLevelData().width / 2,
+        posY: this._canvas.posY + this.getLevelData().height / 2,
+      },
+      {
+        posX: this._data.posX,
+        posY: this._data.posY,
+      },
+      CONSTS.limits.despawnRadius
+    );
+  }
+
+  reposition(): void {
+    const levelData = this.getLevelData();
+    const player = this._player.getData();
+    const heading = player.heading;
 
     this._data.posX += helpers.float(
-      Math.sin(heading * (Math.PI / 180)) * velocity
+      Math.sin(heading * (Math.PI / 180)) * levelData.velocity
     );
     this._data.posY -= helpers.float(
-      Math.cos(heading * (Math.PI / 180)) * velocity
+      Math.cos(heading * (Math.PI / 180)) * levelData.velocity
     );
 
     this._checkInArena();
-  },
+  }
 
-  /**
-   * Draw the bonus item sprite on the page.
-   * @method render
-   */
-  render: function () {
-    var levelData = this.getLevelData();
+  render(): void {
+    const levelData = this.getLevelData();
     this._canvas.renderSprite(this._bonusSprite, {
       frameWidth: levelData.width,
       frameHeight: levelData.height,
@@ -70,7 +83,7 @@ Bonus.prototype = {
       posY:
         this._data.posY - this._player.getData().posY - levelData.height / 2,
     });
-  },
-};
+  }
+}
 
 export default Bonus;

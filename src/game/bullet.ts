@@ -2,40 +2,22 @@
 import CONSTS from "./constants";
 import userOptions from "./user-options";
 import helpers from "./engine/helpers";
-import type { BulletData, BulletInstance, GameDataStore, Heading } from "./types";
+import type {
+  BulletData,
+  BulletInstance,
+  GameArenaInstance,
+  GameDataStore,
+  Heading,
+} from "./types";
 
-/**
- * Creates a bullet to add to render.
- * @constructor
- * @param   {Number}            originX     - Spawning location on the X axis.
- * @param   {Number}            originY     - Spawning location on the Y axis.
- * @param   {Number}            heading     - Start heading (usually towards the player).
- * @returns {Bullet Instance}
- */
+class Bullet implements BulletInstance {
+  private _data: BulletData;
+  private _gameArena: GameArenaInstance;
+  private _level = 1;
 
-var Bullet = function (
-  context: GameDataStore,
-  originX: number,
-  originY: number,
-  heading: Heading,
-  size: number,
-  velocity: number,
-  color: string
-) {
-  this._gameArena = context._gameArena;
+  removeMe = false;
 
-  this._data = {
-    posX: originX,
-    posY: originY,
-    heading: heading,
-    size: size,
-    velocity: velocity,
-    color: color,
-  } satisfies BulletData;
-
-  this.removeMe = false;
-} as unknown as {
-  new (
+  constructor(
     context: GameDataStore,
     originX: number,
     originY: number,
@@ -43,65 +25,50 @@ var Bullet = function (
     size: number,
     velocity: number,
     color: string
-  ): BulletInstance;
-  prototype: Record<string, unknown>;
-};
+  ) {
+    this._gameArena = context._gameArena;
+    this._data = {
+      posX: originX,
+      posY: originY,
+      heading,
+      size,
+      velocity,
+      color,
+    };
+  }
 
-Bullet.prototype = {
-  /**
-   * Get data for the player.
-   * @method
-   * @param {String} [key] Key to return when requesting data. If no key is provided, it returns the object.
-   * @returns {Object}
-   */
-  getData: function (key?: keyof BulletData) {
+  getData(): BulletData;
+  getData<K extends keyof BulletData>(key: K): BulletData[K] | undefined;
+  getData<K extends keyof BulletData>(key?: K) {
     if (!key) {
       return this._data;
-    } else if (this._data.hasOwnProperty(key)) {
+    }
+
+    if (Object.prototype.hasOwnProperty.call(this._data, key)) {
       return this._data[key];
     }
-    return;
-  },
 
-  /**
-   * Set data in the player's data object.
-   * @method
-   * @param   {String} key  - Key from _data object
-   * @param   {Multi} value - Value to be set onto the key from the _data object.
-   * @returns {Boolean} Success response.
-   */
-  setData: function (key: keyof BulletData, value: BulletData[keyof BulletData]): boolean {
+    return undefined;
+  }
+
+  setData<K extends keyof BulletData>(
+    key: K,
+    value: BulletData[K]
+  ): boolean {
     if (this._data[key] !== undefined) {
       this._data[key] = value;
       return this._data[key] === value;
-    } else {
-      return false;
     }
-  },
 
-  /**
-   * The current level.
-   * @type {Number}
-   */
-  _level: 1,
+    return false;
+  }
 
-  /**
-   * Set current level.
-   * @method
-   * @param   {Number} level - Level number to be set.
-   * @returns {Boolean}
-   */
-  setLevel: function (level: number): boolean {
+  setLevel(level: number): boolean {
     this._level = level;
     return this._level === level;
-  },
+  }
 
-  /**
-   * Detect if the entity has left a given radius of the player.
-   * @method
-   * @protected
-   */
-  _checkInArena: function () {
+  private _checkInArena(): void {
     if (this.removeMe) {
       return;
     }
@@ -117,15 +84,10 @@ Bullet.prototype = {
       },
       CONSTS.limits.despawnRadius
     );
-  },
+  }
 
-  /**
-   * Reposition the entity.
-   * @method
-   */
-  reposition: function () {
-    var velocity = this._data.velocity,
-      heading = this._data.heading;
+  reposition(): void {
+    const { heading, velocity } = this._data;
 
     this._data.posX += helpers.float(
       Math.sin(heading * (Math.PI / 180)) * velocity
@@ -135,16 +97,11 @@ Bullet.prototype = {
     );
 
     this._checkInArena();
-  },
+  }
 
-  /**
-   * Render the entity.
-   * @method
-   */
-  render: function () {
-    var size = this._data.size,
-      color = this._data.color,
-      context = this._gameArena.getContext();
+  render(): void {
+    const { color, size } = this._data;
+    const context = this._gameArena.getContext() as CanvasRenderingContext2D;
 
     context.fillStyle = color;
     context.fillRect(
@@ -164,7 +121,7 @@ Bullet.prototype = {
         }
       );
     }
-  },
-};
+  }
+}
 
 export default Bullet;
