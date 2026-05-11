@@ -1,0 +1,69 @@
+:root {
+  font-family: "Trebuchet MS", "Segoe UI", sans-serif;
+  color: #eef5ff;
+  background: radial-gradient(
+    circle at top,
+    #17315b 0%,
+    #091425 52%,
+    #060b12 100%
+  );
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  width: 100%;
+  min-height: 100%;
+}
+
+body {
+  min-height: 100vh;
+}
+
+.app-shell {
+  display: grid;
+  place-items: center;
+  min-height: 100vh;
+  gap: 1.25rem;
+  padding: 1.25rem;
+}
+
+.app-header {
+  text-align: center;
+}
+
+.app-header h1 {
+  margin: 0;
+  letter-spacing: 0.08em;
+}
+
+.app-header p {
+  margin: 0.4rem 0 0;
+  color: #c7d5eb;
+}
+
+.game-panel {
+  width: min(100%, 760px);
+  border: 1px solid #2f4d76;
+  border-radius: 10px;
+  padding: 0.75rem;
+  background: rgba(9, 20, 37, 0.75);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+}
+
+.time-pilot-stage {
+  width: 100%;
+  aspect-ratio: 3 / 2;
+  max-height: 80vh;
+  min-height: 280px;
+}
+
+.time-pilot-stage canvas {
+  width: 100%;
+  height: 100%;
+}
