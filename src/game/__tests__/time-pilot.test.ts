@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import TimePilot from "../index";
+import userOptions from "../user-options";
 
 describe("TimePilot engine", () => {
   let host: HTMLDivElement;
@@ -16,6 +17,8 @@ describe("TimePilot engine", () => {
 
   afterEach(() => {
     host.remove();
+    userOptions.setOption("controllerType", "keyboard1");
+    userOptions.setOption("gamepadEnabled", true);
     vi.restoreAllMocks();
   });
 
@@ -33,5 +36,31 @@ describe("TimePilot engine", () => {
 
     expect(console.info).toHaveBeenCalled();
   });
-});
 
+  it("applies controller options without enabling gamepad polling", async () => {
+    const requestAnimationFrameSpy = vi.mocked(window.requestAnimationFrame);
+
+    requestAnimationFrameSpy.mockClear();
+
+    const game = new TimePilot(host, {
+      controllerType: "keyboard2",
+      gamepadEnabled: false,
+    });
+
+    await new Promise((resolve) => window.setTimeout(resolve, 5));
+
+    expect(userOptions.controllerType).toBe("keyboard2");
+    expect(userOptions.gamepadEnabled).toBe(false);
+    expect(requestAnimationFrameSpy).not.toHaveBeenCalled();
+
+    game.destroyGame();
+  });
+
+  it("persists user option updates", () => {
+    userOptions.setOption("controllerType", "keyboard1");
+    userOptions.setOption("gamepadEnabled", true);
+
+    expect(userOptions.controllerType).toBe("keyboard1");
+    expect(userOptions.gamepadEnabled).toBe(true);
+  });
+});

@@ -47,7 +47,7 @@ const createTicker = (): TickerInstance => ({
   getTicks: vi.fn(() => 200),
 });
 
-const createPlayer = (): PlayerInstance => {
+const createPlayer = (overrides: Partial<PlayerData> = {}): PlayerInstance => {
   const data: PlayerData = {
     isAlive: true,
     deathTick: false,
@@ -61,6 +61,7 @@ const createPlayer = (): PlayerInstance => {
     lives: 3,
     score: 0,
     level: 1,
+    ...overrides,
   };
 
   return {
@@ -84,13 +85,27 @@ const createPlayer = (): PlayerInstance => {
   };
 };
 
-const createContext = (): GameDataStore => {
+const createContext = ({
+  enemyAlive = true,
+  enemyCollides = true,
+  enemyLimitAvailable = true,
+  playerOverrides = {},
+  propCount = 0,
+  ticks = 200,
+}: {
+  enemyAlive?: boolean;
+  enemyCollides?: boolean;
+  enemyLimitAvailable?: boolean;
+  playerOverrides?: Partial<PlayerData>;
+  propCount?: number;
+  ticks?: number;
+} = {}): GameDataStore => {
   const enemy: EnemyInstance = {
-    isAlive: true,
+    isAlive: enemyAlive,
     removeMe: false,
     getData: vi.fn(),
     setData: vi.fn(() => true),
-    detectCollision: vi.fn(() => true),
+    detectCollision: vi.fn(() => enemyCollides),
     reposition: vi.fn(),
     render: vi.fn(),
     kill: vi.fn(() => {
@@ -102,7 +117,10 @@ const createContext = (): GameDataStore => {
     _level: 1,
     _gameArena: createArena(),
     _renderTicker: createTicker(),
-    _gameTicker: createTicker(),
+    _gameTicker: {
+      ...createTicker(),
+      getTicks: vi.fn(() => ticks),
+    },
     _bullets: {
       create: vi.fn(),
       getCount: vi.fn(() => 1),
@@ -112,11 +130,11 @@ const createContext = (): GameDataStore => {
       render: vi.fn(),
       clearAll: vi.fn(),
     } satisfies BulletFactoryInstance,
-    _player: createPlayer(),
+    _player: createPlayer(playerOverrides),
     _enemies: {
       create: vi.fn(),
       getCount: vi.fn(() => 1),
-      isUnderLimit: vi.fn(() => true),
+      isUnderLimit: vi.fn(() => enemyLimitAvailable),
       getData: vi.fn(() => []),
       getEntities: vi.fn(() => [enemy]),
       cleanup: vi.fn(),
@@ -126,7 +144,7 @@ const createContext = (): GameDataStore => {
     } satisfies EnemyFactoryInstance,
     _props: {
       create: vi.fn(),
-      getCount: vi.fn(() => 0),
+      getCount: vi.fn(() => propCount),
       getData: vi.fn(() => []),
       cleanup: vi.fn(),
       reposition: vi.fn(),
@@ -157,6 +175,25 @@ describe("game systems", () => {
     expect(context._player.kill).toHaveBeenCalled();
   });
 
+  it("skips collisions when enemies or the player are not alive", () => {
+    const deadEnemyContext = createContext({ enemyAlive: false });
+    const deadEnemySystem = new CollisionSystem(deadEnemyContext);
+
+    deadEnemySystem.detectCollisions();
+
+    expect(deadEnemyContext._player.kill).not.toHaveBeenCalled();
+
+    const deadPlayerContext = createContext({
+      playerOverrides: { isAlive: false },
+    });
+    const deadPlayerSystem = new CollisionSystem(deadPlayerContext);
+
+    deadPlayerSystem.detectCollisions();
+
+    const [enemy] = deadPlayerContext._enemies.getEntities();
+    expect(enemy.detectCollision).not.toHaveBeenCalled();
+  });
+
   it("spawns initial props and tick-based entities", () => {
     const context = createContext();
     const system = new SpawningSystem(context);
@@ -168,6 +205,22 @@ describe("game systems", () => {
 
     expect(context._props.create).toHaveBeenCalled();
     expect(context._enemies.create).toHaveBeenCalled();
+  });
+
+  it("does not spawn when limits or timing block new entities", () => {
+    const context = createContext({
+      enemyLimitAvailable: false,
+      propCount: 20,
+      ticks: 201,
+    });
+    const system = new SpawningSystem(context);
+
+    vi.spyOn(Math, "random").mockReturnValue(0);
+
+    system.spawnEntities();
+
+    expect(context._enemies.create).not.toHaveBeenCalled();
+    expect(context._props.create).not.toHaveBeenCalled();
   });
 
   it("renders a frame in the expected scene order", () => {
