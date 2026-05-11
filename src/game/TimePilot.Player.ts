@@ -4,6 +4,7 @@ import dataStore from "./TimePilot.dataStore";
 import userOptions from "./TimePilot.userOptions";
 import SoundEngine from "./engine/Sound";
 import helpers from "./engine/helpers";
+import type { PlayerData, PlayerInstance } from "./TimePilot.types";
 
 var playerConst = CONSTS.player;
 /**
@@ -41,9 +42,12 @@ var Player = function () {
     lives: 3,
     score: 0,
     level: 1,
-  };
+  } satisfies PlayerData;
 
   this._dataDefaults = helpers.cloneObject(this._data);
+} as unknown as {
+  new (): PlayerInstance;
+  prototype: Record<string, unknown>;
 };
 
 Player.prototype = {
@@ -52,7 +56,7 @@ Player.prototype = {
    * @method
    * @returns {Object}
    */
-  getData: function (key) {
+  getData: function (key?: keyof PlayerData) {
     if (!key) {
       return this._data;
     } else if (this._data.hasOwnProperty(key)) {
@@ -68,7 +72,11 @@ Player.prototype = {
    * @param   {Multi} value - Value to be set onto the key from the _data object.
    * @returns {Boolean} Success response.
    */
-  setData: function (key, value, isLastKnownGood) {
+  setData: function <K extends keyof PlayerData>(
+    key: K,
+    value: PlayerData[K],
+    isLastKnownGood?: boolean
+  ): boolean {
     if (this._data[key] !== undefined) {
       this._data[key] = value;
       if (isLastKnownGood) {
@@ -93,7 +101,7 @@ Player.prototype = {
    * @returns {[type]}
    */
   getLevelData: function () {
-    return CONSTS.levels[this._data.level].player;
+    return CONSTS.levels[(this._data as PlayerData).level].player;
   },
 
   /**

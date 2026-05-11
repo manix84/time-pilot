@@ -2,6 +2,7 @@
 import CONSTS from "./TimePilot.CONSTANTS";
 import dataStore from "./TimePilot.dataStore";
 import userOptions from "./TimePilot.userOptions";
+import type { HudInstance, PlayerData, SpriteImage } from "./TimePilot.types";
 
 /**
  * Create a hud instance to be rendered on the gameArena
@@ -10,14 +11,17 @@ import userOptions from "./TimePilot.userOptions";
  */
 var Hud = function () {
   this._gameArena = dataStore._gameArena;
-  this._playerData = dataStore._player.getData();
+  this._playerData = dataStore._player.getData() as PlayerData;
 
-  this._playerSprite = new Image();
+  this._playerSprite = new Image() as SpriteImage;
   this._playerSprite.src = CONSTS.player.sprite.src;
   this._playerSprite.frameWidth = CONSTS.player.width;
   this._playerSprite.frameHeight = CONSTS.player.height;
   this._playerSprite.frameX = 0;
   this._playerSprite.frameY = 0;
+} as unknown as {
+  new (): HudInstance;
+  prototype: Record<string, unknown>;
 };
 
 Hud.prototype = {

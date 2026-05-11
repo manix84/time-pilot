@@ -2,25 +2,29 @@
 import CONSTS from "./TimePilot.CONSTANTS";
 import dataStore from "./TimePilot.dataStore";
 import helpers from "./engine/helpers";
+import type { PropData, PropInstance } from "./TimePilot.types";
 
-var Prop = function (posX, posY) {
+var Prop = function (posX: number, posY: number) {
   this._gameArena = dataStore._gameArena;
   this._player = dataStore._player;
 
-  this._data = {};
-  this._data.posX = posX;
-  this._data.posY = posY;
-  this._data.level = 1;
-  this._data.type = Math.floor(
-    Math.random() * CONSTS.levels[this._data.level].props.length
-  );
-  this._data.layer =
-    CONSTS.levels[this._data.level].props[this._data.type].layer;
+  var level = 1 as const;
+  var type = Math.floor(Math.random() * CONSTS.levels[level].props.length);
+  this._data = {
+    posX: posX,
+    posY: posY,
+    level: level,
+    type: type,
+    layer: CONSTS.levels[level].props[type].layer,
+  } satisfies PropData;
 
   this.removeMe = false;
 
   this._propSprite = new Image();
   this._propSprite.src = this.getLevelData().sprite.src;
+} as unknown as {
+  new (posX: number, posY: number): PropInstance;
+  prototype: Record<string, unknown>;
 };
 
 Prop.prototype = {
@@ -29,7 +33,7 @@ Prop.prototype = {
    * @method
    * @returns {Object}
    */
-  getData: function (key) {
+  getData: function (key?: keyof PropData) {
     if (!key) {
       return this._data;
     } else if (this._data.hasOwnProperty(key)) {
@@ -44,7 +48,8 @@ Prop.prototype = {
    * @returns {object}
    */
   getLevelData: function () {
-    return CONSTS.levels[this._data.level].props[this._data.type];
+    var data = this._data as PropData;
+    return CONSTS.levels[data.level].props[data.type];
   },
 
   /**
@@ -81,7 +86,7 @@ Prop.prototype = {
   reposition: function () {
     var levelData = this.getLevelData(),
       player = this._player.getData(),
-      playerVelocity = CONSTS.levels[this._data.level].player.velocity,
+      playerVelocity = CONSTS.levels[(this._data as PropData).level].player.velocity,
       heading = levelData.reversed
         ? (player.heading + 180) % 360
         : player.heading,

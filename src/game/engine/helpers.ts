@@ -1,12 +1,46 @@
 /* Converted from engine/helpers.js (AMD) to ESM TypeScript. */
-var helpers: any = {
+import type { Coordinates, Heading, PositionedRadius } from "../TimePilot.types";
+
+interface LegacyEventTarget extends EventTarget {
+  attachEvent?: (eventName: string, callback: EventListener) => void;
+}
+
+interface Helpers {
+  float: (number: number) => number;
+  rotateTo: (
+    destinationAngle: Heading,
+    currentAngle: Heading,
+    stepSize: number
+  ) => Heading;
+  getSpawnCoords: (target: Coordinates & { heading: Heading }) => Coordinates;
+  findHeading: (target: Coordinates, origin?: Coordinates) => Heading;
+  detectCollision: (
+    target: PositionedRadius,
+    origin?: PositionedRadius
+  ) => boolean;
+  detectAreaExit: (
+    radialCenter: Coordinates,
+    target: Coordinates,
+    radius: number
+  ) => boolean;
+  bind: (
+    eventNames: string | string[],
+    callback: EventListener,
+    element?: LegacyEventTarget
+  ) => void;
+  unbind: (...eventNames: string[]) => void;
+  getRandomColor: () => string;
+  cloneObject: <T>(oldObject: T) => T;
+}
+
+var helpers: Helpers = {
   /**
    * Takes an extremely long number and reduces it decimal place to 5.
    * @method
    * @param   {Number} number - The number you wish to be cleaned up.
    * @returns {Float}
    */
-  float: function (number) {
+  float: function (number: number): number {
     return parseFloat(number.toFixed(5));
   },
 
@@ -18,7 +52,11 @@ var helpers: any = {
    * @param   {Number} stepSize         - Number of degrees that can be moved at a time.
    * @returns {Number}
    */
-  rotateTo: function (destinationAngle, currentAngle, stepSize) {
+  rotateTo: function (
+    destinationAngle: Heading,
+    currentAngle: Heading,
+    stepSize: number
+  ): Heading {
     var direction = Math.atan2(
       parseFloat(
         Math.sin((destinationAngle - currentAngle) * (Math.PI / 180)).toFixed(
@@ -51,17 +89,17 @@ var helpers: any = {
    * @property  {Number} target.posY        - Y position of the target.
    * @returns {Object}
    */
-  getSpawnCoords: function (target) {
-    var data: any = {},
-      spawnRadius = 450,
+  getSpawnCoords: function (target: Coordinates & { heading: Heading }): Coordinates {
+    var data: Coordinates = {
+      posX: target.posX,
+      posY: target.posY,
+    };
+    var spawnRadius = 450,
       spawnArc = 80,
       heading;
 
     heading =
       target.heading - spawnArc / 2 + Math.floor(Math.random() * spawnArc);
-
-    data.posX = target.posX;
-    data.posY = target.posY;
 
     data.posX += this.float(Math.sin(heading * (Math.PI / 180)) * spawnRadius);
     data.posY -= this.float(Math.cos(heading * (Math.PI / 180)) * spawnRadius);
@@ -82,7 +120,7 @@ var helpers: any = {
    * @property  {Number} [origin.heading]     - Heading of the origin.
    * @returns {Float} The number of degrees to turn (+/-) to be pointing towards target.
    */
-  findHeading: function (target, origin) {
+  findHeading: function (target: Coordinates, origin?: Coordinates): Heading {
     origin = origin || {
       posX: 0,
       posY: 0,
@@ -106,10 +144,14 @@ var helpers: any = {
    * @property  {Number} [origin.radius]      - Radius of the origin.
    * @returns {Boolean}
    */
-  detectCollision: function (target, origin) {
+  detectCollision: function (
+    target: PositionedRadius,
+    origin?: PositionedRadius
+  ): boolean {
     origin = origin || {
       posX: 0,
       posY: 0,
+      radius: 0,
     };
     var dx = target.posX - origin.posX,
       dy = target.posY - origin.posY,
@@ -130,7 +172,11 @@ var helpers: any = {
    * @param     {Number} radius               - Distance from the radial center to be considered inside.
    * @returns   {Boolean}
    */
-  detectAreaExit: function (radialCenter, target, radius) {
+  detectAreaExit: function (
+    radialCenter: Coordinates,
+    target: Coordinates,
+    radius: number
+  ): boolean {
     var dx = radialCenter.posX - target.posX,
       dy = radialCenter.posY - target.posY;
 
@@ -144,7 +190,11 @@ var helpers: any = {
    * @param   {Function}      callback        - Function to be run when the event is fired.
    * @param   {DOM Node}      [element=body]  - Element to attach the listener too.
    */
-  bind: function (eventNames, callback, element) {
+  bind: function (
+    eventNames: string | string[],
+    callback: EventListener,
+    element?: LegacyEventTarget
+  ): void {
     element = element || document.documentElement;
 
     if (typeof eventNames === "string") {
@@ -172,7 +222,7 @@ var helpers: any = {
    * @method getRandomColor
    * @return {String} #0-F(6)
    */
-  getRandomColor: function () {
+  getRandomColor: function (): string {
     var colors = 16777215;
 
     return "#" + Math.floor(Math.random() * colors).toString(16);
@@ -184,8 +234,8 @@ var helpers: any = {
    * @param  {Object}    oldObject The object you want to be cloned.
    * @return {Object}    The new cloned object.
    */
-  cloneObject: function (oldObject) {
-    var newObject = {};
+  cloneObject: function <T>(oldObject: T): T {
+    var newObject = {} as T;
     for (var prop in oldObject) {
       if (typeof oldObject[prop] !== "object") {
         newObject[prop] = oldObject[prop];

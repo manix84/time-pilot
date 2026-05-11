@@ -1,5 +1,23 @@
 /* Converted from engine/GameArena.js (AMD) to ESM TypeScript. */
+import type {
+  AssetProgress,
+  CircleOptions,
+  GameArenaInstance,
+  RenderTextOptions,
+  SpriteFrame,
+} from "../TimePilot.types";
 import helpers from "./helpers";
+
+type CanvasContext = CanvasRenderingContext2D | WebGLRenderingContext;
+type FullscreenCanvas = HTMLCanvasElement & {
+  mozRequestFullScreen?: () => void;
+  webkitRequestFullscreen?: (keyboardInput?: number) => void;
+};
+type FullscreenDocument = Document & {
+  cancelFullScreen?: () => void;
+  mozCancelFullScreen?: () => void;
+  webkitCancelFullScreen?: () => void;
+};
 
 /**
  * Create a GameArena instance to run the game in.
@@ -7,7 +25,7 @@ import helpers from "./helpers";
  * @param   {HTML Element} containerElement - Element to load the canvas into.
  * @returns {GameArena Instance}
  */
-var GameArena = function (containerElement) {
+var GameArena = function (containerElement: HTMLElement) {
   var that = this;
   this._containerElement = containerElement;
   this._canvas = document.createElement("canvas");
@@ -37,6 +55,9 @@ var GameArena = function (containerElement) {
   );
 
   this._init();
+} as unknown as {
+  new (containerElement: HTMLElement): GameArenaInstance;
+  prototype: Record<string, unknown>;
 };
 
 GameArena.prototype = {
@@ -61,7 +82,7 @@ GameArena.prototype = {
    * @param  {Number} posX
    * @param  {Number} posY
    */
-  updatePosition: function (posX, posY) {
+  updatePosition: function (posX: number, posY: number): void {
     this.posX = posX;
     this.posY = posY;
   },
@@ -72,7 +93,7 @@ GameArena.prototype = {
    * @param   {Number} width
    * @param   {Number} height
    */
-  resize: function (width, height) {
+  resize: function (width?: number, height?: number): void {
     width = width || this._containerElement.clientWidth;
     height = height || this._containerElement.clientHeight;
 
@@ -97,7 +118,7 @@ GameArena.prototype = {
    * @param   {String} dimentions - Canvas context you want back (2D or 3D).
    * @returns {Canvas Context}
    */
-  getContext: function (dimentions) {
+  getContext: function (dimentions?: "2D" | "2d" | "3D" | "3d" | 2 | 3): CanvasContext {
     if (!this._context) {
       switch (dimentions) {
         case "3D":
@@ -117,13 +138,13 @@ GameArena.prototype = {
    * @method
    */
   enterFullScreen: function () {
-    var element = this._canvas as any;
+    var element = this._canvas as FullscreenCanvas;
     if (element.requestFullscreen) {
       element.requestFullscreen();
     } else if (element.mozRequestFullScreen) {
       element.mozRequestFullScreen();
     } else if (element.webkitRequestFullscreen) {
-      element.webkitRequestFullscreen((Element as any).ALLOW_KEYBOARD_INPUT);
+      element.webkitRequestFullscreen((Element as unknown as { ALLOW_KEYBOARD_INPUT?: number }).ALLOW_KEYBOARD_INPUT);
     }
   },
 
@@ -132,7 +153,7 @@ GameArena.prototype = {
    * @method
    */
   exitFullScreen: function () {
-    var doc = document as any;
+    var doc = document as FullscreenDocument;
     if (doc.cancelFullScreen) {
       doc.cancelFullScreen();
     } else if (doc.mozCancelFullScreen) {
@@ -159,7 +180,7 @@ GameArena.prototype = {
    * Set the canvas background-color.
    * @param  {String} color - Background-color to be set.
    */
-  setBackgroundColor: function (color) {
+  setBackgroundColor: function (color: string): void {
     this._canvas.style.background = color;
   },
 
@@ -176,7 +197,7 @@ GameArena.prototype = {
    * @method
    * @param   {String/Array} assets - Assets to be preloaded.
    */
-  registerAssets: function (assets) {
+  registerAssets: function (assets: string | string[]): void {
     if (typeof assets === "string") {
       assets = [assets];
     }
@@ -188,14 +209,14 @@ GameArena.prototype = {
    * @method
    * @param   {Function} callback - Callback is run on each completed asset.
    */
-  preloadAssets: function (callback) {
+  preloadAssets: function (callback?: (progress: AssetProgress) => void): void {
     callback = callback || (() => {});
     var loadedCount = 0,
       remainingCount = this._assets.length - 1,
       i = remainingCount,
-      img = [],
-      onload,
-      onerror;
+      img: HTMLImageElement[] = [],
+      onload: () => void,
+      onerror: () => void;
 
     onload = () => {
       callback({
@@ -232,30 +253,35 @@ GameArena.prototype = {
    * @enum    {String} [newOptions.font]  - Font type
    * @enum    {String} [newOptions.stroke]  - Stroke color. If not set, it won't show.
    */
-  renderText: function (message, startPosX, startPosY, newOptions) {
+  renderText: function (
+    message: string | number,
+    startPosX?: number,
+    startPosY?: number,
+    newOptions: RenderTextOptions = {}
+  ): void {
     startPosX = startPosX || 0;
     startPosY = startPosY || 0;
-    var options = {
-        size: newOptions.size || 12,
-        align: newOptions.align || "left",
-        valign: newOptions.valign || "top",
-        color: newOptions.color || "#fff",
-        font: newOptions.font || "theFont",
-        stroke: newOptions.stroke || false,
-        strokeWidth: newOptions.strokeWidth || 1,
-      },
-      context = this.getContext();
+    var options: Required<RenderTextOptions> = {
+      size: newOptions.size || 12,
+      align: newOptions.align || "left",
+      valign: newOptions.valign || "top",
+      color: newOptions.color || "#fff",
+      font: newOptions.font || "theFont",
+      stroke: newOptions.stroke || false,
+      strokeWidth: newOptions.strokeWidth || 1,
+    };
+    var context = this.getContext() as CanvasRenderingContext2D;
 
     context.fillStyle = options.color;
     context.font = options.size + "px " + options.font;
     context.textAlign = options.align;
     context.textBaseline = options.valign;
-    context.fillText(message, startPosX, startPosY);
+    context.fillText(String(message), startPosX, startPosY);
 
     if (options.stroke) {
       context.lineWidth = options.strokeWidth;
       context.strokeStyle = options.stroke;
-      context.strokeText(message, startPosX, startPosY);
+      context.strokeText(String(message), startPosX, startPosY);
     }
   },
 
@@ -265,8 +291,8 @@ GameArena.prototype = {
    * @param   {Image Sprite} sprite   - Image sprite to be rendered
    * @param   {Object} spriteData     - Object containing coordinates and sprite positions.
    */
-  renderSprite: function (sprite, spriteData) {
-    var context = this.getContext();
+  renderSprite: function (sprite: CanvasImageSource, spriteData: SpriteFrame): void {
+    var context = this.getContext() as CanvasRenderingContext2D;
 
     context.drawImage(
       sprite,
@@ -291,7 +317,12 @@ GameArena.prototype = {
    * @enum   {String} options.borderColor
    * @enum   {Number} options.borderWidth
    */
-  drawCircle: function (posX, posY, radius, options) {
+  drawCircle: function (
+    posX: number,
+    posY: number,
+    radius: number,
+    options: CircleOptions = {}
+  ): void {
     posX = posX || 0;
     posY = posY || 0;
 
@@ -300,7 +331,7 @@ GameArena.prototype = {
       borderColor: options.borderColor || false,
       borderWidth: options.borderWidth || 1,
     };
-    var context = this.getContext();
+    var context = this.getContext() as CanvasRenderingContext2D;
 
     context.beginPath();
     context.arc(posX, posY, radius, 0, 2 * Math.PI, false);
@@ -319,7 +350,7 @@ GameArena.prototype = {
    * @param  {Number} [widthSpace=20]
    * @param  {Number} [heightSpace=20]
    */
-  drawDebugGrid: function (widthSpace, heightSpace) {
+  drawDebugGrid: function (widthSpace?: number, heightSpace?: number): void {
     widthSpace = widthSpace || 20;
     heightSpace = heightSpace || 20;
 

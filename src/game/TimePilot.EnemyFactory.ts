@@ -3,6 +3,13 @@ import CONSTS from "./TimePilot.CONSTANTS";
 import Enemy from "./TimePilot.Enemy";
 import dataStore from "./TimePilot.dataStore";
 import SoundEngine from "./engine/Sound";
+import type {
+  EnemyConfig,
+  EnemyData,
+  EnemyFactoryInstance,
+  EnemyInstance,
+  Heading,
+} from "./TimePilot.types";
 
 /**
  * Construct an enemy factory for managing creation, movement, rendering and removal of enemies.
@@ -18,7 +25,10 @@ var EnemyFactory = function () {
     this.getLevelData().explosion.sound.src
   );
 
-  this._enemies = [];
+  this._enemies = [] as EnemyInstance[];
+} as unknown as {
+  new (): EnemyFactoryInstance;
+  prototype: Record<string, unknown>;
 };
 
 EnemyFactory.prototype = {
@@ -29,7 +39,7 @@ EnemyFactory.prototype = {
    * @param   {Number} posY    - Y coordinate to start from.
    * @param   {Number} heading - Heading to start from.
    */
-  create: function (posX, posY, heading) {
+  create: function (posX: number, posY: number, heading: Heading): void {
     this._enemies.push(new Enemy(posX, posY, heading));
   },
 
@@ -39,7 +49,7 @@ EnemyFactory.prototype = {
    * @param {String} [key] [description]
    * @returns {object}
    */
-  getLevelData: function (key) {
+  getLevelData: function (key?: keyof EnemyConfig) {
     var data = CONSTS.levels[this._level].enemies.basic;
     if (key) {
       if (data[key]) {
@@ -57,7 +67,7 @@ EnemyFactory.prototype = {
    * @method
    * @returns {Number}
    */
-  getCount: function () {
+  getCount: function (): number {
     return this._enemies.length;
   },
 
@@ -66,7 +76,7 @@ EnemyFactory.prototype = {
    * @method
    * @returns {Boolean}
    */
-  isUnderLimit: function () {
+  isUnderLimit: function (): boolean {
     return this._enemies.length < this.getLevelData("spawnLimit");
   },
 
@@ -75,12 +85,12 @@ EnemyFactory.prototype = {
    * @method
    * @returns {Array}
    */
-  getData: function () {
-    var data = [],
-      i: any = 0;
+  getData: function (): EnemyData[] {
+    var data: EnemyData[] = [],
+      i = "";
     for (i in this._enemies) {
       if (this._enemies.hasOwnProperty(i)) {
-        data.push(this._enemies[i].getData());
+        data.push(this._enemies[i].getData() as EnemyData);
       }
     }
     return data;
@@ -90,7 +100,7 @@ EnemyFactory.prototype = {
    * Run player collision calculations on all entities.
    * @method
    */
-  detectCollision: function () {
+  detectCollision: function (): void {
     var bullets = this._bullets.getData(),
       playerData = this._player.getData();
 
@@ -135,12 +145,12 @@ EnemyFactory.prototype = {
    * If an entity declares it is to be removed, remove it.
    * @method
    */
-  cleanup: function () {
+  cleanup: function (): void {
     var i;
 
     for (i in this._enemies) {
       if (this._enemies.hasOwnProperty(i) && this._enemies[i].removeMe) {
-        this._despawn(i);
+        this._despawn(Number(i));
       }
     }
   },
@@ -149,7 +159,7 @@ EnemyFactory.prototype = {
    * Run all reposition logic.
    * @method
    */
-  reposition: function () {
+  reposition: function (): void {
     var i;
 
     for (i in this._enemies) {
@@ -163,8 +173,8 @@ EnemyFactory.prototype = {
    * Render all enemies on the gameArena.
    * @method
    */
-  render: function () {
-    var i: any = 0;
+  render: function (): void {
+    var i = "";
 
     for (i in this._enemies) {
       if (this._enemies.hasOwnProperty(i)) {
@@ -178,17 +188,17 @@ EnemyFactory.prototype = {
    * @method
    * @param   {Number} entityId - Index ID of entity you wish to remove.
    */
-  _despawn: function (entityId) {
+  _despawn: function (entityId: number): void {
     this._enemies.splice(entityId, 1);
   },
 
   /**
    * Clear all enemies from memory.
    */
-  clearAll: function () {
+  clearAll: function (): void {
     for (var i in this._enemies) {
       if (this._enemies.hasOwnProperty(i)) {
-        this._despawn(i);
+        this._despawn(Number(i));
       }
     }
   },

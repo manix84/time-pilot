@@ -13,8 +13,14 @@ import Hud from "./TimePilot.Hud";
 import Player from "./TimePilot.Player";
 import PropFactory from "./TimePilot.PropFactory";
 import userOptions from "./TimePilot.userOptions";
+import type { AssetProgress, Controller, Coordinates } from "./TimePilot.types";
 
-var TimePilot = function (element, options) {
+interface TimePilotOptions {
+  debug?: boolean;
+  [key: string]: boolean | undefined;
+}
+
+var TimePilot = function (element: HTMLElement, options: TimePilotOptions = {}) {
   this._container = element;
 
   var property = null;
@@ -85,7 +91,7 @@ TimePilot.prototype = {
       "/sprites/props/cloud3.png",
     ]);
 
-    dataStore._gameArena.preloadAssets((obj) => {
+    dataStore._gameArena.preloadAssets((obj: AssetProgress) => {
       if (!obj.remaining) {
         that._start();
         dataStore._gameTicker.start();
@@ -179,7 +185,7 @@ TimePilot.prototype = {
       dataStore._renderTicker.clearTicks();
     }
     if (dataStore._currentController && dataStore._currentController.length) {
-      dataStore._currentController.forEach((controller) => {
+      dataStore._currentController.forEach((controller: Controller) => {
         if (controller && typeof controller.disconnect === "function") {
           controller.disconnect();
         }
@@ -188,7 +194,7 @@ TimePilot.prototype = {
     }
   },
 
-  pauseGame: function (forcePause) {
+  pauseGame: function (forcePause?: boolean) {
     if (dataStore._gameTicker.isRunning || !!forcePause) {
       window.console.info("Pausing");
       dataStore._gameTicker.stop();
@@ -210,7 +216,7 @@ TimePilot.prototype = {
   },
 
   _spawnEntities: function () {
-    var data: any = {},
+    var data: Coordinates = { posX: 0, posY: 0 },
       heading = 0,
       randomTickInterval = Math.floor(Math.random() * (1 - 200 + 1)) + 200;
     if (

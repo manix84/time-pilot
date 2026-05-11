@@ -1,4 +1,6 @@
 /* Converted from TimePilot.dataStore.js (AMD) to ESM TypeScript. */
-var dataStore: Record<string, any> = {};
+import type { GameDataStore } from "./TimePilot.types";
+
+var dataStore = {} as GameDataStore;
 
 export default dataStore;

@@ -3,6 +3,12 @@ import CONSTS from "./TimePilot.CONSTANTS";
 import dataStore from "./TimePilot.dataStore";
 import userOptions from "./TimePilot.userOptions";
 import helpers from "./engine/helpers";
+import type {
+  EnemyConfig,
+  EnemyData,
+  EnemyInstance,
+  Heading,
+} from "./TimePilot.types";
 
 /**
  * Creates an enemy to add to the page.
@@ -13,24 +19,28 @@ import helpers from "./engine/helpers";
  * @returns {Enemy Instance}
  */
 
-var Enemy = function (posX, posY, heading) {
+var Enemy = function (posX: number, posY: number, heading: Heading) {
   this._gameArena = dataStore._gameArena;
   this._player = dataStore._player;
   this._gameTicker = dataStore._gameTicker;
 
-  this._data = {};
-  this._data.posX = posX;
-  this._data.posY = posY;
-  this._data.heading = heading;
-  this._data.level = dataStore._level || 1;
-  this._data.deathTick = false;
-  this._data.tickOffset = Math.floor(Math.random() * 100);
+  this._data = {
+    posX: posX,
+    posY: posY,
+    heading: heading,
+    level: dataStore._level || 1,
+    deathTick: false,
+    tickOffset: Math.floor(Math.random() * 100),
+  } satisfies EnemyData;
 
   this.isAlive = true;
   this.removeMe = false;
 
   this._enemySprite = new Image();
   this._enemySprite.src = this.getLevelData().sprite.src;
+} as unknown as {
+  new (posX: number, posY: number, heading: Heading): EnemyInstance;
+  prototype: Record<string, unknown>;
 };
 
 Enemy.prototype = {
@@ -39,7 +49,7 @@ Enemy.prototype = {
    * @method
    * @returns {Object}
    */
-  getData: function (key) {
+  getData: function (key?: keyof EnemyData) {
     if (!key) {
       return this._data;
     } else if (this._data.hasOwnProperty(key)) {
@@ -55,7 +65,7 @@ Enemy.prototype = {
    * @param   {Multi} value - Value to be set onto the key from the _data object.
    * @returns {Boolean} Success response.
    */
-  setData: function (key, value) {
+  setData: function (key: keyof EnemyData, value: EnemyData[keyof EnemyData]): boolean {
     if (this._data[key] !== undefined) {
       this._data[key] = value;
       return this._data[key] === value;
@@ -69,13 +79,14 @@ Enemy.prototype = {
    * @method
    * @returns {object}
    */
-  getLevelData: function (key) {
+  getLevelData: function (key?: keyof EnemyConfig) {
+    var data = this._data as EnemyData;
     if (!key) {
-      return CONSTS.levels[this._data.level].enemies.basic;
+      return CONSTS.levels[data.level].enemies.basic;
     } else if (
-      CONSTS.levels[this._data.level].enemies.basic.hasOwnProperty(key)
+      CONSTS.levels[data.level].enemies.basic.hasOwnProperty(key)
     ) {
-      return CONSTS.levels[this._data.level].enemies.basic[key];
+      return CONSTS.levels[data.level].enemies.basic[key];
     }
     return;
   },
@@ -85,7 +96,11 @@ Enemy.prototype = {
    * @method
    * @returns {Boolean}
    */
-  detectCollision: function (objectPosX, objectPosY, objectHitRadius) {
+  detectCollision: function (
+    objectPosX: number,
+    objectPosY: number,
+    objectHitRadius: number
+  ): boolean {
     var levelData = this.getLevelData();
 
     return helpers.detectCollision(

@@ -2,6 +2,12 @@
 import Bullet from "./TimePilot.Bullet";
 import CONSTS from "./TimePilot.CONSTANTS";
 import SoundEngine from "./engine/Sound";
+import type {
+  BulletData,
+  BulletFactoryInstance,
+  BulletInstance,
+  Heading,
+} from "./TimePilot.types";
 
 /**
  * Construct an bullet factory for managing creation, movement, rendering and removal of bullets.
@@ -9,8 +15,11 @@ import SoundEngine from "./engine/Sound";
  * @returns {Bullet Factory Instance}
  */
 var BulletFactory = function () {
-  this._bullets = [];
+  this._bullets = [] as BulletInstance[];
   this._bulletSound = new SoundEngine(CONSTS.player.projectile.sound.src);
+} as unknown as {
+  new (): BulletFactoryInstance;
+  prototype: Record<string, unknown>;
 };
 
 BulletFactory.prototype = {
@@ -24,7 +33,14 @@ BulletFactory.prototype = {
    * @param {Number} velocity   - Number of pixels to move per frame.
    * @param {String} color      - Color of the projectile.
    */
-  create: function (originX, originY, heading, size, velocity, color) {
+  create: function (
+    originX: number,
+    originY: number,
+    heading: Heading,
+    size: number,
+    velocity: number,
+    color: string
+  ): void {
     this._bullets.push(
       new Bullet(originX, originY, heading, size, velocity, color)
     );
@@ -37,7 +53,7 @@ BulletFactory.prototype = {
    * @method
    * @returns {Number}
    */
-  getCount: function () {
+  getCount: function (): number {
     return this._bullets.length;
   },
 
@@ -46,12 +62,12 @@ BulletFactory.prototype = {
    * @method
    * @returns {Array}
    */
-  getData: function () {
-    var data = [],
-      i: any = 0;
+  getData: function (): BulletData[] {
+    var data: BulletData[] = [],
+      i = "";
     for (i in this._bullets) {
       if (this._bullets.hasOwnProperty(i)) {
-        data.push(this._bullets[i].getData());
+        data.push(this._bullets[i].getData() as BulletData);
       }
     }
     return data;
@@ -61,12 +77,12 @@ BulletFactory.prototype = {
    * If an entity declares it is to be removed, remove it.
    * @method
    */
-  cleanup: function () {
+  cleanup: function (): void {
     var i;
 
     for (i in this._bullets) {
       if (this._bullets.hasOwnProperty(i) && this._bullets[i].removeMe) {
-        this._despawn(i);
+        this._despawn(Number(i));
       }
     }
   },
@@ -75,7 +91,7 @@ BulletFactory.prototype = {
    * Run all reposition logic.
    * @method
    */
-  reposition: function () {
+  reposition: function (): void {
     var i;
 
     for (i in this._bullets) {
@@ -89,8 +105,8 @@ BulletFactory.prototype = {
    * Render all bullets on the gameArena.
    * @method
    */
-  render: function () {
-    var i: any = 0;
+  render: function (): void {
+    var i = "";
 
     for (i in this._bullets) {
       if (this._bullets.hasOwnProperty(i)) {
@@ -104,17 +120,17 @@ BulletFactory.prototype = {
    * @method
    * @param {Number} entityId - Index ID of entity you wish to remove.
    */
-  _despawn: function (entityId) {
+  _despawn: function (entityId: number): void {
     this._bullets.splice(entityId, 1);
   },
 
   /**
    * Clear all bullets from memory.
    */
-  clearAll: function () {
+  clearAll: function (): void {
     for (var i in this._bullets) {
       if (this._bullets.hasOwnProperty(i)) {
-        this._despawn(i);
+        this._despawn(Number(i));
       }
     }
   },

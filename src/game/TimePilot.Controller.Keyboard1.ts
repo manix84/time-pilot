@@ -1,10 +1,14 @@
 /* Converted from TimePilot.Controller.Keyboard1.js (AMD) to ESM TypeScript. */
 import helpers from "./engine/helpers";
+import type { Controller, ControllerInterfaceInstance } from "./TimePilot.types";
 
-var Keyboard1 = function (controllerInterface) {
+var Keyboard1 = function (controllerInterface: ControllerInterfaceInstance) {
   this._controllerInterface = controllerInterface;
 
   this.connect();
+} as unknown as {
+  new (controllerInterface: ControllerInterfaceInstance): Controller;
+  prototype: Record<string, unknown>;
 };
 
 Keyboard1.prototype = {
@@ -12,7 +16,7 @@ Keyboard1.prototype = {
     var that = this;
     helpers.bind(
       "keydown",
-      (event) => {
+      (event: KeyboardEvent) => {
         switch (event.keyCode) {
           case 37: // Left-Key
           case 65: // "A"
@@ -62,7 +66,7 @@ Keyboard1.prototype = {
 
     helpers.bind(
       "keyup",
-      (event) => {
+      (event: KeyboardEvent) => {
         switch (event.keyCode) {
           case 27: // Escape-Key
           case 70: // "F"-Key

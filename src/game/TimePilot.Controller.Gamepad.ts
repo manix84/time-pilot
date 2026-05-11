@@ -1,10 +1,14 @@
 /* Converted from TimePilot.Controller.Gamepad.js (AMD) to ESM TypeScript. */
 import helpers from "./engine/helpers";
+import type { Controller, ControllerInterfaceInstance } from "./TimePilot.types";
 
-var Gamepad = function (controllerInterface) {
+var Gamepad = function (controllerInterface: ControllerInterfaceInstance) {
   this._controllerInterface = controllerInterface;
 
   this.connect();
+} as unknown as {
+  new (controllerInterface: ControllerInterfaceInstance): Controller;
+  prototype: Record<string, unknown>;
 };
 
 Gamepad.prototype = {
@@ -29,7 +33,9 @@ Gamepad.prototype = {
    * @method _gameLoop
    */
   _gameLoop: function () {
-    var navigatorWithGamepads = navigator as any;
+    var navigatorWithGamepads = navigator as Navigator & {
+      webkitGetGamepads?: () => (Gamepad | null)[];
+    };
     var gamepads = navigator.getGamepads
       ? navigator.getGamepads()
       : navigatorWithGamepads.webkitGetGamepads

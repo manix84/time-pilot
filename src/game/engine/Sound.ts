@@ -6,7 +6,17 @@
  * @param {Object}          [options] - Options for the current sound.
  * @constructor
  */
-var Sound = function (urls, userOptions?) {
+interface SoundOptions {
+  loop?: boolean;
+  autoplay?: boolean;
+  instantDestroy?: boolean;
+}
+
+interface TimePilotAudioElement extends HTMLAudioElement {
+  canPlay?: boolean;
+}
+
+var Sound = function (urls: string | string[], userOptions?: SoundOptions) {
   userOptions = userOptions || {};
 
   var options = {
@@ -15,7 +25,8 @@ var Sound = function (urls, userOptions?) {
     instantDestroy: false,
   };
   var i = 0;
-  var property, source;
+  var property: keyof SoundOptions;
+  var source: HTMLSourceElement;
 
   if (typeof urls === "undefined") {
     throw new Error("You must set an audio url.");
@@ -32,7 +43,7 @@ var Sound = function (urls, userOptions?) {
     }
   }
 
-  this._theSound = new Audio();
+  this._theSound = new Audio() as TimePilotAudioElement;
   for (; i < urls.length; i++) {
     window.console.log("Adding source:", urls[i]);
     source = document.createElement("source");
@@ -48,6 +59,15 @@ var Sound = function (urls, userOptions?) {
   this._theSound.controls = false;
 
   this._theSound.addEventListener("canplay", _canPlayListener, false);
+} as unknown as {
+  new (urls: string | string[], userOptions?: SoundOptions): {
+    play: () => void;
+    loop: () => void;
+    pause: () => void;
+    stop: () => void;
+    destroy: () => void;
+  };
+  prototype: Record<string, unknown>;
 };
 
 Sound.prototype = {
@@ -108,7 +128,7 @@ Sound.prototype = {
  * @method _canPlayListener
  * @private
  */
-var _canPlayListener = function () {
+var _canPlayListener = function (this: TimePilotAudioElement): void {
   this.canPlay = true;
 };
 

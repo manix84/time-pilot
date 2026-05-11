@@ -1,8 +1,16 @@
 /* Converted from TimePilot.PropFactory.js (AMD) to ESM TypeScript. */
 import Prop from "./TimePilot.Prop";
+import type {
+  PropData,
+  PropFactoryInstance,
+  PropInstance,
+} from "./TimePilot.types";
 
 var PropFactory = function () {
-  this._props = [];
+  this._props = [] as PropInstance[];
+} as unknown as {
+  new (): PropFactoryInstance;
+  prototype: Record<string, unknown>;
 };
 
 PropFactory.prototype = {
@@ -12,7 +20,7 @@ PropFactory.prototype = {
    * @param   {Number} posX    - X coordinate to start from.
    * @param   {Number} posY    - Y coordinate to start from.
    */
-  create: function (posX, posY) {
+  create: function (posX: number, posY: number): void {
     this._props.push(new Prop(posX, posY));
   },
 
@@ -21,7 +29,7 @@ PropFactory.prototype = {
    * @method
    * @returns {Number}
    */
-  getCount: function () {
+  getCount: function (): number {
     return this._props.length;
   },
 
@@ -30,9 +38,9 @@ PropFactory.prototype = {
    * @method
    * @returns {Array}
    */
-  getData: function () {
-    var data = [],
-      i: any = 0;
+  getData: function (): PropData[] {
+    var data: PropData[] = [],
+      i = "";
     for (i in this._props) {
       if (this._props.hasOwnProperty(i)) {
         data.push(this._props[i].getData());
@@ -45,12 +53,12 @@ PropFactory.prototype = {
    * If an entity declares it is to be removed, remove it.
    * @method
    */
-  cleanup: function () {
+  cleanup: function (): void {
     var i;
 
     for (i in this._props) {
       if (this._props.hasOwnProperty(i) && this._props[i].removeMe) {
-        this._despawn(i);
+        this._despawn(Number(i));
       }
     }
   },
@@ -59,7 +67,7 @@ PropFactory.prototype = {
    * Run all reposition logic.
    * @method
    */
-  reposition: function () {
+  reposition: function (): void {
     var i;
 
     for (i in this._props) {
@@ -73,9 +81,9 @@ PropFactory.prototype = {
    * Render all entities on the gameArena.
    * @method
    */
-  render: function (layer) {
+  render: function (layer?: number | false): void {
     layer = layer || false;
-    var i: any = 0;
+    var i = "";
 
     for (i in this._props) {
       if (this._props.hasOwnProperty(i)) {
@@ -91,17 +99,17 @@ PropFactory.prototype = {
    * @method
    * @param   {Number} entityId - Index ID of entity you wish to remove.
    */
-  _despawn: function (entityId) {
+  _despawn: function (entityId: number): void {
     this._props.splice(entityId, 1);
   },
 
   /**
    * Clear all props from memory.
    */
-  clearAll: function () {
+  clearAll: function (): void {
     for (var i in this._props) {
       if (this._props.hasOwnProperty(i)) {
-        this._despawn(i);
+        this._despawn(Number(i));
       }
     }
   },

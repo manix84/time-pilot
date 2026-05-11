@@ -1,6 +1,11 @@
 /* Converted from TimePilot.ControllerInterface.js (AMD) to ESM TypeScript. */
 import CONSTS from "./TimePilot.CONSTANTS";
 import dataStore from "./TimePilot.dataStore";
+import type {
+  ControllerCommands,
+  ControllerInterfaceInstance,
+  Heading,
+} from "./TimePilot.types";
 
 /**
  * Create a ControllerInterface instance
@@ -8,7 +13,7 @@ import dataStore from "./TimePilot.dataStore";
  * @method
  * @returns {ControllerInterface instance}
  */
-var ControllerInterface = function (commands) {
+var ControllerInterface = function (commands: ControllerCommands) {
   this._player = dataStore._player;
   this._gameTicker = dataStore._gameTicker;
   this._hud = dataStore._hud;
@@ -20,6 +25,9 @@ var ControllerInterface = function (commands) {
   };
 
   this._rotationStep = 360 / CONSTS.player.rotationFrameCount;
+} as unknown as {
+  new (commands: ControllerCommands): ControllerInterfaceInstance;
+  prototype: Record<string, unknown>;
 };
 
 ControllerInterface.prototype = {
@@ -28,7 +36,7 @@ ControllerInterface.prototype = {
    * @method
    * @param   {Number} desiredHeading - Heading you wish to rotate to.
    */
-  rotateToHeading: function (desiredHeading) {
+  rotateToHeading: function (desiredHeading: Heading): void {
     this._player.setData(
       "newHeading",
       Math.floor(desiredHeading / 22.5) * 22.5

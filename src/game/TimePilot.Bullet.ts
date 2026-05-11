@@ -3,6 +3,7 @@ import CONSTS from "./TimePilot.CONSTANTS";
 import dataStore from "./TimePilot.dataStore";
 import userOptions from "./TimePilot.userOptions";
 import helpers from "./engine/helpers";
+import type { BulletData, BulletInstance, Heading } from "./TimePilot.types";
 
 /**
  * Creates a bullet to add to render.
@@ -13,18 +14,36 @@ import helpers from "./engine/helpers";
  * @returns {Bullet Instance}
  */
 
-var Bullet = function (originX, originY, heading, size, velocity, color) {
+var Bullet = function (
+  originX: number,
+  originY: number,
+  heading: Heading,
+  size: number,
+  velocity: number,
+  color: string
+) {
   this._gameArena = dataStore._gameArena;
 
-  this._data = {};
-  this._data.posX = originX;
-  this._data.posY = originY;
-  this._data.heading = heading;
-  this._data.size = size;
-  this._data.velocity = velocity;
-  this._data.color = color;
+  this._data = {
+    posX: originX,
+    posY: originY,
+    heading: heading,
+    size: size,
+    velocity: velocity,
+    color: color,
+  } satisfies BulletData;
 
   this.removeMe = false;
+} as unknown as {
+  new (
+    originX: number,
+    originY: number,
+    heading: Heading,
+    size: number,
+    velocity: number,
+    color: string
+  ): BulletInstance;
+  prototype: Record<string, unknown>;
 };
 
 Bullet.prototype = {
@@ -34,7 +53,7 @@ Bullet.prototype = {
    * @param {String} [key] Key to return when requesting data. If no key is provided, it returns the object.
    * @returns {Object}
    */
-  getData: function (key) {
+  getData: function (key?: keyof BulletData) {
     if (!key) {
       return this._data;
     } else if (this._data.hasOwnProperty(key)) {
@@ -50,7 +69,7 @@ Bullet.prototype = {
    * @param   {Multi} value - Value to be set onto the key from the _data object.
    * @returns {Boolean} Success response.
    */
-  setData: function (key, value) {
+  setData: function (key: keyof BulletData, value: BulletData[keyof BulletData]): boolean {
     if (this._data[key] !== undefined) {
       this._data[key] = value;
       return this._data[key] === value;
@@ -71,7 +90,7 @@ Bullet.prototype = {
    * @param   {Number} level - Level number to be set.
    * @returns {Boolean}
    */
-  setLevel: function (level) {
+  setLevel: function (level: number): boolean {
     this._level = level;
     return this._level === level;
   },

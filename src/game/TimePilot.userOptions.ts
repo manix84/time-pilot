@@ -1,5 +1,7 @@
 /* Converted from TimePilot.userOptions.js (AMD) to ESM TypeScript. */
-var userOptions = {
+import type { UserOptions } from "./TimePilot.types";
+
+var userOptions: UserOptions = {
   debug: {
     /**
      * Draw either a circle or a box showing what counts as a hit, either by a bullet/missile or the player.

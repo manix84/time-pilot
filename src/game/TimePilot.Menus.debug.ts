@@ -1,6 +1,7 @@
 /* Converted from TimePilot.Menu.debug.js (AMD) to ESM TypeScript. */
+import type { MenuDefinition } from "./TimePilot.types";
 
-var debug = {
+var debug: MenuDefinition = {
   name: "Debug Options",
   buttons: {
     showHitboxes: {

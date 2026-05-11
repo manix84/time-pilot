@@ -1,18 +1,38 @@
 /* Converted from engine/Ticker.js (AMD) to ESM TypeScript. */
+import type { TickerInstance } from "../TimePilot.types";
+
+type LegacyAnimationWindow = Window &
+  typeof globalThis & {
+    mozRequestAnimationFrame?: typeof window.requestAnimationFrame;
+    webkitRequestAnimationFrame?: typeof window.requestAnimationFrame;
+    msRequestAnimationFrame?: typeof window.requestAnimationFrame;
+  };
+
+var animationWindow = window as LegacyAnimationWindow;
 var requestAnimationFrame =
-  window.requestAnimationFrame ||
-  (window as any).mozRequestAnimationFrame ||
-  (window as any).webkitRequestAnimationFrame ||
-  (window as any).msRequestAnimationFrame;
+  animationWindow.requestAnimationFrame ||
+  animationWindow.mozRequestAnimationFrame ||
+  animationWindow.webkitRequestAnimationFrame ||
+  animationWindow.msRequestAnimationFrame;
 /**
  * Creates an instance of a ticker object.
  * @method
  */
+type TickerScheduleCallback = (frame: number) => void;
+
+interface TickerScheduleItem {
+  callback: TickerScheduleCallback;
+  nthFrame: number;
+}
+
 var Ticker = function () {
   this._frame = 0;
   this.isRunning = false;
-  this._schedule = {};
+  this._schedule = {} as Record<number, TickerScheduleItem>;
   this._scheduleCount = 0;
+} as unknown as {
+  new (): TickerInstance;
+  prototype: Record<string, unknown>;
 };
 
 Ticker.prototype = {
@@ -29,7 +49,7 @@ Ticker.prototype = {
    * Stop animation.
    * @method
    */
-  stop: function (callback) {
+  stop: function (callback?: () => void): void {
     this.isRunning = false;
     this.killCallback = callback || (() => {});
   },
@@ -66,7 +86,7 @@ Ticker.prototype = {
    * @param   {Number}   nthFrame  - Run this callback ever Nth frame.
    * @returns {Number}   ID number for callback. Used in "removeSchedule".
    */
-  addSchedule: function (callback, nthFrame) {
+  addSchedule: function (callback: TickerScheduleCallback, nthFrame: number): number {
     nthFrame = nthFrame;
 
     var eventId = ++this._scheduleCount;
@@ -84,7 +104,7 @@ Ticker.prototype = {
    * @param   {Number} eventId - ID to remove, passed back from "addSchedule".
    * @returns {Boolean} Boolean of if the removal sucessful. If the ID did not exist, this is still successful.
    */
-  removeSchedule: function (eventId) {
+  removeSchedule: function (eventId: number): boolean {
     if (this._schedule[eventId]) {
       delete this._schedule[eventId];
     }
@@ -95,7 +115,7 @@ Ticker.prototype = {
    * Empty Schedule of all events.
    * @method
    */
-  clearSchedule: function () {
+  clearSchedule: function (): void {
     this._schedule = {};
   },
 
@@ -104,7 +124,7 @@ Ticker.prototype = {
    * @method
    * @returns {Boolean}
    */
-  clearTicks: function () {
+  clearTicks: function (): boolean {
     this._frame = 0;
 
     return !this._frame;
@@ -115,7 +135,7 @@ Ticker.prototype = {
    * @method
    * @returns {Number}
    */
-  getTicks: function () {
+  getTicks: function (): number {
     return this._frame;
   },
 };

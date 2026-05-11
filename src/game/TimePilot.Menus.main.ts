@@ -1,6 +1,7 @@
 /* Converted from TimePilot.Menu.main.js (AMD) to ESM TypeScript. */
+import type { MenuDefinition } from "./TimePilot.types";
 
-var main = {
+var main: MenuDefinition = {
   name: "Welcome",
   buttons: {
     start: {

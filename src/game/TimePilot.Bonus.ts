@@ -1,18 +1,28 @@
 /* Converted from TimePilot.Bonus.js (AMD) to ESM TypeScript. */
 import CONSTS from "./TimePilot.CONSTANTS";
 import helpers from "./engine/helpers";
+import type {
+  BonusData,
+  GameArenaInstance,
+  PlayerInstance,
+} from "./TimePilot.types";
 
-var Bonus = function (canvas, player, posX, posY) {
+var Bonus = function (
+  canvas: GameArenaInstance,
+  player: PlayerInstance,
+  posX: number,
+  posY: number
+) {
   this._canvas = canvas;
   this._player = player;
 
-  this._data = {};
-  this._data.posX = posX;
-  this._data.posY = posY;
-  this._data.level = 1;
-  this._data.layer =
-    CONSTS.levels[this._data.level].props[this._data.type].layer;
-  this._data.removeMe = false;
+  this._data = {
+    posX: posX,
+    posY: posY,
+    level: 1,
+    layer: CONSTS.levels[1].props[0].layer,
+    removeMe: false,
+  } satisfies BonusData;
 
   this._bonusSprite = new Image();
   this._bonusSprite.src = this.getLevelData().sprite.src;
@@ -24,9 +34,10 @@ Bonus.prototype = {
    * @method
    */
   reposition: function () {
+    var data = this._data as BonusData;
     var levelData = this.getLevelData(),
       player = this._player.getData(),
-      playerVelocity = CONSTS.levels[this._data.level].player.velocity,
+      playerVelocity = CONSTS.levels[data.level].player.velocity,
       heading = levelData.reversed
         ? (player.heading + 180) % 360
         : player.heading,

@@ -1,5 +1,7 @@
 /* Converted from TimePilot.CONSTANTS.js (AMD) to ESM TypeScript. */
-var CONSTS = {
+import type { TimePilotConstants } from "./TimePilot.types";
+
+var CONSTS: TimePilotConstants = {
   player: {
     sprite: {
       src: "/sprites/player/player.png",
