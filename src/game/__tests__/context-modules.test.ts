@@ -112,7 +112,7 @@ describe("context-backed game modules", () => {
     expect(context._bullets.getCount()).toBe(1);
   });
 
-  it("creates, checks, renders, and clears enemies and props", () => {
+  it("creates, exposes, renders, and clears enemies and props", () => {
     const context = createContext();
 
     context._enemies.create(100, 100, 180);
@@ -120,8 +120,8 @@ describe("context-backed game modules", () => {
 
     expect(context._enemies.getCount()).toBe(1);
     expect(context._props.getCount()).toBe(1);
+    expect(context._enemies.getEntities()).toHaveLength(1);
 
-    context._enemies.detectCollision();
     context._enemies.reposition();
     context._props.reposition();
     context._enemies.render();

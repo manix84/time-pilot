@@ -111,6 +111,7 @@ The current design keeps React out of the game loop. This is deliberate.
 - `useTimePilot` creates and destroys the game instance.
 - `TimePilot` owns the game context and wires systems together.
 - Entities, factories, controllers, HUD, and engine wrappers are class-based modules.
+- Collision, spawning, and frame rendering live in dedicated systems under `src/game/systems`.
 - Entities and factories receive explicit context instead of reading a global singleton.
 - Rendering stays canvas-based for predictable frame-by-frame control.
 

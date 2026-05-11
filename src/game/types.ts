@@ -201,7 +201,7 @@ export interface EnemyFactoryInstance {
   getCount: () => number;
   isUnderLimit: () => boolean;
   getData: () => EnemyData[];
-  detectCollision: () => void;
+  getEntities: () => EnemyInstance[];
   cleanup: () => void;
   reposition: () => void;
   render: () => void;
@@ -259,6 +259,19 @@ export interface GameDataStore {
   _props: PropFactoryInstance;
   _hud: HudInstance;
   _currentController: Controller[];
+}
+
+export interface CollisionSystemInstance {
+  detectCollisions: () => void;
+}
+
+export interface SpawningSystemInstance {
+  addInitialProps: () => void;
+  spawnEntities: () => void;
+}
+
+export interface RenderingSystemInstance {
+  renderFrame: () => void;
 }
 
 export interface MenuControl {

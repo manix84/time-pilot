@@ -1,8 +1,6 @@
 import GameArena from "./engine/arena";
-import helpers from "./engine/helpers";
 import Ticker from "./engine/Ticker";
 import BulletFactory from "./bullet-factory";
-import CONST from "./constants";
 import Gamepad from "./controller/gamepad";
 import Keyboard1 from "./controller/keyboard1";
 import ControllerInterface from "./controller-interface";
@@ -10,12 +8,17 @@ import EnemyFactory from "./enemy-factory";
 import Hud from "./hud";
 import Player from "./player";
 import PropFactory from "./prop-factory";
+import CollisionSystem from "./systems/collision";
+import RenderingSystem from "./systems/rendering";
+import SpawningSystem from "./systems/spawning";
 import userOptions from "./user-options";
 import type {
   AssetProgress,
+  CollisionSystemInstance,
   Controller,
-  Coordinates,
   GameDataStore,
+  RenderingSystemInstance,
+  SpawningSystemInstance,
 } from "./types";
 
 export interface TimePilotOptions {
@@ -26,6 +29,9 @@ export class TimePilot {
   private readonly container: HTMLElement;
   private readonly options: Required<TimePilotOptions>;
   private readonly context = {} as GameDataStore;
+  private collisionSystem!: CollisionSystemInstance;
+  private renderingSystem!: RenderingSystemInstance;
+  private spawningSystem!: SpawningSystemInstance;
 
   constructor(element: HTMLElement, options: TimePilotOptions = {}) {
     this.container = element;
@@ -99,6 +105,9 @@ export class TimePilot {
     this.context._enemies = new EnemyFactory(this.context);
     this.context._props = new PropFactory(this.context);
     this.context._hud = new Hud(this.context);
+    this.collisionSystem = new CollisionSystem(this.context);
+    this.renderingSystem = new RenderingSystem(this.context);
+    this.spawningSystem = new SpawningSystem(this.context);
 
     const controllerInterface = new ControllerInterface(this.context, {
       restart: () => {
@@ -143,7 +152,7 @@ export class TimePilot {
   }
 
   private start(): void {
-    this.addRandomClouds();
+    this.spawningSystem.addInitialProps();
 
     this.context._gameTicker.addSchedule(() => {
       this.pauseGame();
@@ -156,7 +165,7 @@ export class TimePilot {
       this.context._bullets.reposition();
       this.context._props.reposition();
 
-      this.spawnEntities();
+      this.spawningSystem.spawnEntities();
     }, 1);
 
     this.context._gameTicker.addSchedule(() => {
@@ -168,21 +177,11 @@ export class TimePilot {
     }, 5);
 
     this.context._renderTicker.addSchedule(() => {
-      this.context._gameArena.clear();
-      this.context._gameArena.setBackgroundColor(
-        CONST.levels[this.context._level].arena.backgroundColor
-      );
-
-      this.context._props.render(1);
-      this.context._bullets.render();
-      this.context._enemies.render();
-      this.context._player.render();
-      this.context._props.render(2);
-      this.context._hud.render();
+      this.renderingSystem.renderFrame();
     }, 1);
 
     this.context._gameTicker.addSchedule(() => {
-      this.context._enemies.detectCollision();
+      this.collisionSystem.detectCollisions();
     }, 1);
 
     this.context._gameTicker.addSchedule(() => {
@@ -190,37 +189,6 @@ export class TimePilot {
       this.context._bullets.cleanup();
       this.context._props.cleanup();
     }, 1);
-  }
-
-  private addRandomClouds(): void {
-    for (let i = 0; i < 20; i++) {
-      this.context._props.create(
-        Math.floor(Math.random() * this.context._gameArena.width),
-        Math.floor(Math.random() * this.context._gameArena.height)
-      );
-    }
-  }
-
-  private spawnEntities(): void {
-    let data: Coordinates = { posX: 0, posY: 0 };
-    const randomTickInterval = Math.floor(Math.random() * (1 - 200 + 1)) + 200;
-
-    if (
-      this.context._gameTicker.getTicks() % randomTickInterval === 0 &&
-      this.context._enemies.isUnderLimit()
-    ) {
-      data = helpers.getSpawnCoords(this.context._player.getData());
-      const heading = helpers.findHeading(data, {
-        posX: this.context._player.getData().posX,
-        posY: this.context._player.getData().posY,
-      });
-      this.context._enemies.create(data.posX, data.posY, heading);
-    }
-
-    if (this.context._props.getCount() < 20) {
-      data = helpers.getSpawnCoords(this.context._player.getData());
-      this.context._props.create(data.posX, data.posY);
-    }
   }
 }
 
