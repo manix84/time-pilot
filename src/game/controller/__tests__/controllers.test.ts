@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import Gamepad from "../gamepad";
 import Keyboard1 from "../keyboard1";
 import Keyboard2 from "../keyboard2";
+import Mouse from "../mouse";
 import type { ControllerInterfaceInstance } from "../../types";
 
 function createControls(): ControllerInterfaceInstance {
@@ -20,6 +21,7 @@ function createControls(): ControllerInterfaceInstance {
     rotateCounterClockwise: vi.fn(),
     rotateRight: vi.fn(),
     rotateLeft: vi.fn(),
+    handlePointer: vi.fn(),
   };
 }
 
@@ -76,5 +78,44 @@ describe("controller modules", () => {
     expect(controls.startShooting).toHaveBeenCalled();
     expect(controls.rotateToHeading).toHaveBeenCalled();
     expect(window.cancelAnimationFrame).toHaveBeenCalled();
+  });
+
+  it("maps mouse movement and clicks to menu pointer actions", () => {
+    const controls = createControls();
+    const canvas = document.createElement("canvas");
+    canvas.width = 800;
+    canvas.height = 600;
+    vi.spyOn(canvas, "getBoundingClientRect").mockReturnValue({
+      bottom: 300,
+      height: 300,
+      left: 0,
+      right: 400,
+      top: 0,
+      width: 400,
+      x: 0,
+      y: 0,
+      toJSON: () => ({}),
+    });
+
+    const mouse = new Mouse(canvas, controls);
+    canvas.dispatchEvent(
+      new MouseEvent("mousemove", { clientX: 200, clientY: 150 })
+    );
+    canvas.dispatchEvent(
+      new MouseEvent("click", { clientX: 200, clientY: 150 })
+    );
+
+    expect(controls.handlePointer).toHaveBeenCalledWith({
+      posX: 0,
+      posY: 0,
+      type: "move",
+    });
+    expect(controls.handlePointer).toHaveBeenCalledWith({
+      posX: 0,
+      posY: 0,
+      type: "click",
+    });
+
+    mouse.disconnect?.();
   });
 });

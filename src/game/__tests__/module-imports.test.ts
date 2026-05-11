@@ -8,6 +8,7 @@ import ControllerInterface from "../controller-interface";
 import Gamepad from "../controller/gamepad";
 import Keyboard1 from "../controller/keyboard1";
 import Keyboard2 from "../controller/keyboard2";
+import Mouse from "../controller/mouse";
 import Enemy from "../enemy";
 import EnemyFactory from "../enemy-factory";
 import Hud from "../hud";
@@ -31,6 +32,7 @@ describe("game module imports", () => {
     expect(Gamepad).toBeTypeOf("function");
     expect(Keyboard1).toBeTypeOf("function");
     expect(Keyboard2).toBeTypeOf("function");
+    expect(Mouse).toBeTypeOf("function");
     expect(Enemy).toBeTypeOf("function");
     expect(EnemyFactory).toBeTypeOf("function");
     expect(Hud).toBeTypeOf("function");

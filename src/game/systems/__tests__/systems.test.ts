@@ -9,6 +9,7 @@ import type {
   GameArenaInstance,
   GameDataStore,
   HudInstance,
+  MenuSystemInstance,
   PlayerData,
   PlayerInstance,
   PropFactoryInstance,
@@ -34,6 +35,7 @@ const createArena = (): GameArenaInstance => ({
   renderSprite: vi.fn(),
   drawCircle: vi.fn(),
   drawDebugGrid: vi.fn(),
+  getElement: vi.fn(() => document.createElement("canvas")),
 });
 
 const createTicker = (): TickerInstance => ({
@@ -155,6 +157,16 @@ const createContext = ({
       render: vi.fn(),
       restart: vi.fn(),
     } satisfies HudInstance,
+    _menus: {
+      isActive: vi.fn(() => false),
+      showStart: vi.fn(),
+      hide: vi.fn(),
+      render: vi.fn(),
+      next: vi.fn(),
+      previous: vi.fn(),
+      activate: vi.fn(),
+      handlePointer: vi.fn(),
+    } satisfies MenuSystemInstance,
     _currentController: [],
   };
 };
@@ -237,5 +249,6 @@ describe("game systems", () => {
     expect(context._player.render).toHaveBeenCalled();
     expect(context._props.render).toHaveBeenNthCalledWith(2, 2);
     expect(context._hud.render).toHaveBeenCalled();
+    expect(context._menus.render).toHaveBeenCalled();
   });
 });

@@ -4,9 +4,11 @@ import BulletFactory from "./bullet-factory";
 import Gamepad from "./controller/gamepad";
 import Keyboard1 from "./controller/keyboard1";
 import Keyboard2 from "./controller/keyboard2";
+import Mouse from "./controller/mouse";
 import ControllerInterface from "./controller-interface";
 import EnemyFactory from "./enemy-factory";
 import Hud from "./hud";
+import Menus from "./menus";
 import Player from "./player";
 import PropFactory from "./prop-factory";
 import CollisionSystem from "./systems/collision";
@@ -34,6 +36,7 @@ export class TimePilot {
   private readonly options: Required<TimePilotOptions>;
   private readonly context = {} as GameDataStore;
   private collisionSystem!: CollisionSystemInstance;
+  private hasSeededInitialProps = false;
   private renderingSystem!: RenderingSystemInstance;
   private spawningSystem!: SpawningSystemInstance;
 
@@ -60,9 +63,10 @@ export class TimePilot {
       this.context._bullets.clearAll();
       this.context._props.clearAll();
       this.context._player.resetData();
+      this.hasSeededInitialProps = false;
 
-      this.start();
-      this.context._gameTicker.start();
+      this.configureGameLoop();
+      this.context._menus.showStart();
     });
   }
 
@@ -113,6 +117,11 @@ export class TimePilot {
     this.context._enemies = new EnemyFactory(this.context);
     this.context._props = new PropFactory(this.context);
     this.context._hud = new Hud(this.context);
+    this.context._menus = new Menus(this.context._gameArena, {
+      start: () => {
+        this.beginGame();
+      },
+    });
     this.collisionSystem = new CollisionSystem(this.context);
     this.renderingSystem = new RenderingSystem(this.context);
     this.spawningSystem = new SpawningSystem(this.context);
@@ -128,6 +137,7 @@ export class TimePilot {
 
     this.context._currentController = [
       this.createKeyboardController(controllerInterface),
+      new Mouse(this.context._gameArena.getElement(), controllerInterface),
     ];
 
     if (this.options.gamepadEnabled) {
@@ -155,16 +165,14 @@ export class TimePilot {
 
     this.context._gameArena.preloadAssets((progress: AssetProgress) => {
       if (!progress.remaining) {
-        this.start();
-        this.context._gameTicker.start();
+        this.configureGameLoop();
+        this.context._menus.showStart();
         this.context._renderTicker.start();
       }
     });
   }
 
-  private start(): void {
-    this.spawningSystem.addInitialProps();
-
+  private configureGameLoop(): void {
     this.context._gameTicker.addSchedule(() => {
       this.pauseGame();
       window.console.warn("Stopping: 50,000 ticks");
@@ -200,6 +208,17 @@ export class TimePilot {
       this.context._bullets.cleanup();
       this.context._props.cleanup();
     }, 1);
+  }
+
+  private beginGame(): void {
+    this.context._menus.hide();
+
+    if (!this.hasSeededInitialProps) {
+      this.spawningSystem.addInitialProps();
+      this.hasSeededInitialProps = true;
+    }
+
+    this.context._gameTicker.start();
   }
 
   private createKeyboardController(

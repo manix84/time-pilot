@@ -286,6 +286,10 @@ class GameArena implements GameArenaInstance {
     context.strokeStyle = "#AAA";
     context.stroke();
   }
+
+  getElement(): HTMLCanvasElement {
+    return this._canvas;
+  }
 }
 
 export default GameArena;

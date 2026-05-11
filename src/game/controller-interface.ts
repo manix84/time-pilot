@@ -7,6 +7,8 @@ import type {
   GameDataStore,
   Heading,
   HudInstance,
+  MenuPointerData,
+  MenuSystemInstance,
   PlayerInstance,
   TickerInstance,
 } from "./types";
@@ -16,6 +18,7 @@ class ControllerInterface implements ControllerInterfaceInstance {
   private _gameArena: GameArenaInstance;
   private _gameTicker: TickerInstance;
   private _hud: HudInstance;
+  private _menus: MenuSystemInstance;
   private _player: PlayerInstance;
   private _rotationStep: number;
 
@@ -24,6 +27,7 @@ class ControllerInterface implements ControllerInterfaceInstance {
     this._gameTicker = context._gameTicker;
     this._hud = context._hud;
     this._gameArena = context._gameArena;
+    this._menus = context._menus;
 
     this._commands = {
       restart: commands.restart || (() => {}),
@@ -34,6 +38,15 @@ class ControllerInterface implements ControllerInterfaceInstance {
   }
 
   rotateToHeading(desiredHeading: Heading): void {
+    if (this._menus.isActive()) {
+      if (desiredHeading === 0 || desiredHeading === 270) {
+        this._menus.previous();
+      } else {
+        this._menus.next();
+      }
+      return;
+    }
+
     this._player.setData(
       "newHeading",
       Math.floor(desiredHeading / 22.5) * 22.5
@@ -41,6 +54,11 @@ class ControllerInterface implements ControllerInterfaceInstance {
   }
 
   rotateClockwise(): void {
+    if (this._menus.isActive()) {
+      this._menus.next();
+      return;
+    }
+
     const currentHeading = this._player.getData().heading;
     const desiredHeading = (currentHeading + this._rotationStep) % 360;
 
@@ -51,6 +69,11 @@ class ControllerInterface implements ControllerInterfaceInstance {
   }
 
   rotateAntiClockwise(): void {
+    if (this._menus.isActive()) {
+      this._menus.previous();
+      return;
+    }
+
     const currentHeading = this._player.getData().heading;
     let desiredHeading = currentHeading - this._rotationStep;
 
@@ -67,7 +90,11 @@ class ControllerInterface implements ControllerInterfaceInstance {
   }
 
   toggleMenu(): void {
-    window.console.log("Opening Menu");
+    if (this._menus.isActive()) {
+      this._menus.hide();
+    } else {
+      this._menus.showStart();
+    }
   }
 
   openMenu(): void {
@@ -75,6 +102,11 @@ class ControllerInterface implements ControllerInterfaceInstance {
   }
 
   startShooting(): void {
+    if (this._menus.isActive()) {
+      this._menus.activate();
+      return;
+    }
+
     this._player.startShooting();
   }
 
@@ -87,10 +119,20 @@ class ControllerInterface implements ControllerInterfaceInstance {
   }
 
   togglePause(): void {
+    if (this._menus.isActive()) {
+      this._menus.activate();
+      return;
+    }
+
     this._commands.pause();
   }
 
   restart(): void {
+    if (this._menus.isActive()) {
+      this._menus.activate();
+      return;
+    }
+
     this._commands.restart();
   }
 
@@ -104,6 +146,10 @@ class ControllerInterface implements ControllerInterfaceInstance {
 
   rotateLeft(): void {
     this.rotateAntiClockwise();
+  }
+
+  handlePointer(pointer: MenuPointerData): void {
+    this._menus.handlePointer(pointer);
   }
 }
 

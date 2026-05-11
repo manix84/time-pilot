@@ -20,6 +20,7 @@ class RenderingSystem implements RenderingSystemInstance {
     this._context._player.render();
     this._context._props.render(2);
     this._context._hud.render();
+    this._context._menus.render();
   }
 }
 

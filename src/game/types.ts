@@ -97,6 +97,10 @@ export interface Controller {
   disconnect?: () => void;
 }
 
+export interface MenuPointerData extends Coordinates {
+  type: "click" | "move";
+}
+
 export interface GameArenaInstance extends Coordinates {
   width: number;
   height: number;
@@ -126,6 +130,7 @@ export interface GameArenaInstance extends Coordinates {
     options?: CircleOptions
   ) => void;
   drawDebugGrid: (widthSpace?: number, heightSpace?: number) => void;
+  getElement: () => HTMLCanvasElement;
 }
 
 export interface TickerInstance {
@@ -248,6 +253,7 @@ export interface ControllerInterfaceInstance {
   rotateCounterClockwise: () => void;
   rotateRight: () => void;
   rotateLeft: () => void;
+  handlePointer?: (pointer: MenuPointerData) => void;
 }
 
 export interface GameDataStore {
@@ -260,6 +266,7 @@ export interface GameDataStore {
   _enemies: EnemyFactoryInstance;
   _props: PropFactoryInstance;
   _hud: HudInstance;
+  _menus: MenuSystemInstance;
   _currentController: Controller[];
 }
 
@@ -274,6 +281,21 @@ export interface SpawningSystemInstance {
 
 export interface RenderingSystemInstance {
   renderFrame: () => void;
+}
+
+export interface MenuSystemCommands {
+  start: () => void;
+}
+
+export interface MenuSystemInstance {
+  isActive: () => boolean;
+  showStart: () => void;
+  hide: () => void;
+  render: () => void;
+  next: () => void;
+  previous: () => void;
+  activate: () => void;
+  handlePointer: (pointer: MenuPointerData) => void;
 }
 
 export interface MenuControl {

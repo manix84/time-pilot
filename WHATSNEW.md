@@ -27,6 +27,7 @@
 - Split collision handling, entity spawning, and frame rendering into dedicated systems.
 - Separated simulation ticking from rendering: game-state calculations run at roughly 30fps, while canvas rendering runs every animation frame.
 - Added an in-app controller configuration UI for keyboard layout selection and gamepad polling.
+- Added a canvas-rendered start menu with keyboard, gamepad, and mouse interaction.
 - Fixed gamepad cleanup so animation frames are cancelled on disconnect.
 
 ## ✅ Automation

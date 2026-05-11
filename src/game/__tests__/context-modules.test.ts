@@ -5,7 +5,12 @@ import EnemyFactory from "../enemy-factory";
 import Hud from "../hud";
 import Player from "../player";
 import PropFactory from "../prop-factory";
-import type { GameArenaInstance, GameDataStore, TickerInstance } from "../types";
+import type {
+  GameArenaInstance,
+  GameDataStore,
+  MenuSystemInstance,
+  TickerInstance,
+} from "../types";
 
 function createArena(): GameArenaInstance {
   const context = document.createElement("canvas").getContext("2d")!;
@@ -36,6 +41,7 @@ function createArena(): GameArenaInstance {
     renderSprite: vi.fn(),
     drawCircle: vi.fn(),
     drawDebugGrid: vi.fn(),
+    getElement: vi.fn(() => document.createElement("canvas")),
   };
 }
 
@@ -76,6 +82,16 @@ function createContext(): GameDataStore {
   context._enemies = new EnemyFactory(context);
   context._props = new PropFactory(context);
   context._hud = new Hud(context);
+  context._menus = {
+    isActive: vi.fn(() => false),
+    showStart: vi.fn(),
+    hide: vi.fn(),
+    render: vi.fn(),
+    next: vi.fn(),
+    previous: vi.fn(),
+    activate: vi.fn(),
+    handlePointer: vi.fn(),
+  } satisfies MenuSystemInstance;
 
   return context;
 }
@@ -153,5 +169,30 @@ describe("context-backed game modules", () => {
     expect(pause).toHaveBeenCalled();
     expect(restart).toHaveBeenCalled();
     expect(context._gameArena.renderText).toHaveBeenCalled();
+  });
+
+  it("routes controller actions to the active menu", () => {
+    const context = createContext();
+    vi.mocked(context._menus.isActive).mockReturnValue(true);
+    const controls = new ControllerInterface(context, {});
+
+    controls.rotateToHeading(90);
+    controls.rotateToHeading(270);
+    controls.rotateClockwise();
+    controls.rotateAntiClockwise();
+    controls.startShooting();
+    controls.togglePause();
+    controls.restart();
+    controls.handlePointer?.({ posX: 0, posY: 0, type: "click" });
+
+    expect(context._menus.next).toHaveBeenCalledTimes(2);
+    expect(context._menus.previous).toHaveBeenCalledTimes(2);
+    expect(context._menus.activate).toHaveBeenCalledTimes(3);
+    expect(context._menus.handlePointer).toHaveBeenCalledWith({
+      posX: 0,
+      posY: 0,
+      type: "click",
+    });
+    expect(context._player.getData().isShooting).not.toBe(true);
   });
 });
