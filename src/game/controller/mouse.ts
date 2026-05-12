@@ -3,6 +3,8 @@ import type { Controller, ControllerInterfaceInstance } from "../types";
 class Mouse implements Controller {
   private _canvas: HTMLCanvasElement;
   private _controllerInterface: ControllerInterfaceInstance;
+  private _isPressed = false;
+  private _isDragging = false;
 
   constructor(
     canvas: HTMLCanvasElement,
@@ -14,27 +16,58 @@ class Mouse implements Controller {
   }
 
   connect(): void {
-    this._canvas.addEventListener("click", this.handleClick);
+    this._canvas.addEventListener("mousedown", this.handlePress);
     this._canvas.addEventListener("mousemove", this.handleMove);
+    this._canvas.addEventListener("mouseup", this.handleRelease);
   }
 
   disconnect(): void {
-    this._canvas.removeEventListener("click", this.handleClick);
+    this._canvas.removeEventListener("mousedown", this.handlePress);
     this._canvas.removeEventListener("mousemove", this.handleMove);
+    this._canvas.removeEventListener("mouseup", this.handleRelease);
   }
 
-  private handleClick = (event: MouseEvent): void => {
+  private handlePress = (event: MouseEvent): void => {
+    this._isPressed = true;
+    this._isDragging = false;
     this._controllerInterface.handlePointer?.({
       ...this.getCanvasPoint(event),
-      type: "click",
+      type: "press",
     });
   };
 
   private handleMove = (event: MouseEvent): void => {
+    if (this._isPressed) {
+      this._isDragging = true;
+    }
+
     this._controllerInterface.handlePointer?.({
       ...this.getCanvasPoint(event),
-      type: "move",
+      type: this._isPressed ? "drag" : "move",
     });
+  };
+
+  private handleRelease = (event: MouseEvent): void => {
+    if (!this._isPressed) {
+      return;
+    }
+
+    const point = this.getCanvasPoint(event);
+
+    if (!this._isDragging) {
+      this._controllerInterface.handlePointer?.({
+        ...point,
+        type: "click",
+      });
+    }
+
+    this._controllerInterface.handlePointer?.({
+      ...point,
+      type: "release",
+    });
+
+    this._isPressed = false;
+    this._isDragging = false;
   };
 
   private getCanvasPoint(event: MouseEvent) {

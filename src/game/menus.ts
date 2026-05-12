@@ -77,6 +77,7 @@ class Menus implements MenuSystemInstance {
   private _screen: MenuScreen = "start";
   private _screenHistory: MenuScreen[] = [];
   private _selectedIndex = 0;
+  private _sliderDragIndex: number | null = null;
   private _scrollY = 0;
   private _transition: MenuTransition | null = null;
 
@@ -188,6 +189,16 @@ class Menus implements MenuSystemInstance {
       return;
     }
 
+    if (pointer.type === "release") {
+      this._sliderDragIndex = null;
+      return;
+    }
+
+    if (pointer.type === "drag" && this._sliderDragIndex !== null) {
+      this._setSliderFromPointer(this._items[this._sliderDragIndex], pointer);
+      return;
+    }
+
     const itemIndex = this._items.findIndex((item) =>
       this._isInsideItem(pointer, item)
     );
@@ -197,6 +208,15 @@ class Menus implements MenuSystemInstance {
     }
 
     this._selectedIndex = itemIndex;
+
+    if (pointer.type === "press") {
+      if (this._items[itemIndex].kind === "slider") {
+        this._sliderDragIndex = itemIndex;
+        this._setSliderFromPointer(this._items[itemIndex], pointer);
+      }
+
+      return;
+    }
 
     if (pointer.type === "click") {
       if (this._items[itemIndex].kind === "slider") {

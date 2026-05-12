@@ -157,6 +157,28 @@ describe("menu definitions", () => {
     expect(userOptions.masterVolume).toBe(10);
   });
 
+  it("drags slider values to the pointer position until release", () => {
+    const menus = new Menus(createArena(), { start: vi.fn() });
+    userOptions.setOption("masterVolume", 10);
+
+    menus.showStart();
+    menus.next();
+    menus.activate();
+
+    menus.handlePointer({ posX: -90, posY: -14, type: "press" });
+    expect(userOptions.masterVolume).toBe(2);
+
+    menus.handlePointer({ posX: 0, posY: -14, type: "drag" });
+    expect(userOptions.masterVolume).toBe(5);
+
+    menus.handlePointer({ posX: 210, posY: -14, type: "drag" });
+    expect(userOptions.masterVolume).toBe(10);
+
+    menus.handlePointer({ posX: 60, posY: -14, type: "release" });
+    menus.handlePointer({ posX: 60, posY: -14, type: "drag" });
+    expect(userOptions.masterVolume).toBe(10);
+  });
+
   it("scrolls long menus inside a padded viewport", () => {
     const performanceNow = vi.spyOn(performance, "now").mockReturnValue(0);
     const arena = {

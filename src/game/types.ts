@@ -124,7 +124,7 @@ export interface Controller {
 }
 
 export interface MenuPointerData extends Coordinates {
-  type: "click" | "move";
+  type: "click" | "drag" | "move" | "press" | "release";
 }
 
 export interface GameArenaInstance extends Coordinates {
