@@ -1,5 +1,6 @@
 /* Converted from TimePilot.ControllerInterface.js (AMD) to ESM TypeScript. */
 import { player } from "./constants";
+import i18n from "./i18n";
 import type {
   ControllerCommands,
   ControllerInterfaceInstance,
@@ -38,7 +39,7 @@ class ControllerInterface implements ControllerInterfaceInstance {
               this._commands.pause();
             }
 
-            this._menus.showStart({ startLabel: "Continue" });
+            this._menus.showStart({ startLabel: i18n.menu.continue });
           }
         }),
       restart: commands.restart || (() => {}),

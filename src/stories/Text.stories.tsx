@@ -1,5 +1,6 @@
 import { useCallback } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import i18n from "../game/i18n";
 import palette from "../game/palette";
 import { CanvasDemo } from "./canvas-demo";
 import { drawLabel } from "./canvas-label";
@@ -14,7 +15,7 @@ const drawGameText = (context: CanvasRenderingContext2D, message: string, x: num
 };
 
 const drawTitleText = (context: CanvasRenderingContext2D, x: number, y: number): void => {
-  const text = "TIME PILOT";
+  const text = i18n.title;
   const layers = [
     { x: 9, y: 9, color: palette.title.shadowDeep },
     { x: 7, y: 7, color: palette.title.shadowDark },
@@ -52,13 +53,13 @@ const TextSamples = () => {
 
     drawLabel(context, "Game States", 280, 148);
     drawGameText(context, "Loading", 280, 192, 30, palette.text.white);
-    drawGameText(context, "Game Over", 280, 238, 30, palette.text.white);
-    drawGameText(context, 'Press "R" to reset', 280, 276, 20, palette.text.white);
+    drawGameText(context, i18n.hud.gameOver, 280, 238, 30, palette.text.white);
+    drawGameText(context, i18n.hud.pressRestartToReset, 280, 276, 20, palette.text.white);
 
     drawLabel(context, "Menu Text", 28, 320);
-    drawGameText(context, "A.D. 1910", 28, 362, 18, palette.menu.mutedText);
-    drawGameText(context, "Press a key", 28, 396, 16, palette.menu.waitingText);
-    drawGameText(context, "Master Volume", 280, 362, 16, palette.menu.itemText);
+    drawGameText(context, i18n.levels[1].introText, 28, 362, 18, palette.menu.mutedText);
+    drawGameText(context, i18n.menu.pressAKey, 28, 396, 16, palette.menu.waitingText);
+    drawGameText(context, i18n.menu.masterVolume, 280, 362, 16, palette.menu.itemText);
     drawGameText(context, "5", 510, 362, 16, palette.menu.mutedText, "right");
   }, []);
 

@@ -1,5 +1,6 @@
 /* Converted from TimePilot.CONSTANTS.js (AMD) to ESM TypeScript. */
 import { assetPath } from "./asset-path";
+import i18n from "./i18n";
 import palette from "./palette";
 import type {
   BonusConfig,
@@ -555,7 +556,7 @@ const timePilotConstants: TimePilotConstants = {
     1: {
       enabled: true,
       arena: {
-        introText: "A.D 1910",
+        introText: i18n.levels[1].introText,
         backgroundColor: palette.level.sky1910,
         spawningArc: 90,
         spawningRadius: 450,
@@ -582,7 +583,7 @@ const timePilotConstants: TimePilotConstants = {
     2: {
       enabled: false,
       arena: {
-        introText: "A.D 1940",
+        introText: i18n.levels[2].introText,
         backgroundColor: palette.level.sky1940,
         spawningArc: 90,
         spawningRadius: 450,
@@ -616,7 +617,7 @@ const timePilotConstants: TimePilotConstants = {
     3: {
       enabled: false,
       arena: {
-        introText: "A.D 1970",
+        introText: i18n.levels[3].introText,
         backgroundColor: palette.level.sky1970,
         spawningArc: 90,
         spawningRadius: 450,
@@ -649,7 +650,7 @@ const timePilotConstants: TimePilotConstants = {
     4: {
       enabled: false,
       arena: {
-        introText: "A.D 1982",
+        introText: i18n.levels[4].introText,
         backgroundColor: palette.level.sky1982,
         spawningArc: 90,
         spawningRadius: 450,
@@ -682,7 +683,7 @@ const timePilotConstants: TimePilotConstants = {
     5: {
       enabled: false,
       arena: {
-        introText: "A.D 2001",
+        introText: i18n.levels[5].introText,
         backgroundColor: palette.level.sky2001,
         spawningArc: 100,
         spawningRadius: 470,

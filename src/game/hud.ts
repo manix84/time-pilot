@@ -1,5 +1,6 @@
 /* Converted from TimePilot.Hud.js (AMD) to ESM TypeScript. */
 import { player } from "./constants";
+import i18n from "./i18n";
 import palette from "./palette";
 import userOptions from "./user-options";
 import type {
@@ -61,13 +62,13 @@ class Hud implements HudInstance {
     }
 
     if (!playerData.isAlive && playerData.lives <= 0) {
-      this._gameArena.renderText("Game Over", 0, 0, {
+      this._gameArena.renderText(i18n.hud.gameOver, 0, 0, {
         size: 30,
         align: "center",
         valign: "middle",
         color: palette.text.white,
       });
-      this._gameArena.renderText('Press "R" to reset', 0, 30, {
+      this._gameArena.renderText(i18n.hud.pressRestartToReset, 0, 30, {
         size: 20,
         align: "center",
         valign: "middle",
@@ -76,13 +77,13 @@ class Hud implements HudInstance {
     }
 
     if (!this._context._gameTicker.isRunning) {
-      this._gameArena.renderText("Paused", 0, 25, {
+      this._gameArena.renderText(i18n.hud.paused, 0, 25, {
         size: 25,
         align: "center",
         valign: "middle",
         color: palette.text.white,
       });
-      this._gameArena.renderText('Press "P" to continue', 0, 45, {
+      this._gameArena.renderText(i18n.hud.pressPauseToContinue, 0, 45, {
         size: 20,
         align: "center",
         valign: "middle",
@@ -109,7 +110,7 @@ class Hud implements HudInstance {
   };
 
   restart = (): void => {
-    this._gameArena.renderText("Restarting", 0, 0, {
+    this._gameArena.renderText(i18n.hud.restarting, 0, 0, {
       size: 30,
       align: "center",
       valign: "middle",

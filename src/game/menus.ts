@@ -1,5 +1,6 @@
 /* Converted from TimePilot.Menu.js (AMD) to ESM TypeScript. */
 import palette from "./palette";
+import i18n from "./i18n";
 import userOptions from "./user-options";
 import type {
   ControllerType,
@@ -60,11 +61,11 @@ const startLogoScale = 2;
 const submenuLogoScale = 1;
 const logoBottomWidth = 390;
 const keyBindingRows: Array<{ binding: BindingAction; label: string }> = [
-  { binding: "up", label: "Up" },
-  { binding: "left", label: "Left" },
-  { binding: "down", label: "Down" },
-  { binding: "right", label: "Right" },
-  { binding: "fire", label: "Fire" },
+  { binding: "up", label: i18n.keys.up },
+  { binding: "left", label: i18n.keys.left },
+  { binding: "down", label: i18n.keys.down },
+  { binding: "right", label: i18n.keys.right },
+  { binding: "fire", label: i18n.menu.fire },
 ];
 const konamiCode = [38, 38, 40, 40, 37, 39, 37, 39, 66, 65];
 
@@ -85,7 +86,7 @@ class Menus implements MenuSystemInstance {
   private _pressedItemIndex: number | null = null;
   private _selectedIndex = 0;
   private _sliderDragIndex: number | null = null;
-  private _startLabel = "Start";
+  private _startLabel = i18n.menu.start;
   private _scrollY = 0;
   private _transition: MenuTransition | null = null;
 
@@ -103,7 +104,7 @@ class Menus implements MenuSystemInstance {
     this._active = true;
     this._awaitingBinding = null;
     this._bindingWarning = "";
-    this._startLabel = options.startLabel ?? "Start";
+    this._startLabel = options.startLabel ?? i18n.menu.start;
     this._screen = "start";
     this._screenHistory = [];
     this._pressedItemIndex = null;
@@ -184,9 +185,9 @@ class Menus implements MenuSystemInstance {
     const duplicateBinding = this._getDuplicateBinding(keyCode);
 
     if (duplicateBinding && duplicateBinding !== this._awaitingBinding) {
-      this._bindingWarning = `Already assigned to ${this._formatBindingLabel(
-        duplicateBinding
-      )}`;
+      this._bindingWarning = i18n.menu.alreadyAssignedTo(
+        this._formatBindingLabel(duplicateBinding)
+      );
       return true;
     }
 
@@ -300,7 +301,7 @@ class Menus implements MenuSystemInstance {
 
     if (this._awaitingBinding) {
       this._renderBindingWarning(context);
-      this._gameArena.renderText("Press a key", 0, 136, {
+      this._gameArena.renderText(i18n.menu.pressAKey, 0, 136, {
         size: 16,
         align: "center",
         valign: "middle",
@@ -363,7 +364,7 @@ class Menus implements MenuSystemInstance {
   };
 
   private _drawLogoText = (context: CanvasRenderingContext2D, width: number, height: number): void => {
-    const text = "TIME PILOT";
+    const text = i18n.title;
     const textX = width / 2;
     const textY = height / 2 + 3;
 
@@ -432,14 +433,14 @@ class Menus implements MenuSystemInstance {
       this._createItem(this._startLabel, "action", -22, {
         action: this._commands.start,
       }),
-      this._createItem("Options", "action", 28, {
+      this._createItem(i18n.menu.options, "action", 28, {
         action: () => this._goToScreen("options"),
       }),
     ];
 
     if (this._debugUnlocked) {
       items.push(
-        this._createItem("Debug", "action", 78, {
+        this._createItem(i18n.menu.debug, "action", 78, {
           action: () => this._goToScreen("debug"),
         })
       );
@@ -450,33 +451,35 @@ class Menus implements MenuSystemInstance {
 
   private _createOptionsItems = (): MenuItem[] => {
     const items = [
-      this._createItem("Master Volume", "slider", -54, {
+      this._createItem(i18n.menu.masterVolume, "slider", -54, {
         getValue: () => `${userOptions.masterVolume}`,
         onAdjust: (direction) => this._adjustVolume("masterVolume", direction),
         onSetValue: (value) => this._setVolume("masterVolume", value),
       }),
-      this._createItem("Music Volume", "slider", -12, {
+      this._createItem(i18n.menu.musicVolume, "slider", -12, {
         getValue: () => `${userOptions.musicVolume}`,
         onAdjust: (direction) => this._adjustVolume("musicVolume", direction),
         onSetValue: (value) => this._setVolume("musicVolume", value),
       }),
-      this._createItem("Effects Volume", "slider", 30, {
+      this._createItem(i18n.menu.effectsVolume, "slider", 30, {
         getValue: () => `${userOptions.effectsVolume}`,
         onAdjust: (direction) => this._adjustVolume("effectsVolume", direction),
         onSetValue: (value) => this._setVolume("effectsVolume", value),
       }),
-      this._createItem("Control Type", "enum", 72, {
+      this._createItem(i18n.menu.controlType, "enum", 72, {
         getValue: () =>
-          userOptions.controllerType === "keyboard1" ? "Directional" : "Rotate",
+          userOptions.controllerType === "keyboard1"
+            ? i18n.menu.directional
+            : i18n.menu.rotate,
         onAdjust: (direction) => this._adjustControllerType(direction),
       }),
-      this._createItem("Remap Controls", "action", 114, {
+      this._createItem(i18n.menu.remapControls, "action", 114, {
         action: () => this._goToScreen("controls"),
       }),
     ];
 
     items.push(
-      this._createItem("Back", "action", 164, {
+      this._createItem(i18n.menu.back, "action", 164, {
         action: () => this._goBack(),
       })
     );
@@ -491,7 +494,7 @@ class Menus implements MenuSystemInstance {
       this._createKeyBindingItem("down", -43, -12, 86, 34),
       this._createKeyBindingItem("right", 60, -12, 86, 34),
       this._createKeyBindingItem("fire", -146, 30, 292, 34),
-      this._createItem("Back", "action", 92, {
+      this._createItem(i18n.menu.back, "action", 92, {
         action: () => this._goBack(),
       }),
     ];
@@ -514,15 +517,15 @@ class Menus implements MenuSystemInstance {
 
   private _createDebugItems = (): MenuItem[] => {
     return [
-      this._createToggleItem("Invincibility Shield", "invincible", -54),
-      this._createToggleItem("Show Hit Boxes", "showHitboxes", -12),
-      this._createToggleItem("Show Controls Overlay", "showControlsOverlay", 30),
-      this._createToggleItem("Show Coordinates", "showPlayerCoordinates", 72),
-      this._createItem("Select Level", "enum", 114, {
+      this._createToggleItem(i18n.menu.invincibilityShield, "invincible", -54),
+      this._createToggleItem(i18n.menu.showHitBoxes, "showHitboxes", -12),
+      this._createToggleItem(i18n.menu.showControlsOverlay, "showControlsOverlay", 30),
+      this._createToggleItem(i18n.menu.showCoordinates, "showPlayerCoordinates", 72),
+      this._createItem(i18n.menu.selectLevel, "enum", 114, {
         disabled: true,
-        getValue: () => "Soon",
+        getValue: () => i18n.menu.soon,
       }),
-      this._createItem("Back", "action", 164, {
+      this._createItem(i18n.menu.back, "action", 164, {
         action: () => this._goBack(),
       }),
     ];
@@ -530,7 +533,7 @@ class Menus implements MenuSystemInstance {
 
   private _createToggleItem = (label: string, option: ToggleDebugOption, y: number): MenuItem => {
     return this._createItem(label, "toggle", y, {
-      getValue: () => (userOptions.debug[option] ? "On" : "Off"),
+      getValue: () => (userOptions.debug[option] ? i18n.menu.on : i18n.menu.off),
       onAdjust: () => {
         userOptions.setDebugOption(option, !userOptions.debug[option]);
       },
@@ -917,18 +920,18 @@ class Menus implements MenuSystemInstance {
 
   private _getScreenTitle = (): string => {
     if (this._screen === "options") {
-      return "Options";
+      return i18n.menu.options;
     }
 
     if (this._screen === "controls") {
-      return "Controls";
+      return i18n.menu.controls;
     }
 
     if (this._screen === "debug") {
-      return "Debug";
+      return i18n.menu.debug;
     }
 
-    return "A.D. 1910";
+    return i18n.levels[1].introText;
   };
 
   private _goToScreen = (screen: MenuScreen): void => {
@@ -979,7 +982,7 @@ class Menus implements MenuSystemInstance {
 
   private _formatKey = (keyCode: number): string => {
     if (keyCode === 32) {
-      return "Space";
+      return i18n.keys.space;
     }
 
     if (keyCode >= 65 && keyCode <= 90) {
@@ -987,10 +990,10 @@ class Menus implements MenuSystemInstance {
     }
 
     const namedKeys: Record<number, string> = {
-      37: "Left",
-      38: "Up",
-      39: "Right",
-      40: "Down",
+      37: i18n.keys.left,
+      38: i18n.keys.up,
+      39: i18n.keys.right,
+      40: i18n.keys.down,
     };
 
     return namedKeys[keyCode] ?? `${keyCode}`;

@@ -13,6 +13,7 @@ import GameArena from "./engine/arena";
 import SoundEngine from "./engine/Sound";
 import Ticker from "./engine/Ticker";
 import Hud from "./hud";
+import i18n from "./i18n";
 import Menus from "./menus";
 import Player from "./player";
 import PropFactory from "./prop-factory";
@@ -410,7 +411,7 @@ export class TimePilot {
     this.resetWorld(this.getRandomDemoLevel(), { skipIntro: true });
     this.spawningSystem.addInitialProps();
     this.hasSeededInitialProps = true;
-    this.context._menus.showStart({ startLabel: "Start" });
+    this.context._menus.showStart({ startLabel: i18n.menu.start });
     this.context._gameTicker.start();
   };
 
@@ -424,7 +425,7 @@ export class TimePilot {
     }
 
     this.playMenuMusic();
-    this.context._menus.showStart({ startLabel: "Continue" });
+    this.context._menus.showStart({ startLabel: i18n.menu.continue });
   };
 
   private updateDemoAutopilot = (): void => {
