@@ -145,4 +145,24 @@ describe("engine modules", () => {
 
     expect(play).not.toHaveBeenCalled();
   });
+
+  it("handles browser autoplay rejections without leaking active sound state", async () => {
+    Object.defineProperty(HTMLMediaElement.prototype, "canPlay", {
+      configurable: true,
+      value: true,
+    });
+    const play = vi.mocked(HTMLMediaElement.prototype.play);
+
+    play.mockRejectedValueOnce(new DOMException("Blocked", "NotAllowedError"));
+
+    const sound = new Sound("/sounds/game_start.wav", { autoplay: false });
+
+    sound.play();
+    await Promise.resolve();
+    Sound.pauseAll();
+    Sound.resumePaused();
+    sound.destroy();
+
+    expect(play).toHaveBeenCalledTimes(1);
+  });
 });

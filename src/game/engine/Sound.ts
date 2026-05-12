@@ -93,8 +93,7 @@ class Sound {
     this._theSound.loop = false;
     if (this._theSound.canPlay) {
       this.applyVolume();
-      this._theSound.play();
-      this._isPlaying = true;
+      this.playElement();
     }
   };
 
@@ -102,8 +101,7 @@ class Sound {
     this._theSound.loop = true;
     if (this._theSound.canPlay) {
       this.applyVolume();
-      this._theSound.play();
-      this._isPlaying = true;
+      this.playElement();
     }
   };
 
@@ -115,8 +113,7 @@ class Sound {
   resume = (): void => {
     if (this._theSound.canPlay) {
       this.applyVolume();
-      this._theSound.play();
-      this._isPlaying = true;
+      this.playElement();
     }
   };
 
@@ -145,6 +142,19 @@ class Sound {
       Sound._isMuted
         ? 0
         : (userOptions.masterVolume / 10) * (userOptions.effectsVolume / 10);
+  };
+
+  private playElement = (): void => {
+    const playPromise = this._theSound.play();
+
+    this._isPlaying = true;
+
+    if (playPromise) {
+      void playPromise.catch(() => {
+        this._isPlaying = false;
+        Sound._pausedInstances.delete(this);
+      });
+    }
   };
 }
 
