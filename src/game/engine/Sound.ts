@@ -21,6 +21,10 @@ class Sound {
   private static _pausedInstances = new Set<Sound>();
   private _isPlaying = false;
   private _theSound: TimePilotAudioElement;
+  private _markEnded = (): void => {
+    this._isPlaying = false;
+    Sound._pausedInstances.delete(this);
+  };
 
   static setMuted = (isMuted: boolean): void => {
     Sound._isMuted = isMuted;
@@ -30,7 +34,7 @@ class Sound {
     Sound._pausedInstances.clear();
 
     Sound._instances.forEach((sound) => {
-      if (!sound._isPlaying) {
+      if (!sound.isActive()) {
         return;
       }
 
@@ -81,6 +85,7 @@ class Sound {
     this._theSound.controls = false;
 
     this._theSound.addEventListener("canplay", canPlayListener, false);
+    this._theSound.addEventListener("ended", this._markEnded, false);
     Sound._instances.add(this);
   }
 
@@ -126,8 +131,13 @@ class Sound {
   destroy = (): void => {
     this.stop();
     this._theSound.removeEventListener("canplay", canPlayListener, false);
+    this._theSound.removeEventListener("ended", this._markEnded, false);
     Sound._instances.delete(this);
     Sound._pausedInstances.delete(this);
+  };
+
+  private isActive = (): boolean => {
+    return this._isPlaying && !this._theSound.ended;
   };
 
   private applyVolume = (): void => {

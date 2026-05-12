@@ -123,4 +123,26 @@ describe("engine modules", () => {
     expect(play).toHaveBeenCalledTimes(2);
     expect(pause).toHaveBeenCalledTimes(3);
   });
+
+  it("does not resume one-shot sounds that finished before pausing", () => {
+    Object.defineProperty(HTMLMediaElement.prototype, "canPlay", {
+      configurable: true,
+      value: true,
+    });
+    const play = vi.mocked(HTMLMediaElement.prototype.play);
+    const sound = new Sound("/sounds/game_start.wav", { autoplay: false });
+
+    sound.play();
+    play.mockClear();
+    HTMLMediaElement.prototype.dispatchEvent.call(
+      (sound as unknown as { _theSound: HTMLAudioElement })._theSound,
+      new Event("ended")
+    );
+
+    Sound.pauseAll();
+    Sound.resumePaused();
+    sound.destroy();
+
+    expect(play).not.toHaveBeenCalled();
+  });
 });
