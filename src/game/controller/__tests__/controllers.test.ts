@@ -107,6 +107,28 @@ describe("controller modules", () => {
     keyboard.disconnect?.();
   });
 
+  it("keeps directional menu navigation working in rotate control mode", () => {
+    const controls = createControls();
+    const inputState = createInputState();
+    userOptions.setOption("controllerType", "keyboard2");
+    vi.mocked(controls.isMenuActive).mockReturnValue(true);
+    const keyboard = new Keyboard2(controls, inputState);
+
+    document.documentElement.dispatchEvent(new KeyboardEvent("keydown", { keyCode: 38 }));
+    document.documentElement.dispatchEvent(new KeyboardEvent("keydown", { keyCode: 40 }));
+    document.documentElement.dispatchEvent(new KeyboardEvent("keydown", { keyCode: 37 }));
+    document.documentElement.dispatchEvent(new KeyboardEvent("keydown", { keyCode: 39 }));
+
+    expect(controls.rotateToHeading).toHaveBeenCalledWith(0);
+    expect(controls.rotateToHeading).toHaveBeenCalledWith(180);
+    expect(controls.rotateToHeading).toHaveBeenCalledWith(270);
+    expect(controls.rotateToHeading).toHaveBeenCalledWith(90);
+    expect(controls.rotateAntiClockwise).not.toHaveBeenCalled();
+    expect(controls.rotateClockwise).not.toHaveBeenCalled();
+
+    keyboard.disconnect?.();
+  });
+
   it("polls gamepad state and disconnects its animation frame", async () => {
     const controls = createControls();
     const inputState = createInputState();

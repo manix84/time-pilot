@@ -151,7 +151,13 @@ describe("menu definitions", () => {
     menus.next();
     menus.activate();
 
-    for (let i = 0; i < 9; i++) {
+    for (let i = 0; i < 4; i++) {
+      menus.next();
+    }
+
+    menus.activate();
+
+    for (let i = 0; i < 5; i++) {
       menus.next();
     }
 
@@ -163,16 +169,16 @@ describe("menu definitions", () => {
 
     expect(context.rect).toHaveBeenCalledWith(-376, -86, 752, 172);
     expect(context.clip).toHaveBeenCalled();
-    expect(context.translate).toHaveBeenCalledWith(0, -216);
+    expect(context.translate).toHaveBeenCalledWith(0, -32);
 
-    menus.handlePointer({ posX: 0, posY: 74, type: "click" });
+    menus.handlePointer({ posX: 0, posY: 70, type: "click" });
     menus.render();
 
     expect(arena.renderText).toHaveBeenCalledWith(
-      "Start",
+      "Options",
       expect.any(Number),
       expect.any(Number),
-      expect.objectContaining({ align: "left" })
+      expect.objectContaining({ align: "center" })
     );
   });
 
@@ -213,7 +219,7 @@ describe("menu definitions", () => {
       expect.objectContaining({ align: "center" })
     );
 
-    for (let i = 0; i < 9; i++) {
+    for (let i = 0; i < 5; i++) {
       menus.next();
     }
 
@@ -339,9 +345,40 @@ describe("menu definitions", () => {
     }
 
     menus.activate();
+    menus.activate();
     expect(menus.captureKey(73)).toBe(true);
     expect(userOptions.keyboardBindings.up).toEqual([73]);
     expect(localStorage.getItem("timePilot.userOptions")).toContain('"up":[73]');
     expect(menus.captureKey(74)).toBe(false);
+  });
+
+  it("denies duplicate keyboard bindings with a warning", () => {
+    const arena = createArena();
+    const menus = new Menus(arena, { start: vi.fn() });
+
+    menus.showStart();
+    menus.next();
+    menus.activate();
+
+    for (let i = 0; i < 4; i++) {
+      menus.next();
+    }
+
+    menus.activate();
+    menus.next();
+    menus.next();
+    menus.activate();
+
+    expect(menus.captureKey(87)).toBe(true);
+    expect(userOptions.keyboardBindings.down).toEqual([40, 83]);
+
+    menus.render();
+
+    expect(arena.renderText).toHaveBeenCalledWith(
+      "Already assigned to Up",
+      0,
+      172,
+      expect.objectContaining({ align: "center" })
+    );
   });
 });

@@ -35,7 +35,9 @@ class Keyboard1 implements Controller {
         if (bindings.left.includes(event.keyCode)) {
           event.preventDefault();
           this._setInputState("left", true);
-          if (userOptions.controllerType === "keyboard2") {
+          if (this._controllerInterface.isMenuActive?.()) {
+            this._controllerInterface.rotateToHeading(270);
+          } else if (userOptions.controllerType === "keyboard2") {
             this._controllerInterface.rotateAntiClockwise();
           } else {
             this._controllerInterface.rotateToHeading(270);
@@ -43,13 +45,18 @@ class Keyboard1 implements Controller {
         } else if (bindings.up.includes(event.keyCode)) {
           event.preventDefault();
           this._setInputState("up", true);
-          if (userOptions.controllerType === "keyboard1") {
+          if (
+            this._controllerInterface.isMenuActive?.() ||
+            userOptions.controllerType === "keyboard1"
+          ) {
             this._controllerInterface.rotateToHeading(0);
           }
         } else if (bindings.right.includes(event.keyCode)) {
           event.preventDefault();
           this._setInputState("right", true);
-          if (userOptions.controllerType === "keyboard2") {
+          if (this._controllerInterface.isMenuActive?.()) {
+            this._controllerInterface.rotateToHeading(90);
+          } else if (userOptions.controllerType === "keyboard2") {
             this._controllerInterface.rotateClockwise();
           } else {
             this._controllerInterface.rotateToHeading(90);
@@ -57,7 +64,10 @@ class Keyboard1 implements Controller {
         } else if (bindings.down.includes(event.keyCode)) {
           event.preventDefault();
           this._setInputState("down", true);
-          if (userOptions.controllerType === "keyboard1") {
+          if (
+            this._controllerInterface.isMenuActive?.() ||
+            userOptions.controllerType === "keyboard1"
+          ) {
             this._controllerInterface.rotateToHeading(180);
           }
         } else if (

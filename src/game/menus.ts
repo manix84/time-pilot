@@ -10,7 +10,7 @@ import type {
   MenuSystemInstance,
 } from "./types";
 
-type MenuScreen = "start" | "options" | "debug";
+type MenuScreen = "start" | "options" | "controls" | "debug";
 type MenuItemKind = "action" | "enum" | "slider" | "key" | "toggle";
 type ToggleDebugOption =
   | "invincible"
@@ -53,17 +53,18 @@ const menuEdgePadding = 24;
 const submenuItemOffsetY = 22;
 const menuTransitionDuration = 1200;
 const keyBindingRows: Array<{ binding: BindingAction; label: string }> = [
-  { binding: "up", label: "Key Up" },
-  { binding: "down", label: "Key Down" },
-  { binding: "left", label: "Key Left" },
-  { binding: "right", label: "Key Right" },
-  { binding: "fire", label: "Key Fire" },
+  { binding: "up", label: "Up" },
+  { binding: "left", label: "Left" },
+  { binding: "down", label: "Down" },
+  { binding: "right", label: "Right" },
+  { binding: "fire", label: "Fire" },
 ];
 const konamiCode = [38, 38, 40, 40, 37, 39, 37, 39, 66, 65];
 
 class Menus implements MenuSystemInstance {
   private _active = false;
   private _awaitingBinding: BindingAction | null = null;
+  private _bindingWarning = "";
   private _commands: MenuSystemCommands;
   private _debugUnlocked = false;
   private _gameArena: GameArenaInstance;
@@ -91,6 +92,7 @@ class Menus implements MenuSystemInstance {
   showStart(): void {
     this._active = true;
     this._awaitingBinding = null;
+    this._bindingWarning = "";
     this._screen = "start";
     this._screenHistory = [];
     this._selectedIndex = 0;
@@ -102,6 +104,7 @@ class Menus implements MenuSystemInstance {
   hide(): void {
     this._active = false;
     this._awaitingBinding = null;
+    this._bindingWarning = "";
   }
 
   next(): void {
@@ -142,6 +145,7 @@ class Menus implements MenuSystemInstance {
 
     if (item.kind === "key" && item.binding) {
       this._awaitingBinding = item.binding;
+      this._bindingWarning = "";
       return;
     }
 
@@ -163,8 +167,18 @@ class Menus implements MenuSystemInstance {
       return false;
     }
 
+    const duplicateBinding = this._getDuplicateBinding(keyCode);
+
+    if (duplicateBinding && duplicateBinding !== this._awaitingBinding) {
+      this._bindingWarning = `Already assigned to ${this._formatBindingLabel(
+        duplicateBinding
+      )}`;
+      return true;
+    }
+
     userOptions.setKeyboardBinding(this._awaitingBinding, [keyCode]);
     this._awaitingBinding = null;
+    this._bindingWarning = "";
     return true;
   }
 
@@ -218,6 +232,7 @@ class Menus implements MenuSystemInstance {
     this._renderItems(context, transition.progress);
 
     if (this._awaitingBinding) {
+      this._renderBindingWarning(context);
       this._gameArena.renderText("Press a key", 0, 136, {
         size: 16,
         align: "center",
@@ -348,6 +363,8 @@ class Menus implements MenuSystemInstance {
       this._items = this._createStartItems();
     } else if (this._screen === "options") {
       this._items = this._createOptionsItems();
+    } else if (this._screen === "controls") {
+      this._items = this._createControlsItems();
     } else {
       this._items = this._createDebugItems();
     }
@@ -393,24 +410,52 @@ class Menus implements MenuSystemInstance {
           userOptions.controllerType === "keyboard1" ? "Directional" : "Rotate",
         onAdjust: (direction) => this._adjustControllerType(direction),
       }),
+      this._createItem("Remap Controls", "action", 114, {
+        action: () => this._goToScreen("controls"),
+      }),
     ];
 
-    keyBindingRows.forEach((row, index) => {
-      items.push(
-        this._createItem(row.label, "key", 114 + index * 34, {
-          binding: row.binding,
-          getValue: () => this._formatKey(userOptions.keyboardBindings[row.binding][0]),
-        })
-      );
-    });
-
     items.push(
-      this._createItem("Back", "action", 288, {
+      this._createItem("Back", "action", 164, {
         action: () => this._goBack(),
       })
     );
 
     return items;
+  }
+
+  private _createControlsItems(): MenuItem[] {
+    return [
+      this._createKeyBindingItem("up", -43, -54, 86, 34),
+      this._createKeyBindingItem("left", -146, -12, 86, 34),
+      this._createKeyBindingItem("down", -43, -12, 86, 34),
+      this._createKeyBindingItem("right", 60, -12, 86, 34),
+      this._createKeyBindingItem("fire", -146, 30, 292, 34),
+      this._createItem("Back", "action", 92, {
+        action: () => this._goBack(),
+      }),
+    ];
+  }
+
+  private _createKeyBindingItem(
+    binding: BindingAction,
+    x: number,
+    y: number,
+    width: number,
+    height: number
+  ): MenuItem {
+    const row = keyBindingRows.find((item) => item.binding === binding);
+
+    return this._createItem(row?.label ?? binding, "key", y, {
+      binding,
+      getValue: () => this._formatKey(userOptions.keyboardBindings[binding][0]),
+      rect: {
+        x,
+        y,
+        width,
+        height,
+      },
+    });
   }
 
   private _createDebugItems(): MenuItem[] {
@@ -539,6 +584,25 @@ class Menus implements MenuSystemInstance {
         }
       );
     }
+  }
+
+  private _renderBindingWarning(context: CanvasRenderingContext2D): void {
+    if (!this._bindingWarning) {
+      return;
+    }
+
+    context.fillStyle = palette.menu.backplate;
+    context.fillRect(-154, 154, 308, 36);
+    context.strokeStyle = palette.menu.waitingBorder;
+    context.lineWidth = 2;
+    context.strokeRect(-154, 154, 308, 36);
+
+    this._gameArena.renderText(this._bindingWarning, 0, 172, {
+      size: 14,
+      align: "center",
+      valign: "middle",
+      color: palette.menu.waitingText,
+    });
   }
 
   private _getItemProgress(item: MenuItem): number | null {
@@ -750,6 +814,10 @@ class Menus implements MenuSystemInstance {
       return "Options";
     }
 
+    if (this._screen === "controls") {
+      return "Controls";
+    }
+
     if (this._screen === "debug") {
       return "Debug";
     }
@@ -764,6 +832,7 @@ class Menus implements MenuSystemInstance {
     this._screen = screen;
     this._selectedIndex = 0;
     this._awaitingBinding = null;
+    this._bindingWarning = "";
     this._scrollY = 0;
     this._buildItems();
     this._startTransition(previousScreen, screen);
@@ -776,6 +845,7 @@ class Menus implements MenuSystemInstance {
     this._screen = nextScreen;
     this._selectedIndex = 0;
     this._awaitingBinding = null;
+    this._bindingWarning = "";
     this._scrollY = 0;
     this._buildItems();
     this._startTransition(previousScreen, nextScreen);
@@ -816,6 +886,18 @@ class Menus implements MenuSystemInstance {
     };
 
     return namedKeys[keyCode] ?? `${keyCode}`;
+  }
+
+  private _formatBindingLabel(binding: BindingAction): string {
+    return keyBindingRows.find((row) => row.binding === binding)?.label ?? binding;
+  }
+
+  private _getDuplicateBinding(keyCode: number): BindingAction | null {
+    const duplicate = Object.entries(userOptions.keyboardBindings).find(
+      ([, keyCodes]) => keyCodes.includes(keyCode)
+    );
+
+    return (duplicate?.[0] as BindingAction | undefined) ?? null;
   }
 
   private _isInsideItem(pointer: MenuPointerData, item: MenuItem): boolean {
