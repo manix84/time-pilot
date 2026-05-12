@@ -203,19 +203,24 @@ class Enemy implements EnemyInstance {
 
   private _render(): void {
     const levelData = this.getLevelData();
+    const renderWidth = levelData.renderWidth ?? levelData.width;
+    const renderHeight = levelData.renderHeight ?? levelData.height;
 
     this._gameArena.renderSprite(this._enemySprite, {
       frameWidth: levelData.width,
       frameHeight: levelData.height,
       frameX: levelData.canRotate
         ? Math.floor(this._data.heading / 22.5)
-        : Math.floor(this._gameTicker.getTicks() / 10) % 8,
+        : Math.floor(this._gameTicker.getTicks() / 10) %
+          (levelData.animationFrames ?? 8),
       frameY: levelData.canRotate
         ? Math.floor(this._gameTicker.getTicks() / 10) % 2
         : 0,
-      posX: this._data.posX - this._player.getData().posX - levelData.width / 2,
+      posX: this._data.posX - this._player.getData().posX - renderWidth / 2,
       posY:
-        this._data.posY - this._player.getData().posY - levelData.height / 2,
+        this._data.posY - this._player.getData().posY - renderHeight / 2,
+      renderHeight,
+      renderWidth,
     });
   }
 

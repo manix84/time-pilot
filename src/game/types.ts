@@ -463,6 +463,7 @@ export interface PlayerConfig {
 }
 
 export interface EnemyConfig {
+  animationFrames?: number;
   countsTowardBoss: boolean;
   deathValue: number;
   sprite: SpriteAsset;
@@ -474,6 +475,8 @@ export interface EnemyConfig {
   hitPoints: number;
   hitRadius: number;
   canRotate: boolean;
+  renderHeight?: number;
+  renderWidth?: number;
   spawnLimit: number;
   projectile: ProjectileConfig;
   explosion: ExplosionConfig;
