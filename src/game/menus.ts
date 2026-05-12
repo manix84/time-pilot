@@ -56,6 +56,9 @@ const menuDesignHeight = 500;
 const menuDesignWidth = 438;
 const submenuItemOffsetY = 22;
 const menuTransitionDuration = 500;
+const startLogoScale = 2;
+const submenuLogoScale = 1;
+const logoBottomWidth = 390;
 const keyBindingRows: Array<{ binding: BindingAction; label: string }> = [
   { binding: "up", label: "Up" },
   { binding: "left", label: "Left" },
@@ -281,13 +284,16 @@ class Menus implements MenuSystemInstance {
 
     context.save();
     context.scale(menuScale, menuScale);
-    this._renderLogo(context, layout.logoY);
-    this._gameArena.renderText(this._getScreenTitle(), 0, layout.titleY, {
-      size: 18,
-      align: "center",
-      valign: "middle",
-      color: palette.menu.mutedText,
-    });
+    this._renderLogo(context, layout.logoY, layout.logoScale);
+
+    if (this._screen !== "start") {
+      this._gameArena.renderText(this._getScreenTitle(), 0, layout.titleY, {
+        size: 18,
+        align: "center",
+        valign: "middle",
+        color: palette.menu.mutedText,
+      });
+    }
 
     this._scrollY = this._getMenuScrollY();
     this._renderItems(context, transition.progress);
@@ -304,11 +310,16 @@ class Menus implements MenuSystemInstance {
     context.restore();
   }
 
-  private _renderLogo(context: CanvasRenderingContext2D, y: number): void {
+  private _renderLogo(
+    context: CanvasRenderingContext2D,
+    y: number,
+    scale = 1
+  ): void {
     const logoCanvas = this._getLogoCanvas();
 
     context.save();
     context.translate(0, y);
+    context.scale(scale, scale);
     this._drawPerspectiveLogo(
       context,
       logoCanvas,
@@ -711,6 +722,7 @@ class Menus implements MenuSystemInstance {
   }
 
   private _getMenuScale(): number {
+    const designWidth = this._getMenuDesignWidth();
     const availableWidth = Math.max(1, this._gameArena.width - menuEdgePadding * 2);
     const availableHeight = Math.max(
       1,
@@ -719,9 +731,18 @@ class Menus implements MenuSystemInstance {
 
     return Math.min(
       1,
-      availableWidth / menuDesignWidth,
+      availableWidth / designWidth,
       availableHeight / menuDesignHeight
     );
+  }
+
+  private _getMenuDesignWidth(): number {
+    const from = this._transition?.from ?? this._screen;
+    const to = this._transition?.to ?? this._screen;
+    const logoWidth =
+      Math.max(this._getLogoScale(from), this._getLogoScale(to)) * logoBottomWidth;
+
+    return Math.max(menuDesignWidth, logoWidth + menuEdgePadding * 2);
   }
 
   private _getScaledPointer(pointer: MenuPointerData): MenuPointerData {
@@ -821,11 +842,16 @@ class Menus implements MenuSystemInstance {
 
   private _getAnimatedLayout(transition: {
     easedProgress: number;
-  }): { logoY: number; titleY: number } {
+  }): { logoScale: number; logoY: number; titleY: number } {
     const from = this._transition?.from ?? this._screen;
     const to = this._transition?.to ?? this._screen;
 
     return {
+      logoScale: this._lerp(
+        this._getLogoScale(from),
+        this._getLogoScale(to),
+        transition.easedProgress
+      ),
       logoY: this._lerp(
         this._getLogoY(from),
         this._getLogoY(to),
@@ -845,6 +871,10 @@ class Menus implements MenuSystemInstance {
     }
 
     return Math.min(-126, -(this._gameArena.height / 2) + 82);
+  }
+
+  private _getLogoScale(screen: MenuScreen): number {
+    return screen === "start" ? startLogoScale : submenuLogoScale;
   }
 
   private _getTitleY(screen: MenuScreen): number {

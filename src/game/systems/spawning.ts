@@ -35,8 +35,19 @@ class SpawningSystem implements SpawningSystemInstance {
   }
 
   spawnEntities(): void {
+    if (this.isLevelIntroActive()) {
+      return;
+    }
+
     this._spawnEnemy();
     this._spawnProp();
+  }
+
+  private isLevelIntroActive(): boolean {
+    return (
+      !!this._context._levelIntroUntilTick &&
+      this._context._gameTicker.getTicks() < this._context._levelIntroUntilTick
+    );
   }
 
   private _spawnEnemy(): void {

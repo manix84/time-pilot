@@ -288,6 +288,7 @@ export interface ControllerInterfaceInstance {
 export interface GameDataStore {
   _level: number;
   _isDemoMode?: boolean;
+  _levelIntroUntilTick?: number;
   _controlInputState: ControlInputState;
   _gameArena: GameArenaInstance;
   _renderTicker: TickerInstance;
@@ -436,6 +437,18 @@ export interface LevelConfig {
 
 export interface TimePilotConstants {
   player: PlayerConfig;
+  scoring: {
+    bomber1940: number;
+    boss: number;
+    formationBonus: number;
+    missile: number;
+    parachute: {
+      max: number;
+      min: number;
+      step: number;
+    };
+    regularEnemy: number;
+  };
   limits: {
     props: number;
     spawningRadius: number;

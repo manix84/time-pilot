@@ -3,6 +3,19 @@ import { assetPath } from "./asset-path";
 import palette from "./palette";
 import type { TimePilotConstants } from "./types";
 
+const scoring = {
+  regularEnemy: 100,
+  missile: 100,
+  boss: 3000,
+  bomber1940: 1500,
+  formationBonus: 2000,
+  parachute: {
+    min: 1000,
+    max: 5000,
+    step: 1000,
+  },
+};
+
 var CONSTS: TimePilotConstants = {
   player: {
     sprite: {
@@ -33,6 +46,7 @@ var CONSTS: TimePilotConstants = {
       },
     },
   },
+  scoring,
   limits: {
     props: 20,
     spawningRadius: 450,
@@ -53,7 +67,7 @@ var CONSTS: TimePilotConstants = {
       },
       enemies: {
         basic: {
-          deathValue: 100,
+          deathValue: scoring.regularEnemy,
           sprite: {
             src: assetPath("sprites/enemies/basic/level1.png"),
           },

@@ -93,6 +93,7 @@ const createContext = ({
   enemyAlive = true,
   enemyCollides = true,
   enemyLimitAvailable = true,
+  levelIntroUntilTick = 0,
   playerOverrides = {},
   propCount = 0,
   ticks = 200,
@@ -102,6 +103,7 @@ const createContext = ({
   enemyAlive?: boolean;
   enemyCollides?: boolean;
   enemyLimitAvailable?: boolean;
+  levelIntroUntilTick?: number;
   playerOverrides?: Partial<PlayerData>;
   propCount?: number;
   ticks?: number;
@@ -122,6 +124,7 @@ const createContext = ({
   return {
     _level: 1,
     _isDemoMode: demoMode,
+    _levelIntroUntilTick: levelIntroUntilTick,
     _controlInputState: {
       down: false,
       fire: false,
@@ -238,6 +241,17 @@ describe("game systems", () => {
     expect(enemy.detectCollision).not.toHaveBeenCalled();
   });
 
+  it("skips collisions while the level intro is active", () => {
+    const context = createContext({ levelIntroUntilTick: 250, ticks: 200 });
+    const system = new CollisionSystem(context);
+
+    system.detectCollisions();
+
+    const [enemy] = context._enemies.getEntities();
+    expect(enemy.detectCollision).not.toHaveBeenCalled();
+    expect(context._player.kill).not.toHaveBeenCalled();
+  });
+
   it("spawns initial props and tick-based entities", () => {
     const context = createContext();
     const system = new SpawningSystem(context);
@@ -294,6 +308,18 @@ describe("game systems", () => {
     expect(context._props.create).not.toHaveBeenCalled();
   });
 
+  it("does not spawn enemies or props while the level intro is active", () => {
+    const context = createContext({ levelIntroUntilTick: 250, ticks: 200 });
+    const system = new SpawningSystem(context);
+
+    vi.spyOn(Math, "random").mockReturnValue(0);
+
+    system.spawnEntities();
+
+    expect(context._enemies.create).not.toHaveBeenCalled();
+    expect(context._props.create).not.toHaveBeenCalled();
+  });
+
   it("renders a frame in the expected scene order", () => {
     const context = createContext();
     const system = new RenderingSystem(context);
@@ -311,6 +337,24 @@ describe("game systems", () => {
     expect(context._menus.render).toHaveBeenCalled();
   });
 
+  it("renders level intro text below the player while intro is active", () => {
+    const context = createContext({ levelIntroUntilTick: 250, ticks: 200 });
+    const system = new RenderingSystem(context);
+
+    system.renderFrame();
+
+    expect(context._gameArena.renderText).toHaveBeenCalledWith(
+      "A.D 1910",
+      0,
+      44,
+      expect.objectContaining({
+        align: "center",
+        size: 24,
+        valign: "middle",
+      })
+    );
+  });
+
   it("hides HUD rendering while menus are active", () => {
     const context = createContext();
     vi.mocked(context._menus.isActive).mockReturnValue(true);
@@ -320,5 +364,20 @@ describe("game systems", () => {
 
     expect(context._hud.render).not.toHaveBeenCalled();
     expect(context._menus.render).toHaveBeenCalled();
+  });
+
+  it("hides level intro text while menus are active", () => {
+    const context = createContext({ levelIntroUntilTick: 250, ticks: 200 });
+    vi.mocked(context._menus.isActive).mockReturnValue(true);
+    const system = new RenderingSystem(context);
+
+    system.renderFrame();
+
+    expect(context._gameArena.renderText).not.toHaveBeenCalledWith(
+      "A.D 1910",
+      expect.any(Number),
+      expect.any(Number),
+      expect.anything()
+    );
   });
 });

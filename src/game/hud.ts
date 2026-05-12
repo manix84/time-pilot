@@ -7,20 +7,17 @@ import type {
   GameArenaInstance,
   GameDataStore,
   HudInstance,
-  PlayerData,
   SpriteImage,
 } from "./types";
 
 class Hud implements HudInstance {
   private _context: GameDataStore;
   private _gameArena: GameArenaInstance;
-  private _playerData: PlayerData;
   private _playerSprite: SpriteImage;
 
   constructor(context: GameDataStore) {
     this._context = context;
     this._gameArena = context._gameArena;
-    this._playerData = context._player.getData();
 
     this._playerSprite = new Image() as SpriteImage;
     this._playerSprite.src = CONSTS.player.sprite.src;
@@ -31,8 +28,10 @@ class Hud implements HudInstance {
   }
 
   render(): void {
+    const playerData = this._context._player.getData();
+
     this._gameArena.renderText(
-      this._playerData.score,
+      playerData.score,
       -(this._gameArena.width / 2) + 20,
       -(this._gameArena.height / 2) + 10,
       { size: 30 }
@@ -40,13 +39,13 @@ class Hud implements HudInstance {
 
     if (userOptions.enableDebug && userOptions.debug.showPlayerCoordinates) {
       this._gameArena.renderText(
-        `${this._playerData.posX.toFixed(2)} x ${this._playerData.posY.toFixed(2)}`,
+        `${playerData.posX.toFixed(2)} x ${playerData.posY.toFixed(2)}`,
         -(this._gameArena.width / 2) + 20,
         -(this._gameArena.height / 2) + 40,
         { size: 15 }
       );
       this._gameArena.renderText(
-        `${this._playerData.heading}°`,
+        `${playerData.heading}°`,
         -(this._gameArena.width / 2) + 20,
         -(this._gameArena.height / 2) + 55,
         { size: 15 }
@@ -57,7 +56,7 @@ class Hud implements HudInstance {
       this.renderControlsOverlay();
     }
 
-    if (!this._playerData.isAlive) {
+    if (!playerData.isAlive) {
       this._gameArena.renderText("Game Over", 0, 0, {
         size: 30,
         align: "center",
@@ -87,7 +86,7 @@ class Hud implements HudInstance {
       });
     }
 
-    for (let i = 0; i < this._playerData.lives; ++i) {
+    for (let i = 0; i < playerData.lives; ++i) {
       this._gameArena.renderSprite(this._playerSprite, {
         frameWidth: this._playerSprite.frameWidth ?? CONSTS.player.width,
         frameHeight: this._playerSprite.frameHeight ?? CONSTS.player.height,

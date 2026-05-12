@@ -185,13 +185,27 @@ describe("menu definitions", () => {
     menus.next();
     menus.activate();
 
-    menus.handlePointer({ posX: -9, posY: -14, type: "click" });
+    const transitionScale = 752 / 828;
+
+    menus.handlePointer({
+      posX: -9 * transitionScale,
+      posY: -14 * transitionScale,
+      type: "click",
+    });
     expect(userOptions.masterVolume).toBe(5);
 
-    menus.handlePointer({ posX: -150, posY: -14, type: "click" });
+    menus.handlePointer({
+      posX: -150 * transitionScale,
+      posY: -14 * transitionScale,
+      type: "click",
+    });
     expect(userOptions.masterVolume).toBe(0);
 
-    menus.handlePointer({ posX: 150, posY: -14, type: "click" });
+    menus.handlePointer({
+      posX: 150 * transitionScale,
+      posY: -14 * transitionScale,
+      type: "click",
+    });
     expect(userOptions.masterVolume).toBe(10);
   });
 
@@ -203,17 +217,35 @@ describe("menu definitions", () => {
     menus.next();
     menus.activate();
 
-    menus.handlePointer({ posX: -90, posY: -14, type: "press" });
+    const transitionScale = 752 / 828;
+
+    menus.handlePointer({
+      posX: -90 * transitionScale,
+      posY: -14 * transitionScale,
+      type: "press",
+    });
     expect(userOptions.masterVolume).toBe(2);
 
-    menus.handlePointer({ posX: 0, posY: -14, type: "drag" });
+    menus.handlePointer({ posX: 0, posY: -14 * transitionScale, type: "drag" });
     expect(userOptions.masterVolume).toBe(5);
 
-    menus.handlePointer({ posX: 210, posY: -14, type: "drag" });
+    menus.handlePointer({
+      posX: 210 * transitionScale,
+      posY: -14 * transitionScale,
+      type: "drag",
+    });
     expect(userOptions.masterVolume).toBe(10);
 
-    menus.handlePointer({ posX: 60, posY: -14, type: "release" });
-    menus.handlePointer({ posX: 60, posY: -14, type: "drag" });
+    menus.handlePointer({
+      posX: 60 * transitionScale,
+      posY: -14 * transitionScale,
+      type: "release",
+    });
+    menus.handlePointer({
+      posX: 60 * transitionScale,
+      posY: -14 * transitionScale,
+      type: "drag",
+    });
     expect(userOptions.masterVolume).toBe(10);
   });
 
@@ -271,7 +303,7 @@ describe("menu definitions", () => {
 
     const context = vi.mocked(arena.getContext).mock.results[0]
       .value as CanvasRenderingContext2D;
-    const scale = 272 / 438;
+    const scale = 272 / 828;
 
     expect(context.scale).toHaveBeenCalledWith(scale, scale);
 
@@ -329,20 +361,26 @@ describe("menu definitions", () => {
     menus.render();
 
     expect(arena.renderText).toHaveBeenCalledWith(
-      "A.D. 1910",
-      0,
-      -166,
-      expect.objectContaining({ align: "center" })
+      "Start",
+      expect.any(Number),
+      expect.any(Number),
+      expect.objectContaining({ align: "left" })
     );
 
     performanceNow.mockReturnValue(1000);
     menus.render();
 
     expect(arena.renderText).toHaveBeenCalledWith(
+      "Start",
+      expect.any(Number),
+      expect.any(Number),
+      expect.objectContaining({ align: "left" })
+    );
+    expect(arena.renderText).not.toHaveBeenCalledWith(
       "A.D. 1910",
-      0,
-      -82,
-      expect.objectContaining({ align: "center" })
+      expect.any(Number),
+      expect.any(Number),
+      expect.anything()
     );
   });
 

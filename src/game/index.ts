@@ -30,10 +30,15 @@ import type {
 } from "./types";
 
 export const DEMO_LEVEL_DURATION_MS = 30000;
+export const LEVEL_INTRO_DURATION_MS = 5000;
 const gameFps = 30;
 const demoLevelDurationFrames = Math.max(
   1,
   Math.round((DEMO_LEVEL_DURATION_MS / 1000) * gameFps)
+);
+const levelIntroDurationFrames = Math.max(
+  1,
+  Math.round((LEVEL_INTRO_DURATION_MS / 1000) * gameFps)
 );
 
 export interface TimePilotOptions {
@@ -136,6 +141,7 @@ export class TimePilot {
       activeController: "keyboard",
     };
     this.context._isDemoMode = false;
+    this.context._levelIntroUntilTick = 0;
     this.context._gameArena = new GameArena(this.container);
     this.context._renderTicker = new Ticker();
     this.context._gameTicker = new Ticker({ fps: 30 });
@@ -228,6 +234,11 @@ export class TimePilot {
     }, demoLevelDurationFrames);
 
     this.context._gameTicker.addSchedule(() => {
+      if (this.isLevelIntroActive()) {
+        this.clearIntroControls();
+        return;
+      }
+
       this.context._player.reposition();
       this.context._enemies.reposition();
       this.context._bullets.reposition();
@@ -237,10 +248,18 @@ export class TimePilot {
     }, 1);
 
     this.context._gameTicker.addSchedule(() => {
+      if (this.isLevelIntroActive()) {
+        return;
+      }
+
       this.context._player.rotate();
     }, 3);
 
     this.context._gameTicker.addSchedule(() => {
+      if (this.isLevelIntroActive()) {
+        return;
+      }
+
       this.context._player.shoot();
     }, 5);
 
@@ -249,6 +268,10 @@ export class TimePilot {
     }, 1);
 
     this.context._gameTicker.addSchedule(() => {
+      if (this.isLevelIntroActive()) {
+        return;
+      }
+
       this.collisionSystem.detectCollisions();
     }, 1);
 
@@ -308,7 +331,7 @@ export class TimePilot {
   }
 
   private updateDemoAutopilot(): void {
-    if (!this.isDemoMode) {
+    if (!this.isDemoMode || this.isLevelIntroActive()) {
       return;
     }
 
@@ -351,7 +374,21 @@ export class TimePilot {
     this.context._player.setData("isAlive", true);
     this.context._player.setData("deathTick", false);
     this.context._player.stopShooting();
+    this.context._levelIntroUntilTick =
+      this.context._gameTicker.getTicks() + levelIntroDurationFrames;
     this.hasSeededInitialProps = false;
+  }
+
+  private isLevelIntroActive(): boolean {
+    return (
+      !!this.context._levelIntroUntilTick &&
+      this.context._gameTicker.getTicks() < this.context._levelIntroUntilTick
+    );
+  }
+
+  private clearIntroControls(): void {
+    this.context._player.setData("newHeading", false);
+    this.context._player.stopShooting();
   }
 
   private playMenuMusic(): void {

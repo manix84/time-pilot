@@ -223,6 +223,10 @@ class Enemy implements EnemyInstance {
   }
 
   kill(): void {
+    if (!this.isAlive) {
+      return;
+    }
+
     this.isAlive = false;
     this._data.deathTick = this._gameTicker.getTicks();
     this._player.setData(

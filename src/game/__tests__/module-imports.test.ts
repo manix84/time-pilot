@@ -28,6 +28,16 @@ describe("game module imports", () => {
     expect(Bullet).toBeTypeOf("function");
     expect(BulletFactory).toBeTypeOf("function");
     expect(constants.player.width).toBeGreaterThan(0);
+    expect(constants.scoring.regularEnemy).toBe(100);
+    expect(constants.scoring.missile).toBe(100);
+    expect(constants.scoring.boss).toBe(3000);
+    expect(constants.scoring.bomber1940).toBe(1500);
+    expect(constants.scoring.formationBonus).toBe(2000);
+    expect(constants.scoring.parachute).toEqual({
+      min: 1000,
+      max: 5000,
+      step: 1000,
+    });
     expect(ControllerInterface).toBeTypeOf("function");
     expect(Gamepad).toBeTypeOf("function");
     expect(Keyboard1).toBeTypeOf("function");

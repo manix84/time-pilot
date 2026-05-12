@@ -148,6 +148,43 @@ describe("context-backed game modules", () => {
     expect(context._bullets.getCount()).toBe(1);
   });
 
+  it("renders HUD with current player data after reset", () => {
+    const context = createContext();
+    userOptions.setOption("enableDebug", true);
+    userOptions.setDebugOption("showPlayerCoordinates", true);
+
+    context._player.setData("score", 300);
+    context._player.setData("posX", 12);
+    context._player.setData("posY", 34);
+    context._player.setData("heading", 180);
+    context._player.setData("score", 300, true);
+    context._player.setData("posX", 12, true);
+    context._player.setData("posY", 34, true);
+    context._player.setData("heading", 180, true);
+    context._player.resetData();
+
+    context._hud.render();
+
+    expect(context._gameArena.renderText).toHaveBeenCalledWith(
+      300,
+      expect.any(Number),
+      expect.any(Number),
+      expect.any(Object)
+    );
+    expect(context._gameArena.renderText).toHaveBeenCalledWith(
+      "12.00 x 34.00",
+      expect.any(Number),
+      expect.any(Number),
+      expect.any(Object)
+    );
+    expect(context._gameArena.renderText).toHaveBeenCalledWith(
+      "180°",
+      expect.any(Number),
+      expect.any(Number),
+      expect.any(Object)
+    );
+  });
+
   it("creates, exposes, renders, and clears enemies and props", () => {
     const context = createContext();
 
@@ -167,6 +204,18 @@ describe("context-backed game modules", () => {
 
     expect(context._enemies.getCount()).toBe(0);
     expect(context._props.getCount()).toBe(0);
+  });
+
+  it("awards regular enemy score only once per enemy kill", () => {
+    const context = createContext();
+
+    context._enemies.create(100, 100, 180);
+    const [enemy] = context._enemies.getEntities();
+
+    enemy.kill();
+    enemy.kill();
+
+    expect(context._player.getData("score")).toBe(100);
   });
 
   it("renders hitboxes for every active damage collision participant", () => {
