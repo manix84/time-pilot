@@ -3,6 +3,7 @@ import Gamepad from "../gamepad";
 import Keyboard1 from "../keyboard1";
 import Keyboard2 from "../keyboard2";
 import Mouse from "../mouse";
+import TouchController from "../touch";
 import type { ControlInputState, ControllerInterfaceInstance } from "../../types";
 import userOptions from "../../user-options";
 
@@ -39,6 +40,26 @@ function createInputState(): ControlInputState {
     up: false,
     activeController: "keyboard",
   };
+}
+
+function dispatchTouch(
+  canvas: HTMLCanvasElement,
+  type: string,
+  touch: { clientX: number; clientY: number; identifier?: number }
+): void {
+  const event = new Event(type, { bubbles: true, cancelable: true });
+
+  Object.defineProperty(event, "changedTouches", {
+    value: [
+      {
+        identifier: touch.identifier ?? 1,
+        clientX: touch.clientX,
+        clientY: touch.clientY,
+      },
+    ],
+  });
+
+  canvas.dispatchEvent(event);
 }
 
 describe("controller modules", () => {
@@ -216,5 +237,80 @@ describe("controller modules", () => {
     });
 
     mouse.disconnect?.();
+  });
+
+  it("maps touch drag direction to heading with a dead zone", () => {
+    const controls = createControls();
+    const inputState = createInputState();
+    const canvas = document.createElement("canvas");
+    canvas.width = 800;
+    canvas.height = 600;
+    vi.spyOn(canvas, "getBoundingClientRect").mockReturnValue({
+      bottom: 300,
+      height: 300,
+      left: 0,
+      right: 400,
+      top: 0,
+      width: 400,
+      x: 0,
+      y: 0,
+      toJSON: () => ({}),
+    });
+
+    const touch = new TouchController(canvas, controls, inputState);
+    dispatchTouch(canvas, "touchstart", { clientX: 202, clientY: 151 });
+    expect(controls.rotateToHeading).not.toHaveBeenCalled();
+
+    dispatchTouch(canvas, "touchmove", { clientX: 200, clientY: 50 });
+    expect(controls.rotateToHeading).toHaveBeenCalledWith(0);
+    expect(inputState.up).toBe(true);
+    expect(inputState.activeController).toBe("touch");
+
+    dispatchTouch(canvas, "touchmove", { clientX: 300, clientY: 150 });
+    expect(controls.rotateToHeading).toHaveBeenCalledWith(90);
+    expect(inputState.right).toBe(true);
+
+    dispatchTouch(canvas, "touchend", { clientX: 300, clientY: 150 });
+    expect(inputState.right).toBe(false);
+    expect(controls.stop).not.toHaveBeenCalled();
+
+    touch.disconnect?.();
+  });
+
+  it("routes touch taps and movement to active menus", () => {
+    const controls = createControls();
+    vi.mocked(controls.isMenuActive).mockReturnValue(true);
+    const canvas = document.createElement("canvas");
+    canvas.width = 800;
+    canvas.height = 600;
+    vi.spyOn(canvas, "getBoundingClientRect").mockReturnValue({
+      bottom: 300,
+      height: 300,
+      left: 0,
+      right: 400,
+      top: 0,
+      width: 400,
+      x: 0,
+      y: 0,
+      toJSON: () => ({}),
+    });
+
+    const touch = new TouchController(canvas, controls);
+    dispatchTouch(canvas, "touchstart", { clientX: 200, clientY: 150 });
+    dispatchTouch(canvas, "touchmove", { clientX: 220, clientY: 160 });
+
+    expect(controls.handlePointer).toHaveBeenCalledWith({
+      posX: 0,
+      posY: 0,
+      type: "click",
+    });
+    expect(controls.handlePointer).toHaveBeenCalledWith({
+      posX: 40,
+      posY: 20,
+      type: "move",
+    });
+    expect(controls.rotateToHeading).not.toHaveBeenCalled();
+
+    touch.disconnect?.();
   });
 });

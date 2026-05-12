@@ -145,6 +145,7 @@ input {
   aspect-ratio: 3 / 2;
   max-height: 74vh;
   min-height: 280px;
+  touch-action: none;
 }
 
 .time-pilot-stage canvas {

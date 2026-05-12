@@ -101,7 +101,7 @@ export type ControlInputName =
   | "right"
   | "up";
 
-export type ControlInputSource = "gamepad" | "keyboard";
+export type ControlInputSource = "gamepad" | "keyboard" | "touch";
 
 export type ControlInputState = Record<ControlInputName, boolean> & {
   activeController: ControlInputSource;

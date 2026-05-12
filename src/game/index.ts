@@ -5,6 +5,7 @@ import Gamepad from "./controller/gamepad";
 import Keyboard1 from "./controller/keyboard1";
 import Keyboard2 from "./controller/keyboard2";
 import Mouse from "./controller/mouse";
+import Touch from "./controller/touch";
 import ControllerInterface from "./controller-interface";
 import EnemyFactory from "./enemy-factory";
 import Hud from "./hud";
@@ -151,6 +152,11 @@ export class TimePilot {
     this.context._currentController = [
       this.createKeyboardController(controllerInterface),
       new Mouse(this.context._gameArena.getElement(), controllerInterface),
+      new Touch(
+        this.context._gameArena.getElement(),
+        controllerInterface,
+        this.context._controlInputState
+      ),
     ];
 
     if (this.options.gamepadEnabled) {
