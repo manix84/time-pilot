@@ -203,14 +203,12 @@ class Enemy implements EnemyInstance {
     const levelData = this.getLevelData();
     const renderWidth = levelData.renderWidth ?? levelData.width;
     const renderHeight = levelData.renderHeight ?? levelData.height;
+    const frameX = this._getFrameX(levelData);
 
     this._gameArena.renderSprite(this._enemySprite, {
       frameWidth: levelData.width,
       frameHeight: levelData.height,
-      frameX: levelData.canRotate
-        ? Math.floor(this._data.heading / 22.5)
-        : Math.floor(this._gameTicker.getTicks() / 10) %
-          (levelData.animationFrames ?? 8),
+      frameX,
       frameY: levelData.canRotate
         ? Math.floor(this._gameTicker.getTicks() / 10) % 2
         : 0,
@@ -220,6 +218,34 @@ class Enemy implements EnemyInstance {
       renderHeight,
       renderWidth,
     });
+  };
+
+  private _getFrameX = (levelData: EnemyConfig): number => {
+    if (this._data.type === "boss" && levelData.bossDamageFrames) {
+      return this._getBossDamageFrame(levelData);
+    }
+
+    if (levelData.canRotate) {
+      return Math.floor(this._data.heading / 22.5);
+    }
+
+    return (
+      Math.floor(this._gameTicker.getTicks() / 10) %
+      (levelData.animationFrames ?? 8)
+    );
+  };
+
+  private _getBossDamageFrame = (levelData: EnemyConfig): number => {
+    const damageFrames = levelData.bossDamageFrames ?? 4;
+    const maxHitPoints = levelData.hitPoints;
+    const hitsTaken = maxHitPoints - this._data.hitPoints;
+    const damageFrame = Math.min(
+      damageFrames - 1,
+      Math.floor((hitsTaken / maxHitPoints) * damageFrames)
+    );
+    const isFacingLeft = this._data.heading > 180;
+
+    return damageFrame + (isFacingLeft ? damageFrames : 0);
   };
 
   private _renderDeath = (): void => {

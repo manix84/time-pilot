@@ -475,6 +475,7 @@ export interface PlayerConfig {
 
 export interface EnemyConfig {
   animationFrames?: number;
+  bossDamageFrames?: number;
   countsTowardBoss: boolean;
   deathValue: number;
   sprite: SpriteAsset;

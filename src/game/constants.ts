@@ -66,6 +66,7 @@ const bossEnemy = (
   overrides: Partial<EnemyConfig> = {}
 ): EnemyConfig => ({
   animationFrames: 8,
+  bossDamageFrames: 4,
   countsTowardBoss: false,
   deathValue: scoring.boss,
   sprite: {
@@ -700,6 +701,7 @@ const timePilotConstants: TimePilotConstants = {
         }),
         boss: bossEnemy(5, {
           animationFrames: 2,
+          bossDamageFrames: 0,
           width: 32,
           height: 16,
           hitRadius: 24,

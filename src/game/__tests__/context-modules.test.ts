@@ -394,6 +394,38 @@ describe("context-backed game modules", () => {
     expect(context._levelProgress.standardEnemyKills).toBe(1);
   });
 
+  it("renders boss damage and facing frames from the damage sheet", () => {
+    const context = createContext();
+
+    context._enemies.create(200, 100, 90, { type: "boss" });
+    const [boss] = context._enemies.getEntities();
+
+    boss.render();
+    boss.kill();
+    boss.kill();
+    boss.render();
+    boss.setData("heading", 270);
+    boss.kill();
+    boss.kill();
+    boss.render();
+
+    expect(context._gameArena.renderSprite).toHaveBeenNthCalledWith(
+      1,
+      expect.any(HTMLImageElement),
+      expect.objectContaining({ frameX: 0 })
+    );
+    expect(context._gameArena.renderSprite).toHaveBeenNthCalledWith(
+      2,
+      expect.any(HTMLImageElement),
+      expect.objectContaining({ frameX: 1 })
+    );
+    expect(context._gameArena.renderSprite).toHaveBeenNthCalledWith(
+      3,
+      expect.any(HTMLImageElement),
+      expect.objectContaining({ frameX: 6 })
+    );
+  });
+
   it("awards the 1940 special bomber after three hits without boss progress", () => {
     const context = createContext();
     context._level = 2;
