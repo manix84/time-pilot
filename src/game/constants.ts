@@ -23,6 +23,16 @@ const scoring = {
   },
 };
 
+const playerMovementSpeed = 5;
+const projectileSpeeds = {
+  bullet1910: playerMovementSpeed * 1.1,
+  bullet1940: playerMovementSpeed * 1.25,
+  bullet1970: playerMovementSpeed * 1.35,
+  bullet1982: playerMovementSpeed * 1.6,
+  energy2001: playerMovementSpeed * 1.75,
+  bomb1940: playerMovementSpeed * 0.9,
+};
+
 const basicEnemy = (
   level: number,
   overrides: Partial<EnemyConfig> = {}
@@ -43,7 +53,7 @@ const basicEnemy = (
   tracksPlayer: true,
   spawnLimit: 8,
   projectile: {
-    velocity: 5,
+    velocity: projectileSpeeds.bullet1910,
     size: 6,
     color: palette.aircraft.enemyBullet,
   },
@@ -77,7 +87,7 @@ const bossEnemy = (
   turnLimiter: 48,
   width: 32,
   height: 16,
-  firingChance: 0.2,
+  firingChance: 0.25,
   hitPoints: 7,
   hitRadius: 18,
   canRotate: false,
@@ -86,7 +96,7 @@ const bossEnemy = (
   renderWidth: 64,
   spawnLimit: 1,
   projectile: {
-    velocity: 5,
+    velocity: projectileSpeeds.bullet1940,
     size: 6,
     color: palette.aircraft.enemyBullet,
   },
@@ -128,7 +138,7 @@ const specialBomber = (
   renderWidth: 64,
   spawnLimit: 1,
   projectile: {
-    velocity: 4,
+    velocity: projectileSpeeds.bomb1940,
     size: 6,
     color: palette.aircraft.enemyBullet,
     sprite: {
@@ -563,7 +573,7 @@ const timePilotConstants: TimePilotConstants = {
         despawnRadius: 500,
       },
       player: {
-        velocity: 5,
+        velocity: playerMovementSpeed,
         turnInterval: 5,
       },
       enemies: {
@@ -590,7 +600,7 @@ const timePilotConstants: TimePilotConstants = {
         despawnRadius: 500,
       },
       player: {
-        velocity: 5,
+        velocity: playerMovementSpeed,
         turnInterval: 5,
       },
       enemies: {
@@ -599,6 +609,11 @@ const timePilotConstants: TimePilotConstants = {
           turnLimiter: 22,
           firingChance: 0.5,
           spawnLimit: 11,
+          projectile: {
+            velocity: projectileSpeeds.bullet1940,
+            size: 6,
+            color: palette.aircraft.enemyBullet,
+          },
         }),
         boss: bossEnemy(2, {
           width: 32,
@@ -625,15 +640,20 @@ const timePilotConstants: TimePilotConstants = {
         despawnRadius: 500,
       },
       player: {
-        velocity: 5,
+        velocity: playerMovementSpeed,
         turnInterval: 5,
       },
       enemies: {
         basic: basicEnemy(3, {
           velocity: 5,
           turnLimiter: 14,
-          firingChance: 0.6,
+          firingChance: 0.55,
           spawnLimit: 13,
+          projectile: {
+            velocity: projectileSpeeds.bullet1970,
+            size: 6,
+            color: palette.aircraft.enemyBullet,
+          },
         }),
         boss: bossEnemy(3, {
           width: 32,
@@ -643,6 +663,12 @@ const timePilotConstants: TimePilotConstants = {
           renderWidth: 64,
           velocity: 3.5,
           turnLimiter: 38,
+          firingChance: 0.3,
+          projectile: {
+            velocity: projectileSpeeds.bullet1970,
+            size: 6,
+            color: palette.aircraft.enemyBullet,
+          },
         }),
         formations: futureLevelFormations[3],
       },
@@ -659,15 +685,20 @@ const timePilotConstants: TimePilotConstants = {
         despawnRadius: 500,
       },
       player: {
-        velocity: 5,
+        velocity: playerMovementSpeed,
         turnInterval: 5,
       },
       enemies: {
         basic: basicEnemy(4, {
           velocity: 6.25,
           turnLimiter: 10,
-          firingChance: 0.68,
+          firingChance: 0.65,
           spawnLimit: 15,
+          projectile: {
+            velocity: projectileSpeeds.bullet1982,
+            size: 6,
+            color: palette.aircraft.enemyBullet,
+          },
         }),
         boss: bossEnemy(4, {
           width: 32,
@@ -677,6 +708,12 @@ const timePilotConstants: TimePilotConstants = {
           renderWidth: 64,
           velocity: 3.75,
           turnLimiter: 34,
+          firingChance: 0.35,
+          projectile: {
+            velocity: projectileSpeeds.bullet1982,
+            size: 6,
+            color: palette.aircraft.enemyBullet,
+          },
         }),
         formations: futureLevelFormations[4],
       },
@@ -693,15 +730,20 @@ const timePilotConstants: TimePilotConstants = {
         despawnRadius: 520,
       },
       player: {
-        velocity: 5,
+        velocity: playerMovementSpeed,
         turnInterval: 5,
       },
       enemies: {
         basic: basicEnemy(5, {
           velocity: 7.5,
           turnLimiter: 8,
-          firingChance: 0.72,
+          firingChance: 0.68,
           spawnLimit: 16,
+          projectile: {
+            velocity: projectileSpeeds.energy2001,
+            size: 6,
+            color: palette.aircraft.enemyBullet,
+          },
         }),
         boss: bossEnemy(5, {
           animationFrames: 2,
@@ -713,6 +755,12 @@ const timePilotConstants: TimePilotConstants = {
           renderWidth: 64,
           velocity: 4,
           turnLimiter: 30,
+          firingChance: 0.4,
+          projectile: {
+            velocity: projectileSpeeds.energy2001,
+            size: 6,
+            color: palette.aircraft.enemyBullet,
+          },
         }),
         formations: futureLevelFormations[5],
       },

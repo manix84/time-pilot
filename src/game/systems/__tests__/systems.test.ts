@@ -403,7 +403,7 @@ describe("game systems", () => {
       100,
       expect.any(Number),
       6,
-      5,
+      5.5,
       "#FF9",
       false,
       "world",
@@ -445,7 +445,7 @@ describe("game systems", () => {
   });
 
   it("drops bombs from the 1940 special bomber", () => {
-    const context = createContext({ level: 2, ticks: 225 });
+    const context = createContext({ level: 2, ticks: 180 });
     const [bomber] = context._enemies.getEntities();
     vi.mocked(bomber.getData).mockImplementation((key?: keyof EnemyData) => {
       const data: EnemyData = {
@@ -472,7 +472,7 @@ describe("game systems", () => {
       109,
       180,
       6,
-      4,
+      4.5,
       "#FF9",
       false,
       "world",
