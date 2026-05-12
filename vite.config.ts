@@ -4,6 +4,10 @@ import { defineConfig } from "vite";
 export default defineConfig({
   base: process.env.VITE_BASE_PATH ?? "/",
   plugins: [react()],
+  server: {
+    host: "0.0.0.0",
+    open: true,
+  },
   test: {
     environment: "jsdom",
     globals: true,
