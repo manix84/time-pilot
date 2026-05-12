@@ -129,6 +129,21 @@ const playerBulletData: BulletData[] = [
   },
 ];
 
+const createPlayerBullet = (): BulletInstance => {
+  const bulletData = { ...playerBulletData[0] };
+
+  return {
+    removeMe: false,
+    getData: vi.fn((key?: keyof BulletData) =>
+      key ? bulletData[key] : bulletData
+    ) as BulletInstance["getData"],
+    setData: vi.fn(() => true),
+    setLevel: vi.fn(() => true),
+    reposition: vi.fn(),
+    render: vi.fn(),
+  };
+};
+
 const createContext = ({
   arenaOverrides = {},
   demoFadeStartedAtTick = 0,
@@ -157,10 +172,12 @@ const createContext = ({
   const enemyData: EnemyData = {
     deathTick: false,
     heading: 180,
+    hitPoints: 1,
     level: 1,
     posX: 100,
     posY: 100,
     tickOffset: 0,
+    type: "basic",
   };
   const enemy: EnemyInstance = {
     isAlive: enemyAlive,
@@ -187,6 +204,12 @@ const createContext = ({
   return {
     _level: 1,
     _formations: {},
+    _levelProgress: {
+      bossDefeated: false,
+      bossKillThreshold: 56,
+      bossSpawned: false,
+      standardEnemyKills: 0,
+    },
     _demoFadeStartedAtTick: demoFadeStartedAtTick,
     _demoFadeUntilTick: demoFadeUntilTick,
     _isDemoMode: demoMode,
@@ -225,7 +248,7 @@ const createContext = ({
       create: vi.fn(),
       getCount: vi.fn(() => 1),
       getData: vi.fn(() => playerBulletData),
-      getEntities: vi.fn(() => []),
+      getEntities: vi.fn(() => [createPlayerBullet()]),
       cleanup: vi.fn(),
       reposition: vi.fn(),
       render: vi.fn(),
@@ -385,6 +408,22 @@ describe("game systems", () => {
       "circle"
     );
     expect(context._bonuses.create).not.toHaveBeenCalled();
+  });
+
+  it("spawns the boss after the level kill threshold", () => {
+    const context = createContext();
+    context._levelProgress.standardEnemyKills = 56;
+    const system = new SpawningSystem(context);
+
+    system.spawnEntities();
+
+    expect(context._enemies.create).toHaveBeenCalledWith(
+      expect.any(Number),
+      expect.any(Number),
+      expect.any(Number),
+      { type: "boss" }
+    );
+    expect(context._levelProgress.bossSpawned).toBe(true);
   });
 
   it("spawns bonuses along the top and upper side spawn areas", () => {

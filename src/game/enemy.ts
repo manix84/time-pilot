@@ -43,11 +43,14 @@ class Enemy implements EnemyInstance {
       posX,
       posY,
       heading,
+      hitPoints: 1,
       level: context._level || 1,
       deathTick: false,
       tickOffset: Math.floor(Math.random() * 100),
+      type: "basic",
       ...options,
     };
+    this._data.hitPoints = this.getLevelData().hitPoints;
 
     this._enemySprite = new Image();
     this._enemySprite.src = this.getLevelData().sprite.src;
@@ -79,7 +82,8 @@ class Enemy implements EnemyInstance {
   getLevelData(): EnemyConfig;
   getLevelData<K extends keyof EnemyConfig>(key: K): EnemyConfig[K] | undefined;
   getLevelData<K extends keyof EnemyConfig>(key?: K) {
-    const levelData = CONSTS.levels[this._data.level].enemies.basic;
+    const enemyType = this._data.type ?? "basic";
+    const levelData = CONSTS.levels[this._data.level].enemies[enemyType];
 
     if (!key) {
       return levelData;
@@ -120,6 +124,10 @@ class Enemy implements EnemyInstance {
       return;
     }
 
+    if (this._data.type === "boss") {
+      return;
+    }
+
     this.removeMe = helpers.detectAreaExit(
       {
         posX: this._gameArena.posX + levelData.width / 2,
@@ -143,7 +151,9 @@ class Enemy implements EnemyInstance {
       this._data.formationUntilTick !== undefined &&
       this._gameTicker.getTicks() < this._data.formationUntilTick;
     const canTurn =
-      !formationActive && !this.removeMe && tick % levelData.turnLimiter === 0;
+      !formationActive &&
+      !this.removeMe &&
+      tick % levelData.turnLimiter === 0;
 
     enemy.posX += helpers.float(
       Math.sin(heading * (Math.PI / 180)) * levelData.velocity
@@ -197,8 +207,12 @@ class Enemy implements EnemyInstance {
     this._gameArena.renderSprite(this._enemySprite, {
       frameWidth: levelData.width,
       frameHeight: levelData.height,
-      frameX: Math.floor(this._data.heading / 22.5),
-      frameY: Math.floor(this._gameTicker.getTicks() / 10) % 2,
+      frameX: levelData.canRotate
+        ? Math.floor(this._data.heading / 22.5)
+        : Math.floor(this._gameTicker.getTicks() / 10) % 8,
+      frameY: levelData.canRotate
+        ? Math.floor(this._gameTicker.getTicks() / 10) % 2
+        : 0,
       posX: this._data.posX - this._player.getData().posX - levelData.width / 2,
       posY:
         this._data.posY - this._player.getData().posY - levelData.height / 2,
@@ -262,13 +276,43 @@ class Enemy implements EnemyInstance {
       return;
     }
 
+    this._data.hitPoints = Math.max(0, this._data.hitPoints - 1);
+
+    if (this._data.hitPoints > 0) {
+      return;
+    }
+
     this.isAlive = false;
     this._data.deathTick = this._gameTicker.getTicks();
     this._player.setData(
       "score",
       this._player.getData("score") + this.getLevelData("deathValue")!
     );
+    this._trackBossKillProgress();
+    this._trackBossDefeat();
     this._trackFormationKill();
+  }
+
+  private _trackBossKillProgress(): void {
+    if (!this.getLevelData("countsTowardBoss")) {
+      return;
+    }
+
+    const progress = this._context._levelProgress;
+
+    if (progress.bossSpawned) {
+      return;
+    }
+
+    progress.standardEnemyKills += 1;
+  }
+
+  private _trackBossDefeat(): void {
+    if (this._data.type !== "boss") {
+      return;
+    }
+
+    this._context._levelProgress.bossDefeated = true;
   }
 
   private _trackFormationKill(): void {

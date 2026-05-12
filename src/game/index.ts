@@ -155,6 +155,7 @@ export class TimePilot {
       activeController: "keyboard",
     };
     this.context._formations = {};
+    this.context._levelProgress = this.createLevelProgress(1);
     this.context._demoFadeStartedAtTick = 0;
     this.context._demoFadeUntilTick = 0;
     this.context._isDemoMode = false;
@@ -216,11 +217,13 @@ export class TimePilot {
       assetPath("sounds/player/bullet.mp3"),
       assetPath("sprites/player/explosion.png"),
       assetPath("sprites/enemies/basic/level1.png"),
+      assetPath("sprites/enemies/boss/level1.png"),
       // assetPath("sprites/enemies/basic/level2.png"),
       // assetPath("sprites/enemies/basic/level3.png"),
       // assetPath("sprites/enemies/basic/level4.png"),
       // assetPath("sprites/enemies/basic/level5.png"),
       assetPath("sprites/enemies/basic/explosion.png"),
+      assetPath("sprites/enemies/boss/explosion.png"),
       assetPath("sprites/bonuses/parachute.png"),
       assetPath("sprites/props/cloud1.png"),
       assetPath("sprites/props/cloud2.png"),
@@ -344,6 +347,10 @@ export class TimePilot {
       this.context._enemyBullets.cleanup();
       this.context._props.cleanup();
       this.context._bonuses.cleanup();
+
+      if (this.context._levelProgress.bossDefeated) {
+        this.advanceAfterBossDefeat();
+      }
     }, 1);
   }
 
@@ -435,6 +442,7 @@ export class TimePilot {
   private resetWorld(level: number, options: { skipIntro?: boolean } = {}): void {
     this.context._level = level;
     this.context._formations = {};
+    this.context._levelProgress = this.createLevelProgress(level);
     this.context._enemies.clearAll();
     this.context._bullets.clearAll();
     this.context._enemyBullets.clearAll();
@@ -450,6 +458,45 @@ export class TimePilot {
       ? 0
       : this.context._gameTicker.getTicks() + levelIntroDurationFrames;
     this.hasSeededInitialProps = false;
+  }
+
+  private advanceAfterBossDefeat(): void {
+    const score = this.context._player.getData("score") ?? 0;
+    const lives = this.context._player.getData("lives") ?? 3;
+    const nextLevel = this.getNextEnabledLevel();
+
+    this.resetWorld(nextLevel, { skipIntro: false });
+    this.context._player.setData("score", score);
+    this.context._player.setData("score", score, true);
+    this.context._player.setData("lives", lives);
+    this.context._player.setData("lives", lives, true);
+    this.spawningSystem.addInitialProps();
+    this.hasSeededInitialProps = true;
+  }
+
+  private createLevelProgress(level: number) {
+    return {
+      bossDefeated: false,
+      bossKillThreshold:
+        CONSTS.limits.bossKillThresholdBase +
+        (level - 1) * CONSTS.limits.bossKillThresholdIncrementPerLevel,
+      bossSpawned: false,
+      standardEnemyKills: 0,
+    };
+  }
+
+  private getNextEnabledLevel(): number {
+    const levelNumbers = Object.keys(CONSTS.levels)
+      .map(Number)
+      .sort((a, b) => a - b)
+      .filter((level) => CONSTS.levels[level].enabled);
+    const currentIndex = levelNumbers.indexOf(this.context._level);
+
+    if (currentIndex === -1 || levelNumbers.length === 0) {
+      return 1;
+    }
+
+    return levelNumbers[(currentIndex + 1) % levelNumbers.length] ?? 1;
   }
 
   private getRandomDemoLevel(): number {

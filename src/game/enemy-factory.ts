@@ -15,11 +15,9 @@ import type {
 class EnemyFactory implements EnemyFactoryInstance {
   private _context: GameDataStore;
   private _enemies: EnemyInstance[] = [];
-  private _level: number;
 
   constructor(context: GameDataStore) {
     this._context = context;
-    this._level = context._level;
   }
 
   create(
@@ -34,7 +32,7 @@ class EnemyFactory implements EnemyFactoryInstance {
   getLevelData(): EnemyConfig;
   getLevelData<K extends keyof EnemyConfig>(key: K): EnemyConfig[K] | undefined;
   getLevelData<K extends keyof EnemyConfig>(key?: K) {
-    const data = CONSTS.levels[this._level].enemies.basic;
+    const data = CONSTS.levels[this._context._level].enemies.basic;
 
     if (key) {
       return data[key];

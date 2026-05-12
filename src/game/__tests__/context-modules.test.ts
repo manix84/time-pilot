@@ -74,6 +74,12 @@ function createContext(): GameDataStore {
   const context = {
     _level: 1,
     _formations: {},
+    _levelProgress: {
+      bossDefeated: false,
+      bossKillThreshold: 56,
+      bossSpawned: false,
+      standardEnemyKills: 0,
+    },
     _nextParachuteScore: 1000,
     _controlInputState: {
       down: false,
@@ -356,6 +362,36 @@ describe("context-backed game modules", () => {
     enemy.kill();
 
     expect(context._player.getData("score")).toBe(100);
+    expect(context._levelProgress.standardEnemyKills).toBe(1);
+  });
+
+  it("tracks boss progress from standard enemies and defeats bosses after seven hits", () => {
+    const context = createContext();
+
+    context._enemies.create(100, 100, 180);
+    const [enemy] = context._enemies.getEntities();
+
+    enemy.kill();
+
+    expect(context._levelProgress.standardEnemyKills).toBe(1);
+
+    context._enemies.create(200, 100, 180, { type: "boss" });
+    const boss = context._enemies.getEntities()[1];
+
+    for (let i = 0; i < 6; i++) {
+      boss.kill();
+    }
+
+    expect(boss.isAlive).toBe(true);
+    expect(context._player.getData("score")).toBe(100);
+    expect(context._levelProgress.bossDefeated).toBe(false);
+
+    boss.kill();
+
+    expect(boss.isAlive).toBe(false);
+    expect(context._player.getData("score")).toBe(3100);
+    expect(context._levelProgress.bossDefeated).toBe(true);
+    expect(context._levelProgress.standardEnemyKills).toBe(1);
   });
 
   it("awards the formation bonus when every formation enemy is killed", () => {

@@ -65,9 +65,11 @@ export interface BulletData extends Coordinates {
 
 export interface EnemyData extends Coordinates {
   heading: Heading;
+  hitPoints: number;
   level: number;
   deathTick: number | false;
   tickOffset: number;
+  type: "basic" | "boss";
   formationId?: string;
   formationUntilTick?: number;
   formationWaveAmplitude?: number;
@@ -245,11 +247,19 @@ export interface EnemyInstance {
 }
 
 export interface EnemySpawnOptions {
+  type?: EnemyData["type"];
   formationId?: string;
   formationUntilTick?: number;
   formationWaveAmplitude?: number;
   formationWaveFrequency?: number;
   formationWavePhase?: number;
+}
+
+export interface LevelProgressState {
+  bossDefeated: boolean;
+  bossKillThreshold: number;
+  bossSpawned: boolean;
+  standardEnemyKills: number;
 }
 
 export interface FormationState {
@@ -346,6 +356,7 @@ export interface ControllerInterfaceInstance {
 
 export interface GameDataStore {
   _level: number;
+  _levelProgress: LevelProgressState;
   _formations: Record<string, FormationState>;
   _demoFadeStartedAtTick?: number;
   _demoFadeUntilTick?: number;
@@ -452,6 +463,7 @@ export interface PlayerConfig {
 }
 
 export interface EnemyConfig {
+  countsTowardBoss: boolean;
   deathValue: number;
   sprite: SpriteAsset;
   velocity: number;
@@ -459,6 +471,7 @@ export interface EnemyConfig {
   width: number;
   height: number;
   firingChance: number;
+  hitPoints: number;
   hitRadius: number;
   canRotate: boolean;
   spawnLimit: number;
@@ -515,6 +528,7 @@ export interface LevelConfig {
   };
   enemies: {
     basic: EnemyConfig;
+    boss: EnemyConfig;
     formations: EnemyFormationConfig[];
   };
   bonus: BonusConfig;
@@ -536,6 +550,8 @@ export interface TimePilotConstants {
     regularEnemy: number;
   };
   limits: {
+    bossKillThresholdBase: number;
+    bossKillThresholdIncrementPerLevel: number;
     bonuses: number;
     enemyBullets: number;
     props: number;

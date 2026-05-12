@@ -19,7 +19,7 @@ class CollisionSystem implements CollisionSystemInstance {
       return;
     }
 
-    const bullets = this._context._bullets.getData();
+    const bullets = this._context._bullets.getEntities();
     const playerData = this._context._player.getData();
 
     if (!this._context._isDemoMode && playerData.isAlive) {
@@ -87,20 +87,31 @@ class CollisionSystem implements CollisionSystemInstance {
         )
       ) {
         enemy.kill();
-        this._playExplosion();
+        if (!enemy.isAlive) {
+          this._playExplosion();
+        }
         this._context._player.kill();
       }
 
       bullets.forEach((bullet) => {
+        if (bullet.removeMe) {
+          return;
+        }
+
+        const bulletData = bullet.getData() as BulletData;
+
         if (
           enemy.detectCollision(
-            bullet.posX + this._context._player.getData().posX,
-            bullet.posY + this._context._player.getData().posY,
-            CONSTS.player.projectile.size
+            bulletData.posX + this._context._player.getData().posX,
+            bulletData.posY + this._context._player.getData().posY,
+            bulletData.size
           )
         ) {
+          bullet.removeMe = true;
           enemy.kill();
-          this._playExplosion();
+          if (!enemy.isAlive) {
+            this._playExplosion();
+          }
         }
       });
     });

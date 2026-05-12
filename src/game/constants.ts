@@ -26,6 +26,7 @@ const basicEnemy = (
   level: number,
   overrides: Partial<EnemyConfig> = {}
 ): EnemyConfig => ({
+  countsTowardBoss: true,
   deathValue: scoring.regularEnemy,
   sprite: {
     src: assetPath(`sprites/enemies/basic/level${level}.png`),
@@ -35,6 +36,7 @@ const basicEnemy = (
   width: 32,
   height: 32,
   firingChance: 0.5,
+  hitPoints: 1,
   hitRadius: 8,
   canRotate: true,
   spawnLimit: 10,
@@ -53,6 +55,44 @@ const basicEnemy = (
     width: 32,
     height: 32,
     frames: 4,
+    frameLimiter: 5,
+  },
+  ...overrides,
+});
+
+const bossEnemy = (
+  level: number,
+  overrides: Partial<EnemyConfig> = {}
+): EnemyConfig => ({
+  countsTowardBoss: false,
+  deathValue: scoring.boss,
+  sprite: {
+    src: assetPath(`sprites/enemies/boss/level${level}.png`),
+  },
+  velocity: 2,
+  turnLimiter: 35,
+  width: 32,
+  height: 32,
+  firingChance: 0.2,
+  hitPoints: 7,
+  hitRadius: 18,
+  canRotate: false,
+  spawnLimit: 1,
+  projectile: {
+    velocity: 5,
+    size: 6,
+    color: palette.aircraft.enemyBullet,
+  },
+  explosion: {
+    sprite: {
+      src: assetPath("sprites/enemies/boss/explosion.png"),
+    },
+    sound: {
+      src: assetPath("sounds/enemies/basic/explosion.mp3"),
+    },
+    width: 32,
+    height: 32,
+    frames: 8,
     frameLimiter: 5,
   },
   ...overrides,
@@ -426,6 +466,8 @@ var CONSTS: TimePilotConstants = {
   },
   scoring,
   limits: {
+    bossKillThresholdBase: 56,
+    bossKillThresholdIncrementPerLevel: 0,
     bonuses: 1,
     enemyBullets: 4,
     props: 20,
@@ -448,6 +490,11 @@ var CONSTS: TimePilotConstants = {
       },
       enemies: {
         basic: basicEnemy(1),
+        boss: bossEnemy(1, {
+          width: 30,
+          height: 32,
+          hitRadius: 16,
+        }),
         formations: levelOneFormations,
       },
       bonus: parachuteBonus,
@@ -472,6 +519,11 @@ var CONSTS: TimePilotConstants = {
           turnLimiter: 20,
           firingChance: 0.55,
           spawnLimit: 12,
+        }),
+        boss: bossEnemy(2, {
+          width: 26,
+          height: 18,
+          velocity: 2.4,
         }),
         formations: futureLevelFormations[2],
       },
@@ -498,6 +550,11 @@ var CONSTS: TimePilotConstants = {
           firingChance: 0.65,
           spawnLimit: 14,
         }),
+        boss: bossEnemy(3, {
+          width: 26,
+          height: 18,
+          velocity: 2.8,
+        }),
         formations: futureLevelFormations[3],
       },
       bonus: parachuteBonus,
@@ -523,6 +580,11 @@ var CONSTS: TimePilotConstants = {
           firingChance: 0.7,
           spawnLimit: 15,
         }),
+        boss: bossEnemy(4, {
+          width: 26,
+          height: 18,
+          velocity: 3,
+        }),
         formations: futureLevelFormations[4],
       },
       bonus: parachuteBonus,
@@ -547,6 +609,11 @@ var CONSTS: TimePilotConstants = {
           turnLimiter: 12,
           firingChance: 0.75,
           spawnLimit: 16,
+        }),
+        boss: bossEnemy(5, {
+          width: 26,
+          height: 18,
+          velocity: 2.6,
         }),
         formations: futureLevelFormations[5],
       },

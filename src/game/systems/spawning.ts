@@ -66,6 +66,14 @@ class SpawningSystem implements SpawningSystemInstance {
   }
 
   private _spawnEnemy(): void {
+    if (this._spawnBoss()) {
+      return;
+    }
+
+    if (this._context._levelProgress.bossSpawned) {
+      return;
+    }
+
     const randomTickInterval = Math.floor(Math.random() * 200) + 1;
 
     if (
@@ -88,6 +96,33 @@ class SpawningSystem implements SpawningSystemInstance {
     });
 
     this._context._enemies.create(data.posX, data.posY, heading);
+  }
+
+  private _spawnBoss(): boolean {
+    const progress = this._context._levelProgress;
+
+    if (
+      progress.bossSpawned ||
+      progress.standardEnemyKills < progress.bossKillThreshold ||
+      !this._context._enemies.isUnderLimit()
+    ) {
+      return false;
+    }
+
+    const data = helpers.getSpawnCoords(this._context._player.getData(), {
+      spawnRadius: getSpawnRadius(this._context._gameArena),
+    });
+    const heading = helpers.findHeading(data, {
+      posX: this._context._player.getData().posX,
+      posY: this._context._player.getData().posY,
+    });
+
+    this._context._enemies.create(data.posX, data.posY, heading, {
+      type: "boss",
+    });
+    progress.bossSpawned = true;
+
+    return true;
   }
 
   private _spawnFormation(): boolean {
