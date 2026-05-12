@@ -5,6 +5,7 @@ const palette = {
     playerShield: "#F00",
   },
   debug: {
+    bonusHitbox: "#0FF",
     enemyHitbox: "#F00",
     playerHitbox: "#0F0",
   },

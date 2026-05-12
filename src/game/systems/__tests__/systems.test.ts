@@ -3,6 +3,8 @@ import CollisionSystem from "../collision";
 import RenderingSystem from "../rendering";
 import SpawningSystem from "../spawning";
 import type {
+  BonusFactoryInstance,
+  BonusInstance,
   BulletFactoryInstance,
   EnemyFactoryInstance,
   EnemyInstance,
@@ -124,6 +126,14 @@ const createContext = ({
       enemy.isAlive = false;
     }),
   };
+  const bonus: BonusInstance = {
+    removeMe: false,
+    getData: vi.fn(),
+    detectCollision: vi.fn(() => true),
+    collect: vi.fn(),
+    reposition: vi.fn(),
+    render: vi.fn(),
+  };
 
   return {
     _level: 1,
@@ -151,6 +161,16 @@ const createContext = ({
       ...createTicker(),
       getTicks: vi.fn(() => ticks),
     },
+    _bonuses: {
+      create: vi.fn(),
+      getCount: vi.fn(() => 0),
+      getData: vi.fn(() => []),
+      getEntities: vi.fn(() => [bonus]),
+      cleanup: vi.fn(),
+      reposition: vi.fn(),
+      render: vi.fn(),
+      clearAll: vi.fn(),
+    } satisfies BonusFactoryInstance,
     _bullets: {
       create: vi.fn(),
       getCount: vi.fn(() => 1),
@@ -217,6 +237,17 @@ describe("game systems", () => {
     expect(context._player.kill).toHaveBeenCalled();
   });
 
+  it("collects bonuses through player collision only", () => {
+    const context = createContext();
+    const system = new CollisionSystem(context);
+
+    system.detectCollisions();
+
+    const [bonus] = context._bonuses.getEntities();
+    expect(bonus.detectCollision).toHaveBeenCalledWith(10, 20, 8);
+    expect(bonus.collect).toHaveBeenCalled();
+  });
+
   it("keeps the player alive while demo collisions continue resolving bullets", () => {
     const context = createContext({ demoMode: true });
     const system = new CollisionSystem(context);
@@ -269,6 +300,18 @@ describe("game systems", () => {
 
     expect(context._props.create).toHaveBeenCalled();
     expect(context._enemies.create).toHaveBeenCalled();
+    expect(context._bonuses.create).not.toHaveBeenCalled();
+  });
+
+  it("spawns bonuses along the top and upper side spawn areas", () => {
+    const context = createContext({ ticks: 600 });
+    const system = new SpawningSystem(context);
+
+    vi.spyOn(Math, "random").mockReturnValue(0);
+
+    system.spawnEntities();
+
+    expect(context._bonuses.create).toHaveBeenCalledWith(-390, -328);
   });
 
   it("expands spawn areas to cover wide or tall viewports", () => {
@@ -312,9 +355,10 @@ describe("game systems", () => {
 
     expect(context._enemies.create).not.toHaveBeenCalled();
     expect(context._props.create).not.toHaveBeenCalled();
+    expect(context._bonuses.create).not.toHaveBeenCalled();
   });
 
-  it("does not spawn enemies or props while the level intro is active", () => {
+  it("does not spawn enemies, props, or bonuses while the level intro is active", () => {
     const context = createContext({ levelIntroUntilTick: 250, ticks: 200 });
     const system = new SpawningSystem(context);
 
@@ -324,6 +368,7 @@ describe("game systems", () => {
 
     expect(context._enemies.create).not.toHaveBeenCalled();
     expect(context._props.create).not.toHaveBeenCalled();
+    expect(context._bonuses.create).not.toHaveBeenCalled();
   });
 
   it("renders a frame in the expected scene order", () => {
@@ -335,6 +380,7 @@ describe("game systems", () => {
     expect(context._gameArena.clear).toHaveBeenCalled();
     expect(context._gameArena.setBackgroundColor).toHaveBeenCalledWith("#007");
     expect(context._props.render).toHaveBeenNthCalledWith(1, 1);
+    expect(context._bonuses.render).toHaveBeenCalled();
     expect(context._bullets.render).toHaveBeenCalled();
     expect(context._enemies.render).toHaveBeenCalled();
     expect(context._player.render).toHaveBeenCalled();

@@ -21,6 +21,22 @@ class CollisionSystem implements CollisionSystemInstance {
     const bullets = this._context._bullets.getData();
     const playerData = this._context._player.getData();
 
+    this._context._bonuses.getEntities().forEach((bonus) => {
+      if (!playerData.isAlive || bonus.removeMe) {
+        return;
+      }
+
+      if (
+        bonus.detectCollision(
+          playerData.posX,
+          playerData.posY,
+          CONSTS.player.hitRadius
+        )
+      ) {
+        bonus.collect();
+      }
+    });
+
     this._context._enemies.getEntities().forEach((enemy) => {
       if (!enemy.isAlive || !playerData.isAlive) {
         return;

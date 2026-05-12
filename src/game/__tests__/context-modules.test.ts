@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import BonusFactory from "../bonus-factory";
 import BulletFactory from "../bullet-factory";
 import ControllerInterface from "../controller-interface";
 import EnemyFactory from "../enemy-factory";
@@ -72,6 +73,7 @@ function createTicker(): TickerInstance {
 function createContext(): GameDataStore {
   const context = {
     _level: 1,
+    _nextParachuteScore: 1000,
     _controlInputState: {
       down: false,
       fire: false,
@@ -93,6 +95,7 @@ function createContext(): GameDataStore {
   context._player = new Player(context);
   context._enemies = new EnemyFactory(context);
   context._props = new PropFactory(context);
+  context._bonuses = new BonusFactory(context);
   context._hud = new Hud(context);
   context._menus = {
     adjust: vi.fn(),
@@ -185,25 +188,78 @@ describe("context-backed game modules", () => {
     );
   });
 
-  it("creates, exposes, renders, and clears enemies and props", () => {
+  it("creates, exposes, renders, and clears enemies, props, and bonuses", () => {
     const context = createContext();
 
     context._enemies.create(100, 100, 180);
     context._props.create(50, 50);
+    context._bonuses.create(75, 75);
 
     expect(context._enemies.getCount()).toBe(1);
     expect(context._props.getCount()).toBe(1);
+    expect(context._bonuses.getCount()).toBe(1);
     expect(context._enemies.getEntities()).toHaveLength(1);
+    expect(context._bonuses.getEntities()).toHaveLength(1);
 
     context._enemies.reposition();
     context._props.reposition();
+    context._bonuses.reposition();
     context._enemies.render();
     context._props.render();
+    context._bonuses.render();
     context._enemies.clearAll();
     context._props.clearAll();
+    context._bonuses.clearAll();
 
     expect(context._enemies.getCount()).toBe(0);
     expect(context._props.getCount()).toBe(0);
+    expect(context._bonuses.getCount()).toBe(0);
+  });
+
+  it("awards parachute bonuses in 1000 point steps capped at 5000", () => {
+    const context = createContext();
+
+    for (let i = 0; i < 6; i++) {
+      vi.mocked(context._gameTicker.getTicks).mockReturnValue(i * 100);
+      context._bonuses.create(0, 0);
+      const [bonus] = context._bonuses.getEntities();
+      bonus.collect();
+      vi.mocked(context._gameTicker.getTicks).mockReturnValue(i * 100 + 61);
+      bonus.reposition();
+      context._bonuses.cleanup();
+    }
+
+    expect(context._player.getData("score")).toBe(20000);
+    expect(context._nextParachuteScore).toBe(5000);
+  });
+
+  it("renders collected parachute score at the pickup position before cleanup", () => {
+    const context = createContext();
+
+    vi.mocked(context._gameTicker.getTicks).mockReturnValue(10);
+    context._bonuses.create(40, 60);
+    const [bonus] = context._bonuses.getEntities();
+
+    bonus.collect();
+    bonus.render();
+
+    expect(context._gameArena.renderText).toHaveBeenCalledWith(
+      1000,
+      40,
+      60,
+      expect.objectContaining({
+        align: "center",
+        color: "#FFF",
+        valign: "middle",
+      })
+    );
+    expect(bonus.detectCollision(40, 60, 8)).toBe(false);
+
+    vi.mocked(context._gameTicker.getTicks).mockReturnValue(71);
+    bonus.reposition();
+    context._bonuses.cleanup();
+
+    expect(context._bonuses.getCount()).toBe(0);
   });
 
   it("awards regular enemy score only once per enemy kill", () => {
@@ -225,9 +281,11 @@ describe("context-backed game modules", () => {
 
     context._bullets.create(0, 0, 90, 4, 7, "#fff");
     context._enemies.create(100, 100, 180);
+    context._bonuses.create(80, 80);
     context._player.render();
     context._bullets.render();
     context._enemies.render();
+    context._bonuses.render();
 
     expect(context._gameArena.drawCircle).toHaveBeenCalledWith(0, 0, 16, {
       borderColor: expect.stringMatching(/^#[0-9a-f]{6}$/),
@@ -237,6 +295,9 @@ describe("context-backed game modules", () => {
     });
     expect(context._gameArena.drawCircle).toHaveBeenCalledWith(100, 100, 8, {
       borderColor: "#F00",
+    });
+    expect(context._gameArena.drawCircle).toHaveBeenCalledWith(80, 80, 10, {
+      borderColor: "#0FF",
     });
   });
 

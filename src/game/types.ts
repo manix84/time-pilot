@@ -76,6 +76,7 @@ export interface BonusData extends Coordinates {
   level: number;
   layer: number;
   removeMe: boolean;
+  type: "parachute";
 }
 
 export interface SpriteImage extends HTMLImageElement {
@@ -260,6 +261,31 @@ export interface PropFactoryInstance {
   clearAll: () => void;
 }
 
+export interface BonusInstance {
+  removeMe: boolean;
+  getData(): BonusData;
+  getData<K extends keyof BonusData>(key: K): BonusData[K] | undefined;
+  detectCollision: (
+    objectPosX: number,
+    objectPosY: number,
+    objectHitRadius: number
+  ) => boolean;
+  collect: () => void;
+  reposition: () => void;
+  render: () => void;
+}
+
+export interface BonusFactoryInstance {
+  create: (posX: number, posY: number, type?: BonusData["type"]) => void;
+  getCount: () => number;
+  getData: () => BonusData[];
+  getEntities: () => BonusInstance[];
+  cleanup: () => void;
+  reposition: () => void;
+  render: () => void;
+  clearAll: () => void;
+}
+
 export interface HudInstance {
   render: () => void;
   restart: () => void;
@@ -291,10 +317,12 @@ export interface GameDataStore {
   _demoFadeUntilTick?: number;
   _isDemoMode?: boolean;
   _levelIntroUntilTick?: number;
+  _nextParachuteScore?: number;
   _controlInputState: ControlInputState;
   _gameArena: GameArenaInstance;
   _renderTicker: TickerInstance;
   _gameTicker: TickerInstance;
+  _bonuses: BonusFactoryInstance;
   _bullets: BulletFactoryInstance;
   _player: PlayerInstance;
   _enemies: EnemyFactoryInstance;
@@ -414,6 +442,7 @@ export interface BonusConfig {
   sprite: SpriteAsset;
   velocity: number;
   animationCycle: number[];
+  hitRadius: number;
   width: number;
   height: number;
 }
@@ -452,6 +481,7 @@ export interface TimePilotConstants {
     regularEnemy: number;
   };
   limits: {
+    bonuses: number;
     props: number;
     spawningRadius: number;
     despawnRadius: number;

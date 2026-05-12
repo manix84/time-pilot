@@ -15,6 +15,7 @@ class RenderingSystem implements RenderingSystemInstance {
     );
 
     this._context._props.render(1);
+    this._context._bonuses.render();
     this._context._bullets.render();
     this._context._enemies.render();
     this._context._player.render();

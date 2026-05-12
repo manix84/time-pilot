@@ -3,6 +3,10 @@ import helpers from "../engine/helpers";
 import type { Coordinates, GameDataStore, SpawningSystemInstance } from "../types";
 import { getSpawnRadius } from "../viewport";
 
+const bonusSpawnIntervalMinTicks = 600;
+const bonusSpawnIntervalRangeTicks = 600;
+const bonusSpawnPadding = 48;
+
 class SpawningSystem implements SpawningSystemInstance {
   private _context: GameDataStore;
 
@@ -41,6 +45,7 @@ class SpawningSystem implements SpawningSystemInstance {
 
     this._spawnEnemy();
     this._spawnProp();
+    this._spawnBonus();
   }
 
   private isLevelIntroActive(): boolean {
@@ -83,6 +88,49 @@ class SpawningSystem implements SpawningSystemInstance {
       }
     );
     this._context._props.create(data.posX, data.posY);
+  }
+
+  private _spawnBonus(): void {
+    if (this._context._bonuses.getCount() >= CONSTS.limits.bonuses) {
+      return;
+    }
+
+    const randomTickInterval =
+      Math.floor(Math.random() * bonusSpawnIntervalRangeTicks) +
+      bonusSpawnIntervalMinTicks;
+
+    if (this._context._gameTicker.getTicks() % randomTickInterval !== 0) {
+      return;
+    }
+
+    const data = this._getBonusSpawnCoords();
+    this._context._bonuses.create(data.posX, data.posY);
+  }
+
+  private _getBonusSpawnCoords(): Coordinates {
+    const player = this._context._player.getData();
+    const halfWidth = this._context._gameArena.width / 2;
+    const halfHeight = this._context._gameArena.height / 2;
+    const side = Math.floor(Math.random() * 3);
+
+    if (side === 1) {
+      return {
+        posX: player.posX - halfWidth - bonusSpawnPadding,
+        posY: player.posY - halfHeight + Math.random() * halfHeight,
+      };
+    }
+
+    if (side === 2) {
+      return {
+        posX: player.posX + halfWidth + bonusSpawnPadding,
+        posY: player.posY - halfHeight + Math.random() * halfHeight,
+      };
+    }
+
+    return {
+      posX: player.posX - halfWidth + Math.random() * this._context._gameArena.width,
+      posY: player.posY - halfHeight - bonusSpawnPadding,
+    };
   }
 }
 

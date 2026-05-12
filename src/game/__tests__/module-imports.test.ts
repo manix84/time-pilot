@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import Bonus from "../bonus";
+import BonusFactory from "../bonus-factory";
 import Bullet from "../bullet";
 import BulletFactory from "../bullet-factory";
 import constants from "../constants";
@@ -25,6 +26,7 @@ import userOptions from "../user-options";
 describe("game module imports", () => {
   it("loads every game module", () => {
     expect(Bonus).toBeTypeOf("function");
+    expect(BonusFactory).toBeTypeOf("function");
     expect(Bullet).toBeTypeOf("function");
     expect(BulletFactory).toBeTypeOf("function");
     expect(constants.player.width).toBeGreaterThan(0);

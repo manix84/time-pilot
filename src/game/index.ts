@@ -1,5 +1,6 @@
 import GameArena from "./engine/arena";
 import Ticker from "./engine/Ticker";
+import BonusFactory from "./bonus-factory";
 import BulletFactory from "./bullet-factory";
 import Gamepad from "./controller/gamepad";
 import Keyboard1 from "./controller/keyboard1";
@@ -86,6 +87,7 @@ export class TimePilot {
       this.context._enemies.clearAll();
       this.context._bullets.clearAll();
       this.context._props.clearAll();
+      this.context._bonuses.clearAll();
       this.context._player.resetData();
       this.hasSeededInitialProps = false;
       this.hasStartedGame = false;
@@ -149,6 +151,7 @@ export class TimePilot {
     this.context._demoFadeUntilTick = 0;
     this.context._isDemoMode = false;
     this.context._levelIntroUntilTick = 0;
+    this.context._nextParachuteScore = CONSTS.scoring.parachute.min;
     this.context._gameArena = new GameArena(this.container);
     this.context._renderTicker = new Ticker();
     this.context._gameTicker = new Ticker({ fps: 30 });
@@ -156,6 +159,7 @@ export class TimePilot {
     this.context._player = new Player(this.context);
     this.context._enemies = new EnemyFactory(this.context);
     this.context._props = new PropFactory(this.context);
+    this.context._bonuses = new BonusFactory(this.context);
     this.context._hud = new Hud(this.context);
     this.context._menus = new Menus(this.context._gameArena, {
       start: () => {
@@ -208,6 +212,7 @@ export class TimePilot {
       // assetPath("sprites/enemies/basic/level4.png"),
       // assetPath("sprites/enemies/basic/level5.png"),
       assetPath("sprites/enemies/basic/explosion.png"),
+      assetPath("sprites/bonuses/parachute.png"),
       assetPath("sprites/props/cloud1.png"),
       assetPath("sprites/props/cloud2.png"),
       assetPath("sprites/props/cloud3.png"),
@@ -250,6 +255,7 @@ export class TimePilot {
       this.context._enemies.reposition();
       this.context._bullets.reposition();
       this.context._props.reposition();
+      this.context._bonuses.reposition();
 
       this.spawningSystem.spawnEntities();
     }, 1);
@@ -286,6 +292,7 @@ export class TimePilot {
       this.context._enemies.cleanup();
       this.context._bullets.cleanup();
       this.context._props.cleanup();
+      this.context._bonuses.cleanup();
     }, 1);
   }
 
@@ -371,6 +378,8 @@ export class TimePilot {
     this.context._enemies.clearAll();
     this.context._bullets.clearAll();
     this.context._props.clearAll();
+    this.context._bonuses.clearAll();
+    this.context._nextParachuteScore = CONSTS.scoring.parachute.min;
     this.context._player.resetData();
     this.context._player.setData("level", level);
     this.context._player.setData("isAlive", true);

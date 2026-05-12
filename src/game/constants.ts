@@ -48,6 +48,7 @@ var CONSTS: TimePilotConstants = {
   },
   scoring,
   limits: {
+    bonuses: 1,
     props: 20,
     spawningRadius: 450,
     despawnRadius: 500,
@@ -104,6 +105,7 @@ var CONSTS: TimePilotConstants = {
         },
         velocity: 2,
         animationCycle: [1, 2, 3, 4, 4, 3, 2, 1],
+        hitRadius: 10,
         width: 32,
         height: 32,
       },
