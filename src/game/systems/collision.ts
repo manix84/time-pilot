@@ -51,6 +51,10 @@ class CollisionSystem implements CollisionSystemInstance {
           this._context._player.kill();
         }
       });
+
+      if (!this._context._player.getData("isAlive")) {
+        return;
+      }
     }
 
     this._context._bonuses.getEntities().forEach((bonus) => {

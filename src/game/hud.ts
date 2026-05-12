@@ -60,7 +60,7 @@ class Hud implements HudInstance {
       this.renderControlsOverlay();
     }
 
-    if (!playerData.isAlive) {
+    if (!playerData.isAlive && playerData.lives <= 0) {
       this._gameArena.renderText("Game Over", 0, 0, {
         size: 30,
         align: "center",

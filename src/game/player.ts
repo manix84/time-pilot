@@ -21,6 +21,7 @@ class Player implements PlayerInstance {
   private _bulletFactory: BulletFactoryInstance;
   private _data: PlayerData;
   private _dataDefaults: PlayerData;
+  private _enemyBulletFactory: BulletFactoryInstance;
   private _explosionSound: SoundEngine;
   private _gameArena: GameArenaInstance;
   private _gameTicker: TickerInstance;
@@ -32,6 +33,7 @@ class Player implements PlayerInstance {
     this._gameArena = context._gameArena;
     this._gameTicker = context._gameTicker;
     this._bulletFactory = context._bullets;
+    this._enemyBulletFactory = context._enemyBullets;
 
     this._playerSprite = new Image();
     this._playerSprite.src = playerConst.sprite.src;
@@ -163,8 +165,12 @@ class Player implements PlayerInstance {
       posY: -(explosionData.height / 2),
     });
 
-    if (frameX === explosionData.frames) {
-      this._data.removeMe = true;
+    if (frameX >= explosionData.frames) {
+      if (this._data.lives > 0) {
+        this._respawnAtLevelStart();
+      } else {
+        this._data.removeMe = true;
+      }
     }
   }
 
@@ -211,10 +217,27 @@ class Player implements PlayerInstance {
       return;
     }
 
+    this._data.lives = Math.max(0, this._data.lives - 1);
     this._data.isAlive = false;
+    this._data.isShooting = false;
+    this._data.newHeading = false;
     this._data.deathTick = this._gameTicker.getTicks();
     this._explosionSound.stop();
     this._explosionSound.play();
+  }
+
+  private _respawnAtLevelStart(): void {
+    this._data.isAlive = true;
+    this._data.deathTick = false;
+    this._data.isShooting = false;
+    this._data.newHeading = false;
+    this._data.heading = this._dataDefaults.heading;
+    this._data.posX = 0;
+    this._data.posY = 0;
+    this._data.removeMe = false;
+    this._bulletFactory.clearAll();
+    this._enemyBulletFactory.clearAll();
+    this._gameArena.updatePosition(this._data.posX, this._data.posY);
   }
 }
 

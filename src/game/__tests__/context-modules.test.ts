@@ -183,6 +183,47 @@ describe("context-backed game modules", () => {
     expect(context._bullets.getCount()).toBe(1);
   });
 
+  it("spends a life and respawns the player at level start after death", () => {
+    const context = createContext();
+    vi.mocked(context._gameTicker.getTicks).mockReturnValue(10);
+    context._player.setData("score", 1200);
+    context._player.setData("posX", 50);
+    context._player.setData("posY", -30);
+    context._enemyBullets.create(10, 20, 180, 6, 5, "#FF9", false, "world");
+
+    context._player.kill();
+
+    expect(context._player.getData("lives")).toBe(2);
+    expect(context._player.getData("isAlive")).toBe(false);
+    expect(context._player.getData("score")).toBe(1200);
+
+    vi.mocked(context._gameTicker.getTicks).mockReturnValue(50);
+    context._player.render();
+
+    expect(context._player.getData("isAlive")).toBe(true);
+    expect(context._player.getData("deathTick")).toBe(false);
+    expect(context._player.getData("score")).toBe(1200);
+    expect(context._player.getData("posX")).toBe(0);
+    expect(context._player.getData("posY")).toBe(0);
+    expect(context._enemyBullets.getCount()).toBe(0);
+    expect(context._gameArena.updatePosition).toHaveBeenCalledWith(0, 0);
+  });
+
+  it("shows game over only after the final life is lost", () => {
+    const context = createContext();
+    context._player.setData("lives", 1);
+
+    context._player.kill();
+    context._hud.render();
+
+    expect(context._gameArena.renderText).toHaveBeenCalledWith(
+      "Game Over",
+      0,
+      0,
+      expect.any(Object)
+    );
+  });
+
   it("renders HUD with current player data after reset", () => {
     const context = createContext();
     userOptions.setOption("enableDebug", true);
