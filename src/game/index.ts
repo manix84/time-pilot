@@ -111,6 +111,16 @@ export class TimePilot {
     userOptions.setOption("controllerType", this.options.controllerType);
     userOptions.setOption("gamepadEnabled", this.options.gamepadEnabled);
 
+    this.context._controlInputState = {
+      down: false,
+      fire: false,
+      left: false,
+      menu: false,
+      pause: false,
+      restart: false,
+      right: false,
+      up: false,
+    };
     this.context._gameArena = new GameArena(this.container);
     this.context._renderTicker = new Ticker();
     this.context._gameTicker = new Ticker({ fps: 30 });
@@ -143,7 +153,9 @@ export class TimePilot {
     ];
 
     if (this.options.gamepadEnabled) {
-      this.context._currentController.push(new Gamepad(controllerInterface));
+      this.context._currentController.push(
+        new Gamepad(controllerInterface, this.context._controlInputState)
+      );
     }
 
     this.context._player.setData("level", 1);
@@ -227,10 +239,10 @@ export class TimePilot {
     controllerInterface: ControllerInterface
   ): Controller {
     if (this.options.controllerType === "keyboard2") {
-      return new Keyboard2(controllerInterface);
+      return new Keyboard2(controllerInterface, this.context._controlInputState);
     }
 
-    return new Keyboard1(controllerInterface);
+    return new Keyboard1(controllerInterface, this.context._controlInputState);
   }
 }
 

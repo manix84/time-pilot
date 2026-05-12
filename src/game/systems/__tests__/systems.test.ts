@@ -117,6 +117,16 @@ const createContext = ({
 
   return {
     _level: 1,
+    _controlInputState: {
+      down: false,
+      fire: false,
+      left: false,
+      menu: false,
+      pause: false,
+      restart: false,
+      right: false,
+      up: false,
+    },
     _gameArena: createArena(),
     _renderTicker: createTicker(),
     _gameTicker: {

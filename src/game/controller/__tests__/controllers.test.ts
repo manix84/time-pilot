@@ -3,7 +3,7 @@ import Gamepad from "../gamepad";
 import Keyboard1 from "../keyboard1";
 import Keyboard2 from "../keyboard2";
 import Mouse from "../mouse";
-import type { ControllerInterfaceInstance } from "../../types";
+import type { ControlInputState, ControllerInterfaceInstance } from "../../types";
 import userOptions from "../../user-options";
 
 function createControls(): ControllerInterfaceInstance {
@@ -23,6 +23,20 @@ function createControls(): ControllerInterfaceInstance {
     rotateRight: vi.fn(),
     rotateLeft: vi.fn(),
     handlePointer: vi.fn(),
+    isMenuActive: vi.fn(() => false),
+  };
+}
+
+function createInputState(): ControlInputState {
+  return {
+    down: false,
+    fire: false,
+    left: false,
+    menu: false,
+    pause: false,
+    restart: false,
+    right: false,
+    up: false,
   };
 }
 
@@ -34,37 +48,66 @@ describe("controller modules", () => {
 
   it("maps keyboard set 1 keys to controller actions", () => {
     const controls = createControls();
-    const keyboard = new Keyboard1(controls);
+    const inputState = createInputState();
+    const keyboard = new Keyboard1(controls, inputState);
 
     document.documentElement.dispatchEvent(new KeyboardEvent("keydown", { keyCode: 37 }));
     document.documentElement.dispatchEvent(new KeyboardEvent("keydown", { keyCode: 32 }));
     document.documentElement.dispatchEvent(new KeyboardEvent("keyup", { keyCode: 32 }));
+    document.documentElement.dispatchEvent(new KeyboardEvent("keydown", { keyCode: 27 }));
 
     expect(controls.rotateToHeading).toHaveBeenCalledWith(270);
     expect(controls.startShooting).toHaveBeenCalled();
     expect(controls.stopShooting).toHaveBeenCalled();
+    expect(controls.openMenu).toHaveBeenCalled();
+    expect(controls.togglePause).not.toHaveBeenCalled();
+    expect(inputState.left).toBe(true);
+    expect(inputState.fire).toBe(false);
+    expect(inputState.menu).toBe(true);
+
+    keyboard.disconnect?.();
+  });
+
+  it("uses Enter to activate menu items without treating it as gameplay fire", () => {
+    const controls = createControls();
+    vi.mocked(controls.isMenuActive).mockReturnValue(true);
+    const inputState = createInputState();
+    const keyboard = new Keyboard1(controls, inputState);
+
+    document.documentElement.dispatchEvent(new KeyboardEvent("keydown", { keyCode: 13 }));
+
+    expect(controls.startShooting).toHaveBeenCalled();
+    expect(inputState.fire).toBe(false);
 
     keyboard.disconnect?.();
   });
 
   it("maps keyboard set 2 keys to rotational controls", () => {
     const controls = createControls();
+    const inputState = createInputState();
     userOptions.setOption("controllerType", "keyboard2");
-    const keyboard = new Keyboard2(controls);
+    const keyboard = new Keyboard2(controls, inputState);
 
     document.documentElement.dispatchEvent(new KeyboardEvent("keydown", { keyCode: 37 }));
     document.documentElement.dispatchEvent(new KeyboardEvent("keydown", { keyCode: 39 }));
     document.documentElement.dispatchEvent(new KeyboardEvent("keyup", { keyCode: 39 }));
+    document.documentElement.dispatchEvent(new KeyboardEvent("keydown", { keyCode: 27 }));
 
     expect(controls.rotateAntiClockwise).toHaveBeenCalled();
     expect(controls.rotateClockwise).toHaveBeenCalled();
     expect(controls.stop).toHaveBeenCalled();
+    expect(controls.openMenu).toHaveBeenCalled();
+    expect(controls.togglePause).not.toHaveBeenCalled();
+    expect(inputState.left).toBe(false);
+    expect(inputState.right).toBe(false);
+    expect(inputState.menu).toBe(true);
 
     keyboard.disconnect?.();
   });
 
   it("polls gamepad state and disconnects its animation frame", async () => {
     const controls = createControls();
+    const inputState = createInputState();
     const gamepad = {
       axes: [1, 0],
       buttons: Array.from({ length: 10 }, () => ({ pressed: false })),
@@ -74,12 +117,14 @@ describe("controller modules", () => {
       gamepad as unknown as globalThis.Gamepad,
     ]);
 
-    const controller = new Gamepad(controls);
+    const controller = new Gamepad(controls, inputState);
     await new Promise((resolve) => window.setTimeout(resolve, 5));
     controller.disconnect?.();
 
     expect(controls.startShooting).toHaveBeenCalled();
     expect(controls.rotateToHeading).toHaveBeenCalled();
+    expect(inputState.fire).toBe(true);
+    expect(inputState.right).toBe(true);
     expect(window.cancelAnimationFrame).toHaveBeenCalled();
   });
 

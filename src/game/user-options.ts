@@ -22,6 +22,12 @@ var userOptions: UserOptions = {
     showSpriteCenters: true,
 
     /**
+     * Display gameplay controls on the HUD.
+     * @type {Boolean}
+     */
+    showControlsOverlay: false,
+
+    /**
      * Write the current player coordinates on screen.
      * @type {Boolean}
      */

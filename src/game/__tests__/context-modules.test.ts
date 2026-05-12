@@ -71,6 +71,16 @@ function createTicker(): TickerInstance {
 function createContext(): GameDataStore {
   const context = {
     _level: 1,
+    _controlInputState: {
+      down: false,
+      fire: false,
+      left: false,
+      menu: false,
+      pause: false,
+      restart: false,
+      right: false,
+      up: false,
+    },
     _gameArena: createArena(),
     _renderTicker: createTicker(),
     _gameTicker: createTicker(),
@@ -161,6 +171,7 @@ describe("context-backed game modules", () => {
     controls.startShooting();
     controls.stopShooting();
     controls.toggleFullScreen();
+    controls.openMenu();
     controls.togglePause();
     controls.restart();
     context._hud.render();
@@ -168,6 +179,7 @@ describe("context-backed game modules", () => {
 
     expect(context._player.getData().newHeading).toBe(270);
     expect(context._gameArena.toggleFullScreen).toHaveBeenCalled();
+    expect(context._menus.showStart).toHaveBeenCalled();
     expect(pause).toHaveBeenCalled();
     expect(restart).toHaveBeenCalled();
     expect(context._gameArena.renderText).toHaveBeenCalled();
@@ -183,6 +195,7 @@ describe("context-backed game modules", () => {
     controls.rotateClockwise();
     controls.rotateAntiClockwise();
     controls.startShooting();
+    controls.openMenu();
     controls.togglePause();
     controls.restart();
     controls.handlePointer?.({ posX: 0, posY: 0, type: "click" });
@@ -190,11 +203,35 @@ describe("context-backed game modules", () => {
     expect(context._menus.adjust).toHaveBeenCalledWith(1);
     expect(context._menus.adjust).toHaveBeenCalledWith(-1);
     expect(context._menus.activate).toHaveBeenCalledTimes(3);
+    expect(context._menus.showStart).not.toHaveBeenCalled();
     expect(context._menus.handlePointer).toHaveBeenCalledWith({
       posX: 0,
       posY: 0,
       type: "click",
     });
     expect(context._player.getData().isShooting).not.toBe(true);
+  });
+
+  it("pauses the running game when opening the menu", () => {
+    const context = createContext();
+    const pause = vi.fn();
+    const controls = new ControllerInterface(context, { pause });
+
+    controls.openMenu();
+
+    expect(pause).toHaveBeenCalled();
+    expect(context._menus.showStart).toHaveBeenCalled();
+  });
+
+  it("does not resume an already paused game when opening the menu", () => {
+    const context = createContext();
+    context._gameTicker.isRunning = false;
+    const pause = vi.fn();
+    const controls = new ControllerInterface(context, { pause });
+
+    controls.openMenu();
+
+    expect(pause).not.toHaveBeenCalled();
+    expect(context._menus.showStart).toHaveBeenCalled();
   });
 });

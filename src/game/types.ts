@@ -92,6 +92,17 @@ export interface ControllerCommands {
 }
 
 export type ControllerType = "keyboard1" | "keyboard2";
+export type ControlInputName =
+  | "down"
+  | "fire"
+  | "left"
+  | "menu"
+  | "pause"
+  | "restart"
+  | "right"
+  | "up";
+
+export type ControlInputState = Record<ControlInputName, boolean>;
 
 export interface KeyboardBindings {
   down: number[];
@@ -267,10 +278,12 @@ export interface ControllerInterfaceInstance {
   rotateLeft: () => void;
   handlePointer?: (pointer: MenuPointerData) => void;
   captureKey?: (keyCode: number) => boolean;
+  isMenuActive?: () => boolean;
 }
 
 export interface GameDataStore {
   _level: number;
+  _controlInputState: ControlInputState;
   _gameArena: GameArenaInstance;
   _renderTicker: TickerInstance;
   _gameTicker: TickerInstance;
@@ -427,6 +440,7 @@ export interface UserOptions {
     showHitboxes: boolean;
     showSpriteCorners: boolean;
     showSpriteCenters: boolean;
+    showControlsOverlay: boolean;
     showPlayerCoordinates: boolean;
     invincible: boolean;
   };

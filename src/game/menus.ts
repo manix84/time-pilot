@@ -9,13 +9,19 @@ import type {
   MenuSystemInstance,
 } from "./types";
 
-type MenuScreen = "start" | "options";
-type MenuItemKind = "action" | "enum" | "slider" | "key";
+type MenuScreen = "start" | "options" | "debug";
+type MenuItemKind = "action" | "enum" | "slider" | "key" | "toggle";
+type ToggleDebugOption =
+  | "invincible"
+  | "showControlsOverlay"
+  | "showHitboxes"
+  | "showPlayerCoordinates";
 type BindingAction = keyof KeyboardBindings;
 
 interface MenuItem {
   action?: () => void;
   binding?: BindingAction;
+  disabled?: boolean;
   getValue?: () => string;
   kind: MenuItemKind;
   label: string;
@@ -36,22 +42,28 @@ const keyBindingRows: Array<{ binding: BindingAction; label: string }> = [
   { binding: "right", label: "Key Right" },
   { binding: "fire", label: "Key Fire" },
 ];
+const konamiCode = [38, 38, 40, 40, 37, 39, 37, 39, 66, 65];
+const debugUnlockedStorageKey = "timePilot.debugUnlocked";
 
 class Menus implements MenuSystemInstance {
   private _active = false;
   private _awaitingBinding: BindingAction | null = null;
   private _commands: MenuSystemCommands;
+  private _debugUnlocked = false;
   private _gameArena: GameArenaInstance;
   private _items: MenuItem[] = [];
+  private _konamiIndex = 0;
   private _logoCanvas?: HTMLCanvasElement;
   private readonly _logoHeight = 96;
   private readonly _logoWidth = 420;
   private _screen: MenuScreen = "start";
+  private _screenHistory: MenuScreen[] = [];
   private _selectedIndex = 0;
 
   constructor(gameArena: GameArenaInstance, commands: MenuSystemCommands) {
     this._gameArena = gameArena;
     this._commands = commands;
+    this._debugUnlocked = sessionStorage.getItem(debugUnlockedStorageKey) === "true";
   }
 
   isActive(): boolean {
@@ -62,6 +74,7 @@ class Menus implements MenuSystemInstance {
     this._active = true;
     this._awaitingBinding = null;
     this._screen = "start";
+    this._screenHistory = [];
     this._selectedIndex = 0;
     this._buildItems();
   }
@@ -103,7 +116,7 @@ class Menus implements MenuSystemInstance {
 
     const item = this._items[this._selectedIndex];
 
-    if (!item) {
+    if (!item || item.disabled) {
       return;
     }
 
@@ -112,11 +125,21 @@ class Menus implements MenuSystemInstance {
       return;
     }
 
+    if (item.kind === "toggle") {
+      item.onAdjust?.(1);
+      return;
+    }
+
     item.action?.();
   }
 
   captureKey(keyCode: number): boolean {
-    if (!this._active || !this._awaitingBinding) {
+    if (!this._active) {
+      return false;
+    }
+
+    if (!this._awaitingBinding) {
+      this._captureKonamiKey(keyCode);
       return false;
     }
 
@@ -161,7 +184,7 @@ class Menus implements MenuSystemInstance {
     );
 
     this._renderLogo(context);
-    this._gameArena.renderText(this._screen === "start" ? "A.D. 1910" : "Options", 0, -82, {
+    this._gameArena.renderText(this._getScreenTitle(), 0, -82, {
       size: 18,
       align: "center",
       valign: "middle",
@@ -277,23 +300,34 @@ class Menus implements MenuSystemInstance {
   }
 
   private _buildItems(): void {
-    this._items =
-      this._screen === "start" ? this._createStartItems() : this._createOptionsItems();
+    if (this._screen === "start") {
+      this._items = this._createStartItems();
+    } else if (this._screen === "options") {
+      this._items = this._createOptionsItems();
+    } else {
+      this._items = this._createDebugItems();
+    }
   }
 
   private _createStartItems(): MenuItem[] {
-    return [
+    const items = [
       this._createItem("Start", "action", -22, {
         action: this._commands.start,
       }),
       this._createItem("Options", "action", 28, {
-        action: () => {
-          this._screen = "options";
-          this._selectedIndex = 0;
-          this._buildItems();
-        },
+        action: () => this._goToScreen("options"),
       }),
     ];
+
+    if (this._debugUnlocked) {
+      items.push(
+        this._createItem("Debug", "action", 78, {
+          action: () => this._goToScreen("debug"),
+        })
+      );
+    }
+
+    return items;
   }
 
   private _createOptionsItems(): MenuItem[] {
@@ -328,13 +362,40 @@ class Menus implements MenuSystemInstance {
 
     items.push(
       this._createItem("Back", "action", 288, {
-        action: () => {
-          this.showStart();
-        },
+        action: () => this._goBack(),
       })
     );
 
     return items;
+  }
+
+  private _createDebugItems(): MenuItem[] {
+    return [
+      this._createToggleItem("Invincibility Shield", "invincible", -54),
+      this._createToggleItem("Show Hit Boxes", "showHitboxes", -12),
+      this._createToggleItem("Show Controls Overlay", "showControlsOverlay", 30),
+      this._createToggleItem("Show Coordinates", "showPlayerCoordinates", 72),
+      this._createItem("Select Level", "enum", 114, {
+        disabled: true,
+        getValue: () => "Soon",
+      }),
+      this._createItem("Back", "action", 164, {
+        action: () => this._goBack(),
+      }),
+    ];
+  }
+
+  private _createToggleItem(
+    label: string,
+    option: ToggleDebugOption,
+    y: number
+  ): MenuItem {
+    return this._createItem(label, "toggle", y, {
+      getValue: () => (userOptions.debug[option] ? "On" : "Off"),
+      onAdjust: () => {
+        userOptions.debug[option] = !userOptions.debug[option];
+      },
+    });
   }
 
   private _createItem(
@@ -359,28 +420,128 @@ class Menus implements MenuSystemInstance {
   private _renderItem(item: MenuItem, isSelected: boolean): void {
     const context = this._gameArena.getContext() as CanvasRenderingContext2D;
     const isAwaiting = item.binding === this._awaitingBinding;
+    const progress = this._getItemProgress(item);
+    const progressWidth = progress === null ? 0 : item.rect.width * progress;
 
-    context.fillStyle = isSelected ? "#F2B84B" : "#0B1727";
+    context.fillStyle = item.disabled ? "#152033" : isSelected ? "#F2B84B" : "#0B1727";
     context.fillRect(item.rect.x, item.rect.y, item.rect.width, item.rect.height);
-    context.strokeStyle = isAwaiting ? "#7EDBD3" : isSelected ? "#FFF1B8" : "#466485";
+
+    if (progress !== null) {
+      context.fillStyle = isSelected ? "#0B1727" : "#F2B84B";
+      context.fillRect(item.rect.x, item.rect.y, progressWidth, item.rect.height);
+    }
+
+    context.strokeStyle = item.disabled
+      ? "#334158"
+      : isAwaiting
+        ? "#7EDBD3"
+        : isSelected
+          ? "#FFF1B8"
+          : "#466485";
     context.lineWidth = 2;
     context.strokeRect(item.rect.x, item.rect.y, item.rect.width, item.rect.height);
 
-    this._gameArena.renderText(item.label, item.rect.x + 14, item.rect.y + item.rect.height / 2, {
-      size: item.kind === "key" ? 13 : 16,
-      align: "left",
-      valign: "middle",
-      color: isSelected ? "#111927" : "#E9F3FF",
-    });
+    this._renderItemText(
+      item,
+      item.disabled ? "#718099" : isSelected ? "#111927" : "#E9F3FF"
+    );
+
+    if (progress !== null && progressWidth > 0) {
+      context.save();
+      context.beginPath();
+      context.rect(item.rect.x, item.rect.y, progressWidth, item.rect.height);
+      context.clip();
+      this._renderItemText(item, isSelected ? "#E9F3FF" : "#111927");
+      context.restore();
+    }
+  }
+
+  private _renderItemText(item: MenuItem, color: string): void {
+    this._gameArena.renderText(
+      item.label,
+      item.rect.x + 14,
+      item.rect.y + item.rect.height / 2,
+      {
+        size: item.kind === "key" ? 13 : 16,
+        align: "left",
+        valign: "middle",
+        color,
+      }
+    );
 
     if (item.getValue) {
-      this._gameArena.renderText(item.getValue(), item.rect.x + item.rect.width - 14, item.rect.y + item.rect.height / 2, {
-        size: item.kind === "key" ? 13 : 16,
-        align: "right",
-        valign: "middle",
-        color: isSelected ? "#111927" : "#C7D5EB",
-      });
+      this._gameArena.renderText(
+        item.getValue(),
+        item.rect.x + item.rect.width - 14,
+        item.rect.y + item.rect.height / 2,
+        {
+          size: item.kind === "key" ? 13 : 16,
+          align: "right",
+          valign: "middle",
+          color,
+        }
+      );
     }
+  }
+
+  private _getItemProgress(item: MenuItem): number | null {
+    if (item.kind !== "slider" || !item.getValue) {
+      return null;
+    }
+
+    const value = Number(item.getValue());
+    if (!Number.isFinite(value)) {
+      return null;
+    }
+
+    return Math.max(0, Math.min(1, value / 10));
+  }
+
+  private _captureKonamiKey(keyCode: number): void {
+    if (this._screen !== "start" || this._debugUnlocked) {
+      return;
+    }
+
+    if (keyCode === konamiCode[this._konamiIndex]) {
+      this._konamiIndex++;
+    } else {
+      this._konamiIndex = keyCode === konamiCode[0] ? 1 : 0;
+    }
+
+    if (this._konamiIndex === konamiCode.length) {
+      this._debugUnlocked = true;
+      userOptions.enableDebug = true;
+      sessionStorage.setItem(debugUnlockedStorageKey, "true");
+      this._konamiIndex = 0;
+      this._buildItems();
+    }
+  }
+
+  private _getScreenTitle(): string {
+    if (this._screen === "options") {
+      return "Options";
+    }
+
+    if (this._screen === "debug") {
+      return "Debug";
+    }
+
+    return "A.D. 1910";
+  }
+
+  private _goToScreen(screen: MenuScreen): void {
+    this._screenHistory.push(this._screen);
+    this._screen = screen;
+    this._selectedIndex = 0;
+    this._awaitingBinding = null;
+    this._buildItems();
+  }
+
+  private _goBack(): void {
+    this._screen = this._screenHistory.pop() ?? "start";
+    this._selectedIndex = 0;
+    this._awaitingBinding = null;
+    this._buildItems();
   }
 
   private _adjustControllerType(direction: -1 | 1): void {

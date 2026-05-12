@@ -102,7 +102,13 @@ class ControllerInterface implements ControllerInterfaceInstance {
   }
 
   openMenu(): void {
-    this.toggleMenu();
+    if (!this._menus.isActive()) {
+      if (this._gameTicker.isRunning) {
+        this._commands.pause();
+      }
+
+      this._menus.showStart();
+    }
   }
 
   startShooting(): void {
@@ -158,6 +164,10 @@ class ControllerInterface implements ControllerInterfaceInstance {
 
   captureKey(keyCode: number): boolean {
     return this._menus.captureKey(keyCode);
+  }
+
+  isMenuActive(): boolean {
+    return this._menus.isActive();
   }
 }
 

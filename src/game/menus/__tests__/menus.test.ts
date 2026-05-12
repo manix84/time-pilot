@@ -30,6 +30,12 @@ const createArena = (): GameArenaInstance => ({
 
 describe("menu definitions", () => {
   afterEach(() => {
+    sessionStorage.clear();
+    userOptions.enableDebug = false;
+    userOptions.debug.invincible = true;
+    userOptions.debug.showControlsOverlay = false;
+    userOptions.debug.showHitboxes = true;
+    userOptions.debug.showPlayerCoordinates = true;
     userOptions.setOption("controllerType", "keyboard1");
     userOptions.setOption("masterVolume", 10);
     userOptions.keyboardBindings.up = [38, 87];
@@ -97,6 +103,123 @@ describe("menu definitions", () => {
     menus.next();
     menus.adjust(1);
     expect(userOptions.controllerType).toBe("keyboard2");
+  });
+
+  it("renders slider values with a clipped progress underlay", () => {
+    const arena = createArena();
+    const menus = new Menus(arena, { start: vi.fn() });
+    userOptions.setOption("masterVolume", 5);
+
+    menus.showStart();
+    menus.next();
+    menus.activate();
+    menus.render();
+
+    const contexts = vi
+      .mocked(arena.getContext)
+      .mock.results.map((result) => result.value as CanvasRenderingContext2D);
+
+    expect(
+      contexts.some((context) =>
+        vi.mocked(context.rect).mock.calls.some(
+          (call) =>
+            call[0] === -150 && call[1] === -54 && call[2] === 150 && call[3] === 36
+        )
+      )
+    ).toBe(true);
+    expect(contexts.some((context) => vi.mocked(context.clip).mock.calls.length > 0)).toBe(
+      true
+    );
+    expect(arena.renderText).toHaveBeenCalledWith(
+      "Master Volume",
+      expect.any(Number),
+      expect.any(Number),
+      expect.objectContaining({ color: "#111927" })
+    );
+  });
+
+  it("unlocks the debug menu with the Konami code", () => {
+    const arena = createArena();
+    const menus = new Menus(arena, { start: vi.fn() });
+
+    menus.showStart();
+    for (const keyCode of [38, 38, 40, 40, 37, 39, 37, 39, 66, 65]) {
+      expect(menus.captureKey(keyCode)).toBe(false);
+    }
+
+    menus.render();
+
+    expect(userOptions.enableDebug).toBe(true);
+    expect(sessionStorage.getItem("timePilot.debugUnlocked")).toBe("true");
+    expect(arena.renderText).toHaveBeenCalledWith(
+      "Debug",
+      expect.any(Number),
+      expect.any(Number),
+      expect.objectContaining({ align: "left" })
+    );
+  });
+
+  it("does not consume regular menu navigation keys", () => {
+    const menus = new Menus(createArena(), { start: vi.fn() });
+
+    menus.showStart();
+
+    expect(menus.captureKey(40)).toBe(false);
+  });
+
+  it("keeps the debug menu unlocked for the current browser session", () => {
+    sessionStorage.setItem("timePilot.debugUnlocked", "true");
+    const arena = createArena();
+    const menus = new Menus(arena, { start: vi.fn() });
+
+    menus.showStart();
+    menus.render();
+
+    expect(arena.renderText).toHaveBeenCalledWith(
+      "Debug",
+      expect.any(Number),
+      expect.any(Number),
+      expect.objectContaining({ align: "left" })
+    );
+  });
+
+  it("opens debug options, toggles flags, and goes back", () => {
+    const arena = createArena();
+    const menus = new Menus(arena, { start: vi.fn() });
+
+    menus.showStart();
+    for (const keyCode of [38, 38, 40, 40, 37, 39, 37, 39, 66, 65]) {
+      menus.captureKey(keyCode);
+    }
+
+    menus.next();
+    menus.next();
+    menus.activate();
+    menus.render();
+
+    expect(arena.renderText).toHaveBeenCalledWith(
+      "Invincibility Shield",
+      expect.any(Number),
+      expect.any(Number),
+      expect.objectContaining({ align: "left" })
+    );
+
+    menus.activate();
+    expect(userOptions.debug.invincible).toBe(false);
+
+    for (let i = 0; i < 5; i++) {
+      menus.next();
+    }
+
+    menus.activate();
+    menus.render();
+
+    expect(arena.renderText).toHaveBeenCalledWith(
+      "Start",
+      expect.any(Number),
+      expect.any(Number),
+      expect.objectContaining({ align: "left" })
+    );
   });
 
   it("captures a replacement keyboard binding", () => {
