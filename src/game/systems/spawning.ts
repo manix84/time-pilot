@@ -1,6 +1,7 @@
 import CONSTS from "../constants";
 import helpers from "../engine/helpers";
 import type { Coordinates, GameDataStore, SpawningSystemInstance } from "../types";
+import { getSpawnRadius } from "../viewport";
 
 class SpawningSystem implements SpawningSystemInstance {
   private _context: GameDataStore;
@@ -10,10 +11,25 @@ class SpawningSystem implements SpawningSystemInstance {
   }
 
   addInitialProps(): void {
+    const player = this._context._player.getData();
+    const halfWidth = this._context._gameArena.width / 2;
+    const halfHeight = this._context._gameArena.height / 2;
+    const spawnPadding = 96;
+
     for (let i = 0; i < CONSTS.limits.props; i++) {
       this._context._props.create(
-        Math.floor(Math.random() * this._context._gameArena.width),
-        Math.floor(Math.random() * this._context._gameArena.height)
+        player.posX +
+          Math.floor(
+            Math.random() * (this._context._gameArena.width + spawnPadding * 2)
+          ) -
+          halfWidth -
+          spawnPadding,
+        player.posY +
+          Math.floor(
+            Math.random() * (this._context._gameArena.height + spawnPadding * 2)
+          ) -
+          halfHeight -
+          spawnPadding
       );
     }
   }
@@ -33,7 +49,9 @@ class SpawningSystem implements SpawningSystemInstance {
       return;
     }
 
-    const data = helpers.getSpawnCoords(this._context._player.getData());
+    const data = helpers.getSpawnCoords(this._context._player.getData(), {
+      spawnRadius: getSpawnRadius(this._context._gameArena),
+    });
     const heading = helpers.findHeading(data, {
       posX: this._context._player.getData().posX,
       posY: this._context._player.getData().posY,
@@ -48,7 +66,10 @@ class SpawningSystem implements SpawningSystemInstance {
     }
 
     const data: Coordinates = helpers.getSpawnCoords(
-      this._context._player.getData()
+      this._context._player.getData(),
+      {
+        spawnRadius: getSpawnRadius(this._context._gameArena),
+      }
     );
     this._context._props.create(data.posX, data.posY);
   }

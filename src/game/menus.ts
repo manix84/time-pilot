@@ -51,6 +51,8 @@ interface MenuTransition {
 
 const controllerTypes: ControllerType[] = ["keyboard1", "keyboard2"];
 const menuEdgePadding = 24;
+const menuDesignHeight = 500;
+const menuDesignWidth = 438;
 const submenuItemOffsetY = 22;
 const menuTransitionDuration = 1200;
 const keyBindingRows: Array<{ binding: BindingAction; label: string }> = [
@@ -189,18 +191,23 @@ class Menus implements MenuSystemInstance {
       return;
     }
 
+    const menuPointer = this._getScaledPointer(pointer);
+
     if (pointer.type === "release") {
       this._sliderDragIndex = null;
       return;
     }
 
     if (pointer.type === "drag" && this._sliderDragIndex !== null) {
-      this._setSliderFromPointer(this._items[this._sliderDragIndex], pointer);
+      this._setSliderFromPointer(
+        this._items[this._sliderDragIndex],
+        menuPointer
+      );
       return;
     }
 
     const itemIndex = this._items.findIndex((item) =>
-      this._isInsideItem(pointer, item)
+      this._isInsideItem(menuPointer, item)
     );
 
     if (itemIndex === -1) {
@@ -212,7 +219,7 @@ class Menus implements MenuSystemInstance {
     if (pointer.type === "press") {
       if (this._items[itemIndex].kind === "slider") {
         this._sliderDragIndex = itemIndex;
-        this._setSliderFromPointer(this._items[itemIndex], pointer);
+        this._setSliderFromPointer(this._items[itemIndex], menuPointer);
       }
 
       return;
@@ -220,7 +227,7 @@ class Menus implements MenuSystemInstance {
 
     if (pointer.type === "click") {
       if (this._items[itemIndex].kind === "slider") {
-        this._setSliderFromPointer(this._items[itemIndex], pointer);
+        this._setSliderFromPointer(this._items[itemIndex], menuPointer);
         return;
       }
 
@@ -234,6 +241,7 @@ class Menus implements MenuSystemInstance {
     }
 
     const context = this._gameArena.getContext() as CanvasRenderingContext2D;
+    const menuScale = this._getMenuScale();
 
     context.fillStyle = palette.menu.backplate;
     context.fillRect(
@@ -246,6 +254,8 @@ class Menus implements MenuSystemInstance {
     const transition = this._getTransitionState();
     const layout = this._getAnimatedLayout(transition);
 
+    context.save();
+    context.scale(menuScale, menuScale);
     this._renderLogo(context, layout.logoY);
     this._gameArena.renderText(this._getScreenTitle(), 0, layout.titleY, {
       size: 18,
@@ -266,6 +276,7 @@ class Menus implements MenuSystemInstance {
         color: palette.menu.waitingText,
       });
     }
+    context.restore();
   }
 
   private _renderLogo(context: CanvasRenderingContext2D, y: number): void {
@@ -661,11 +672,40 @@ class Menus implements MenuSystemInstance {
   }
 
   private _getMenuViewport(): MenuViewport {
+    const scale = this._getMenuScale();
+    const logicalWidth = this._gameArena.width / scale;
+    const logicalHeight = this._gameArena.height / scale;
+    const logicalPadding = menuEdgePadding / scale;
+
     return {
-      x: -(this._gameArena.width / 2) + menuEdgePadding,
-      y: -(this._gameArena.height / 2) + menuEdgePadding,
-      width: this._gameArena.width - menuEdgePadding * 2,
-      height: this._gameArena.height - menuEdgePadding * 2,
+      x: -(logicalWidth / 2) + logicalPadding,
+      y: -(logicalHeight / 2) + logicalPadding,
+      width: logicalWidth - logicalPadding * 2,
+      height: logicalHeight - logicalPadding * 2,
+    };
+  }
+
+  private _getMenuScale(): number {
+    const availableWidth = Math.max(1, this._gameArena.width - menuEdgePadding * 2);
+    const availableHeight = Math.max(
+      1,
+      this._gameArena.height - menuEdgePadding * 2
+    );
+
+    return Math.min(
+      1,
+      availableWidth / menuDesignWidth,
+      availableHeight / menuDesignHeight
+    );
+  }
+
+  private _getScaledPointer(pointer: MenuPointerData): MenuPointerData {
+    const scale = this._getMenuScale();
+
+    return {
+      ...pointer,
+      posX: pointer.posX / scale,
+      posY: pointer.posY / scale,
     };
   }
 

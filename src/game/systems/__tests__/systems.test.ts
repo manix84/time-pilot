@@ -88,6 +88,7 @@ const createPlayer = (overrides: Partial<PlayerData> = {}): PlayerInstance => {
 };
 
 const createContext = ({
+  arenaOverrides = {},
   enemyAlive = true,
   enemyCollides = true,
   enemyLimitAvailable = true,
@@ -95,6 +96,7 @@ const createContext = ({
   propCount = 0,
   ticks = 200,
 }: {
+  arenaOverrides?: Partial<GameArenaInstance>;
   enemyAlive?: boolean;
   enemyCollides?: boolean;
   enemyLimitAvailable?: boolean;
@@ -128,7 +130,10 @@ const createContext = ({
       up: false,
       activeController: "keyboard",
     },
-    _gameArena: createArena(),
+    _gameArena: {
+      ...createArena(),
+      ...arenaOverrides,
+    },
     _renderTicker: createTicker(),
     _gameTicker: {
       ...createTicker(),
@@ -230,6 +235,33 @@ describe("game systems", () => {
 
     expect(context._props.create).toHaveBeenCalled();
     expect(context._enemies.create).toHaveBeenCalled();
+  });
+
+  it("expands spawn areas to cover wide or tall viewports", () => {
+    const context = createContext({
+      arenaOverrides: {
+        width: 1920,
+        height: 1080,
+      },
+      playerOverrides: {
+        heading: 90,
+        posX: 10,
+        posY: 20,
+      },
+    });
+    const system = new SpawningSystem(context);
+
+    vi.spyOn(Math, "random").mockReturnValue(0);
+
+    system.addInitialProps();
+    system.spawnEntities();
+
+    expect(context._props.create).toHaveBeenNthCalledWith(1, -1046, -616);
+
+    const [enemyX, enemyY] = vi.mocked(context._enemies.create).mock.calls[0];
+    const distanceFromPlayer = Math.hypot(enemyX - 10, enemyY - 20);
+
+    expect(distanceFromPlayer).toBeGreaterThan(1100);
   });
 
   it("does not spawn when limits or timing block new entities", () => {

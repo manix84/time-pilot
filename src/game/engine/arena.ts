@@ -36,6 +36,17 @@ class GameArena implements GameArenaInstance {
   private _oldHeight: number;
   private _oldWidth: number;
   private _styles?: HTMLStyleElement;
+  private readonly _handleResize = (): void => {
+    if (this._isInFullScreen) {
+      this.resize(
+        window.innerWidth || screen.width,
+        window.innerHeight || screen.height
+      );
+      return;
+    }
+
+    this.resize();
+  };
 
   height = 0;
   posX = 0;
@@ -63,6 +74,7 @@ class GameArena implements GameArenaInstance {
         }
       }
     );
+    helpers.bind("resize", this._handleResize, window);
 
     this._init();
   }

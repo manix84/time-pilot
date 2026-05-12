@@ -13,7 +13,10 @@ interface Helpers {
     currentAngle: Heading,
     stepSize: number
   ) => Heading;
-  getSpawnCoords: (target: Coordinates & { heading: Heading }) => Coordinates;
+  getSpawnCoords: (
+    target: Coordinates & { heading: Heading },
+    options?: { spawnArc?: number; spawnRadius?: number }
+  ) => Coordinates;
   findHeading: (target: Coordinates, origin?: Coordinates) => Heading;
   detectCollision: (
     target: PositionedRadius,
@@ -97,14 +100,15 @@ var helpers: Helpers = {
    * @returns {Object}
    */
   getSpawnCoords: function (
-    target: Coordinates & { heading: Heading }
+    target: Coordinates & { heading: Heading },
+    options: { spawnArc?: number; spawnRadius?: number } = {}
   ): Coordinates {
     var data: Coordinates = {
       posX: target.posX,
       posY: target.posY,
     };
-    var spawnRadius = 450,
-      spawnArc = 80,
+    var spawnRadius = options.spawnRadius ?? 450,
+      spawnArc = options.spawnArc ?? 80,
       heading;
 
     heading =

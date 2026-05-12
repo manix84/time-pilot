@@ -1,6 +1,7 @@
 /* Converted from TimePilot.Prop.js (AMD) to ESM TypeScript. */
 import CONSTS from "./constants";
 import helpers from "./engine/helpers";
+import { getDespawnRadius } from "./viewport";
 import type {
   GameArenaInstance,
   GameDataStore,
@@ -70,7 +71,7 @@ class Prop implements PropInstance {
         posX: this._data.posX,
         posY: this._data.posY,
       },
-      CONSTS.limits.despawnRadius
+      getDespawnRadius(this._gameArena)
     );
   }
 

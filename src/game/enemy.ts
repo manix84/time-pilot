@@ -3,6 +3,7 @@ import CONSTS from "./constants";
 import userOptions from "./user-options";
 import helpers from "./engine/helpers";
 import palette from "./palette";
+import { getDespawnRadius } from "./viewport";
 import type {
   EnemyConfig,
   EnemyData,
@@ -123,7 +124,7 @@ class Enemy implements EnemyInstance {
         posX: this._data.posX,
         posY: this._data.posY,
       },
-      CONSTS.limits.despawnRadius
+      getDespawnRadius(this._gameArena)
     );
   }
 

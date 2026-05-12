@@ -179,7 +179,7 @@ describe("menu definitions", () => {
     expect(userOptions.masterVolume).toBe(10);
   });
 
-  it("scrolls long menus inside a padded viewport", () => {
+  it("scales menus uniformly inside the padded viewport", () => {
     const performanceNow = vi.spyOn(performance, "now").mockReturnValue(0);
     const arena = {
       ...createArena(),
@@ -207,19 +207,43 @@ describe("menu definitions", () => {
     const context = vi.mocked(arena.getContext).mock.results[0]
       .value as CanvasRenderingContext2D;
 
-    expect(context.rect).toHaveBeenCalledWith(-376, -86, 752, 172);
+    expect(context.scale).toHaveBeenCalledWith(0.344, 0.344);
+    expect(context.rect).toHaveBeenCalledWith(
+      -1093.0232558139535,
+      -250.00000000000006,
+      2186.046511627907,
+      500.0000000000001
+    );
     expect(context.clip).toHaveBeenCalled();
-    expect(context.translate).toHaveBeenCalledWith(0, -32);
+  });
 
-    menus.handlePointer({ posX: 0, posY: 70, type: "click" });
+  it("keeps pointer slider input aligned with scaled menus", () => {
+    const arena = {
+      ...createArena(),
+      width: 320,
+      height: 480,
+    };
+    const menus = new Menus(arena, { start: vi.fn() });
+    userOptions.setOption("masterVolume", 10);
+
+    menus.showStart();
+    menus.next();
+    menus.activate();
     menus.render();
 
-    expect(arena.renderText).toHaveBeenCalledWith(
-      "Options",
-      expect.any(Number),
-      expect.any(Number),
-      expect.objectContaining({ align: "center" })
-    );
+    const context = vi.mocked(arena.getContext).mock.results[0]
+      .value as CanvasRenderingContext2D;
+    const scale = 272 / 438;
+
+    expect(context.scale).toHaveBeenCalledWith(scale, scale);
+
+    menus.handlePointer({
+      posX: -9 * scale,
+      posY: -14 * scale,
+      type: "click",
+    });
+
+    expect(userOptions.masterVolume).toBe(5);
   });
 
   it("animates the title position into and out of submenus", () => {
