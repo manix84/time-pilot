@@ -5,7 +5,7 @@ const nl: typeof en = {
     code: "nl",
     name: "Nederlands",
   },
-  title: "TIME PILOT",
+  title: "TIJDPILOOT",
   hud: {
     gameOver: "Spel voorbij",
     paused: "Gepauzeerd",
@@ -21,11 +21,11 @@ const nl: typeof en = {
     up: "Omhoog",
   },
   levels: {
-    1: { introText: "A.D 1910" },
-    2: { introText: "A.D 1940" },
-    3: { introText: "A.D 1970" },
-    4: { introText: "A.D 1982" },
-    5: { introText: "A.D 2001" },
+    1: { introText: "N.C. 1910" },
+    2: { introText: "N.C. 1940" },
+    3: { introText: "N.C. 1970" },
+    4: { introText: "N.C. 1982" },
+    5: { introText: "N.C. 2001" },
   },
   menu: {
     alreadyAssignedTo: (binding: string) => `Al toegewezen aan ${binding}`,

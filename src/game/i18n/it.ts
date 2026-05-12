@@ -5,7 +5,7 @@ const it: typeof en = {
     code: "it",
     name: "Italiano",
   },
-  title: "TIME PILOT",
+  title: "PILOTA DEL TEMPO",
   hud: {
     gameOver: "Fine partita",
     paused: "Pausa",
@@ -21,11 +21,11 @@ const it: typeof en = {
     up: "Su",
   },
   levels: {
-    1: { introText: "A.D 1910" },
-    2: { introText: "A.D 1940" },
-    3: { introText: "A.D 1970" },
-    4: { introText: "A.D 1982" },
-    5: { introText: "A.D 2001" },
+    1: { introText: "D.C. 1910" },
+    2: { introText: "D.C. 1940" },
+    3: { introText: "D.C. 1970" },
+    4: { introText: "D.C. 1982" },
+    5: { introText: "D.C. 2001" },
   },
   menu: {
     alreadyAssignedTo: (binding: string) => `Gia assegnato a ${binding}`,

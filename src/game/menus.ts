@@ -1,6 +1,10 @@
 /* Converted from TimePilot.Menu.js (AMD) to ESM TypeScript. */
 import palette from "./palette";
-import i18n, { availableLanguages, getLanguageName } from "./i18n";
+import i18n, {
+  availableLanguages,
+  getCurrentLanguage,
+  getLanguageName,
+} from "./i18n";
 import userOptions from "./user-options";
 import type {
   ControllerType,
@@ -81,6 +85,7 @@ class Menus implements MenuSystemInstance {
   private _gameArena: GameArenaInstance;
   private _items: MenuItem[] = [];
   private _konamiIndex = 0;
+  private _logoLanguage?: GameLanguage;
   private _logoCanvas?: HTMLCanvasElement;
   private readonly _logoHeight = 96;
   private readonly _logoWidth = 420;
@@ -349,7 +354,9 @@ class Menus implements MenuSystemInstance {
   };
 
   private _getLogoCanvas = (): HTMLCanvasElement => {
-    if (this._logoCanvas) {
+    const logoLanguage = getCurrentLanguage();
+
+    if (this._logoCanvas && this._logoLanguage === logoLanguage) {
       return this._logoCanvas;
     }
 
@@ -363,6 +370,7 @@ class Menus implements MenuSystemInstance {
     }
 
     this._logoCanvas = logoCanvas;
+    this._logoLanguage = logoLanguage;
     return logoCanvas;
   };
 
@@ -371,7 +379,9 @@ class Menus implements MenuSystemInstance {
     const textX = width / 2;
     const textY = height / 2 + 3;
 
-    context.font = "900 52px 'Bookman Old Style', Georgia, serif";
+    const fontSize = Math.min(52, Math.floor(520 / text.length));
+
+    context.font = `900 ${fontSize}px 'Bookman Old Style', Georgia, serif`;
     context.textAlign = "center";
     context.textBaseline = "middle";
 

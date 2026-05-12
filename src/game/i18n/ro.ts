@@ -5,7 +5,7 @@ const ro: typeof en = {
     code: "ro",
     name: "Romana",
   },
-  title: "TIME PILOT",
+  title: "PILOTUL TIMPULUI",
   hud: {
     gameOver: "Joc terminat",
     paused: "Pauza",
@@ -21,11 +21,11 @@ const ro: typeof en = {
     up: "Sus",
   },
   levels: {
-    1: { introText: "A.D 1910" },
-    2: { introText: "A.D 1940" },
-    3: { introText: "A.D 1970" },
-    4: { introText: "A.D 1982" },
-    5: { introText: "A.D 2001" },
+    1: { introText: "D.HR. 1910" },
+    2: { introText: "D.HR. 1940" },
+    3: { introText: "D.HR. 1970" },
+    4: { introText: "D.HR. 1982" },
+    5: { introText: "D.HR. 2001" },
   },
   menu: {
     alreadyAssignedTo: (binding: string) => `Deja atribuit la ${binding}`,
