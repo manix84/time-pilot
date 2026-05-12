@@ -86,6 +86,7 @@ export class TimePilot {
       this.context._renderTicker.clearSchedule();
       this.context._enemies.clearAll();
       this.context._bullets.clearAll();
+      this.context._enemyBullets.clearAll();
       this.context._props.clearAll();
       this.context._bonuses.clearAll();
       this.context._player.resetData();
@@ -156,6 +157,7 @@ export class TimePilot {
     this.context._renderTicker = new Ticker();
     this.context._gameTicker = new Ticker({ fps: 30 });
     this.context._bullets = new BulletFactory(this.context);
+    this.context._enemyBullets = new BulletFactory(this.context);
     this.context._player = new Player(this.context);
     this.context._enemies = new EnemyFactory(this.context);
     this.context._props = new PropFactory(this.context);
@@ -254,6 +256,7 @@ export class TimePilot {
       this.context._player.reposition();
       this.context._enemies.reposition();
       this.context._bullets.reposition();
+      this.context._enemyBullets.reposition();
       this.context._props.reposition();
       this.context._bonuses.reposition();
 
@@ -291,6 +294,7 @@ export class TimePilot {
     this.context._gameTicker.addSchedule(() => {
       this.context._enemies.cleanup();
       this.context._bullets.cleanup();
+      this.context._enemyBullets.cleanup();
       this.context._props.cleanup();
       this.context._bonuses.cleanup();
     }, 1);
@@ -377,6 +381,7 @@ export class TimePilot {
     this.context._level = level;
     this.context._enemies.clearAll();
     this.context._bullets.clearAll();
+    this.context._enemyBullets.clearAll();
     this.context._props.clearAll();
     this.context._bonuses.clearAll();
     this.context._nextParachuteScore = CONSTS.scoring.parachute.min;

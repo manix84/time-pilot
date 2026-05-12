@@ -1,6 +1,7 @@
 import CONSTS from "../constants";
 import SoundEngine from "../engine/Sound";
-import type { CollisionSystemInstance, GameDataStore } from "../types";
+import helpers from "../engine/helpers";
+import type { BulletData, CollisionSystemInstance, GameDataStore } from "../types";
 
 class CollisionSystem implements CollisionSystemInstance {
   private _context: GameDataStore;
@@ -20,6 +21,37 @@ class CollisionSystem implements CollisionSystemInstance {
 
     const bullets = this._context._bullets.getData();
     const playerData = this._context._player.getData();
+
+    if (!this._context._isDemoMode && playerData.isAlive) {
+      this._context._enemyBullets.getEntities().forEach((bullet) => {
+        const bulletData = bullet.getData() as BulletData;
+        const bulletPosition =
+          bulletData.coordinateSpace === "world"
+            ? { posX: bulletData.posX, posY: bulletData.posY }
+            : {
+              posX: bulletData.posX + playerData.posX,
+              posY: bulletData.posY + playerData.posY,
+            };
+
+        if (
+          helpers.detectCollision(
+            {
+              posX: bulletPosition.posX,
+              posY: bulletPosition.posY,
+              radius: bulletData.size,
+            },
+            {
+              posX: playerData.posX,
+              posY: playerData.posY,
+              radius: CONSTS.player.hitRadius,
+            }
+          )
+        ) {
+          bullet.removeMe = true;
+          this._context._player.kill();
+        }
+      });
+    }
 
     this._context._bonuses.getEntities().forEach((bonus) => {
       if (!playerData.isAlive || bonus.removeMe) {

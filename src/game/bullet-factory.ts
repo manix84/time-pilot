@@ -26,13 +26,29 @@ class BulletFactory implements BulletFactoryInstance {
     heading: Heading,
     size: number,
     velocity: number,
-    color: string
+    color: string,
+    playSound = true,
+    coordinateSpace: BulletData["coordinateSpace"] = "screen",
+    shape: BulletData["shape"] = "square"
   ): void {
     this._bullets.push(
-      new Bullet(this._context, originX, originY, heading, size, velocity, color)
+      new Bullet(
+        this._context,
+        originX,
+        originY,
+        heading,
+        size,
+        velocity,
+        color,
+        coordinateSpace,
+        shape
+      )
     );
-    this._bulletSound.stop();
-    this._bulletSound.play();
+
+    if (playSound) {
+      this._bulletSound.stop();
+      this._bulletSound.play();
+    }
   }
 
   getCount(): number {
@@ -41,6 +57,10 @@ class BulletFactory implements BulletFactoryInstance {
 
   getData(): BulletData[] {
     return this._bullets.map((bullet) => bullet.getData() as BulletData);
+  }
+
+  getEntities(): BulletInstance[] {
+    return [...this._bullets];
   }
 
   cleanup(): void {

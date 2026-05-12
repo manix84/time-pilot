@@ -49,6 +49,7 @@ var CONSTS: TimePilotConstants = {
   scoring,
   limits: {
     bonuses: 1,
+    enemyBullets: 4,
     props: 20,
     spawningRadius: 450,
     despawnRadius: 500,
@@ -76,7 +77,7 @@ var CONSTS: TimePilotConstants = {
           turnLimiter: 25,
           width: 32,
           height: 32,
-          firingChance: 0.2,
+          firingChance: 0.5,
           hitRadius: 8,
           canRotate: true,
           spawnLimit: 10,

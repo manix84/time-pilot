@@ -1,6 +1,7 @@
 /* Converted from TimePilot.EnemyFactory.js (AMD) to ESM TypeScript. */
 import CONSTS from "./constants";
 import Enemy from "./enemy";
+import { getScaledEntityLimit } from "./viewport";
 import type {
   EnemyConfig,
   EnemyData,
@@ -41,7 +42,13 @@ class EnemyFactory implements EnemyFactoryInstance {
   }
 
   isUnderLimit(): boolean {
-    return this._enemies.length < this.getLevelData("spawnLimit")!;
+    return (
+      this._enemies.length <
+      getScaledEntityLimit(
+        this.getLevelData("spawnLimit")!,
+        this._context._gameArena
+      )
+    );
   }
 
   getData(): EnemyData[] {

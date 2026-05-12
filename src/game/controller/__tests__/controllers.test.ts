@@ -105,6 +105,23 @@ describe("controller modules", () => {
     keyboard.disconnect?.();
   });
 
+  it("keeps rotating toward held keyboard directions when another direction is released", () => {
+    const controls = createControls();
+    const inputState = createInputState();
+    const keyboard = new Keyboard1(controls, inputState);
+
+    document.documentElement.dispatchEvent(new KeyboardEvent("keydown", { keyCode: 38 }));
+    document.documentElement.dispatchEvent(new KeyboardEvent("keydown", { keyCode: 39 }));
+    document.documentElement.dispatchEvent(new KeyboardEvent("keyup", { keyCode: 38 }));
+
+    expect(controls.rotateToHeading).toHaveBeenLastCalledWith(90);
+    expect(controls.stop).not.toHaveBeenCalled();
+    expect(inputState.up).toBe(false);
+    expect(inputState.right).toBe(true);
+
+    keyboard.disconnect?.();
+  });
+
   it("maps keyboard set 2 keys to rotational controls", () => {
     const controls = createControls();
     const inputState = createInputState();

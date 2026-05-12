@@ -10,12 +10,14 @@ import type {
   GameArenaInstance,
   GameDataStore,
   Heading,
+  PlayerInstance,
 } from "./types";
 
 class Bullet implements BulletInstance {
   private _data: BulletData;
   private _gameArena: GameArenaInstance;
   private _level = 1;
+  private _player: PlayerInstance;
 
   removeMe = false;
 
@@ -26,13 +28,18 @@ class Bullet implements BulletInstance {
     heading: Heading,
     size: number,
     velocity: number,
-    color: string
+    color: string,
+    coordinateSpace: BulletData["coordinateSpace"] = "screen",
+    shape: BulletData["shape"] = "square"
   ) {
     this._gameArena = context._gameArena;
+    this._player = context._player;
     this._data = {
       posX: originX,
       posY: originY,
+      coordinateSpace,
       heading,
+      shape,
       size,
       velocity,
       color,
@@ -75,15 +82,24 @@ class Bullet implements BulletInstance {
       return;
     }
 
+    if (this._data.coordinateSpace === "world") {
+      this.removeMe = helpers.detectAreaExit(
+        {
+          posX: this._gameArena.posX,
+          posY: this._gameArena.posY,
+        },
+        {
+          posX: this._data.posX,
+          posY: this._data.posY,
+        },
+        getDespawnRadius(this._gameArena)
+      );
+      return;
+    }
+
     this.removeMe = helpers.detectAreaExit(
-      {
-        posX: this._data.size / 2,
-        posY: this._data.size / 2,
-      },
-      {
-        posX: this._data.posX,
-        posY: this._data.posY,
-      },
+      { posX: this._data.size / 2, posY: this._data.size / 2 },
+      { posX: this._data.posX, posY: this._data.posY },
       getDespawnRadius(this._gameArena)
     );
   }
@@ -104,19 +120,29 @@ class Bullet implements BulletInstance {
   render(): void {
     const { color, size } = this._data;
     const context = this._gameArena.getContext() as CanvasRenderingContext2D;
+    const posX =
+      this._data.coordinateSpace === "world"
+        ? this._data.posX - this._player.getData().posX
+        : this._data.posX;
+    const posY =
+      this._data.coordinateSpace === "world"
+        ? this._data.posY - this._player.getData().posY
+        : this._data.posY;
 
     context.fillStyle = color;
-    context.fillRect(
-      this._data.posX - size / 2,
-      this._data.posY - size / 2,
-      size,
-      size
-    );
+
+    if (this._data.shape === "circle") {
+      context.beginPath();
+      context.arc(posX, posY, size / 2, 0, Math.PI * 2);
+      context.fill();
+    } else {
+      context.fillRect(posX - size / 2, posY - size / 2, size, size);
+    }
 
     if (userOptions.enableDebug && userOptions.debug.showHitboxes) {
       this._gameArena.drawCircle(
-        this._data.posX,
-        this._data.posY,
+        posX,
+        posY,
         this._data.size,
         {
           borderColor: palette.debug.playerHitbox,

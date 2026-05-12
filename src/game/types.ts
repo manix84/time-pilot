@@ -53,7 +53,9 @@ export interface PlayerData extends Coordinates {
 }
 
 export interface BulletData extends Coordinates {
+  coordinateSpace: "screen" | "world";
   heading: Heading;
+  shape: "circle" | "square";
   size: number;
   velocity: number;
   color: string;
@@ -188,10 +190,14 @@ export interface BulletFactoryInstance {
     heading: Heading,
     size: number,
     velocity: number,
-    color: string
+    color: string,
+    playSound?: boolean,
+    coordinateSpace?: BulletData["coordinateSpace"],
+    shape?: BulletData["shape"]
   ) => void;
   getCount: () => number;
   getData: () => BulletData[];
+  getEntities: () => BulletInstance[];
   cleanup: () => void;
   reposition: () => void;
   render: () => void;
@@ -324,6 +330,7 @@ export interface GameDataStore {
   _gameTicker: TickerInstance;
   _bonuses: BonusFactoryInstance;
   _bullets: BulletFactoryInstance;
+  _enemyBullets: BulletFactoryInstance;
   _player: PlayerInstance;
   _enemies: EnemyFactoryInstance;
   _props: PropFactoryInstance;
@@ -482,6 +489,7 @@ export interface TimePilotConstants {
   };
   limits: {
     bonuses: number;
+    enemyBullets: number;
     props: number;
     spawningRadius: number;
     despawnRadius: number;

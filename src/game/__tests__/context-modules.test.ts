@@ -92,6 +92,7 @@ function createContext(): GameDataStore {
   } as unknown as GameDataStore;
 
   context._bullets = new BulletFactory(context);
+  context._enemyBullets = new BulletFactory(context);
   context._player = new Player(context);
   context._enemies = new EnemyFactory(context);
   context._props = new PropFactory(context);
@@ -136,6 +137,28 @@ describe("context-backed game modules", () => {
     context._bullets.clearAll();
 
     expect(context._bullets.getCount()).toBe(0);
+  });
+
+  it("renders enemy bullets as world-positioned circles", () => {
+    const context = createContext();
+    context._player.setData("posX", 10);
+    context._player.setData("posY", 20);
+
+    context._enemyBullets.create(
+      30,
+      50,
+      180,
+      6,
+      5,
+      "#FF9",
+      false,
+      "world",
+      "circle"
+    );
+    context._enemyBullets.render();
+
+    const canvasContext = context._gameArena.getContext() as CanvasRenderingContext2D;
+    expect(canvasContext.arc).toHaveBeenCalledWith(20, 30, 3, 0, Math.PI * 2);
   });
 
   it("moves and renders the player", () => {

@@ -5,7 +5,10 @@ import SpawningSystem from "../spawning";
 import type {
   BonusFactoryInstance,
   BonusInstance,
+  BulletData,
+  BulletInstance,
   BulletFactoryInstance,
+  EnemyData,
   EnemyFactoryInstance,
   EnemyInstance,
   GameArenaInstance,
@@ -89,6 +92,43 @@ const createPlayer = (overrides: Partial<PlayerData> = {}): PlayerInstance => {
   };
 };
 
+const createEnemyBullet = (): BulletInstance => {
+  const enemyBulletData: BulletData = {
+    color: "#ff9",
+    coordinateSpace: "world",
+    heading: 180,
+    posX: 10,
+    posY: 20,
+    shape: "circle",
+    size: 6,
+    velocity: 5,
+  };
+
+  return {
+    removeMe: false,
+    getData: vi.fn((key?: keyof BulletData) =>
+      key ? enemyBulletData[key] : enemyBulletData
+    ) as BulletInstance["getData"],
+    setData: vi.fn(() => true),
+    setLevel: vi.fn(() => true),
+    reposition: vi.fn(),
+    render: vi.fn(),
+  };
+};
+
+const playerBulletData: BulletData[] = [
+  {
+    color: "#fff",
+    coordinateSpace: "screen",
+    heading: 90,
+    posX: 1,
+    posY: 2,
+    shape: "square",
+    size: 4,
+    velocity: 7,
+  },
+];
+
 const createContext = ({
   arenaOverrides = {},
   demoFadeStartedAtTick = 0,
@@ -114,10 +154,20 @@ const createContext = ({
   propCount?: number;
   ticks?: number;
 } = {}): GameDataStore => {
+  const enemyData: EnemyData = {
+    deathTick: false,
+    heading: 180,
+    level: 1,
+    posX: 100,
+    posY: 100,
+    tickOffset: 0,
+  };
   const enemy: EnemyInstance = {
     isAlive: enemyAlive,
     removeMe: false,
-    getData: vi.fn(),
+    getData: vi.fn((key?: keyof EnemyData) =>
+      key ? enemyData[key] : enemyData
+    ) as EnemyInstance["getData"],
     setData: vi.fn(() => true),
     detectCollision: vi.fn(() => enemyCollides),
     reposition: vi.fn(),
@@ -134,7 +184,6 @@ const createContext = ({
     reposition: vi.fn(),
     render: vi.fn(),
   };
-
   return {
     _level: 1,
     _demoFadeStartedAtTick: demoFadeStartedAtTick,
@@ -174,7 +223,18 @@ const createContext = ({
     _bullets: {
       create: vi.fn(),
       getCount: vi.fn(() => 1),
-      getData: vi.fn(() => [{ posX: 1, posY: 2, heading: 90, size: 4, velocity: 7, color: "#fff" }]),
+      getData: vi.fn(() => playerBulletData),
+      getEntities: vi.fn(() => []),
+      cleanup: vi.fn(),
+      reposition: vi.fn(),
+      render: vi.fn(),
+      clearAll: vi.fn(),
+    } satisfies BulletFactoryInstance,
+    _enemyBullets: {
+      create: vi.fn(),
+      getCount: vi.fn(() => 0),
+      getData: vi.fn(() => []),
+      getEntities: vi.fn(() => []),
       cleanup: vi.fn(),
       reposition: vi.fn(),
       render: vi.fn(),
@@ -248,6 +308,18 @@ describe("game systems", () => {
     expect(bonus.collect).toHaveBeenCalled();
   });
 
+  it("kills the player when enemy bullets hit them", () => {
+    const context = createContext();
+    const enemyBullet = createEnemyBullet();
+    vi.mocked(context._enemyBullets.getEntities).mockReturnValue([enemyBullet]);
+    const system = new CollisionSystem(context);
+
+    system.detectCollisions();
+
+    expect(context._player.kill).toHaveBeenCalled();
+    expect(enemyBullet.removeMe).toBe(true);
+  });
+
   it("keeps the player alive while demo collisions continue resolving bullets", () => {
     const context = createContext({ demoMode: true });
     const system = new CollisionSystem(context);
@@ -300,6 +372,17 @@ describe("game systems", () => {
 
     expect(context._props.create).toHaveBeenCalled();
     expect(context._enemies.create).toHaveBeenCalled();
+    expect(context._enemyBullets.create).toHaveBeenCalledWith(
+      100,
+      100,
+      expect.any(Number),
+      6,
+      5,
+      "#FF9",
+      false,
+      "world",
+      "circle"
+    );
     expect(context._bonuses.create).not.toHaveBeenCalled();
   });
 
@@ -339,6 +422,22 @@ describe("game systems", () => {
     const distanceFromPlayer = Math.hypot(enemyX - 10, enemyY - 20);
 
     expect(distanceFromPlayer).toBeGreaterThan(1100);
+  });
+
+  it("scales initial prop density for larger viewports", () => {
+    const context = createContext({
+      arenaOverrides: {
+        width: 1920,
+        height: 1080,
+      },
+    });
+    const system = new SpawningSystem(context);
+
+    vi.spyOn(Math, "random").mockReturnValue(0);
+
+    system.addInitialProps();
+
+    expect(context._props.create).toHaveBeenCalledTimes(87);
   });
 
   it("does not spawn when limits or timing block new entities", () => {
@@ -383,6 +482,7 @@ describe("game systems", () => {
     expect(context._bonuses.render).toHaveBeenCalled();
     expect(context._bullets.render).toHaveBeenCalled();
     expect(context._enemies.render).toHaveBeenCalled();
+    expect(context._enemyBullets.render).toHaveBeenCalled();
     expect(context._player.render).toHaveBeenCalled();
     expect(context._props.render).toHaveBeenNthCalledWith(2, 2);
     expect(context._hud.render).toHaveBeenCalled();

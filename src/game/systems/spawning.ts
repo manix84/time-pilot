@@ -1,11 +1,17 @@
 import CONSTS from "../constants";
 import helpers from "../engine/helpers";
-import type { Coordinates, GameDataStore, SpawningSystemInstance } from "../types";
-import { getSpawnRadius } from "../viewport";
+import type {
+  Coordinates,
+  EnemyData,
+  GameDataStore,
+  SpawningSystemInstance,
+} from "../types";
+import { getScaledEntityLimit, getSpawnRadius } from "../viewport";
 
 const bonusSpawnIntervalMinTicks = 600;
 const bonusSpawnIntervalRangeTicks = 600;
 const bonusSpawnPadding = 48;
+const enemyFireIntervalTicks = 20;
 
 class SpawningSystem implements SpawningSystemInstance {
   private _context: GameDataStore;
@@ -20,7 +26,7 @@ class SpawningSystem implements SpawningSystemInstance {
     const halfHeight = this._context._gameArena.height / 2;
     const spawnPadding = 96;
 
-    for (let i = 0; i < CONSTS.limits.props; i++) {
+    for (let i = 0; i < this.getPropLimit(); i++) {
       this._context._props.create(
         player.posX +
           Math.floor(
@@ -45,6 +51,7 @@ class SpawningSystem implements SpawningSystemInstance {
 
     this._spawnEnemy();
     this._spawnProp();
+    this._spawnEnemyBullet();
     this._spawnBonus();
   }
 
@@ -77,7 +84,7 @@ class SpawningSystem implements SpawningSystemInstance {
   }
 
   private _spawnProp(): void {
-    if (this._context._props.getCount() >= CONSTS.limits.props) {
+    if (this._context._props.getCount() >= this.getPropLimit()) {
       return;
     }
 
@@ -88,6 +95,53 @@ class SpawningSystem implements SpawningSystemInstance {
       }
     );
     this._context._props.create(data.posX, data.posY);
+  }
+
+  private _spawnEnemyBullet(): void {
+    if (
+      this._context._enemyBullets.getCount() >=
+        getScaledEntityLimit(
+          CONSTS.limits.enemyBullets,
+          this._context._gameArena
+        ) ||
+      this._context._gameTicker.getTicks() % enemyFireIntervalTicks !== 0
+    ) {
+      return;
+    }
+
+    const levelData = CONSTS.levels[this._context._level].enemies.basic;
+
+    if (Math.random() > levelData.firingChance) {
+      return;
+    }
+
+    const enemies = this._context._enemies
+      .getEntities()
+      .filter((enemy) => enemy.isAlive)
+      .map((enemy) => enemy.getData() as EnemyData);
+
+    if (!enemies.length) {
+      return;
+    }
+
+    const player = this._context._player.getData();
+    const enemy = enemies[Math.floor(Math.random() * enemies.length)];
+    const heading = helpers.findHeading(enemy, {
+      posX: player.posX,
+      posY: player.posY,
+    });
+
+    this._context._enemyBullets.create(
+      enemy.posX,
+      enemy.posY,
+      heading,
+      levelData.projectile.size,
+      levelData.projectile.velocity,
+      levelData.projectile.color,
+      false,
+      "world",
+      "circle"
+    );
   }
 
   private _spawnBonus(): void {
@@ -128,9 +182,14 @@ class SpawningSystem implements SpawningSystemInstance {
     }
 
     return {
-      posX: player.posX - halfWidth + Math.random() * this._context._gameArena.width,
+      posX:
+        player.posX - halfWidth + Math.random() * this._context._gameArena.width,
       posY: player.posY - halfHeight - bonusSpawnPadding,
     };
+  }
+
+  private getPropLimit(): number {
+    return getScaledEntityLimit(CONSTS.limits.props, this._context._gameArena);
   }
 }
 
