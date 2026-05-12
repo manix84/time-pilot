@@ -29,7 +29,8 @@ class BulletFactory implements BulletFactoryInstance {
     color: string,
     playSound = true,
     coordinateSpace: BulletData["coordinateSpace"] = "screen",
-    shape: BulletData["shape"] = "square"
+    shape: BulletData["shape"] = "square",
+    sprite?: BulletData["sprite"]
   ): void {
     this._bullets.push(
       new Bullet(
@@ -41,7 +42,8 @@ class BulletFactory implements BulletFactoryInstance {
         velocity,
         color,
         coordinateSpace,
-        shape
+        shape,
+        sprite
       )
     );
 

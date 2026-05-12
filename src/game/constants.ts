@@ -39,6 +39,7 @@ const basicEnemy = (
   hitPoints: 1,
   hitRadius: 8,
   canRotate: true,
+  tracksPlayer: true,
   spawnLimit: 10,
   projectile: {
     velocity: 5,
@@ -78,6 +79,7 @@ const bossEnemy = (
   hitPoints: 7,
   hitRadius: 18,
   canRotate: false,
+  tracksPlayer: true,
   renderHeight: 32,
   renderWidth: 64,
   spawnLimit: 1,
@@ -96,6 +98,57 @@ const bossEnemy = (
     width: 32,
     height: 32,
     frames: 8,
+    frameLimiter: 5,
+  },
+  ...overrides,
+});
+
+const specialBomber = (
+  level: number,
+  overrides: Partial<EnemyConfig> = {}
+): EnemyConfig => ({
+  animationFrames: 7,
+  countsTowardBoss: false,
+  deathValue: scoring.bomber1940,
+  sprite: {
+    src: assetPath(`sprites/enemies/special-bomber/level${level}.png`),
+  },
+  velocity: 3,
+  turnLimiter: 9999,
+  width: 32,
+  height: 9,
+  firingChance: 0,
+  hitPoints: 3,
+  hitRadius: 18,
+  canRotate: false,
+  tracksPlayer: false,
+  renderHeight: 18,
+  renderWidth: 64,
+  spawnLimit: 1,
+  projectile: {
+    velocity: 4,
+    size: 6,
+    color: palette.aircraft.enemyBullet,
+    sprite: {
+      sprite: {
+        src: assetPath("sprites/enemies/projectiles/bomb.png"),
+      },
+      width: 12,
+      height: 3,
+      renderWidth: 24,
+      renderHeight: 6,
+    },
+  },
+  explosion: {
+    sprite: {
+      src: assetPath("sprites/enemies/basic/explosion.png"),
+    },
+    sound: {
+      src: assetPath("sounds/enemies/basic/explosion.mp3"),
+    },
+    width: 32,
+    height: 32,
+    frames: 4,
     frameLimiter: 5,
   },
   ...overrides,
@@ -534,6 +587,7 @@ var CONSTS: TimePilotConstants = {
           velocity: 2.4,
         }),
         formations: futureLevelFormations[2],
+        specialBomber: specialBomber(2),
       },
       bonus: parachuteBonus,
       props: levelOneProps,

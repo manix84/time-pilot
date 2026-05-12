@@ -156,6 +156,7 @@ const createContext = ({
   playerOverrides = {},
   propCount = 0,
   ticks = 200,
+  level = 1,
 }: {
   arenaOverrides?: Partial<GameArenaInstance>;
   demoFadeStartedAtTick?: number;
@@ -168,6 +169,7 @@ const createContext = ({
   playerOverrides?: Partial<PlayerData>;
   propCount?: number;
   ticks?: number;
+  level?: number;
 } = {}): GameDataStore => {
   const enemyData: EnemyData = {
     deathTick: false,
@@ -202,7 +204,7 @@ const createContext = ({
     render: vi.fn(),
   };
   return {
-    _level: 1,
+    _level: level,
     _formations: {},
     _levelProgress: {
       bossDefeated: false,
@@ -424,6 +426,64 @@ describe("game systems", () => {
       { type: "boss" }
     );
     expect(context._levelProgress.bossSpawned).toBe(true);
+  });
+
+  it("spawns the 1940 special bomber as a horizontal non-progression enemy", () => {
+    const context = createContext({ level: 2, ticks: 900 });
+    const system = new SpawningSystem(context);
+
+    vi.spyOn(Math, "random").mockReturnValue(0);
+
+    system.spawnEntities();
+
+    expect(context._enemies.create).toHaveBeenCalledWith(
+      expect.any(Number),
+      expect.any(Number),
+      90,
+      { type: "specialBomber" }
+    );
+  });
+
+  it("drops bombs from the 1940 special bomber", () => {
+    const context = createContext({ level: 2, ticks: 225 });
+    const [bomber] = context._enemies.getEntities();
+    vi.mocked(bomber.getData).mockImplementation((key?: keyof EnemyData) => {
+      const data: EnemyData = {
+        deathTick: false,
+        heading: 90,
+        hitPoints: 3,
+        level: 2,
+        posX: 100,
+        posY: 100,
+        tickOffset: 0,
+        type: "specialBomber" as const,
+      };
+
+      return key ? data[key] : data;
+    });
+    const system = new SpawningSystem(context);
+
+    vi.spyOn(Math, "random").mockReturnValue(0);
+
+    system.spawnEntities();
+
+    expect(context._enemyBullets.create).toHaveBeenCalledWith(
+      100,
+      109,
+      180,
+      6,
+      4,
+      "#FF9",
+      false,
+      "world",
+      "sprite",
+      expect.objectContaining({
+        height: 3,
+        renderHeight: 6,
+        renderWidth: 24,
+        width: 12,
+      })
+    );
   });
 
   it("spawns bonuses along the top and upper side spawn areas", () => {

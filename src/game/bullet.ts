@@ -15,6 +15,7 @@ import type {
 
 class Bullet implements BulletInstance {
   private _data: BulletData;
+  private _projectileSprite?: HTMLImageElement;
   private _gameArena: GameArenaInstance;
   private _level = 1;
   private _player: PlayerInstance;
@@ -30,7 +31,8 @@ class Bullet implements BulletInstance {
     velocity: number,
     color: string,
     coordinateSpace: BulletData["coordinateSpace"] = "screen",
-    shape: BulletData["shape"] = "square"
+    shape: BulletData["shape"] = "square",
+    sprite?: BulletData["sprite"]
   ) {
     this._gameArena = context._gameArena;
     this._player = context._player;
@@ -43,7 +45,13 @@ class Bullet implements BulletInstance {
       size,
       velocity,
       color,
+      sprite,
     };
+
+    if (sprite) {
+      this._projectileSprite = new Image();
+      this._projectileSprite.src = sprite.sprite.src;
+    }
   }
 
   getData(): BulletData;
@@ -131,7 +139,26 @@ class Bullet implements BulletInstance {
 
     context.fillStyle = color;
 
-    if (this._data.shape === "circle") {
+    if (
+      this._data.shape === "sprite" &&
+      this._data.sprite &&
+      this._projectileSprite
+    ) {
+      const renderWidth = this._data.sprite.renderWidth ?? this._data.sprite.width;
+      const renderHeight =
+        this._data.sprite.renderHeight ?? this._data.sprite.height;
+
+      this._gameArena.renderSprite(this._projectileSprite, {
+        frameWidth: this._data.sprite.width,
+        frameHeight: this._data.sprite.height,
+        frameX: 0,
+        frameY: 0,
+        posX: posX - renderWidth / 2,
+        posY: posY - renderHeight / 2,
+        renderHeight,
+        renderWidth,
+      });
+    } else if (this._data.shape === "circle") {
       context.beginPath();
       context.arc(posX, posY, size / 2, 0, Math.PI * 2);
       context.fill();

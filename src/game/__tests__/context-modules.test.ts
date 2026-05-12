@@ -394,6 +394,28 @@ describe("context-backed game modules", () => {
     expect(context._levelProgress.standardEnemyKills).toBe(1);
   });
 
+  it("awards the 1940 special bomber after three hits without boss progress", () => {
+    const context = createContext();
+    context._level = 2;
+
+    context._enemies.create(100, 100, 90, { type: "specialBomber" });
+    const [bomber] = context._enemies.getEntities();
+
+    bomber.kill();
+    bomber.kill();
+
+    expect(bomber.isAlive).toBe(true);
+    expect(context._player.getData("score")).toBe(0);
+    expect(context._levelProgress.standardEnemyKills).toBe(0);
+
+    bomber.kill();
+
+    expect(bomber.isAlive).toBe(false);
+    expect(context._player.getData("score")).toBe(1500);
+    expect(context._levelProgress.standardEnemyKills).toBe(0);
+    expect(context._levelProgress.bossDefeated).toBe(false);
+  });
+
   it("awards the formation bonus when every formation enemy is killed", () => {
     const context = createContext();
     context._formations["formation-1"] = {

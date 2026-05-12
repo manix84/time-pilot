@@ -83,7 +83,8 @@ class Enemy implements EnemyInstance {
   getLevelData<K extends keyof EnemyConfig>(key: K): EnemyConfig[K] | undefined;
   getLevelData<K extends keyof EnemyConfig>(key?: K) {
     const enemyType = this._data.type ?? "basic";
-    const levelData = CONSTS.levels[this._data.level].enemies[enemyType];
+    const levelEnemies = CONSTS.levels[this._data.level].enemies;
+    const levelData = levelEnemies[enemyType] ?? levelEnemies.basic;
 
     if (!key) {
       return levelData;
@@ -151,6 +152,7 @@ class Enemy implements EnemyInstance {
       this._data.formationUntilTick !== undefined &&
       this._gameTicker.getTicks() < this._data.formationUntilTick;
     const canTurn =
+      levelData.tracksPlayer &&
       !formationActive &&
       !this.removeMe &&
       tick % levelData.turnLimiter === 0;

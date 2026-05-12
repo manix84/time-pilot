@@ -54,22 +54,13 @@ export interface PlayerData extends Coordinates {
   removeMe?: boolean;
 }
 
-export interface BulletData extends Coordinates {
-  coordinateSpace: "screen" | "world";
-  heading: Heading;
-  shape: "circle" | "square";
-  size: number;
-  velocity: number;
-  color: string;
-}
-
 export interface EnemyData extends Coordinates {
   heading: Heading;
   hitPoints: number;
   level: number;
   deathTick: number | false;
   tickOffset: number;
-  type: "basic" | "boss";
+  type: "basic" | "boss" | "specialBomber";
   formationId?: string;
   formationUntilTick?: number;
   formationWaveAmplitude?: number;
@@ -202,7 +193,8 @@ export interface BulletFactoryInstance {
     color: string,
     playSound?: boolean,
     coordinateSpace?: BulletData["coordinateSpace"],
-    shape?: BulletData["shape"]
+    shape?: BulletData["shape"],
+    sprite?: BulletData["sprite"]
   ) => void;
   getCount: () => number;
   getData: () => BulletData[];
@@ -434,6 +426,24 @@ export interface SoundAsset {
   src: string;
 }
 
+export interface ProjectileSpriteConfig {
+  sprite: SpriteAsset;
+  width: number;
+  height: number;
+  renderWidth?: number;
+  renderHeight?: number;
+}
+
+export interface BulletData extends Coordinates {
+  coordinateSpace: "screen" | "world";
+  heading: Heading;
+  shape: "circle" | "sprite" | "square";
+  size: number;
+  velocity: number;
+  color: string;
+  sprite?: ProjectileSpriteConfig;
+}
+
 export interface ExplosionConfig {
   sprite: SpriteAsset;
   sound: SoundAsset;
@@ -447,6 +457,7 @@ export interface ProjectileConfig {
   velocity: number;
   size: number;
   color: string;
+  sprite?: ProjectileSpriteConfig;
   sound?: SoundAsset;
 }
 
@@ -475,6 +486,7 @@ export interface EnemyConfig {
   hitPoints: number;
   hitRadius: number;
   canRotate: boolean;
+  tracksPlayer: boolean;
   renderHeight?: number;
   renderWidth?: number;
   spawnLimit: number;
@@ -533,6 +545,7 @@ export interface LevelConfig {
     basic: EnemyConfig;
     boss: EnemyConfig;
     formations: EnemyFormationConfig[];
+    specialBomber?: EnemyConfig;
   };
   bonus: BonusConfig;
   props: PropConfig[];

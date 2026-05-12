@@ -13,6 +13,10 @@ import { getScaledEntityLimit, getSpawnRadius } from "../viewport";
 const bonusSpawnIntervalMinTicks = 600;
 const bonusSpawnIntervalRangeTicks = 600;
 const bonusSpawnPadding = 48;
+const specialBomberBombIntervalTicks = 45;
+const specialBomberBombChance = 0.35;
+const specialBomberSpawnIntervalMinTicks = 900;
+const specialBomberSpawnIntervalRangeTicks = 900;
 const enemyFireIntervalTicks = 20;
 let nextFormationId = 1;
 
@@ -55,6 +59,7 @@ class SpawningSystem implements SpawningSystemInstance {
     this._spawnEnemy();
     this._spawnProp();
     this._spawnEnemyBullet();
+    this._spawnSpecialBomberBomb();
     this._spawnBonus();
   }
 
@@ -71,6 +76,10 @@ class SpawningSystem implements SpawningSystemInstance {
     }
 
     if (this._context._levelProgress.bossSpawned) {
+      return;
+    }
+
+    if (this._spawnSpecialBomber()) {
       return;
     }
 
@@ -121,6 +130,45 @@ class SpawningSystem implements SpawningSystemInstance {
       type: "boss",
     });
     progress.bossSpawned = true;
+
+    return true;
+  }
+
+  private _spawnSpecialBomber(): boolean {
+    const levelData = CONSTS.levels[this._context._level].enemies.specialBomber;
+
+    if (!levelData || this._context._level !== 2) {
+      return false;
+    }
+
+    const hasBomber = this._context._enemies
+      .getData()
+      .some((enemy) => enemy.type === "specialBomber");
+    const randomTickInterval =
+      Math.floor(Math.random() * specialBomberSpawnIntervalRangeTicks) +
+      specialBomberSpawnIntervalMinTicks;
+
+    if (
+      hasBomber ||
+      this._context._gameTicker.getTicks() % randomTickInterval !== 0 ||
+      !this._context._enemies.isUnderLimit()
+    ) {
+      return false;
+    }
+
+    const player = this._context._player.getData();
+    const halfWidth = this._context._gameArena.width / 2;
+    const halfHeight = this._context._gameArena.height / 2;
+    const travelsRight = Math.random() < 0.5;
+    const spawnPadding = levelData.renderWidth ?? levelData.width;
+    const posX = travelsRight
+      ? player.posX - halfWidth - spawnPadding
+      : player.posX + halfWidth + spawnPadding;
+    const posY = player.posY - halfHeight + Math.random() * this._context._gameArena.height;
+
+    this._context._enemies.create(posX, posY, travelsRight ? 90 : 270, {
+      type: "specialBomber",
+    });
 
     return true;
   }
@@ -236,7 +284,8 @@ class SpawningSystem implements SpawningSystemInstance {
     const enemies = this._context._enemies
       .getEntities()
       .filter((enemy) => enemy.isAlive)
-      .map((enemy) => enemy.getData() as EnemyData);
+      .map((enemy) => enemy.getData() as EnemyData)
+      .filter((enemy) => enemy.type !== "specialBomber");
 
     if (!enemies.length) {
       return;
@@ -259,6 +308,52 @@ class SpawningSystem implements SpawningSystemInstance {
       false,
       "world",
       "circle"
+    );
+  }
+
+  private _spawnSpecialBomberBomb(): void {
+    if (
+      this._context._enemyBullets.getCount() >=
+        getScaledEntityLimit(
+          CONSTS.limits.enemyBullets,
+          this._context._gameArena
+        ) ||
+      this._context._gameTicker.getTicks() % specialBomberBombIntervalTicks !==
+        0 ||
+      Math.random() > specialBomberBombChance
+    ) {
+      return;
+    }
+
+    const bomber = this._context._enemies
+      .getEntities()
+      .find(
+        (enemy) =>
+          enemy.isAlive && enemy.getData("type") === "specialBomber"
+      );
+
+    if (!bomber) {
+      return;
+    }
+
+    const bomberData = bomber.getData() as EnemyData;
+    const levelData = CONSTS.levels[this._context._level].enemies.specialBomber;
+
+    if (!levelData) {
+      return;
+    }
+
+    this._context._enemyBullets.create(
+      bomberData.posX,
+      bomberData.posY + (levelData.renderHeight ?? levelData.height) / 2,
+      180,
+      levelData.projectile.size,
+      levelData.projectile.velocity,
+      levelData.projectile.color,
+      false,
+      "world",
+      levelData.projectile.sprite ? "sprite" : "circle",
+      levelData.projectile.sprite
     );
   }
 
