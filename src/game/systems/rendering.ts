@@ -25,6 +25,7 @@ class RenderingSystem implements RenderingSystemInstance {
       this._context._hud.render();
     }
 
+    this.renderDemoLevelFade();
     this._context._menus.render();
   }
 
@@ -50,6 +51,39 @@ class RenderingSystem implements RenderingSystemInstance {
       !!this._context._levelIntroUntilTick &&
       this._context._gameTicker.getTicks() < this._context._levelIntroUntilTick
     );
+  }
+
+  private renderDemoLevelFade(): void {
+    if (
+      !this._context._isDemoMode ||
+      this._context._demoFadeStartedAtTick === undefined ||
+      this._context._demoFadeUntilTick === undefined
+    ) {
+      return;
+    }
+
+    const ticks = this._context._gameTicker.getTicks();
+
+    if (ticks >= this._context._demoFadeUntilTick) {
+      return;
+    }
+
+    const duration =
+      this._context._demoFadeUntilTick - this._context._demoFadeStartedAtTick;
+    const progress =
+      (ticks - this._context._demoFadeStartedAtTick) / Math.max(1, duration);
+    const context = this._context._gameArena.getContext() as CanvasRenderingContext2D;
+
+    context.save();
+    context.globalAlpha = Math.max(0, Math.min(1, 1 - progress));
+    context.fillStyle = "#000";
+    context.fillRect(
+      -(this._context._gameArena.width / 2),
+      -(this._context._gameArena.height / 2),
+      this._context._gameArena.width,
+      this._context._gameArena.height
+    );
+    context.restore();
   }
 }
 

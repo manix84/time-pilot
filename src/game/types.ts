@@ -287,6 +287,8 @@ export interface ControllerInterfaceInstance {
 
 export interface GameDataStore {
   _level: number;
+  _demoFadeStartedAtTick?: number;
+  _demoFadeUntilTick?: number;
   _isDemoMode?: boolean;
   _levelIntroUntilTick?: number;
   _controlInputState: ControlInputState;

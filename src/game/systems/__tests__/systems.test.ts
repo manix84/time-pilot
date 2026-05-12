@@ -89,6 +89,8 @@ const createPlayer = (overrides: Partial<PlayerData> = {}): PlayerInstance => {
 
 const createContext = ({
   arenaOverrides = {},
+  demoFadeStartedAtTick = 0,
+  demoFadeUntilTick = 0,
   demoMode = false,
   enemyAlive = true,
   enemyCollides = true,
@@ -99,6 +101,8 @@ const createContext = ({
   ticks = 200,
 }: {
   arenaOverrides?: Partial<GameArenaInstance>;
+  demoFadeStartedAtTick?: number;
+  demoFadeUntilTick?: number;
   demoMode?: boolean;
   enemyAlive?: boolean;
   enemyCollides?: boolean;
@@ -123,6 +127,8 @@ const createContext = ({
 
   return {
     _level: 1,
+    _demoFadeStartedAtTick: demoFadeStartedAtTick,
+    _demoFadeUntilTick: demoFadeUntilTick,
     _isDemoMode: demoMode,
     _levelIntroUntilTick: levelIntroUntilTick,
     _controlInputState: {
@@ -352,6 +358,28 @@ describe("game systems", () => {
         size: 24,
         valign: "middle",
       })
+    );
+  });
+
+  it("renders demo level fade behind active menus", () => {
+    const context = createContext({
+      demoFadeStartedAtTick: 100,
+      demoFadeUntilTick: 130,
+      demoMode: true,
+      ticks: 115,
+    });
+    vi.mocked(context._menus.isActive).mockReturnValue(true);
+    const system = new RenderingSystem(context);
+
+    system.renderFrame();
+
+    const canvasContext = vi.mocked(context._gameArena.getContext).mock.results[0]
+      .value as CanvasRenderingContext2D;
+
+    expect(canvasContext.fillRect).toHaveBeenCalledWith(-400, -300, 800, 600);
+    expect(context._menus.render).toHaveBeenCalled();
+    expect(vi.mocked(canvasContext.fillRect).mock.invocationCallOrder[0]).toBeLessThan(
+      vi.mocked(context._menus.render).mock.invocationCallOrder[0]
     );
   });
 

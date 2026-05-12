@@ -30,11 +30,16 @@ import type {
 } from "./types";
 
 export const DEMO_LEVEL_DURATION_MS = 30000;
+export const DEMO_LEVEL_FADE_MS = 1000;
 export const LEVEL_INTRO_DURATION_MS = 5000;
 const gameFps = 30;
 const demoLevelDurationFrames = Math.max(
   1,
   Math.round((DEMO_LEVEL_DURATION_MS / 1000) * gameFps)
+);
+const demoLevelFadeFrames = Math.max(
+  1,
+  Math.round((DEMO_LEVEL_FADE_MS / 1000) * gameFps)
 );
 const levelIntroDurationFrames = Math.max(
   1,
@@ -140,6 +145,8 @@ export class TimePilot {
       up: false,
       activeController: "keyboard",
     };
+    this.context._demoFadeStartedAtTick = 0;
+    this.context._demoFadeUntilTick = 0;
     this.context._isDemoMode = false;
     this.context._levelIntroUntilTick = 0;
     this.context._gameArena = new GameArena(this.container);
@@ -291,7 +298,7 @@ export class TimePilot {
     this.context._isDemoMode = false;
 
     if (shouldStartFreshGame) {
-      this.resetWorld(1);
+      this.resetWorld(1, { skipIntro: false });
       this.hasStartedGame = true;
     }
 
@@ -310,7 +317,7 @@ export class TimePilot {
     this.isDemoMode = true;
     this.context._isDemoMode = true;
     SoundEngine.setMuted(true);
-    this.resetWorld(1);
+    this.resetWorld(this.getRandomDemoLevel(), { skipIntro: true });
     this.spawningSystem.addInitialProps();
     this.hasSeededInitialProps = true;
     this.context._menus.showStart({ startLabel: "Start" });
@@ -331,7 +338,7 @@ export class TimePilot {
   }
 
   private updateDemoAutopilot(): void {
-    if (!this.isDemoMode || this.isLevelIntroActive()) {
+    if (!this.isDemoMode) {
       return;
     }
 
@@ -353,18 +360,13 @@ export class TimePilot {
       return;
     }
 
-    const levelNumbers = Object.keys(CONSTS.levels).map(Number);
-    const currentIndex = levelNumbers.indexOf(this.context._level);
-    const nextLevel =
-      levelNumbers[(currentIndex + 1 + levelNumbers.length) % levelNumbers.length] ??
-      1;
-
-    this.resetWorld(nextLevel);
+    this.startDemoLevelFade();
+    this.resetWorld(this.getRandomDemoLevel(), { skipIntro: true });
     this.spawningSystem.addInitialProps();
     this.hasSeededInitialProps = true;
   }
 
-  private resetWorld(level: number): void {
+  private resetWorld(level: number, options: { skipIntro?: boolean } = {}): void {
     this.context._level = level;
     this.context._enemies.clearAll();
     this.context._bullets.clearAll();
@@ -374,9 +376,33 @@ export class TimePilot {
     this.context._player.setData("isAlive", true);
     this.context._player.setData("deathTick", false);
     this.context._player.stopShooting();
-    this.context._levelIntroUntilTick =
-      this.context._gameTicker.getTicks() + levelIntroDurationFrames;
+    this.context._levelIntroUntilTick = options.skipIntro
+      ? 0
+      : this.context._gameTicker.getTicks() + levelIntroDurationFrames;
     this.hasSeededInitialProps = false;
+  }
+
+  private getRandomDemoLevel(): number {
+    const levelNumbers = Object.keys(CONSTS.levels).map(Number);
+
+    if (levelNumbers.length <= 1) {
+      return levelNumbers[0] ?? 1;
+    }
+
+    const availableLevels = levelNumbers.filter(
+      (level) => level !== this.context._level
+    );
+
+    return availableLevels[
+      Math.floor(Math.random() * availableLevels.length)
+    ] ?? 1;
+  }
+
+  private startDemoLevelFade(): void {
+    const ticks = this.context._gameTicker.getTicks();
+
+    this.context._demoFadeStartedAtTick = ticks;
+    this.context._demoFadeUntilTick = ticks + demoLevelFadeFrames;
   }
 
   private isLevelIntroActive(): boolean {
