@@ -42,8 +42,16 @@ interface MenuViewport {
   y: number;
 }
 
+interface MenuTransition {
+  from: MenuScreen;
+  startedAt: number;
+  to: MenuScreen;
+}
+
 const controllerTypes: ControllerType[] = ["keyboard1", "keyboard2"];
 const menuEdgePadding = 24;
+const submenuItemOffsetY = 22;
+const menuTransitionDuration = 1200;
 const keyBindingRows: Array<{ binding: BindingAction; label: string }> = [
   { binding: "up", label: "Key Up" },
   { binding: "down", label: "Key Down" },
@@ -69,6 +77,7 @@ class Menus implements MenuSystemInstance {
   private _screenHistory: MenuScreen[] = [];
   private _selectedIndex = 0;
   private _scrollY = 0;
+  private _transition: MenuTransition | null = null;
 
   constructor(gameArena: GameArenaInstance, commands: MenuSystemCommands) {
     this._gameArena = gameArena;
@@ -87,6 +96,7 @@ class Menus implements MenuSystemInstance {
     this._screenHistory = [];
     this._selectedIndex = 0;
     this._scrollY = 0;
+    this._transition = null;
     this._buildItems();
   }
 
@@ -194,8 +204,11 @@ class Menus implements MenuSystemInstance {
       this._gameArena.height
     );
 
-    this._renderLogo(context);
-    this._gameArena.renderText(this._getScreenTitle(), 0, -82, {
+    const transition = this._getTransitionState();
+    const layout = this._getAnimatedLayout(transition);
+
+    this._renderLogo(context, layout.logoY);
+    this._gameArena.renderText(this._getScreenTitle(), 0, layout.titleY, {
       size: 18,
       align: "center",
       valign: "middle",
@@ -203,7 +216,7 @@ class Menus implements MenuSystemInstance {
     });
 
     this._scrollY = this._getMenuScrollY();
-    this._renderItems(context);
+    this._renderItems(context, transition.progress);
 
     if (this._awaitingBinding) {
       this._gameArena.renderText("Press a key", 0, 136, {
@@ -215,11 +228,11 @@ class Menus implements MenuSystemInstance {
     }
   }
 
-  private _renderLogo(context: CanvasRenderingContext2D): void {
+  private _renderLogo(context: CanvasRenderingContext2D, y: number): void {
     const logoCanvas = this._getLogoCanvas();
 
     context.save();
-    context.translate(0, -126);
+    context.translate(0, y);
     this._drawPerspectiveLogo(
       context,
       logoCanvas,
@@ -229,14 +242,20 @@ class Menus implements MenuSystemInstance {
     context.restore();
   }
 
-  private _renderItems(context: CanvasRenderingContext2D): void {
+  private _renderItems(
+    context: CanvasRenderingContext2D,
+    transitionProgress: number
+  ): void {
     const viewport = this._getMenuViewport();
+    const transitionOffset = (1 - transitionProgress) * this._getItemTransitionOffset();
+    const screenOffset = this._getScreenItemOffset(this._screen);
 
     context.save();
     context.beginPath();
     context.rect(viewport.x, viewport.y, viewport.width, viewport.height);
     context.clip();
-    context.translate(0, this._scrollY);
+    context.globalAlpha *= 0.35 + transitionProgress * 0.65;
+    context.translate(0, this._scrollY + transitionOffset + screenOffset);
 
     this._items.forEach((item, index) => {
       this._renderItem(item, index === this._selectedIndex);
@@ -591,13 +610,121 @@ class Menus implements MenuSystemInstance {
   }
 
   private _getItemsBounds(): { bottom: number; top: number } {
+    const screenOffset = this._getScreenItemOffset(this._screen);
+
     return this._items.reduce(
       (bounds, item) => ({
-        bottom: Math.max(bounds.bottom, item.rect.y + item.rect.height),
-        top: Math.min(bounds.top, item.rect.y),
+        bottom: Math.max(
+          bounds.bottom,
+          item.rect.y + item.rect.height + screenOffset
+        ),
+        top: Math.min(bounds.top, item.rect.y + screenOffset),
       }),
       { bottom: -Infinity, top: Infinity }
     );
+  }
+
+  private _getScreenItemOffset(screen: MenuScreen): number {
+    return screen === "start" ? 0 : submenuItemOffsetY;
+  }
+
+  private _getTransitionState(): { easedProgress: number; progress: number } {
+    if (!this._transition) {
+      return {
+        easedProgress: 1,
+        progress: 1,
+      };
+    }
+
+    const elapsed = performance.now() - this._transition.startedAt;
+    const progress = Math.max(0, Math.min(1, elapsed / menuTransitionDuration));
+
+    if (progress >= 1) {
+      this._transition = null;
+    }
+
+    return {
+      easedProgress: this._easeInOutCubic(progress),
+      progress,
+    };
+  }
+
+  private _getAnimatedLayout(transition: {
+    easedProgress: number;
+  }): { logoY: number; titleY: number } {
+    const from = this._transition?.from ?? this._screen;
+    const to = this._transition?.to ?? this._screen;
+
+    return {
+      logoY: this._lerp(
+        this._getLogoY(from),
+        this._getLogoY(to),
+        transition.easedProgress
+      ),
+      titleY: this._lerp(
+        this._getTitleY(from),
+        this._getTitleY(to),
+        transition.easedProgress
+      ),
+    };
+  }
+
+  private _getLogoY(screen: MenuScreen): number {
+    if (screen === "start") {
+      return -126;
+    }
+
+    return Math.min(-126, -(this._gameArena.height / 2) + 82);
+  }
+
+  private _getTitleY(screen: MenuScreen): number {
+    if (screen === "start") {
+      return -82;
+    }
+
+    return this._getLogoY(screen) + 52;
+  }
+
+  private _getItemTransitionOffset(): number {
+    if (!this._transition) {
+      return 0;
+    }
+
+    const fromY = this._getLogoY(this._transition.from);
+    const toY = this._getLogoY(this._transition.to);
+
+    if (toY < fromY) {
+      return 24;
+    }
+
+    if (toY > fromY) {
+      return -24;
+    }
+
+    return 0;
+  }
+
+  private _startTransition(from: MenuScreen, to: MenuScreen): void {
+    if (from === to) {
+      this._transition = null;
+      return;
+    }
+
+    this._transition = {
+      from,
+      startedAt: performance.now(),
+      to,
+    };
+  }
+
+  private _easeInOutCubic(progress: number): number {
+    return progress < 0.5
+      ? 4 * progress * progress * progress
+      : 1 - Math.pow(-2 * progress + 2, 3) / 2;
+  }
+
+  private _lerp(from: number, to: number, progress: number): number {
+    return from + (to - from) * progress;
   }
 
   private _captureKonamiKey(keyCode: number): void {
@@ -633,20 +760,27 @@ class Menus implements MenuSystemInstance {
   }
 
   private _goToScreen(screen: MenuScreen): void {
+    const previousScreen = this._screen;
+
     this._screenHistory.push(this._screen);
     this._screen = screen;
     this._selectedIndex = 0;
     this._awaitingBinding = null;
     this._scrollY = 0;
     this._buildItems();
+    this._startTransition(previousScreen, screen);
   }
 
   private _goBack(): void {
-    this._screen = this._screenHistory.pop() ?? "start";
+    const previousScreen = this._screen;
+    const nextScreen = this._screenHistory.pop() ?? "start";
+
+    this._screen = nextScreen;
     this._selectedIndex = 0;
     this._awaitingBinding = null;
     this._scrollY = 0;
     this._buildItems();
+    this._startTransition(previousScreen, nextScreen);
   }
 
   private _adjustControllerType(direction: -1 | 1): void {
@@ -688,7 +822,8 @@ class Menus implements MenuSystemInstance {
 
   private _isInsideItem(pointer: MenuPointerData, item: MenuItem): boolean {
     const viewport = this._getMenuViewport();
-    const itemPosY = pointer.posY - this._scrollY;
+    const itemPosY =
+      pointer.posY - this._scrollY - this._getScreenItemOffset(this._screen);
 
     return (
       pointer.posX >= viewport.x &&

@@ -30,6 +30,7 @@ const createArena = (): GameArenaInstance => ({
 
 describe("menu definitions", () => {
   afterEach(() => {
+    vi.restoreAllMocks();
     sessionStorage.clear();
     userOptions.enableDebug = false;
     userOptions.debug.invincible = true;
@@ -139,6 +140,7 @@ describe("menu definitions", () => {
   });
 
   it("scrolls long menus inside a padded viewport", () => {
+    const performanceNow = vi.spyOn(performance, "now").mockReturnValue(0);
     const arena = {
       ...createArena(),
       height: 220,
@@ -153,6 +155,7 @@ describe("menu definitions", () => {
       menus.next();
     }
 
+    performanceNow.mockReturnValue(1200);
     menus.render();
 
     const context = vi.mocked(arena.getContext).mock.results[0]
@@ -160,9 +163,9 @@ describe("menu definitions", () => {
 
     expect(context.rect).toHaveBeenCalledWith(-376, -86, 752, 172);
     expect(context.clip).toHaveBeenCalled();
-    expect(context.translate).toHaveBeenCalledWith(0, -238);
+    expect(context.translate).toHaveBeenCalledWith(0, -216);
 
-    menus.handlePointer({ posX: 0, posY: 70, type: "click" });
+    menus.handlePointer({ posX: 0, posY: 74, type: "click" });
     menus.render();
 
     expect(arena.renderText).toHaveBeenCalledWith(
@@ -170,6 +173,68 @@ describe("menu definitions", () => {
       expect.any(Number),
       expect.any(Number),
       expect.objectContaining({ align: "left" })
+    );
+  });
+
+  it("animates the title position into and out of submenus", () => {
+    const performanceNow = vi.spyOn(performance, "now").mockReturnValue(0);
+    const arena = createArena();
+    const menus = new Menus(arena, { start: vi.fn() });
+
+    menus.showStart();
+    menus.next();
+    menus.activate();
+    menus.render();
+
+    expect(arena.renderText).toHaveBeenCalledWith(
+      "Options",
+      0,
+      -82,
+      expect.objectContaining({ align: "center" })
+    );
+
+    performanceNow.mockReturnValue(600);
+    menus.render();
+
+    expect(arena.renderText).toHaveBeenCalledWith(
+      "Options",
+      0,
+      -124,
+      expect.objectContaining({ align: "center" })
+    );
+
+    performanceNow.mockReturnValue(1200);
+    menus.render();
+
+    expect(arena.renderText).toHaveBeenCalledWith(
+      "Options",
+      0,
+      -166,
+      expect.objectContaining({ align: "center" })
+    );
+
+    for (let i = 0; i < 9; i++) {
+      menus.next();
+    }
+
+    menus.activate();
+    menus.render();
+
+    expect(arena.renderText).toHaveBeenCalledWith(
+      "A.D. 1910",
+      0,
+      -166,
+      expect.objectContaining({ align: "center" })
+    );
+
+    performanceNow.mockReturnValue(2400);
+    menus.render();
+
+    expect(arena.renderText).toHaveBeenCalledWith(
+      "A.D. 1910",
+      0,
+      -82,
+      expect.objectContaining({ align: "center" })
     );
   });
 
