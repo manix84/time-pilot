@@ -1,14 +1,17 @@
-import GameArena from "./engine/arena";
-import Ticker from "./engine/Ticker";
+import { assetPath } from "./asset-path";
 import BonusFactory from "./bonus-factory";
 import BulletFactory from "./bullet-factory";
+import { levels, limits, player, scoring, sounds } from "./constants";
+import ControllerInterface from "./controller-interface";
 import Gamepad from "./controller/gamepad";
 import Keyboard1 from "./controller/keyboard1";
 import Keyboard2 from "./controller/keyboard2";
 import Mouse from "./controller/mouse";
 import Touch from "./controller/touch";
-import ControllerInterface from "./controller-interface";
 import EnemyFactory from "./enemy-factory";
+import GameArena from "./engine/arena";
+import SoundEngine from "./engine/Sound";
+import Ticker from "./engine/Ticker";
 import Hud from "./hud";
 import Menus from "./menus";
 import Player from "./player";
@@ -16,10 +19,6 @@ import PropFactory from "./prop-factory";
 import CollisionSystem from "./systems/collision";
 import RenderingSystem from "./systems/rendering";
 import SpawningSystem from "./systems/spawning";
-import { assetPath } from "./asset-path";
-import { levels, limits, player, scoring, sounds } from "./constants";
-import SoundEngine from "./engine/Sound";
-import userOptions from "./user-options";
 import type {
   AssetProgress,
   CollisionSystemInstance,
@@ -29,11 +28,12 @@ import type {
   RenderingSystemInstance,
   SpawningSystemInstance,
 } from "./types";
+import userOptions from "./user-options";
 
 export const DEMO_LEVEL_DURATION_MS = 30000;
 export const DEMO_LEVEL_FADE_MS = 1000;
 export const LEVEL_INTRO_DURATION_MS = 5000;
-const gameFps = 30;
+const gameFps = 50;
 const demoLevelDurationFrames = Math.max(
   1,
   Math.round((DEMO_LEVEL_DURATION_MS / 1000) * gameFps)
@@ -172,7 +172,7 @@ export class TimePilot {
     this.context._nextParachuteScore = scoring.parachute.min;
     this.context._gameArena = new GameArena(this.container);
     this.context._renderTicker = new Ticker();
-    this.context._gameTicker = new Ticker({ fps: 30 });
+    this.context._gameTicker = new Ticker({ fps: gameFps });
     this.context._bullets = new BulletFactory(this.context);
     this.context._enemyBullets = new BulletFactory(this.context);
     this.context._player = new Player(this.context);
@@ -434,8 +434,7 @@ export class TimePilot {
 
     const frame = this.context._gameTicker.getTicks();
     const desiredHeading =
-      (90 + Math.sin(frame / 45) * 90 + Math.sin(frame / 120) * 45 + 360) %
-      360;
+      (90 + Math.sin(frame / 45) * 90 + Math.sin(frame / 120) * 45 + 360) % 360;
 
     this.context._player.setData(
       "newHeading",
@@ -456,7 +455,10 @@ export class TimePilot {
     this.hasSeededInitialProps = true;
   };
 
-  private resetWorld = (level: number, options: { skipIntro?: boolean } = {}): void => {
+  private resetWorld = (
+    level: number,
+    options: { skipIntro?: boolean } = {}
+  ): void => {
     this.context._level = level;
     this.context._formations = {};
     this.context._levelProgress = this.createLevelProgress(level);
@@ -536,9 +538,9 @@ export class TimePilot {
       (level) => level !== this.context._level
     );
 
-    return availableLevels[
-      Math.floor(Math.random() * availableLevels.length)
-    ] ?? 1;
+    return (
+      availableLevels[Math.floor(Math.random() * availableLevels.length)] ?? 1
+    );
   };
 
   private startDemoLevelFade = (): void => {
@@ -568,9 +570,14 @@ export class TimePilot {
     // Menu music will be stopped here when the asset is available.
   };
 
-  private createKeyboardController = (controllerInterface: ControllerInterface): Controller => {
+  private createKeyboardController = (
+    controllerInterface: ControllerInterface
+  ): Controller => {
     if (this.options.controllerType === "keyboard2") {
-      return new Keyboard2(controllerInterface, this.context._controlInputState);
+      return new Keyboard2(
+        controllerInterface,
+        this.context._controlInputState
+      );
     }
 
     return new Keyboard1(controllerInterface, this.context._controlInputState);
