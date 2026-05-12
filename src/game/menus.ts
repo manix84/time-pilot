@@ -208,16 +208,17 @@ class Menus implements MenuSystemInstance {
     const textX = width / 2;
     const textY = height / 2 + 3;
 
-    context.font = "italic 900 52px 'Bookman Old Style', Georgia, serif";
+    context.font = "900 52px 'Bookman Old Style', Georgia, serif";
     context.textAlign = "center";
     context.textBaseline = "middle";
 
     const layers = [
-      { x: 5, y: 5, color: "#7A1200" },
-      { x: 4, y: 4, color: "#7A1200" },
+      { x: 9, y: 9, color: "#3F0700" },
+      { x: 7, y: 7, color: "#7A1200" },
+      { x: 5, y: 5, color: "#A72A00" },
       { x: 3, y: 3, color: "#C94F00" },
       { x: 2, y: 2, color: "#FF8C00" },
-      { x: 1, y: 1, color: "#FF8C00" },
+      { x: 1, y: 1, color: "#FFAA00" },
     ];
 
     for (const layer of layers) {
@@ -235,8 +236,8 @@ class Menus implements MenuSystemInstance {
     logoWidth: number,
     logoHeight: number
   ): void {
-    const topWidth = 300;
-    const bottomWidth = 380;
+    const topWidth = 260;
+    const bottomWidth = 390;
     const targetHeight = 86;
     const sliceHeight = 2;
 
