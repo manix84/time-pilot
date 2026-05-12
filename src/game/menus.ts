@@ -35,7 +35,15 @@ interface MenuItem {
   };
 }
 
+interface MenuViewport {
+  height: number;
+  width: number;
+  x: number;
+  y: number;
+}
+
 const controllerTypes: ControllerType[] = ["keyboard1", "keyboard2"];
+const menuEdgePadding = 24;
 const keyBindingRows: Array<{ binding: BindingAction; label: string }> = [
   { binding: "up", label: "Key Up" },
   { binding: "down", label: "Key Down" },
@@ -60,6 +68,7 @@ class Menus implements MenuSystemInstance {
   private _screen: MenuScreen = "start";
   private _screenHistory: MenuScreen[] = [];
   private _selectedIndex = 0;
+  private _scrollY = 0;
 
   constructor(gameArena: GameArenaInstance, commands: MenuSystemCommands) {
     this._gameArena = gameArena;
@@ -77,6 +86,7 @@ class Menus implements MenuSystemInstance {
     this._screen = "start";
     this._screenHistory = [];
     this._selectedIndex = 0;
+    this._scrollY = 0;
     this._buildItems();
   }
 
@@ -192,9 +202,8 @@ class Menus implements MenuSystemInstance {
       color: palette.menu.mutedText,
     });
 
-    this._items.forEach((item, index) => {
-      this._renderItem(item, index === this._selectedIndex);
-    });
+    this._scrollY = this._getMenuScrollY();
+    this._renderItems(context);
 
     if (this._awaitingBinding) {
       this._gameArena.renderText("Press a key", 0, 136, {
@@ -217,6 +226,22 @@ class Menus implements MenuSystemInstance {
       this._logoWidth,
       this._logoHeight
     );
+    context.restore();
+  }
+
+  private _renderItems(context: CanvasRenderingContext2D): void {
+    const viewport = this._getMenuViewport();
+
+    context.save();
+    context.beginPath();
+    context.rect(viewport.x, viewport.y, viewport.width, viewport.height);
+    context.clip();
+    context.translate(0, this._scrollY);
+
+    this._items.forEach((item, index) => {
+      this._renderItem(item, index === this._selectedIndex);
+    });
+
     context.restore();
   }
 
@@ -511,6 +536,70 @@ class Menus implements MenuSystemInstance {
     return Math.max(0, Math.min(1, value / 10));
   }
 
+  private _getMenuViewport(): MenuViewport {
+    return {
+      x: -(this._gameArena.width / 2) + menuEdgePadding,
+      y: -(this._gameArena.height / 2) + menuEdgePadding,
+      width: this._gameArena.width - menuEdgePadding * 2,
+      height: this._gameArena.height - menuEdgePadding * 2,
+    };
+  }
+
+  private _getMenuScrollY(): number {
+    const selectedItem = this._items[this._selectedIndex];
+
+    if (!selectedItem) {
+      return 0;
+    }
+
+    const viewport = this._getMenuViewport();
+    const viewportTop = viewport.y;
+    const viewportBottom = viewport.y + viewport.height;
+    const bounds = this._getItemsBounds();
+
+    let scrollY = this._scrollY;
+    const selectedTop = selectedItem.rect.y + scrollY;
+    const selectedBottom = selectedTop + selectedItem.rect.height;
+
+    if (selectedTop < viewportTop) {
+      scrollY += viewportTop - selectedTop;
+    } else if (selectedBottom > viewportBottom) {
+      scrollY -= selectedBottom - viewportBottom;
+    }
+
+    const contentHeight = bounds.bottom - bounds.top;
+
+    if (contentHeight <= viewport.height) {
+      const contentTop = bounds.top + scrollY;
+      const contentBottom = bounds.bottom + scrollY;
+
+      if (contentTop < viewportTop) {
+        scrollY += viewportTop - contentTop;
+      }
+
+      if (contentBottom > viewportBottom) {
+        scrollY -= contentBottom - viewportBottom;
+      }
+
+      return scrollY;
+    }
+
+    const maxScrollY = viewportTop - bounds.top;
+    const minScrollY = viewportBottom - bounds.bottom;
+
+    return Math.min(maxScrollY, Math.max(minScrollY, scrollY));
+  }
+
+  private _getItemsBounds(): { bottom: number; top: number } {
+    return this._items.reduce(
+      (bounds, item) => ({
+        bottom: Math.max(bounds.bottom, item.rect.y + item.rect.height),
+        top: Math.min(bounds.top, item.rect.y),
+      }),
+      { bottom: -Infinity, top: Infinity }
+    );
+  }
+
   private _captureKonamiKey(keyCode: number): void {
     if (this._screen !== "start" || this._debugUnlocked) {
       return;
@@ -548,6 +637,7 @@ class Menus implements MenuSystemInstance {
     this._screen = screen;
     this._selectedIndex = 0;
     this._awaitingBinding = null;
+    this._scrollY = 0;
     this._buildItems();
   }
 
@@ -555,6 +645,7 @@ class Menus implements MenuSystemInstance {
     this._screen = this._screenHistory.pop() ?? "start";
     this._selectedIndex = 0;
     this._awaitingBinding = null;
+    this._scrollY = 0;
     this._buildItems();
   }
 
@@ -596,11 +687,18 @@ class Menus implements MenuSystemInstance {
   }
 
   private _isInsideItem(pointer: MenuPointerData, item: MenuItem): boolean {
+    const viewport = this._getMenuViewport();
+    const itemPosY = pointer.posY - this._scrollY;
+
     return (
+      pointer.posX >= viewport.x &&
+      pointer.posX <= viewport.x + viewport.width &&
+      pointer.posY >= viewport.y &&
+      pointer.posY <= viewport.y + viewport.height &&
       pointer.posX >= item.rect.x &&
       pointer.posX <= item.rect.x + item.rect.width &&
-      pointer.posY >= item.rect.y &&
-      pointer.posY <= item.rect.y + item.rect.height
+      itemPosY >= item.rect.y &&
+      itemPosY <= item.rect.y + item.rect.height
     );
   }
 }

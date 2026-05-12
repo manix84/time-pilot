@@ -16,6 +16,7 @@ export default tseslint.config(
       "images/**",
       "sounds/**",
       "sprites/**",
+      "storybook-static/**",
       "lib/**",
     ],
   },
