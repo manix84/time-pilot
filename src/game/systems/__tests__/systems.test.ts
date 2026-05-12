@@ -343,7 +343,7 @@ describe("game systems", () => {
     expect(context._menus.render).toHaveBeenCalled();
   });
 
-  it("renders level intro text below the player while intro is active", () => {
+  it("renders level intro text above gameplay and below menus while intro is active", () => {
     const context = createContext({ levelIntroUntilTick: 250, ticks: 200 });
     const system = new RenderingSystem(context);
 
@@ -359,6 +359,14 @@ describe("game systems", () => {
         valign: "middle",
       })
     );
+    expect(
+      vi.mocked(context._props.render).mock.invocationCallOrder[1]
+    ).toBeLessThan(
+      vi.mocked(context._gameArena.renderText).mock.invocationCallOrder[0]
+    );
+    expect(
+      vi.mocked(context._gameArena.renderText).mock.invocationCallOrder[0]
+    ).toBeLessThan(vi.mocked(context._menus.render).mock.invocationCallOrder[0]);
   });
 
   it("renders demo level fade behind active menus", () => {

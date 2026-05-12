@@ -18,13 +18,13 @@ class RenderingSystem implements RenderingSystemInstance {
     this._context._bullets.render();
     this._context._enemies.render();
     this._context._player.render();
-    this.renderLevelIntroText();
     this._context._props.render(2);
 
     if (!this._context._menus.isActive()) {
       this._context._hud.render();
     }
 
+    this.renderLevelIntroText();
     this.renderDemoLevelFade();
     this._context._menus.render();
   }
