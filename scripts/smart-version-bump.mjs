@@ -19,6 +19,43 @@ function git(args) {
   return result.stdout.trim();
 }
 
+function gitWithInput(args, input) {
+  const result = spawnSync("git", args, { encoding: "utf8", input });
+  if (result.status !== 0) {
+    throw new Error(result.stderr || result.stdout);
+  }
+  return result.stdout.trim();
+}
+
+function readStagedFile(path) {
+  return git(["show", `:${path}`]);
+}
+
+function stageFileContent(path, content) {
+  const indexEntry = git(["ls-files", "-s", "--", path]);
+  const [mode] = indexEntry.split(/\s+/);
+  const blob = gitWithInput(["hash-object", "-w", "--stdin"], content);
+
+  git(["update-index", "--cacheinfo", `${mode},${blob},${path}`]);
+}
+
+function updatePackageVersion(content, nextVersion) {
+  const packageJson = JSON.parse(content);
+  packageJson.version = nextVersion;
+  return `${JSON.stringify(packageJson, null, 2)}\n`;
+}
+
+function updatePackageLockVersion(content, nextVersion) {
+  const packageLock = JSON.parse(content);
+  packageLock.version = nextVersion;
+
+  if (packageLock.packages?.[""]) {
+    packageLock.packages[""].version = nextVersion;
+  }
+
+  return `${JSON.stringify(packageLock, null, 2)}\n`;
+}
+
 function stagedNameStatus() {
   const output = git(["diff", "--cached", "--name-status"]);
   if (!output) {
@@ -143,19 +180,24 @@ if (currentVersion === nextVersion) {
   process.exit(0);
 }
 
-packageJson.version = nextVersion;
-writeFileSync("package.json", `${JSON.stringify(packageJson, null, 2)}\n`);
+writeFileSync(
+  "package.json",
+  updatePackageVersion(readFileSync("package.json", "utf8"), nextVersion)
+);
+stageFileContent(
+  "package.json",
+  updatePackageVersion(readStagedFile("package.json"), nextVersion)
+);
 
 if (existsSync("package-lock.json")) {
-  const packageLock = JSON.parse(readFileSync("package-lock.json", "utf8"));
-  packageLock.version = nextVersion;
-
-  if (packageLock.packages?.[""]) {
-    packageLock.packages[""].version = nextVersion;
-  }
-
-  writeFileSync("package-lock.json", `${JSON.stringify(packageLock, null, 2)}\n`);
+  writeFileSync(
+    "package-lock.json",
+    updatePackageLockVersion(readFileSync("package-lock.json", "utf8"), nextVersion)
+  );
+  stageFileContent(
+    "package-lock.json",
+    updatePackageLockVersion(readStagedFile("package-lock.json"), nextVersion)
+  );
 }
 
-git(["add", "package.json", "package-lock.json"]);
 console.log(`Version bumped ${currentVersion} -> ${nextVersion} (${bump}).`);
