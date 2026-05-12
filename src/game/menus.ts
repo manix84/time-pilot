@@ -55,7 +55,7 @@ const menuEdgePadding = 24;
 const menuDesignHeight = 500;
 const menuDesignWidth = 438;
 const submenuItemOffsetY = 22;
-const menuTransitionDuration = 1200;
+const menuTransitionDuration = 500;
 const keyBindingRows: Array<{ binding: BindingAction; label: string }> = [
   { binding: "up", label: "Up" },
   { binding: "left", label: "Left" },

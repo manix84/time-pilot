@@ -301,7 +301,7 @@ describe("menu definitions", () => {
       expect.objectContaining({ align: "center" })
     );
 
-    performanceNow.mockReturnValue(600);
+    performanceNow.mockReturnValue(250);
     menus.render();
 
     expect(arena.renderText).toHaveBeenCalledWith(
@@ -311,7 +311,7 @@ describe("menu definitions", () => {
       expect.objectContaining({ align: "center" })
     );
 
-    performanceNow.mockReturnValue(1200);
+    performanceNow.mockReturnValue(500);
     menus.render();
 
     expect(arena.renderText).toHaveBeenCalledWith(
@@ -335,7 +335,7 @@ describe("menu definitions", () => {
       expect.objectContaining({ align: "center" })
     );
 
-    performanceNow.mockReturnValue(2400);
+    performanceNow.mockReturnValue(1000);
     menus.render();
 
     expect(arena.renderText).toHaveBeenCalledWith(
