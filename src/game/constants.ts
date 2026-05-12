@@ -32,16 +32,16 @@ const basicEnemy = (
   sprite: {
     src: assetPath(`sprites/enemies/basic/level${level}.png`),
   },
-  velocity: 3,
-  turnLimiter: 25,
+  velocity: 3.25,
+  turnLimiter: 32,
   width: 32,
   height: 32,
-  firingChance: 0.5,
+  firingChance: 0.35,
   hitPoints: 1,
   hitRadius: 8,
   canRotate: true,
   tracksPlayer: true,
-  spawnLimit: 10,
+  spawnLimit: 8,
   projectile: {
     velocity: 5,
     size: 6,
@@ -73,8 +73,8 @@ const bossEnemy = (
   sprite: {
     src: assetPath(`sprites/enemies/boss/level${level}.png`),
   },
-  velocity: 2,
-  turnLimiter: 35,
+  velocity: 3,
+  turnLimiter: 48,
   width: 32,
   height: 16,
   firingChance: 0.2,
@@ -115,7 +115,7 @@ const specialBomber = (
   sprite: {
     src: assetPath(`sprites/enemies/special-bomber/level${level}.png`),
   },
-  velocity: 3,
+  velocity: 2.75,
   turnLimiter: 9999,
   width: 32,
   height: 9,
@@ -595,10 +595,10 @@ const timePilotConstants: TimePilotConstants = {
       },
       enemies: {
         basic: basicEnemy(2, {
-          velocity: 4,
-          turnLimiter: 20,
-          firingChance: 0.55,
-          spawnLimit: 12,
+          velocity: 4.25,
+          turnLimiter: 22,
+          firingChance: 0.5,
+          spawnLimit: 11,
         }),
         boss: bossEnemy(2, {
           width: 32,
@@ -606,7 +606,8 @@ const timePilotConstants: TimePilotConstants = {
           hitRadius: 22,
           renderHeight: 18,
           renderWidth: 64,
-          velocity: 2.4,
+          velocity: 3.2,
+          turnLimiter: 44,
         }),
         formations: futureLevelFormations[2],
         specialBomber: specialBomber(2),
@@ -630,9 +631,9 @@ const timePilotConstants: TimePilotConstants = {
       enemies: {
         basic: basicEnemy(3, {
           velocity: 5,
-          turnLimiter: 16,
-          firingChance: 0.65,
-          spawnLimit: 14,
+          turnLimiter: 14,
+          firingChance: 0.6,
+          spawnLimit: 13,
         }),
         boss: bossEnemy(3, {
           width: 32,
@@ -640,7 +641,8 @@ const timePilotConstants: TimePilotConstants = {
           hitRadius: 23,
           renderHeight: 26,
           renderWidth: 64,
-          velocity: 2.8,
+          velocity: 3.5,
+          turnLimiter: 38,
         }),
         formations: futureLevelFormations[3],
       },
@@ -662,9 +664,9 @@ const timePilotConstants: TimePilotConstants = {
       },
       enemies: {
         basic: basicEnemy(4, {
-          velocity: 5.5,
-          turnLimiter: 14,
-          firingChance: 0.7,
+          velocity: 6.25,
+          turnLimiter: 10,
+          firingChance: 0.68,
           spawnLimit: 15,
         }),
         boss: bossEnemy(4, {
@@ -673,7 +675,8 @@ const timePilotConstants: TimePilotConstants = {
           hitRadius: 23,
           renderHeight: 26,
           renderWidth: 64,
-          velocity: 3,
+          velocity: 3.75,
+          turnLimiter: 34,
         }),
         formations: futureLevelFormations[4],
       },
@@ -695,9 +698,9 @@ const timePilotConstants: TimePilotConstants = {
       },
       enemies: {
         basic: basicEnemy(5, {
-          velocity: 4.5,
-          turnLimiter: 12,
-          firingChance: 0.75,
+          velocity: 7.5,
+          turnLimiter: 8,
+          firingChance: 0.72,
           spawnLimit: 16,
         }),
         boss: bossEnemy(5, {
@@ -708,7 +711,8 @@ const timePilotConstants: TimePilotConstants = {
           hitRadius: 24,
           renderHeight: 32,
           renderWidth: 64,
-          velocity: 2.6,
+          velocity: 4,
+          turnLimiter: 30,
         }),
         formations: futureLevelFormations[5],
       },
