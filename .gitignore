@@ -2,3 +2,7 @@ sprites/tmp/*
 sprites/src/*
 sounds/tmp/*
 sounds/src/*
+node_modules/
+dist/
+tsconfig.tsbuildinfo
+.DS_Store
