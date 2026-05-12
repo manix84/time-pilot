@@ -724,7 +724,7 @@ class Menus implements MenuSystemInstance {
     const context = this._gameArena.getContext() as CanvasRenderingContext2D;
     const sprite = this._getLevelIconSprite(level);
     const enemyConfig = levelConfig.enemies.basic;
-    const frame = enemyConfig.canRotate ? 4 : 0;
+    const upwardFrame = 0;
     const size = 28;
     const x = item.rect.x + item.rect.width - 38;
     const y = item.rect.y + item.rect.height / 2 - size / 2;
@@ -732,7 +732,7 @@ class Menus implements MenuSystemInstance {
     context.imageSmoothingEnabled = false;
     context.drawImage(
       sprite,
-      frame * enemyConfig.width,
+      upwardFrame * enemyConfig.width,
       0,
       enemyConfig.width,
       enemyConfig.height,

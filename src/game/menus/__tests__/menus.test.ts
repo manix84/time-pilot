@@ -522,6 +522,13 @@ describe("menu definitions", () => {
     expect(
       contexts.some((context) => vi.mocked(context.drawImage).mock.calls.length > 0)
     ).toBe(true);
+    expect(
+      contexts.some((context) =>
+        vi.mocked(context.drawImage).mock.calls.some(
+          (call) => call[1] === 0 && call[2] === 0 && call[3] === 32 && call[4] === 32
+        )
+      )
+    ).toBe(true);
     expect(arena.renderText).not.toHaveBeenCalledWith(
       "Selected",
       expect.any(Number),
