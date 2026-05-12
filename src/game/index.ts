@@ -63,8 +63,12 @@ export class TimePilot {
   private hasStartedGame = false;
   private isDestroyed = false;
   private isDemoMode = false;
+  private readonly coinDropSound = new SoundEngine(CONSTS.sounds.coinDrop.src);
+  private readonly gameStartSound = new SoundEngine(CONSTS.sounds.gameStart.src);
+  private readonly nextLevelSound = new SoundEngine(CONSTS.sounds.nextLevel.src);
   private renderingSystem!: RenderingSystemInstance;
   private spawningSystem!: SpawningSystemInstance;
+  private readonly timeWarpSound = new SoundEngine(CONSTS.sounds.timeWarp.src);
 
   constructor(element: HTMLElement, options: TimePilotOptions = {}) {
     this.container = element;
@@ -369,6 +373,10 @@ export class TimePilot {
     this.context._isDemoMode = false;
 
     if (shouldStartFreshGame) {
+      this.coinDropSound.stop();
+      this.coinDropSound.play();
+      this.gameStartSound.stop();
+      this.gameStartSound.play();
       this.resetWorld(1, { skipIntro: false });
       this.hasStartedGame = true;
     }
@@ -466,6 +474,13 @@ export class TimePilot {
     const score = this.context._player.getData("score") ?? 0;
     const lives = this.context._player.getData("lives") ?? 3;
     const nextLevel = this.getNextEnabledLevel();
+
+    this.timeWarpSound.stop();
+    this.timeWarpSound.play();
+    if (nextLevel > 1) {
+      this.nextLevelSound.stop();
+      this.nextLevelSound.play();
+    }
 
     this.resetWorld(nextLevel, { skipIntro: false });
     this.context._player.setData("score", score);

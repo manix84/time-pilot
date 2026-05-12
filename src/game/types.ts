@@ -553,6 +553,14 @@ export interface LevelConfig {
 
 export interface TimePilotConstants {
   player: PlayerConfig;
+  sounds: {
+    coinDrop: SoundAsset;
+    enemyShoot: SoundAsset;
+    gameStart: SoundAsset;
+    nextLevel: SoundAsset;
+    timeWarp: SoundAsset;
+    waveStart: SoundAsset;
+  };
   scoring: {
     bomber1940: number;
     boss: number;

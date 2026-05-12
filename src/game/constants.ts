@@ -51,7 +51,7 @@ const basicEnemy = (
       src: assetPath("sprites/enemies/basic/explosion.png"),
     },
     sound: {
-      src: assetPath("sounds/enemies/basic/explosion.mp3"),
+      src: assetPath("sounds/enemy_explode.wav"),
     },
     width: 32,
     height: 32,
@@ -93,7 +93,7 @@ const bossEnemy = (
       src: assetPath("sprites/enemies/boss/explosion.png"),
     },
     sound: {
-      src: assetPath("sounds/enemies/basic/explosion.mp3"),
+      src: assetPath("sounds/enemy_explode.wav"),
     },
     width: 32,
     height: 32,
@@ -144,7 +144,7 @@ const specialBomber = (
       src: assetPath("sprites/enemies/basic/explosion.png"),
     },
     sound: {
-      src: assetPath("sounds/enemies/basic/explosion.mp3"),
+      src: assetPath("sounds/enemy_explode.wav"),
     },
     width: 32,
     height: 32,
@@ -518,6 +518,26 @@ var CONSTS: TimePilotConstants = {
       sound: {
         src: assetPath("sounds/player/bullet.mp3"),
       },
+    },
+  },
+  sounds: {
+    coinDrop: {
+      src: assetPath("sounds/coindrop.wav"),
+    },
+    enemyShoot: {
+      src: assetPath("sounds/enemy_shoot.wav"),
+    },
+    gameStart: {
+      src: assetPath("sounds/game_start.wav"),
+    },
+    nextLevel: {
+      src: assetPath("sounds/next_level.wav"),
+    },
+    timeWarp: {
+      src: assetPath("sounds/timewarp.wav"),
+    },
+    waveStart: {
+      src: assetPath("sounds/wave_start.wav"),
     },
   },
   scoring,

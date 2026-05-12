@@ -1,4 +1,5 @@
 import CONSTS from "../constants";
+import SoundEngine from "../engine/Sound";
 import helpers from "../engine/helpers";
 import type {
   Coordinates,
@@ -22,6 +23,8 @@ let nextFormationId = 1;
 
 class SpawningSystem implements SpawningSystemInstance {
   private _context: GameDataStore;
+  private _enemyShootSound = new SoundEngine(CONSTS.sounds.enemyShoot.src);
+  private _waveStartSound = new SoundEngine(CONSTS.sounds.waveStart.src);
 
   constructor(context: GameDataStore) {
     this._context = context;
@@ -205,6 +208,9 @@ class SpawningSystem implements SpawningSystemInstance {
       total: formation.slots.length,
     };
 
+    this._waveStartSound.stop();
+    this._waveStartSound.play();
+
     formation.slots.forEach((slot, index) => {
       const position = this._rotateFormationSlot(center, slot, heading);
 
@@ -309,6 +315,8 @@ class SpawningSystem implements SpawningSystemInstance {
       "world",
       "circle"
     );
+    this._enemyShootSound.stop();
+    this._enemyShootSound.play();
   }
 
   private _spawnSpecialBomberBomb(): void {
