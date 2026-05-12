@@ -10,6 +10,10 @@ import type {
   SpriteImage,
 } from "./types";
 
+const upFacingPlayerFrame =
+  Math.round(((0 + 270) % 360) / (360 / CONSTS.player.rotationFrameCount)) %
+  CONSTS.player.rotationFrameCount;
+
 class Hud implements HudInstance {
   private _context: GameDataStore;
   private _gameArena: GameArenaInstance;
@@ -21,9 +25,9 @@ class Hud implements HudInstance {
 
     this._playerSprite = new Image() as SpriteImage;
     this._playerSprite.src = CONSTS.player.sprite.src;
-    this._playerSprite.frameWidth = CONSTS.player.width;
-    this._playerSprite.frameHeight = CONSTS.player.height;
-    this._playerSprite.frameX = 0;
+    this._playerSprite.frameWidth = CONSTS.player.frameWidth;
+    this._playerSprite.frameHeight = CONSTS.player.frameHeight;
+    this._playerSprite.frameX = upFacingPlayerFrame;
     this._playerSprite.frameY = 0;
   }
 
@@ -88,10 +92,12 @@ class Hud implements HudInstance {
 
     for (let i = 0; i < playerData.lives; ++i) {
       this._gameArena.renderSprite(this._playerSprite, {
-        frameWidth: this._playerSprite.frameWidth ?? CONSTS.player.width,
-        frameHeight: this._playerSprite.frameHeight ?? CONSTS.player.height,
+        frameWidth: this._playerSprite.frameWidth ?? CONSTS.player.frameWidth,
+        frameHeight: this._playerSprite.frameHeight ?? CONSTS.player.frameHeight,
         frameX: this._playerSprite.frameX ?? 0,
         frameY: this._playerSprite.frameY ?? 0,
+        renderWidth: CONSTS.player.width,
+        renderHeight: CONSTS.player.height,
         posX:
           this._gameArena.width / 2 -
           CONSTS.player.width -

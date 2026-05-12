@@ -200,6 +200,17 @@ describe("context-backed game modules", () => {
 
     context._hud.render();
 
+    expect(context._gameArena.renderSprite).toHaveBeenCalledTimes(3);
+    expect(context._gameArena.renderSprite).toHaveBeenCalledWith(
+      expect.any(HTMLImageElement),
+      expect.objectContaining({
+        frameHeight: 16,
+        frameWidth: 16,
+        frameX: 24,
+        renderHeight: 32,
+        renderWidth: 32,
+      })
+    );
     expect(context._gameArena.renderText).toHaveBeenCalledWith(
       300,
       expect.any(Number),
@@ -356,7 +367,7 @@ describe("context-backed game modules", () => {
     context._enemies.render();
     context._bonuses.render();
 
-    expect(context._gameArena.drawCircle).toHaveBeenCalledWith(0, 0, 8, {
+    expect(context._gameArena.drawCircle).toHaveBeenCalledWith(0, 0, 16, {
       borderColor: expect.stringMatching(/^#[0-9a-f]{6}$/),
     });
     expect(context._gameArena.drawCircle).toHaveBeenCalledWith(0, 0, 4, {
