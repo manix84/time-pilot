@@ -101,7 +101,11 @@ export type ControlInputName =
   | "right"
   | "up";
 
-export type ControlInputState = Record<ControlInputName, boolean>;
+export type ControlInputSource = "gamepad" | "keyboard";
+
+export type ControlInputState = Record<ControlInputName, boolean> & {
+  activeController: ControlInputSource;
+};
 
 export interface KeyboardBindings {
   down: number[];

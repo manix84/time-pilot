@@ -120,6 +120,7 @@ export class TimePilot {
       restart: false,
       right: false,
       up: false,
+      activeController: "keyboard",
     };
     this.context._gameArena = new GameArena(this.container);
     this.context._renderTicker = new Ticker();

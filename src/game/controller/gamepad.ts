@@ -1,6 +1,11 @@
 /* Converted from TimePilot.Controller.Gamepad.js (AMD) to ESM TypeScript. */
 import helpers from "../engine/helpers";
-import type { ControlInputState, Controller, ControllerInterfaceInstance } from "../types";
+import type {
+  ControlInputName,
+  ControlInputState,
+  Controller,
+  ControllerInterfaceInstance,
+} from "../types";
 
 type NavigatorWithGamepads = Navigator & {
   webkitGetGamepads?: () => (globalThis.Gamepad | null)[];
@@ -112,13 +117,26 @@ class Gamepad implements Controller {
     this._inputState.right = axisX > threshold;
     this._inputState.up = axisY < -threshold;
     this._inputState.down = axisY > threshold;
+
+    if (
+      this._inputState.left ||
+      this._inputState.right ||
+      this._inputState.up ||
+      this._inputState.down
+    ) {
+      this._inputState.activeController = "gamepad";
+    }
   }
 
   private _setInputState(
-    key: keyof ControlInputState,
+    key: ControlInputName,
     isPressed: boolean
   ): void {
     if (this._inputState) {
+      if (isPressed) {
+        this._inputState.activeController = "gamepad";
+      }
+
       this._inputState[key] = isPressed;
     }
   }

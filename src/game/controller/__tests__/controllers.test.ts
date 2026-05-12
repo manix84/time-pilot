@@ -37,6 +37,7 @@ function createInputState(): ControlInputState {
     restart: false,
     right: false,
     up: false,
+    activeController: "keyboard",
   };
 }
 
@@ -64,6 +65,7 @@ describe("controller modules", () => {
     expect(inputState.left).toBe(true);
     expect(inputState.fire).toBe(false);
     expect(inputState.menu).toBe(true);
+    expect(inputState.activeController).toBe("keyboard");
 
     keyboard.disconnect?.();
   });
@@ -125,6 +127,7 @@ describe("controller modules", () => {
     expect(controls.rotateToHeading).toHaveBeenCalled();
     expect(inputState.fire).toBe(true);
     expect(inputState.right).toBe(true);
+    expect(inputState.activeController).toBe("gamepad");
     expect(window.cancelAnimationFrame).toHaveBeenCalled();
   });
 

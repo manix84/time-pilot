@@ -115,12 +115,26 @@ class Hud implements HudInstance {
   private renderControlsOverlay(): void {
     const context = this._gameArena.getContext() as CanvasRenderingContext2D;
     const inputState = this._context._controlInputState;
-    const y = this._gameArena.height / 2 - 102;
 
     context.save();
     context.globalAlpha = 0.9;
-    this.renderKeyboardOverlay(context, -210, y, inputState);
-    this.renderGamepadOverlay(context, 120, y + 14, inputState);
+
+    if (inputState.activeController === "gamepad") {
+      this.renderGamepadOverlay(
+        context,
+        this._gameArena.width / 2 - 244,
+        this._gameArena.height / 2 - 114,
+        inputState
+      );
+    } else {
+      this.renderKeyboardOverlay(
+        context,
+        this._gameArena.width / 2 - 190,
+        this._gameArena.height / 2 - 124,
+        inputState
+      );
+    }
+
     context.restore();
   }
 
@@ -135,6 +149,38 @@ class Hud implements HudInstance {
     this.renderKey(context, "S", x + 44, y + 32, 34, 28, inputState.down);
     this.renderKey(context, "D", x + 88, y + 32, 34, 28, inputState.right);
     this.renderKey(context, "Space", x, y + 68, 122, 28, inputState.fire);
+    this.renderMouseOverlay(context, x + 138, y + 10, inputState.fire);
+  }
+
+  private renderMouseOverlay(
+    context: CanvasRenderingContext2D,
+    x: number,
+    y: number,
+    isPressed: boolean
+  ): void {
+    context.globalAlpha = isPressed ? 0.92 : 0.5;
+    context.fillStyle = isPressed ? palette.overlay.activeWash : "transparent";
+    context.strokeStyle = isPressed ? palette.overlay.activeFill : palette.overlay.line;
+    context.lineWidth = 2;
+    context.beginPath();
+    context.roundRect(x, y, 30, 48, 14);
+    context.fill();
+    context.stroke();
+
+    context.beginPath();
+    context.moveTo(x + 15, y + 5);
+    context.lineTo(x + 15, y + 22);
+    context.moveTo(x + 3, y + 22);
+    context.lineTo(x + 27, y + 22);
+    context.stroke();
+
+    context.globalAlpha = isPressed ? 1 : 0.6;
+    this._gameArena.renderText("M1", x + 15, y + 36, {
+      size: 8,
+      align: "center",
+      valign: "middle",
+      color: isPressed ? palette.overlay.activeFill : palette.overlay.line,
+    });
   }
 
   private renderKey(

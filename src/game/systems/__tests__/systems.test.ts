@@ -126,6 +126,7 @@ const createContext = ({
       restart: false,
       right: false,
       up: false,
+      activeController: "keyboard",
     },
     _gameArena: createArena(),
     _renderTicker: createTicker(),

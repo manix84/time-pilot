@@ -81,6 +81,7 @@ function createContext(): GameDataStore {
       restart: false,
       right: false,
       up: false,
+      activeController: "keyboard",
     },
     _gameArena: createArena(),
     _renderTicker: createTicker(),
@@ -212,6 +213,45 @@ describe("context-backed game modules", () => {
     expect(pause).toHaveBeenCalled();
     expect(restart).toHaveBeenCalled();
     expect(context._gameArena.renderText).toHaveBeenCalled();
+  });
+
+  it("renders only the active controller overlay", () => {
+    const context = createContext();
+    userOptions.setOption("enableDebug", true);
+    userOptions.setDebugOption("showControlsOverlay", true);
+
+    context._controlInputState.activeController = "keyboard";
+    context._hud.render();
+
+    expect(context._gameArena.renderText).toHaveBeenCalledWith(
+      "Space",
+      expect.any(Number),
+      expect.any(Number),
+      expect.objectContaining({ align: "center" })
+    );
+    expect(context._gameArena.renderText).not.toHaveBeenCalledWith(
+      "Menu",
+      expect.any(Number),
+      expect.any(Number),
+      expect.any(Object)
+    );
+
+    vi.mocked(context._gameArena.renderText).mockClear();
+    context._controlInputState.activeController = "gamepad";
+    context._hud.render();
+
+    expect(context._gameArena.renderText).toHaveBeenCalledWith(
+      "Menu",
+      expect.any(Number),
+      expect.any(Number),
+      expect.objectContaining({ align: "center" })
+    );
+    expect(context._gameArena.renderText).not.toHaveBeenCalledWith(
+      "Space",
+      expect.any(Number),
+      expect.any(Number),
+      expect.any(Object)
+    );
   });
 
   it("routes controller actions to the active menu", () => {

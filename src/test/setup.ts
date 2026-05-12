@@ -59,6 +59,7 @@ export function createCanvasContextMock() {
     fillRect: vi.fn((...args: unknown[]) => calls.push({ method: "fillRect", args })),
     moveTo: vi.fn((...args: unknown[]) => calls.push({ method: "moveTo", args })),
     lineTo: vi.fn((...args: unknown[]) => calls.push({ method: "lineTo", args })),
+    roundRect: vi.fn((...args: unknown[]) => calls.push({ method: "roundRect", args })),
   };
 }
 

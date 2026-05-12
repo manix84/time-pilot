@@ -136,6 +136,10 @@ class Keyboard1 implements Controller {
 
   private _setInputState(key: ControlInputName, isPressed: boolean): void {
     if (this._inputState) {
+      if (isPressed) {
+        this._inputState.activeController = "keyboard";
+      }
+
       this._inputState[key] = isPressed;
     }
   }

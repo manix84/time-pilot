@@ -30,6 +30,7 @@ function createInputState(): ControlInputState {
     restart: false,
     right: false,
     up: false,
+    activeController: "keyboard",
   };
 }
 
@@ -200,6 +201,7 @@ function InputOverlayDemo() {
       event.preventDefault();
       setInputState((current) => ({
         ...current,
+        activeController: "keyboard",
         [inputName]: isPressed,
       }));
     };
