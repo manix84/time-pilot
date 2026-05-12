@@ -63,8 +63,8 @@ describe("menu definitions", () => {
       .value as CanvasRenderingContext2D;
 
     expect(menus.isActive()).toBe(true);
-    expect(context.strokeText).toHaveBeenCalledWith("TIME PILOT", 5, 7);
-    expect(context.fillText).toHaveBeenCalledWith("TIME PILOT", -3, -5);
+    expect(context.transform).not.toHaveBeenCalled();
+    expect(context.drawImage).toHaveBeenCalled();
     expect(start).toHaveBeenCalled();
   });
 

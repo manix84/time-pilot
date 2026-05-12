@@ -180,37 +180,84 @@ class Menus implements MenuSystemInstance {
   }
 
   private _renderLogo(context: CanvasRenderingContext2D): void {
+    const logoCanvas = document.createElement("canvas");
+    const logoWidth = 420;
+    const logoHeight = 96;
+    logoCanvas.width = logoWidth;
+    logoCanvas.height = logoHeight;
+
+    const logoContext = logoCanvas.getContext("2d");
+    if (!logoContext) {
+      return;
+    }
+
+    this._drawLogoText(logoContext, logoWidth, logoHeight);
+
     context.save();
     context.translate(0, -126);
-    context.transform(1, 0, -0.18, 1, 0, 0);
-    context.scale(1.18, 0.9);
+    this._drawPerspectiveLogo(context, logoCanvas, logoWidth, logoHeight);
+    context.restore();
+  }
+
+  private _drawLogoText(
+    context: CanvasRenderingContext2D,
+    width: number,
+    height: number
+  ): void {
+    const text = "TIME PILOT";
+    const textX = width / 2;
+    const textY = height / 2 + 3;
+
+    context.font = "italic 900 52px 'Bookman Old Style', Georgia, serif";
     context.textAlign = "center";
     context.textBaseline = "middle";
-    context.font = "italic 900 42px Georgia, 'Times New Roman', serif";
-    context.lineJoin = "round";
-    context.miterLimit = 2;
 
-    const text = "TIME PILOT";
     const layers = [
-      { x: 5, y: 7, color: "#6F1206", stroke: "#6F1206", width: 9 },
-      { x: 3, y: 5, color: "#D92705", stroke: "#D92705", width: 8 },
-      { x: 1, y: 3, color: "#FF740A", stroke: "#FF740A", width: 7 },
-      { x: 0, y: 0, color: "#FFD72B", stroke: "#FFC20D", width: 6 },
-      { x: -2, y: -2, color: "#FFF45A", stroke: "#FFE32B", width: 3 },
+      { x: 5, y: 5, color: "#7A1200" },
+      { x: 4, y: 4, color: "#7A1200" },
+      { x: 3, y: 3, color: "#C94F00" },
+      { x: 2, y: 2, color: "#FF8C00" },
+      { x: 1, y: 1, color: "#FF8C00" },
     ];
 
     for (const layer of layers) {
-      context.lineWidth = layer.width;
-      context.strokeStyle = layer.stroke;
       context.fillStyle = layer.color;
-      context.strokeText(text, layer.x, layer.y);
-      context.fillText(text, layer.x, layer.y);
+      context.fillText(text, textX + layer.x, textY + layer.y);
     }
 
-    context.fillStyle = "rgba(255, 255, 150, 0.85)";
-    context.fillText(text, -3, -5);
+    context.fillStyle = "#FFD400";
+    context.fillText(text, textX, textY);
+  }
 
-    context.restore();
+  private _drawPerspectiveLogo(
+    context: CanvasRenderingContext2D,
+    logoCanvas: HTMLCanvasElement,
+    logoWidth: number,
+    logoHeight: number
+  ): void {
+    const topWidth = 300;
+    const bottomWidth = 380;
+    const targetHeight = 86;
+    const sliceHeight = 2;
+
+    for (let sourceY = 0; sourceY < logoHeight; sourceY += sliceHeight) {
+      const progress = sourceY / (logoHeight - sliceHeight);
+      const targetWidth = topWidth + (bottomWidth - topWidth) * progress;
+      const targetY = -targetHeight / 2 + (sourceY / logoHeight) * targetHeight;
+      const targetSliceHeight = Math.ceil((sliceHeight / logoHeight) * targetHeight);
+
+      context.drawImage(
+        logoCanvas,
+        0,
+        sourceY,
+        logoWidth,
+        sliceHeight,
+        -targetWidth / 2,
+        targetY,
+        targetWidth,
+        targetSliceHeight
+      );
+    }
   }
 
   private _buildItems(): void {
