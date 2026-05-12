@@ -181,13 +181,22 @@ const InputOverlayDemo = () => {
     };
   }, []);
 
-  const draw = useCallback(
+  const drawKeyboard = useCallback(
     (context: CanvasRenderingContext2D, canvas: HTMLCanvasElement) => {
       context.fillStyle = "#06101d";
       context.fillRect(0, 0, canvas.width, canvas.height);
       context.save();
-      renderKeyboardOverlay(context, 70, 58, inputState);
-      renderGamepadOverlay(context, 252, 42, inputState);
+      renderKeyboardOverlay(context, 65, 50, inputState);
+      context.restore();
+    },
+    [inputState]
+  );
+  const drawGamepad = useCallback(
+    (context: CanvasRenderingContext2D, canvas: HTMLCanvasElement) => {
+      context.fillStyle = "#06101d";
+      context.fillRect(0, 0, canvas.width, canvas.height);
+      context.save();
+      renderGamepadOverlay(context, 20, 36, inputState);
       context.restore();
     },
     [inputState]
@@ -209,7 +218,16 @@ const InputOverlayDemo = () => {
       <section className={"storybook-section"}>
         <p className={"storybook-eyebrow"}>Game UI</p>
         <h1 className={"storybook-title"}>Controller Input Overlays</h1>
-        <CanvasDemo draw={draw} height={220} width={560} />
+        <div className={"storybook-demo-grid"}>
+          <article className={"storybook-card"}>
+            <h2>Keyboard</h2>
+            <CanvasDemo draw={drawKeyboard} height={180} width={280} />
+          </article>
+          <article className={"storybook-card"}>
+            <h2>Gamepad</h2>
+            <CanvasDemo draw={drawGamepad} height={180} width={280} />
+          </article>
+        </div>
         <div className={"storybook-controls"}>
           {controls.map(([inputName, label]) => (
             <button
