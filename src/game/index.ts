@@ -84,6 +84,7 @@ export class TimePilot {
 
   restartGame = (): void => {
     window.console.info("Restarting");
+    SoundEngine.stopAll();
     this.context._gameTicker.stop(() => {
       this.context._hud.restart();
 
@@ -108,6 +109,7 @@ export class TimePilot {
     this.isDestroyed = true;
     this.isDemoMode = false;
     this.context._isDemoMode = false;
+    SoundEngine.stopAll();
 
     this.context._gameTicker.stop();
     this.context._gameTicker.clearSchedule();
@@ -129,9 +131,11 @@ export class TimePilot {
     if (this.context._gameTicker.isRunning || !!forcePause) {
       window.console.info("Pausing");
       this.context._gameTicker.stop();
+      SoundEngine.pauseAll();
     } else {
       window.console.info("Unpausing");
       this.context._gameTicker.start();
+      SoundEngine.resumePaused();
     }
   };
 
@@ -139,6 +143,7 @@ export class TimePilot {
     if (!this.context._gameTicker.isRunning) {
       window.console.info("Unpausing");
       this.context._gameTicker.start();
+      SoundEngine.resumePaused();
     }
   };
 
@@ -368,6 +373,7 @@ export class TimePilot {
     const shouldStartFreshGame = this.isDemoMode || !this.hasStartedGame;
 
     this.stopMenuMusic();
+    SoundEngine.resumePaused();
     SoundEngine.setMuted(false);
     this.isDemoMode = false;
     this.context._isDemoMode = false;
@@ -397,6 +403,7 @@ export class TimePilot {
     }
 
     this.stopMenuMusic();
+    SoundEngine.stopAll();
     this.isDemoMode = true;
     this.context._isDemoMode = true;
     SoundEngine.setMuted(true);

@@ -16,11 +16,39 @@ const canPlayListener = function (this: TimePilotAudioElement): void {
 };
 
 class Sound {
+  private static _instances = new Set<Sound>();
   private static _isMuted = false;
+  private static _pausedInstances = new Set<Sound>();
+  private _isPlaying = false;
   private _theSound: TimePilotAudioElement;
 
   static setMuted = (isMuted: boolean): void => {
     Sound._isMuted = isMuted;
+  };
+
+  static pauseAll = (): void => {
+    Sound._pausedInstances.clear();
+
+    Sound._instances.forEach((sound) => {
+      if (!sound._isPlaying) {
+        return;
+      }
+
+      sound.pause();
+      Sound._pausedInstances.add(sound);
+    });
+  };
+
+  static resumePaused = (): void => {
+    const pausedInstances = [...Sound._pausedInstances];
+
+    Sound._pausedInstances.clear();
+    pausedInstances.forEach((sound) => sound.resume());
+  };
+
+  static stopAll = (): void => {
+    Sound._pausedInstances.clear();
+    Sound._instances.forEach((sound) => sound.stop());
   };
 
   constructor(urls: string | string[], userOptions: SoundOptions = {}) {
@@ -53,6 +81,7 @@ class Sound {
     this._theSound.controls = false;
 
     this._theSound.addEventListener("canplay", canPlayListener, false);
+    Sound._instances.add(this);
   }
 
   play = (): void => {
@@ -60,6 +89,7 @@ class Sound {
     if (this._theSound.canPlay) {
       this.applyVolume();
       this._theSound.play();
+      this._isPlaying = true;
     }
   };
 
@@ -68,15 +98,26 @@ class Sound {
     if (this._theSound.canPlay) {
       this.applyVolume();
       this._theSound.play();
+      this._isPlaying = true;
     }
   };
 
   pause = (): void => {
     this._theSound.pause();
+    this._isPlaying = false;
+  };
+
+  resume = (): void => {
+    if (this._theSound.canPlay) {
+      this.applyVolume();
+      this._theSound.play();
+      this._isPlaying = true;
+    }
   };
 
   stop = (): void => {
     this._theSound.pause();
+    this._isPlaying = false;
     if (this._theSound.currentTime > 0) {
       this._theSound.currentTime = 0;
     }
@@ -85,6 +126,8 @@ class Sound {
   destroy = (): void => {
     this.stop();
     this._theSound.removeEventListener("canplay", canPlayListener, false);
+    Sound._instances.delete(this);
+    Sound._pausedInstances.delete(this);
   };
 
   private applyVolume = (): void => {

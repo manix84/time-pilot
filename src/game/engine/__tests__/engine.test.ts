@@ -104,4 +104,23 @@ describe("engine modules", () => {
 
     expect(HTMLMediaElement.prototype.pause).toHaveBeenCalled();
   });
+
+  it("pauses, resumes, and stops active sounds globally", () => {
+    Object.defineProperty(HTMLMediaElement.prototype, "canPlay", {
+      configurable: true,
+      value: true,
+    });
+    const play = vi.mocked(HTMLMediaElement.prototype.play);
+    const pause = vi.mocked(HTMLMediaElement.prototype.pause);
+    const sound = new Sound("/sounds/player/bullet.mp3", { autoplay: false });
+
+    sound.play();
+    Sound.pauseAll();
+    Sound.resumePaused();
+    Sound.stopAll();
+    sound.destroy();
+
+    expect(play).toHaveBeenCalledTimes(2);
+    expect(pause).toHaveBeenCalledTimes(3);
+  });
 });
