@@ -46,11 +46,13 @@ class Gamepad implements Controller {
         continue;
       }
 
-      if (gamepad.buttons[0].pressed && !this._isFireButtonPressed) {
+      const isFaceButtonPressed = this._isFaceButtonPressed(gamepad);
+
+      if (isFaceButtonPressed && !this._isFireButtonPressed) {
         this._isFireButtonPressed = true;
         this._setInputState("fire", true);
         this._controllerInterface.startShooting();
-      } else if (!gamepad.buttons[0].pressed && this._isFireButtonPressed) {
+      } else if (!isFaceButtonPressed && this._isFireButtonPressed) {
         this._isFireButtonPressed = false;
         this._setInputState("fire", false);
         this._controllerInterface.stopShooting();
@@ -76,12 +78,18 @@ class Gamepad implements Controller {
 
       if (gamepad.buttons[4]?.pressed) {
         this._setActiveController();
+        this._setRotationState("rotateLeft", true);
         this._controllerInterface.rotateAntiClockwise();
+      } else {
+        this._setRotationState("rotateLeft", false);
       }
 
       if (gamepad.buttons[5]?.pressed) {
         this._setActiveController();
+        this._setRotationState("rotateRight", true);
         this._controllerInterface.rotateClockwise();
+      } else {
+        this._setRotationState("rotateRight", false);
       }
 
       const directionalInput = this._getDirectionalInput(gamepad);
@@ -148,6 +156,10 @@ class Gamepad implements Controller {
     };
   };
 
+  private _isFaceButtonPressed = (gamepad: globalThis.Gamepad): boolean => {
+    return [0, 1, 2, 3].some((buttonIndex) => gamepad.buttons[buttonIndex]?.pressed);
+  };
+
   private _setAxisState = (axisX: number, axisY: number): void => {
     if (!this._inputState) {
       return;
@@ -172,6 +184,16 @@ class Gamepad implements Controller {
   private _setActiveController = (): void => {
     if (this._inputState) {
       this._inputState.activeController = "gamepad";
+    }
+  };
+
+  private _setRotationState = (key: "rotateLeft" | "rotateRight", isPressed: boolean): void => {
+    if (this._inputState) {
+      if (isPressed) {
+        this._setActiveController();
+      }
+
+      this._inputState[key] = isPressed;
     }
   };
 

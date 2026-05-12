@@ -109,6 +109,8 @@ export type ControlInputSource = "gamepad" | "keyboard" | "touch";
 
 export type ControlInputState = Record<ControlInputName, boolean> & {
   activeController: ControlInputSource;
+  rotateLeft?: boolean;
+  rotateRight?: boolean;
 };
 
 export interface KeyboardBindings {

@@ -213,10 +213,23 @@ class Hud implements HudInstance {
     context.closePath();
     context.stroke();
 
-    this.renderStick(context, x + 70, y + 48, inputState);
-    this.renderButton(context, "A", x + 148, y + 52, inputState.fire);
-    this.renderButton(context, "Menu", x + 106, y + 38, inputState.menu);
-    this.renderButton(context, "P", x + 122, y + 38, inputState.pause);
+    const menuY = y + 27;
+    const faceButtonX = x + 152;
+    const faceButtonY = y + 58;
+    const faceButtonRadius = 6;
+    const faceButtonGap = 1;
+    const faceButtonOffset = faceButtonRadius * 2 + faceButtonGap;
+
+    this.renderShoulderButton(context, "L", x + 48, y + 6, inputState.rotateLeft ?? false, -0.26);
+    this.renderShoulderButton(context, "R", x + 164, y + 6, inputState.rotateRight ?? false, 0.26);
+    this.renderStick(context, x + 60, y + 58, inputState);
+    this.renderButton(context, "Y", faceButtonX, faceButtonY - faceButtonOffset, inputState.fire, faceButtonRadius);
+    this.renderButton(context, "A", faceButtonX, faceButtonY + faceButtonOffset, inputState.fire, faceButtonRadius);
+    this.renderButton(context, "X", faceButtonX - faceButtonOffset, faceButtonY, inputState.fire, faceButtonRadius);
+    this.renderButton(context, "B", faceButtonX + faceButtonOffset, faceButtonY, inputState.fire, faceButtonRadius);
+    this.renderButton(context, "Menu", x + 106, menuY, inputState.menu);
+    this.renderOvalButton(context, "P", x + 74, menuY, inputState.pause);
+    this.renderOvalButton(context, "R", x + 138, menuY, inputState.restart);
   };
 
   private renderStick = (context: CanvasRenderingContext2D, x: number, y: number, inputState: ControlInputState): void => {
@@ -240,8 +253,14 @@ class Hud implements HudInstance {
     context.stroke();
   };
 
-  private renderButton = (context: CanvasRenderingContext2D, label: string, x: number, y: number, isPressed: boolean): void => {
-    const radius = label.length > 1 ? 9 : 12;
+  private renderButton = (
+    context: CanvasRenderingContext2D,
+    label: string,
+    x: number,
+    y: number,
+    isPressed: boolean,
+    radius = label.length > 1 ? 9 : 12
+  ): void => {
 
     context.globalAlpha = isPressed ? 0.95 : 0.5;
     context.fillStyle = isPressed ? palette.overlay.activeWashStrong : "transparent";
@@ -258,6 +277,59 @@ class Hud implements HudInstance {
       valign: "middle",
       color: isPressed ? palette.overlay.activeFill : palette.overlay.line,
     });
+  };
+
+  private renderOvalButton = (context: CanvasRenderingContext2D, label: string, x: number, y: number, isPressed: boolean): void => {
+    const width = 28;
+    const height = 8;
+
+    context.globalAlpha = isPressed ? 0.95 : 0.5;
+    context.fillStyle = isPressed ? palette.overlay.activeWashStrong : "transparent";
+    context.strokeStyle = isPressed ? palette.overlay.activeFill : palette.overlay.line;
+    context.beginPath();
+    context.roundRect(x - width / 2, y - height / 2, width, height, height / 2);
+    context.fill();
+    context.stroke();
+
+    context.globalAlpha = isPressed ? 1 : 0.65;
+    this._gameArena.renderText(label, x, y, {
+      size: 9,
+      align: "center",
+      valign: "middle",
+      color: isPressed ? palette.overlay.activeFill : palette.overlay.line,
+    });
+  };
+
+  private renderShoulderButton = (
+    context: CanvasRenderingContext2D,
+    label: string,
+    x: number,
+    y: number,
+    isPressed: boolean,
+    rotation: number
+  ): void => {
+    const width = 46;
+    const height = 12;
+
+    context.save();
+    context.translate(x, y);
+    context.rotate(rotation);
+    context.globalAlpha = isPressed ? 0.95 : 0.5;
+    context.fillStyle = isPressed ? palette.overlay.activeWashStrong : "transparent";
+    context.strokeStyle = isPressed ? palette.overlay.activeFill : palette.overlay.line;
+    context.beginPath();
+    context.roundRect(-width / 2, -height / 2, width, height, 4);
+    context.fill();
+    context.stroke();
+
+    context.globalAlpha = isPressed ? 1 : 0.65;
+    this._gameArena.renderText(label, 0, 0, {
+      size: 8,
+      align: "center",
+      valign: "middle",
+      color: isPressed ? palette.overlay.activeFill : palette.overlay.line,
+    });
+    context.restore();
   };
 }
 

@@ -16,6 +16,7 @@ import type {
 
 const createArena = (): GameArenaInstance => {
   const context = document.createElement("canvas").getContext("2d")!;
+  context.rotate = context.rotate ?? vi.fn();
 
   return {
     width: 800,

@@ -5,6 +5,8 @@ import type { ControlInputName, ControlInputState } from "../game/types";
 import { CanvasDemo } from "./canvas-demo";
 import "./storybook.css";
 
+type OverlayControlInputName = Exclude<keyof ControlInputState, "activeController">;
+
 const keyMap: Record<string, ControlInputName> = {
   ArrowDown: "down",
   ArrowLeft: "left",
@@ -29,6 +31,8 @@ const createInputState = (): ControlInputState => {
     pause: false,
     restart: false,
     right: false,
+    rotateLeft: false,
+    rotateRight: false,
     up: false,
     activeController: "keyboard",
   };
@@ -91,8 +95,14 @@ const renderStick = (context: CanvasRenderingContext2D, x: number, y: number, in
   context.stroke();
 };
 
-const renderButton = (context: CanvasRenderingContext2D, label: string, x: number, y: number, isPressed: boolean): void => {
-  const radius = label.length > 1 ? 12 : 16;
+const renderButton = (
+  context: CanvasRenderingContext2D,
+  label: string,
+  x: number,
+  y: number,
+  isPressed: boolean,
+  radius = label.length > 1 ? 12 : 16
+): void => {
 
   context.globalAlpha = isPressed ? 0.95 : 0.5;
   context.fillStyle = isPressed ? palette.overlay.activeWashStrong : "transparent";
@@ -113,6 +123,63 @@ const renderButton = (context: CanvasRenderingContext2D, label: string, x: numbe
   );
 };
 
+const renderOvalButton = (context: CanvasRenderingContext2D, label: string, x: number, y: number, isPressed: boolean): void => {
+  const width = 34;
+  const height = 10;
+
+  context.globalAlpha = isPressed ? 0.95 : 0.5;
+  context.fillStyle = isPressed ? palette.overlay.activeWashStrong : "transparent";
+  context.strokeStyle = isPressed ? palette.overlay.activeFill : palette.overlay.line;
+  context.beginPath();
+  context.roundRect(x - width / 2, y - height / 2, width, height, height / 2);
+  context.fill();
+  context.stroke();
+
+  context.globalAlpha = isPressed ? 1 : 0.65;
+  renderText(
+    context,
+    label,
+    x,
+    y,
+    10,
+    isPressed ? palette.overlay.activeFill : palette.overlay.line
+  );
+};
+
+const renderShoulderButton = (
+  context: CanvasRenderingContext2D,
+  label: string,
+  x: number,
+  y: number,
+  isPressed: boolean,
+  rotation: number
+): void => {
+  const width = 58;
+  const height = 16;
+
+  context.save();
+  context.translate(x, y);
+  context.rotate(rotation);
+  context.globalAlpha = isPressed ? 0.95 : 0.5;
+  context.fillStyle = isPressed ? palette.overlay.activeWashStrong : "transparent";
+  context.strokeStyle = isPressed ? palette.overlay.activeFill : palette.overlay.line;
+  context.beginPath();
+  context.roundRect(-width / 2, -height / 2, width, height, 5);
+  context.fill();
+  context.stroke();
+
+  context.globalAlpha = isPressed ? 1 : 0.65;
+  renderText(
+    context,
+    label,
+    0,
+    0,
+    10,
+    isPressed ? palette.overlay.activeFill : palette.overlay.line
+  );
+  context.restore();
+};
+
 const renderGamepadOverlay = (context: CanvasRenderingContext2D, x: number, y: number, inputState: ControlInputState): void => {
   context.globalAlpha = 0.5;
   context.strokeStyle = palette.overlay.line;
@@ -131,11 +198,23 @@ const renderGamepadOverlay = (context: CanvasRenderingContext2D, x: number, y: n
   context.closePath();
   context.stroke();
 
-  renderStick(context, x + 88, y + 72, inputState);
-  renderButton(context, "A", x + 188, y + 76, inputState.fire);
-  renderButton(context, "Menu", x + 130, y + 56, inputState.menu);
-  renderButton(context, "P", x + 154, y + 56, inputState.pause);
-  renderButton(context, "R", x + 212, y + 48, inputState.restart);
+  const menuY = y + 31;
+  const faceButtonX = x + 198;
+  const faceButtonY = y + 72;
+  const faceButtonRadius = 8;
+  const faceButtonGap = 1;
+  const faceButtonOffset = faceButtonRadius * 2 + faceButtonGap;
+
+  renderShoulderButton(context, "L", x + 62, y + 8, inputState.rotateLeft ?? false, -0.29);
+  renderShoulderButton(context, "R", x + 204, y + 8, inputState.rotateRight ?? false, 0.29);
+  renderStick(context, x + 68, y + 72, inputState);
+  renderButton(context, "Y", faceButtonX, faceButtonY - faceButtonOffset, inputState.fire, faceButtonRadius);
+  renderButton(context, "A", faceButtonX, faceButtonY + faceButtonOffset, inputState.fire, faceButtonRadius);
+  renderButton(context, "X", faceButtonX - faceButtonOffset, faceButtonY, inputState.fire, faceButtonRadius);
+  renderButton(context, "B", faceButtonX + faceButtonOffset, faceButtonY, inputState.fire, faceButtonRadius);
+  renderButton(context, "Menu", x + 130, menuY, inputState.menu);
+  renderOvalButton(context, "P", x + 91, menuY, inputState.pause);
+  renderOvalButton(context, "R", x + 169, menuY, inputState.restart);
 };
 
 const InputOverlayDemo = () => {
@@ -146,11 +225,13 @@ const InputOverlayDemo = () => {
       ["left", "A / Left"],
       ["down", "S / Down"],
       ["right", "D / Right"],
-      ["fire", "Space / A"],
+      ["fire", "Space / A/B/X/Y"],
       ["menu", "Esc / Menu"],
       ["pause", "P"],
       ["restart", "R"],
-    ] satisfies Array<[ControlInputName, string]>,
+      ["rotateLeft", "L Shoulder"],
+      ["rotateRight", "R Shoulder"],
+    ] satisfies Array<[OverlayControlInputName, string]>,
     []
   );
 
@@ -202,7 +283,7 @@ const InputOverlayDemo = () => {
     [inputState]
   );
 
-  const toggleInput = (inputName: ControlInputName): void => {
+  const toggleInput = (inputName: OverlayControlInputName): void => {
     setInputState((current) => ({
       ...current,
       [inputName]: !current[inputName],
