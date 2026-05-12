@@ -1,7 +1,13 @@
 /* Converted from TimePilot.CONSTANTS.js (AMD) to ESM TypeScript. */
 import { assetPath } from "./asset-path";
 import palette from "./palette";
-import type { TimePilotConstants } from "./types";
+import type {
+  BonusConfig,
+  EnemyConfig,
+  EnemyFormationConfig,
+  PropConfig,
+  TimePilotConstants,
+} from "./types";
 
 const scoring = {
   regularEnemy: 100,
@@ -14,6 +20,376 @@ const scoring = {
     max: 5000,
     step: 1000,
   },
+};
+
+const basicEnemy = (
+  level: number,
+  overrides: Partial<EnemyConfig> = {}
+): EnemyConfig => ({
+  deathValue: scoring.regularEnemy,
+  sprite: {
+    src: assetPath(`sprites/enemies/basic/level${level}.png`),
+  },
+  velocity: 3,
+  turnLimiter: 25,
+  width: 32,
+  height: 32,
+  firingChance: 0.5,
+  hitRadius: 8,
+  canRotate: true,
+  spawnLimit: 10,
+  projectile: {
+    velocity: 5,
+    size: 6,
+    color: palette.aircraft.enemyBullet,
+  },
+  explosion: {
+    sprite: {
+      src: assetPath("sprites/enemies/basic/explosion.png"),
+    },
+    sound: {
+      src: assetPath("sounds/enemies/basic/explosion.mp3"),
+    },
+    width: 32,
+    height: 32,
+    frames: 4,
+    frameLimiter: 5,
+  },
+  ...overrides,
+});
+
+const parachuteBonus: BonusConfig = {
+  sprite: {
+    src: assetPath("sprites/bonuses/parachute.png"),
+  },
+  velocity: 2,
+  animationCycle: [1, 2, 3, 4, 4, 3, 2, 1],
+  hitRadius: 10,
+  width: 32,
+  height: 32,
+};
+
+const levelOneProps: PropConfig[] = [
+  {
+    sprite: {
+      src: assetPath("sprites/props/cloud1.png"),
+    },
+    width: 32,
+    height: 18,
+    relativeVelocity: 0.5,
+    layer: 1,
+    reversed: false,
+  },
+  {
+    sprite: {
+      src: assetPath("sprites/props/cloud2.png"),
+    },
+    width: 60,
+    height: 28,
+    relativeVelocity: 0.25,
+    layer: 1,
+    reversed: false,
+  },
+  {
+    sprite: {
+      src: assetPath("sprites/props/cloud3.png"),
+    },
+    width: 92,
+    height: 32,
+    relativeVelocity: 0,
+    layer: 2,
+    reversed: false,
+  },
+];
+
+const levelOneFormations: EnemyFormationConfig[] = [
+  {
+    name: "v",
+    movement: "slow diagonal entry with slight wave",
+    breakPattern: "peel-apart",
+    spawnChance: 0.28,
+    holdTicks: 150,
+    waveAmplitude: 1.25,
+    waveFrequency: 0.08,
+    slots: [
+      { posX: 0, posY: -64 },
+      { posX: -42, posY: -22 },
+      { posX: 42, posY: -22 },
+      { posX: -84, posY: 28 },
+      { posX: 84, posY: 28 },
+    ],
+  },
+  {
+    name: "horizontal-sweep",
+    movement: "straight cross-screen sweep with vertical wobble",
+    breakPattern: "staggered-firing",
+    fireStaggerTicks: 12,
+    spawnChance: 0.22,
+    holdTicks: 120,
+    waveAmplitude: 1.5,
+    waveFrequency: 0.07,
+    slots: [
+      { posX: -96, posY: 0 },
+      { posX: -48, posY: 0 },
+      { posX: 0, posY: 0 },
+      { posX: 48, posY: 0 },
+      { posX: 96, posY: 0 },
+    ],
+  },
+  {
+    name: "curved-arc",
+    movement: "curved arc entry, then reform",
+    breakPattern: "reform-then-attack",
+    spawnChance: 0.18,
+    holdTicks: 135,
+    waveAmplitude: 1,
+    waveFrequency: 0.09,
+    slots: [
+      { posX: -72, posY: -72 },
+      { posX: -36, posY: -36 },
+      { posX: 0, posY: 0 },
+      { posX: 36, posY: 36 },
+    ],
+    transformSlots: [
+      { posX: -48, posY: -32 },
+      { posX: 48, posY: -32 },
+      { posX: -48, posY: 32 },
+      { posX: 48, posY: 32 },
+    ],
+  },
+];
+
+const futureLevelFormations: Record<number, EnemyFormationConfig[]> = {
+  2: [
+    {
+      name: "arrowhead",
+      movement: "fast forward entry with slight steering toward player",
+      steering: "leader-tracks-player",
+      breakPattern: "forward-attack",
+      spawnChance: 0.26,
+      holdTicks: 120,
+      waveAmplitude: 0.4,
+      waveFrequency: 0.04,
+      slots: [
+        { posX: 0, posY: -72 },
+        { posX: -42, posY: -30 },
+        { posX: 42, posY: -30 },
+        { posX: -84, posY: 18 },
+        { posX: 0, posY: 18 },
+        { posX: 84, posY: 18 },
+      ],
+    },
+    {
+      name: "crossing-squadron-left",
+      movement: "diagonal crossing path from left side",
+      breakPattern: "crossfire",
+      fireStaggerTicks: 10,
+      spawnChance: 0.18,
+      holdTicks: 100,
+      waveAmplitude: 0,
+      waveFrequency: 0,
+      slots: [
+        { posX: -48, posY: -24 },
+        { posX: 0, posY: 0 },
+        { posX: 48, posY: 24 },
+      ],
+    },
+    {
+      name: "crossing-squadron-right",
+      movement: "diagonal crossing path from right side",
+      breakPattern: "crossfire",
+      fireStaggerTicks: 10,
+      spawnChance: 0.18,
+      holdTicks: 100,
+      waveAmplitude: 0,
+      waveFrequency: 0,
+      slots: [
+        { posX: 48, posY: -24 },
+        { posX: 0, posY: 0 },
+        { posX: -48, posY: 24 },
+      ],
+    },
+    {
+      name: "dive-bomb-split",
+      movement: "line entry, outer enemies dive on break",
+      breakPattern: "outer-dive-inner-forward",
+      spawnChance: 0.2,
+      holdTicks: 110,
+      waveAmplitude: 0.3,
+      waveFrequency: 0.03,
+      slots: [
+        { posX: -72, posY: 0 },
+        { posX: -24, posY: 0 },
+        { posX: 24, posY: 0 },
+        { posX: 72, posY: 0 },
+      ],
+      transformSlots: [
+        { posX: -120, posY: 48 },
+        { posX: -24, posY: 0 },
+        { posX: 24, posY: 0 },
+        { posX: 120, posY: 48 },
+      ],
+    },
+  ],
+  3: [
+    {
+      name: "diamond",
+      movement: "tight formation with shared rotation",
+      breakPattern: "rotating-breakaway",
+      rotationSpeed: 0.045,
+      spawnChance: 0.25,
+      holdTicks: 110,
+      waveAmplitude: 0,
+      waveFrequency: 0,
+      slots: [
+        { posX: 0, posY: -58 },
+        { posX: -58, posY: 0 },
+        { posX: 58, posY: 0 },
+        { posX: 0, posY: 58 },
+      ],
+    },
+    {
+      name: "serpentine-chain",
+      movement: "shared sine-wave with delayed slot motion",
+      breakPattern: "snake-dispersal",
+      spawnChance: 0.2,
+      holdTicks: 150,
+      waveAmplitude: 2.5,
+      waveFrequency: 0.12,
+      slots: [
+        { posX: -48, posY: -96 },
+        { posX: -18, posY: -48 },
+        { posX: 18, posY: 0 },
+        { posX: -18, posY: 48 },
+        { posX: -48, posY: 96 },
+      ],
+    },
+    {
+      name: "circular-orbit",
+      movement: "orbit around shared center",
+      breakPattern: "radial-attack",
+      rotationSpeed: 0.08,
+      spawnChance: 0.18,
+      holdTicks: 140,
+      waveAmplitude: 0,
+      waveFrequency: 0,
+      slots: [
+        { posX: 0, posY: -64 },
+        { posX: -64, posY: 0 },
+        { posX: 64, posY: 0 },
+        { posX: 0, posY: 64 },
+      ],
+    },
+  ],
+  4: [
+    {
+      name: "staggered-box",
+      movement: "fast box entry with alternating attacks",
+      breakPattern: "alternating-breakaway",
+      fireStaggerTicks: 8,
+      spawnChance: 0.24,
+      holdTicks: 100,
+      waveAmplitude: 0.4,
+      waveFrequency: 0.04,
+      slots: [
+        { posX: -36, posY: -36 },
+        { posX: 36, posY: -36 },
+        { posX: 0, posY: 18 },
+        { posX: 72, posY: 18 },
+      ],
+    },
+    {
+      name: "spiral-entry",
+      movement: "shrinking-radius spiral with increasing rotation speed",
+      breakPattern: "burst-outward",
+      radiusChange: -0.8,
+      rotationSpeed: 0.11,
+      spawnChance: 0.18,
+      holdTicks: 130,
+      waveAmplitude: 0,
+      waveFrequency: 0,
+      slots: [
+        { posX: 0, posY: -96 },
+        { posX: 68, posY: -68 },
+        { posX: 96, posY: 0 },
+        { posX: 68, posY: 68 },
+        { posX: 0, posY: 96 },
+      ],
+    },
+    {
+      name: "fake-formation",
+      movement: "independent enemies with shared timing and direction",
+      breakPattern: "independent-attack",
+      spawnChance: 0.22,
+      holdTicks: 60,
+      waveAmplitude: 0.8,
+      waveFrequency: 0.06,
+      slots: [
+        { posX: -96, posY: -48 },
+        { posX: -24, posY: 0 },
+        { posX: 48, posY: -24 },
+        { posX: 112, posY: 36 },
+      ],
+    },
+  ],
+  5: [
+    {
+      name: "rotating-ring",
+      movement: "continuous ring rotation with expansion and contraction",
+      breakPattern: "individual-detach",
+      radiusChange: 0.35,
+      rotationSpeed: 0.075,
+      spawnChance: 0.24,
+      holdTicks: 160,
+      waveAmplitude: 0,
+      waveFrequency: 0,
+      slots: [
+        { posX: -36, posY: -76 },
+        { posX: 36, posY: -76 },
+        { posX: -84, posY: 0 },
+        { posX: 84, posY: 0 },
+        { posX: -36, posY: 76 },
+        { posX: 36, posY: 76 },
+      ],
+    },
+    {
+      name: "swarm-burst",
+      movement: "cluster spawn with radial outward burst",
+      breakPattern: "radial-burst",
+      spawnChance: 0.2,
+      holdTicks: 70,
+      waveAmplitude: 0.5,
+      waveFrequency: 0.08,
+      slots: [
+        { posX: -28, posY: -28 },
+        { posX: 0, posY: -34 },
+        { posX: 28, posY: -28 },
+        { posX: -34, posY: 0 },
+        { posX: 34, posY: 0 },
+        { posX: -28, posY: 28 },
+        { posX: 0, posY: 34 },
+        { posX: 28, posY: 28 },
+      ],
+    },
+    {
+      name: "chasing-wave",
+      movement: "staggered spawn wave attempting interception",
+      steering: "intercept-player",
+      breakPattern: "emergent-chase",
+      fireStaggerTicks: 6,
+      spawnChance: 0.22,
+      holdTicks: 90,
+      waveAmplitude: 2,
+      waveFrequency: 0.1,
+      slots: [
+        { posX: -96, posY: -72 },
+        { posX: -48, posY: -36 },
+        { posX: 0, posY: 0 },
+        { posX: 48, posY: 36 },
+        { posX: 96, posY: 72 },
+      ],
+    },
+  ],
 };
 
 var CONSTS: TimePilotConstants = {
@@ -56,6 +432,7 @@ var CONSTS: TimePilotConstants = {
   },
   levels: {
     1: {
+      enabled: true,
       arena: {
         introText: "A.D 1910",
         backgroundColor: palette.level.sky1910,
@@ -68,123 +445,111 @@ var CONSTS: TimePilotConstants = {
         turnInterval: 5,
       },
       enemies: {
-        basic: {
-          deathValue: scoring.regularEnemy,
-          sprite: {
-            src: assetPath("sprites/enemies/basic/level1.png"),
-          },
-          velocity: 3,
-          turnLimiter: 25,
-          width: 32,
-          height: 32,
-          firingChance: 0.5,
-          hitRadius: 8,
-          canRotate: true,
-          spawnLimit: 10,
-          projectile: {
-            velocity: 5,
-            size: 6,
-            color: palette.aircraft.enemyBullet,
-          },
-          explosion: {
-            sprite: {
-              src: assetPath("sprites/enemies/basic/explosion.png"),
-            },
-            sound: {
-              src: assetPath("sounds/enemies/basic/explosion.mp3"),
-            },
-            width: 32,
-            height: 32,
-            frames: 4,
-            frameLimiter: 5,
-          },
-        },
-        formations: [
-          {
-            name: "v",
-            spawnChance: 0.28,
-            holdTicks: 150,
-            waveAmplitude: 1.25,
-            waveFrequency: 0.08,
-            slots: [
-              { posX: 0, posY: -64 },
-              { posX: -42, posY: -22 },
-              { posX: 42, posY: -22 },
-              { posX: -84, posY: 28 },
-              { posX: 84, posY: 28 },
-            ],
-          },
-          {
-            name: "horizontal-sweep",
-            spawnChance: 0.22,
-            holdTicks: 120,
-            waveAmplitude: 1.5,
-            waveFrequency: 0.07,
-            slots: [
-              { posX: -96, posY: 0 },
-              { posX: -48, posY: 0 },
-              { posX: 0, posY: 0 },
-              { posX: 48, posY: 0 },
-              { posX: 96, posY: 0 },
-            ],
-          },
-          {
-            name: "curved-arc",
-            spawnChance: 0.18,
-            holdTicks: 135,
-            waveAmplitude: 1,
-            waveFrequency: 0.09,
-            slots: [
-              { posX: -72, posY: -72 },
-              { posX: -36, posY: -36 },
-              { posX: 0, posY: 0 },
-              { posX: 36, posY: 36 },
-            ],
-          },
-        ],
+        basic: basicEnemy(1),
+        formations: levelOneFormations,
       },
-      bonus: {
-        sprite: {
-          src: assetPath("sprites/bonuses/parachute.png"),
-        },
-        velocity: 2,
-        animationCycle: [1, 2, 3, 4, 4, 3, 2, 1],
-        hitRadius: 10,
-        width: 32,
-        height: 32,
+      bonus: parachuteBonus,
+      props: levelOneProps,
+    },
+    2: {
+      enabled: false,
+      arena: {
+        introText: "A.D 1940",
+        backgroundColor: palette.level.sky1910,
+        spawningArc: 90,
+        spawningRadius: 450,
+        despawnRadius: 500,
       },
-      props: [
-        {
-          sprite: {
-            src: assetPath("sprites/props/cloud1.png"),
-          },
-          width: 32,
-          height: 18,
-          relativeVelocity: 0.5,
-          layer: 1,
-          reversed: false,
-        },
-        {
-          sprite: {
-            src: assetPath("sprites/props/cloud2.png"),
-          },
-          width: 60,
-          height: 28,
-          relativeVelocity: 0.25,
-          layer: 1,
-          reversed: false,
-        },
-        {
-          sprite: {
-            src: assetPath("sprites/props/cloud3.png"),
-          },
-          width: 92,
-          height: 32,
-          relativeVelocity: 0,
-          layer: 2,
-          reversed: false,
-        },
-      ],
+      player: {
+        velocity: 5,
+        turnInterval: 5,
+      },
+      enemies: {
+        basic: basicEnemy(2, {
+          velocity: 4,
+          turnLimiter: 20,
+          firingChance: 0.55,
+          spawnLimit: 12,
+        }),
+        formations: futureLevelFormations[2],
+      },
+      bonus: parachuteBonus,
+      props: levelOneProps,
+    },
+    3: {
+      enabled: false,
+      arena: {
+        introText: "A.D 1970",
+        backgroundColor: palette.level.sky1910,
+        spawningArc: 90,
+        spawningRadius: 450,
+        despawnRadius: 500,
+      },
+      player: {
+        velocity: 5,
+        turnInterval: 5,
+      },
+      enemies: {
+        basic: basicEnemy(3, {
+          velocity: 5,
+          turnLimiter: 16,
+          firingChance: 0.65,
+          spawnLimit: 14,
+        }),
+        formations: futureLevelFormations[3],
+      },
+      bonus: parachuteBonus,
+      props: levelOneProps,
+    },
+    4: {
+      enabled: false,
+      arena: {
+        introText: "A.D 1982",
+        backgroundColor: palette.level.sky1910,
+        spawningArc: 90,
+        spawningRadius: 450,
+        despawnRadius: 500,
+      },
+      player: {
+        velocity: 5,
+        turnInterval: 5,
+      },
+      enemies: {
+        basic: basicEnemy(4, {
+          velocity: 5.5,
+          turnLimiter: 14,
+          firingChance: 0.7,
+          spawnLimit: 15,
+        }),
+        formations: futureLevelFormations[4],
+      },
+      bonus: parachuteBonus,
+      props: levelOneProps,
+    },
+    5: {
+      enabled: false,
+      arena: {
+        introText: "A.D 2001",
+        backgroundColor: palette.level.sky1910,
+        spawningArc: 100,
+        spawningRadius: 470,
+        despawnRadius: 520,
+      },
+      player: {
+        velocity: 5,
+        turnInterval: 5,
+      },
+      enemies: {
+        basic: basicEnemy(5, {
+          velocity: 4.5,
+          turnLimiter: 12,
+          firingChance: 0.75,
+          spawnLimit: 16,
+        }),
+        formations: futureLevelFormations[5],
+      },
+      bonus: parachuteBonus,
+      props: levelOneProps,
     },
   },
 };

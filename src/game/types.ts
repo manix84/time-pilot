@@ -463,10 +463,17 @@ export interface EnemyConfig {
 }
 
 export interface EnemyFormationConfig {
+  breakPattern?: string;
+  fireStaggerTicks?: number;
   holdTicks: number;
+  movement: string;
   name: string;
+  radiusChange?: number;
+  rotationSpeed?: number;
   spawnChance: number;
   slots: Coordinates[];
+  steering?: string;
+  transformSlots?: Coordinates[];
   waveAmplitude: number;
   waveFrequency: number;
 }
@@ -490,6 +497,7 @@ export interface BonusConfig {
 }
 
 export interface LevelConfig {
+  enabled: boolean;
   arena: {
     introText: string;
     backgroundColor: string;

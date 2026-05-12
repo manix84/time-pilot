@@ -399,7 +399,9 @@ export class TimePilot {
   }
 
   private getRandomDemoLevel(): number {
-    const levelNumbers = Object.keys(CONSTS.levels).map(Number);
+    const levelNumbers = Object.keys(CONSTS.levels)
+      .map(Number)
+      .filter((level) => CONSTS.levels[level].enabled);
 
     if (levelNumbers.length <= 1) {
       return levelNumbers[0] ?? 1;

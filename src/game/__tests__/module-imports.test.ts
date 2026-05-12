@@ -40,6 +40,37 @@ describe("game module imports", () => {
       max: 5000,
       step: 1000,
     });
+    expect(constants.levels[1].enabled).toBe(true);
+    expect(constants.levels[1].enemies.formations.map(({ name }) => name)).toEqual([
+      "v",
+      "horizontal-sweep",
+      "curved-arc",
+    ]);
+    expect(constants.levels[2].enabled).toBe(false);
+    expect(constants.levels[2].enemies.formations.map(({ name }) => name)).toEqual([
+      "arrowhead",
+      "crossing-squadron-left",
+      "crossing-squadron-right",
+      "dive-bomb-split",
+    ]);
+    expect(constants.levels[3].enabled).toBe(false);
+    expect(constants.levels[3].enemies.formations.map(({ name }) => name)).toEqual([
+      "diamond",
+      "serpentine-chain",
+      "circular-orbit",
+    ]);
+    expect(constants.levels[4].enabled).toBe(false);
+    expect(constants.levels[4].enemies.formations.map(({ name }) => name)).toEqual([
+      "staggered-box",
+      "spiral-entry",
+      "fake-formation",
+    ]);
+    expect(constants.levels[5].enabled).toBe(false);
+    expect(constants.levels[5].enemies.formations.map(({ name }) => name)).toEqual([
+      "rotating-ring",
+      "swarm-burst",
+      "chasing-wave",
+    ]);
     expect(ControllerInterface).toBeTypeOf("function");
     expect(Gamepad).toBeTypeOf("function");
     expect(Keyboard1).toBeTypeOf("function");
