@@ -153,6 +153,32 @@ describe("controller modules", () => {
     expect(window.cancelAnimationFrame).toHaveBeenCalled();
   });
 
+  it("treats gamepad D-pad as directional and shoulder buttons as rotation", async () => {
+    const controls = createControls();
+    const inputState = createInputState();
+    userOptions.setOption("controllerType", "keyboard2");
+    const gamepad = {
+      axes: [0, 0],
+      buttons: Array.from({ length: 16 }, () => ({ pressed: false })),
+    };
+    gamepad.buttons[4].pressed = true;
+    gamepad.buttons[5].pressed = true;
+    gamepad.buttons[12].pressed = true;
+    vi.spyOn(navigator, "getGamepads").mockReturnValue([
+      gamepad as unknown as globalThis.Gamepad,
+    ]);
+
+    const controller = new Gamepad(controls, inputState);
+    await new Promise((resolve) => window.setTimeout(resolve, 5));
+    controller.disconnect?.();
+
+    expect(controls.rotateAntiClockwise).toHaveBeenCalled();
+    expect(controls.rotateClockwise).toHaveBeenCalled();
+    expect(controls.rotateToHeading).toHaveBeenCalledWith(0);
+    expect(inputState.up).toBe(true);
+    expect(inputState.activeController).toBe("gamepad");
+  });
+
   it("maps mouse movement and clicks to menu pointer actions", () => {
     const controls = createControls();
     const canvas = document.createElement("canvas");

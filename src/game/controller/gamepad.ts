@@ -74,11 +74,23 @@ class Gamepad implements Controller {
         this._setInputState("restart", false);
       }
 
-      if (gamepad.axes[0] || gamepad.axes[1]) {
-        this._setAxisState(gamepad.axes[0], gamepad.axes[1]);
+      if (gamepad.buttons[4]?.pressed) {
+        this._setActiveController();
+        this._controllerInterface.rotateAntiClockwise();
+      }
+
+      if (gamepad.buttons[5]?.pressed) {
+        this._setActiveController();
+        this._controllerInterface.rotateClockwise();
+      }
+
+      const directionalInput = this._getDirectionalInput(gamepad);
+
+      if (directionalInput.axisX || directionalInput.axisY) {
+        this._setAxisState(directionalInput.axisX, directionalInput.axisY);
         const heading = helpers.findHeading({
-          posX: -gamepad.axes[0],
-          posY: -gamepad.axes[1],
+          posX: -directionalInput.axisX,
+          posY: -directionalInput.axisY,
         });
         this._controllerInterface.rotateToHeading(heading);
       } else {
@@ -107,6 +119,35 @@ class Gamepad implements Controller {
     }
   }
 
+  private _getDirectionalInput(gamepad: globalThis.Gamepad): {
+    axisX: number;
+    axisY: number;
+  } {
+    const threshold = 0.2;
+    const stickX = Math.abs(gamepad.axes[0] ?? 0) > threshold ? gamepad.axes[0] : 0;
+    const stickY = Math.abs(gamepad.axes[1] ?? 0) > threshold ? gamepad.axes[1] : 0;
+
+    if (stickX || stickY) {
+      return {
+        axisX: stickX,
+        axisY: stickY,
+      };
+    }
+
+    return {
+      axisX: gamepad.buttons[14]?.pressed
+        ? -1
+        : gamepad.buttons[15]?.pressed
+          ? 1
+          : 0,
+      axisY: gamepad.buttons[12]?.pressed
+        ? -1
+        : gamepad.buttons[13]?.pressed
+          ? 1
+          : 0,
+    };
+  }
+
   private _setAxisState(axisX: number, axisY: number): void {
     if (!this._inputState) {
       return;
@@ -124,6 +165,12 @@ class Gamepad implements Controller {
       this._inputState.up ||
       this._inputState.down
     ) {
+      this._setActiveController();
+    }
+  }
+
+  private _setActiveController(): void {
+    if (this._inputState) {
       this._inputState.activeController = "gamepad";
     }
   }
@@ -134,7 +181,7 @@ class Gamepad implements Controller {
   ): void {
     if (this._inputState) {
       if (isPressed) {
-        this._inputState.activeController = "gamepad";
+        this._setActiveController();
       }
 
       this._inputState[key] = isPressed;
