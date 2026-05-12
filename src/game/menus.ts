@@ -27,6 +27,7 @@ interface MenuItem {
   kind: MenuItemKind;
   label: string;
   onAdjust?: (direction: -1 | 1) => void;
+  onSetValue?: (value: number) => void;
   rect: {
     height: number;
     width: number;
@@ -198,6 +199,11 @@ class Menus implements MenuSystemInstance {
     this._selectedIndex = itemIndex;
 
     if (pointer.type === "click") {
+      if (this._items[itemIndex].kind === "slider") {
+        this._setSliderFromPointer(this._items[itemIndex], pointer);
+        return;
+      }
+
       this.activate();
     }
   }
@@ -396,14 +402,17 @@ class Menus implements MenuSystemInstance {
       this._createItem("Master Volume", "slider", -54, {
         getValue: () => `${userOptions.masterVolume}`,
         onAdjust: (direction) => this._adjustVolume("masterVolume", direction),
+        onSetValue: (value) => this._setVolume("masterVolume", value),
       }),
       this._createItem("Music Volume", "slider", -12, {
         getValue: () => `${userOptions.musicVolume}`,
         onAdjust: (direction) => this._adjustVolume("musicVolume", direction),
+        onSetValue: (value) => this._setVolume("musicVolume", value),
       }),
       this._createItem("Effects Volume", "slider", 30, {
         getValue: () => `${userOptions.effectsVolume}`,
         onAdjust: (direction) => this._adjustVolume("effectsVolume", direction),
+        onSetValue: (value) => this._setVolume("effectsVolume", value),
       }),
       this._createItem("Control Type", "enum", 72, {
         getValue: () =>
@@ -616,6 +625,19 @@ class Menus implements MenuSystemInstance {
     }
 
     return Math.max(0, Math.min(1, value / 10));
+  }
+
+  private _setSliderFromPointer(item: MenuItem, pointer: MenuPointerData): void {
+    if (!item.onSetValue) {
+      return;
+    }
+
+    const progress = Math.max(
+      0,
+      Math.min(1, (pointer.posX - item.rect.x) / item.rect.width)
+    );
+
+    item.onSetValue(Math.round(progress * 10));
   }
 
   private _getMenuViewport(): MenuViewport {
@@ -863,10 +885,14 @@ class Menus implements MenuSystemInstance {
     key: "masterVolume" | "musicVolume" | "effectsVolume",
     direction: -1 | 1
   ): void {
-    userOptions.setOption(
-      key,
-      Math.max(0, Math.min(10, userOptions[key] + direction))
-    );
+    this._setVolume(key, userOptions[key] + direction);
+  }
+
+  private _setVolume(
+    key: "masterVolume" | "musicVolume" | "effectsVolume",
+    value: number
+  ): void {
+    userOptions.setOption(key, Math.max(0, Math.min(10, value)));
   }
 
   private _formatKey(keyCode: number): string {

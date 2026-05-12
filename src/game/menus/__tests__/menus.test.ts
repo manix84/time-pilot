@@ -139,6 +139,24 @@ describe("menu definitions", () => {
     );
   });
 
+  it("sets slider values from pointer clicks at the nearest step", () => {
+    const menus = new Menus(createArena(), { start: vi.fn() });
+    userOptions.setOption("masterVolume", 10);
+
+    menus.showStart();
+    menus.next();
+    menus.activate();
+
+    menus.handlePointer({ posX: -9, posY: -14, type: "click" });
+    expect(userOptions.masterVolume).toBe(5);
+
+    menus.handlePointer({ posX: -150, posY: -14, type: "click" });
+    expect(userOptions.masterVolume).toBe(0);
+
+    menus.handlePointer({ posX: 150, posY: -14, type: "click" });
+    expect(userOptions.masterVolume).toBe(10);
+  });
+
   it("scrolls long menus inside a padded viewport", () => {
     const performanceNow = vi.spyOn(performance, "now").mockReturnValue(0);
     const arena = {
