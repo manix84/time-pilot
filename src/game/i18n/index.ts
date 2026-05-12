@@ -48,4 +48,13 @@ export const getLanguageName = (language: GameLanguage): string => {
   return messages[language].language.name;
 };
 
+export const getLevelIntroText = (level: number): string => {
+  const levelMessages = getCurrentMessages().levels as Record<
+    number,
+    { introText: string }
+  >;
+
+  return levelMessages[level]?.introText ?? levelMessages[1].introText;
+};
+
 export default i18n;

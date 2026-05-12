@@ -1,4 +1,5 @@
 /* Converted from TimePilot.Menu.js (AMD) to ESM TypeScript. */
+import { levels } from "./constants";
 import palette from "./palette";
 import i18n, {
   availableLanguages,
@@ -17,7 +18,13 @@ import type {
   ShowStartMenuOptions,
 } from "./types";
 
-type MenuScreen = "start" | "options" | "controls" | "debug" | "language";
+type MenuScreen =
+  | "start"
+  | "options"
+  | "controls"
+  | "debug"
+  | "language"
+  | "level";
 type MenuItemKind = "action" | "enum" | "slider" | "key" | "toggle";
 type ToggleDebugOption =
   | "invincible"
@@ -35,6 +42,7 @@ interface MenuItem {
   label: string;
   languageFlag?: GameLanguage;
   isCurrent?: () => boolean;
+  levelIcon?: number;
   onAdjust?: (direction: -1 | 1) => void;
   onSetValue?: (value: number) => void;
   rect: {
@@ -85,6 +93,7 @@ class Menus implements MenuSystemInstance {
   private _gameArena: GameArenaInstance;
   private _items: MenuItem[] = [];
   private _konamiIndex = 0;
+  private _levelIconSprites: Partial<Record<number, HTMLImageElement>> = {};
   private _logoLanguage?: GameLanguage;
   private _logoCanvas?: HTMLCanvasElement;
   private readonly _logoHeight = 96;
@@ -438,8 +447,10 @@ class Menus implements MenuSystemInstance {
       this._items = this._createControlsItems();
     } else if (this._screen === "language") {
       this._items = this._createLanguageItems();
-    } else {
+    } else if (this._screen === "debug") {
       this._items = this._createDebugItems();
+    } else {
+      this._items = this._createLevelItems();
     }
   };
 
@@ -537,6 +548,22 @@ class Menus implements MenuSystemInstance {
     ];
   };
 
+  private _createLevelItems = (): MenuItem[] => {
+    const enabledLevels = this._getEnabledLevels();
+
+    return [
+      ...enabledLevels.map((level, index) =>
+        this._createItem(this._getLevelLabel(level), "action", -54 + index * 42, {
+          action: () => this._setSelectedLevel(level),
+          levelIcon: level,
+        })
+      ),
+      this._createItem(i18n.menu.back, "action", 30 + enabledLevels.length * 42, {
+        action: () => this._goBack(),
+      }),
+    ];
+  };
+
   private _createKeyBindingItem = (binding: BindingAction, x: number, y: number, width: number, height: number): MenuItem => {
     const row = keyBindingRows.find((item) => item.binding === binding);
 
@@ -558,9 +585,9 @@ class Menus implements MenuSystemInstance {
       this._createToggleItem(i18n.menu.showHitBoxes, "showHitboxes", -12),
       this._createToggleItem(i18n.menu.showControlsOverlay, "showControlsOverlay", 30),
       this._createToggleItem(i18n.menu.showCoordinates, "showPlayerCoordinates", 72),
-      this._createItem(i18n.menu.selectLevel, "enum", 114, {
-        disabled: true,
-        getValue: () => i18n.menu.soon,
+      this._createItem(i18n.menu.selectLevel, "action", 114, {
+        action: () => this._goToScreen("level"),
+        getValue: () => this._getSelectedLevelLabel(),
       }),
       this._createItem(i18n.menu.back, "action", 164, {
         action: () => this._goBack(),
@@ -664,6 +691,10 @@ class Menus implements MenuSystemInstance {
       }
     );
 
+    if (item.levelIcon) {
+      this._renderLevelIcon(item, item.levelIcon);
+    }
+
     if (item.getValue) {
       if (item.languageFlag) {
         this._renderLanguageFlag(item, item.languageFlag);
@@ -671,7 +702,7 @@ class Menus implements MenuSystemInstance {
 
       this._gameArena.renderText(
         item.getValue(),
-        item.rect.x + item.rect.width - (item.languageFlag ? 48 : 14),
+        item.rect.x + item.rect.width - (item.languageFlag || item.levelIcon ? 48 : 14),
         item.rect.y + item.rect.height / 2,
         {
           size: item.kind === "key" ? 13 : 16,
@@ -681,6 +712,46 @@ class Menus implements MenuSystemInstance {
         }
       );
     }
+  };
+
+  private _renderLevelIcon = (item: MenuItem, level: number): void => {
+    const levelConfig = levels[level];
+
+    if (!levelConfig) {
+      return;
+    }
+
+    const context = this._gameArena.getContext() as CanvasRenderingContext2D;
+    const sprite = this._getLevelIconSprite(level);
+    const enemyConfig = levelConfig.enemies.basic;
+    const frame = enemyConfig.canRotate ? 4 : 0;
+    const size = 28;
+    const x = item.rect.x + item.rect.width - 38;
+    const y = item.rect.y + item.rect.height / 2 - size / 2;
+
+    context.imageSmoothingEnabled = false;
+    context.drawImage(
+      sprite,
+      frame * enemyConfig.width,
+      0,
+      enemyConfig.width,
+      enemyConfig.height,
+      x,
+      y,
+      size,
+      size
+    );
+  };
+
+  private _getLevelIconSprite = (level: number): HTMLImageElement => {
+    if (this._levelIconSprites[level]) {
+      return this._levelIconSprites[level];
+    }
+
+    const sprite = new Image();
+    sprite.src = levels[level].enemies.basic.sprite.src;
+    this._levelIconSprites[level] = sprite;
+    return sprite;
   };
 
   private _renderLanguageFlag = (item: MenuItem, language: GameLanguage): void => {
@@ -1072,6 +1143,10 @@ class Menus implements MenuSystemInstance {
       return i18n.menu.language;
     }
 
+    if (this._screen === "level") {
+      return i18n.menu.selectLevel;
+    }
+
     return i18n.levels[1].introText;
   };
 
@@ -1111,6 +1186,27 @@ class Menus implements MenuSystemInstance {
       (currentIndex + direction + controllerTypes.length) % controllerTypes.length;
 
     userOptions.setOption("controllerType", controllerTypes[nextIndex]);
+  };
+
+  private _getSelectedLevelLabel = (): string => {
+    return this._getLevelLabel(this._commands.getLevel?.() ?? 1);
+  };
+
+  private _getLevelLabel = (level: number): string => {
+    const levelMessages = i18n.levels as Record<number, { introText: string }>;
+
+    return levelMessages[level]?.introText ?? `${level}`;
+  };
+
+  private _getEnabledLevels = (): number[] => {
+    return Object.keys(levels)
+      .map(Number)
+      .filter((level) => levels[level].enabled)
+      .sort((a, b) => a - b);
+  };
+
+  private _setSelectedLevel = (level: number): void => {
+    this._commands.selectLevel?.(level);
   };
 
   private _setLanguage = (language: GameLanguage): void => {

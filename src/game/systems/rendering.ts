@@ -1,4 +1,5 @@
 import { levels } from "../constants";
+import { getLevelIntroText } from "../i18n";
 import type { GameDataStore, RenderingSystemInstance } from "../types";
 
 class RenderingSystem implements RenderingSystemInstance {
@@ -37,7 +38,7 @@ class RenderingSystem implements RenderingSystemInstance {
     }
 
     this._context._gameArena.renderText(
-      levels[this._context._level].arena.introText,
+      getLevelIntroText(this._context._level),
       0,
       44,
       {

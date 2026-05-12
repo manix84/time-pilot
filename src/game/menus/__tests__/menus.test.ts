@@ -475,6 +475,66 @@ describe("menu definitions", () => {
     );
   });
 
+  it("opens level select as a submenu with enemy icons", () => {
+    const arena = createArena();
+    let selectedLevel = 1;
+    const selectLevel = vi.fn((level: number) => {
+      selectedLevel = level;
+    });
+    const menus = new Menus(arena, {
+      getLevel: () => selectedLevel,
+      selectLevel,
+      start: vi.fn(),
+    });
+
+    menus.showStart();
+    for (const keyCode of [38, 38, 40, 40, 37, 39, 37, 39, 66, 65]) {
+      menus.captureKey(keyCode);
+    }
+
+    menus.next();
+    menus.next();
+    menus.activate();
+
+    for (let i = 0; i < 4; i++) {
+      menus.next();
+    }
+
+    menus.activate();
+    menus.render();
+
+    const contexts = vi
+      .mocked(arena.getContext)
+      .mock.results.map((result) => result.value as CanvasRenderingContext2D);
+
+    expect(arena.renderText).toHaveBeenCalledWith(
+      "Select Level",
+      expect.any(Number),
+      expect.any(Number),
+      expect.objectContaining({ align: "center" })
+    );
+    expect(arena.renderText).toHaveBeenCalledWith(
+      "A.D 1910",
+      expect.any(Number),
+      expect.any(Number),
+      expect.objectContaining({ align: "left" })
+    );
+    expect(
+      contexts.some((context) => vi.mocked(context.drawImage).mock.calls.length > 0)
+    ).toBe(true);
+    expect(arena.renderText).not.toHaveBeenCalledWith(
+      "Selected",
+      expect.any(Number),
+      expect.any(Number),
+      expect.anything()
+    );
+
+    menus.next();
+    menus.activate();
+
+    expect(selectLevel).toHaveBeenCalledWith(2);
+  });
+
   it("captures a replacement keyboard binding", () => {
     const menus = new Menus(createArena(), { start: vi.fn() });
 

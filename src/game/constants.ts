@@ -581,7 +581,7 @@ const timePilotConstants: TimePilotConstants = {
       props: levelOneProps,
     },
     2: {
-      enabled: false,
+      enabled: true,
       arena: {
         introText: i18n.levels[2].introText,
         backgroundColor: palette.level.sky1940,
@@ -615,7 +615,7 @@ const timePilotConstants: TimePilotConstants = {
       props: levelOneProps,
     },
     3: {
-      enabled: false,
+      enabled: true,
       arena: {
         introText: i18n.levels[3].introText,
         backgroundColor: palette.level.sky1970,
@@ -648,7 +648,7 @@ const timePilotConstants: TimePilotConstants = {
       props: levelOneProps,
     },
     4: {
-      enabled: false,
+      enabled: true,
       arena: {
         introText: i18n.levels[4].introText,
         backgroundColor: palette.level.sky1982,
@@ -681,7 +681,7 @@ const timePilotConstants: TimePilotConstants = {
       props: levelOneProps,
     },
     5: {
-      enabled: false,
+      enabled: true,
       arena: {
         introText: i18n.levels[5].introText,
         backgroundColor: palette.level.sky2001,

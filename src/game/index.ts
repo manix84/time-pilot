@@ -64,6 +64,7 @@ export class TimePilot {
   private hasStartedGame = false;
   private isDestroyed = false;
   private isDemoMode = false;
+  private selectedStartLevel = 1;
   private readonly coinDropSound = new SoundEngine(sounds.coinDrop.src);
   private readonly gameStartSound = new SoundEngine(sounds.gameStart.src);
   private readonly nextLevelSound = new SoundEngine(sounds.nextLevel.src);
@@ -100,6 +101,7 @@ export class TimePilot {
       this.context._player.resetData();
       this.hasSeededInitialProps = false;
       this.hasStartedGame = false;
+      this.selectedStartLevel = 1;
 
       this.configureGameLoop();
       this.startDemoMode();
@@ -182,6 +184,11 @@ export class TimePilot {
     this.context._bonuses = new BonusFactory(this.context);
     this.context._hud = new Hud(this.context);
     this.context._menus = new Menus(this.context._gameArena, {
+      getLevel: () => this.selectedStartLevel,
+      selectLevel: (level) => {
+        this.selectDebugLevel(level);
+        this.beginGame();
+      },
       start: () => {
         this.beginGame();
       },
@@ -228,11 +235,15 @@ export class TimePilot {
       assetPath("sprites/player/explosion.png"),
       assetPath("sprites/enemies/basic/level1.png"),
       assetPath("sprites/enemies/boss/level1.png"),
-      // assetPath("sprites/enemies/basic/level2.png"),
+      assetPath("sprites/enemies/basic/level2.png"),
+      assetPath("sprites/enemies/boss/level2.png"),
       assetPath("sprites/enemies/special-bomber/level2.png"),
-      // assetPath("sprites/enemies/basic/level3.png"),
-      // assetPath("sprites/enemies/basic/level4.png"),
-      // assetPath("sprites/enemies/basic/level5.png"),
+      assetPath("sprites/enemies/basic/level3.png"),
+      assetPath("sprites/enemies/boss/level3.png"),
+      assetPath("sprites/enemies/basic/level4.png"),
+      assetPath("sprites/enemies/boss/level4.png"),
+      assetPath("sprites/enemies/basic/level5.png"),
+      assetPath("sprites/enemies/boss/level5.png"),
       assetPath("sprites/enemies/basic/explosion.png"),
       assetPath("sprites/enemies/boss/explosion.png"),
       assetPath("sprites/enemies/projectiles/bomb.png"),
@@ -384,7 +395,7 @@ export class TimePilot {
       this.coinDropSound.play();
       this.gameStartSound.stop();
       this.gameStartSound.play();
-      this.resetWorld(1, { skipIntro: false });
+      this.resetWorld(this.selectedStartLevel, { skipIntro: false });
       this.hasStartedGame = true;
     }
 
@@ -493,6 +504,25 @@ export class TimePilot {
     }
 
     this.resetWorld(nextLevel, { skipIntro: false });
+    this.context._player.setData("score", score);
+    this.context._player.setData("score", score, true);
+    this.context._player.setData("lives", lives);
+    this.context._player.setData("lives", lives, true);
+    this.spawningSystem.addInitialProps();
+    this.hasSeededInitialProps = true;
+  };
+
+  private selectDebugLevel = (level: number): void => {
+    if (!levels[level]?.enabled) {
+      return;
+    }
+
+    this.selectedStartLevel = level;
+
+    const score = this.context._player.getData("score") ?? 0;
+    const lives = this.context._player.getData("lives") ?? 3;
+
+    this.resetWorld(level, { skipIntro: this.isDemoMode });
     this.context._player.setData("score", score);
     this.context._player.setData("score", score, true);
     this.context._player.setData("lives", lives);
