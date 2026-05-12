@@ -99,6 +99,49 @@ var CONSTS: TimePilotConstants = {
             frameLimiter: 5,
           },
         },
+        formations: [
+          {
+            name: "v",
+            spawnChance: 0.28,
+            holdTicks: 150,
+            waveAmplitude: 1.25,
+            waveFrequency: 0.08,
+            slots: [
+              { posX: 0, posY: -64 },
+              { posX: -42, posY: -22 },
+              { posX: 42, posY: -22 },
+              { posX: -84, posY: 28 },
+              { posX: 84, posY: 28 },
+            ],
+          },
+          {
+            name: "horizontal-sweep",
+            spawnChance: 0.22,
+            holdTicks: 120,
+            waveAmplitude: 1.5,
+            waveFrequency: 0.07,
+            slots: [
+              { posX: -96, posY: 0 },
+              { posX: -48, posY: 0 },
+              { posX: 0, posY: 0 },
+              { posX: 48, posY: 0 },
+              { posX: 96, posY: 0 },
+            ],
+          },
+          {
+            name: "curved-arc",
+            spawnChance: 0.18,
+            holdTicks: 135,
+            waveAmplitude: 1,
+            waveFrequency: 0.09,
+            slots: [
+              { posX: -72, posY: -72 },
+              { posX: -36, posY: -36 },
+              { posX: 0, posY: 0 },
+              { posX: 36, posY: 36 },
+            ],
+          },
+        ],
       },
       bonus: {
         sprite: {

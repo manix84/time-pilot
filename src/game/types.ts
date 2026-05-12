@@ -66,6 +66,11 @@ export interface EnemyData extends Coordinates {
   level: number;
   deathTick: number | false;
   tickOffset: number;
+  formationId?: string;
+  formationUntilTick?: number;
+  formationWaveAmplitude?: number;
+  formationWaveFrequency?: number;
+  formationWavePhase?: number;
 }
 
 export interface PropData extends Coordinates {
@@ -237,8 +242,28 @@ export interface EnemyInstance {
   kill: () => void;
 }
 
+export interface EnemySpawnOptions {
+  formationId?: string;
+  formationUntilTick?: number;
+  formationWaveAmplitude?: number;
+  formationWaveFrequency?: number;
+  formationWavePhase?: number;
+}
+
+export interface FormationState {
+  awarded: boolean;
+  escaped: boolean;
+  remaining: number;
+  total: number;
+}
+
 export interface EnemyFactoryInstance {
-  create: (posX: number, posY: number, heading: Heading) => void;
+  create: (
+    posX: number,
+    posY: number,
+    heading: Heading,
+    options?: EnemySpawnOptions
+  ) => void;
   getCount: () => number;
   isUnderLimit: () => boolean;
   getData: () => EnemyData[];
@@ -319,6 +344,7 @@ export interface ControllerInterfaceInstance {
 
 export interface GameDataStore {
   _level: number;
+  _formations: Record<string, FormationState>;
   _demoFadeStartedAtTick?: number;
   _demoFadeUntilTick?: number;
   _isDemoMode?: boolean;
@@ -436,6 +462,15 @@ export interface EnemyConfig {
   explosion: ExplosionConfig;
 }
 
+export interface EnemyFormationConfig {
+  holdTicks: number;
+  name: string;
+  spawnChance: number;
+  slots: Coordinates[];
+  waveAmplitude: number;
+  waveFrequency: number;
+}
+
 export interface PropConfig {
   sprite: SpriteAsset;
   width: number;
@@ -468,6 +503,7 @@ export interface LevelConfig {
   };
   enemies: {
     basic: EnemyConfig;
+    formations: EnemyFormationConfig[];
   };
   bonus: BonusConfig;
   props: PropConfig[];

@@ -7,6 +7,7 @@ import type {
   EnemyData,
   EnemyFactoryInstance,
   EnemyInstance,
+  EnemySpawnOptions,
   GameDataStore,
   Heading,
 } from "./types";
@@ -21,8 +22,13 @@ class EnemyFactory implements EnemyFactoryInstance {
     this._level = context._level;
   }
 
-  create(posX: number, posY: number, heading: Heading): void {
-    this._enemies.push(new Enemy(this._context, posX, posY, heading));
+  create(
+    posX: number,
+    posY: number,
+    heading: Heading,
+    options: EnemySpawnOptions = {}
+  ): void {
+    this._enemies.push(new Enemy(this._context, posX, posY, heading, options));
   }
 
   getLevelData(): EnemyConfig;
@@ -60,6 +66,19 @@ class EnemyFactory implements EnemyFactoryInstance {
   }
 
   cleanup(): void {
+    this._enemies.forEach((enemy) => {
+      const formationId = enemy.getData("formationId");
+
+      if (
+        enemy.removeMe &&
+        enemy.isAlive &&
+        typeof formationId === "string" &&
+        this._context._formations[formationId]
+      ) {
+        this._context._formations[formationId].escaped = true;
+      }
+    });
+
     this._enemies = this._enemies.filter((enemy) => !enemy.removeMe);
   }
 

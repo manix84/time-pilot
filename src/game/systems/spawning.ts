@@ -3,7 +3,9 @@ import helpers from "../engine/helpers";
 import type {
   Coordinates,
   EnemyData,
+  EnemyFormationConfig,
   GameDataStore,
+  Heading,
   SpawningSystemInstance,
 } from "../types";
 import { getScaledEntityLimit, getSpawnRadius } from "../viewport";
@@ -12,6 +14,7 @@ const bonusSpawnIntervalMinTicks = 600;
 const bonusSpawnIntervalRangeTicks = 600;
 const bonusSpawnPadding = 48;
 const enemyFireIntervalTicks = 20;
+let nextFormationId = 1;
 
 class SpawningSystem implements SpawningSystemInstance {
   private _context: GameDataStore;
@@ -72,6 +75,10 @@ class SpawningSystem implements SpawningSystemInstance {
       return;
     }
 
+    if (this._spawnFormation()) {
+      return;
+    }
+
     const data = helpers.getSpawnCoords(this._context._player.getData(), {
       spawnRadius: getSpawnRadius(this._context._gameArena),
     });
@@ -81,6 +88,82 @@ class SpawningSystem implements SpawningSystemInstance {
     });
 
     this._context._enemies.create(data.posX, data.posY, heading);
+  }
+
+  private _spawnFormation(): boolean {
+    const formation = this._pickFormation();
+
+    if (
+      !formation ||
+      this._context._enemies.getCount() + formation.slots.length >
+        getScaledEntityLimit(
+          CONSTS.levels[this._context._level].enemies.basic.spawnLimit,
+          this._context._gameArena
+        )
+    ) {
+      return false;
+    }
+
+    const center = helpers.getSpawnCoords(this._context._player.getData(), {
+      spawnRadius: getSpawnRadius(this._context._gameArena),
+    });
+    const heading = helpers.findHeading(center, {
+      posX: this._context._player.getData().posX,
+      posY: this._context._player.getData().posY,
+    });
+    const formationId = `${this._context._level}-${nextFormationId++}`;
+    const formationUntilTick =
+      this._context._gameTicker.getTicks() + formation.holdTicks;
+
+    this._context._formations[formationId] = {
+      awarded: false,
+      escaped: false,
+      remaining: formation.slots.length,
+      total: formation.slots.length,
+    };
+
+    formation.slots.forEach((slot, index) => {
+      const position = this._rotateFormationSlot(center, slot, heading);
+
+      this._context._enemies.create(position.posX, position.posY, heading, {
+        formationId,
+        formationUntilTick,
+        formationWaveAmplitude: formation.waveAmplitude,
+        formationWaveFrequency: formation.waveFrequency,
+        formationWavePhase: index * 0.45,
+      });
+    });
+
+    return true;
+  }
+
+  private _pickFormation(): EnemyFormationConfig | false {
+    const formations = CONSTS.levels[this._context._level].enemies.formations;
+
+    if (!formations.length) {
+      return false;
+    }
+
+    const formation = formations[Math.floor(Math.random() * formations.length)];
+
+    return Math.random() <= formation.spawnChance ? formation : false;
+  }
+
+  private _rotateFormationSlot(
+    center: Coordinates,
+    slot: Coordinates,
+    heading: Heading
+  ): Coordinates {
+    const radians = heading * (Math.PI / 180);
+
+    return {
+      posX:
+        center.posX +
+        helpers.float(slot.posX * Math.cos(radians) - slot.posY * Math.sin(radians)),
+      posY:
+        center.posY +
+        helpers.float(slot.posX * Math.sin(radians) + slot.posY * Math.cos(radians)),
+    };
   }
 
   private _spawnProp(): void {

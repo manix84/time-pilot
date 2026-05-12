@@ -73,6 +73,7 @@ function createTicker(): TickerInstance {
 function createContext(): GameDataStore {
   const context = {
     _level: 1,
+    _formations: {},
     _nextParachuteScore: 1000,
     _controlInputState: {
       down: false,
@@ -295,6 +296,43 @@ describe("context-backed game modules", () => {
     enemy.kill();
 
     expect(context._player.getData("score")).toBe(100);
+  });
+
+  it("awards the formation bonus when every formation enemy is killed", () => {
+    const context = createContext();
+    context._formations["formation-1"] = {
+      awarded: false,
+      escaped: false,
+      remaining: 2,
+      total: 2,
+    };
+
+    context._enemies.create(100, 100, 180, { formationId: "formation-1" });
+    context._enemies.create(130, 100, 180, { formationId: "formation-1" });
+
+    context._enemies.getEntities().forEach((enemy) => enemy.kill());
+
+    expect(context._player.getData("score")).toBe(2200);
+    expect(context._formations["formation-1"].awarded).toBe(true);
+  });
+
+  it("does not award the formation bonus after a formation enemy escapes", () => {
+    const context = createContext();
+    context._formations["formation-1"] = {
+      awarded: false,
+      escaped: false,
+      remaining: 2,
+      total: 2,
+    };
+
+    context._enemies.create(100, 100, 180, { formationId: "formation-1" });
+    context._enemies.create(130, 100, 180, { formationId: "formation-1" });
+    context._formations["formation-1"].escaped = true;
+
+    context._enemies.getEntities().forEach((enemy) => enemy.kill());
+
+    expect(context._player.getData("score")).toBe(200);
+    expect(context._formations["formation-1"].awarded).toBe(false);
   });
 
   it("renders hitboxes for every active damage collision participant", () => {

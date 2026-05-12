@@ -8,6 +8,7 @@ import type {
   EnemyConfig,
   EnemyData,
   EnemyInstance,
+  EnemySpawnOptions,
   GameArenaInstance,
   GameDataStore,
   Heading,
@@ -16,6 +17,7 @@ import type {
 } from "./types";
 
 class Enemy implements EnemyInstance {
+  private _context: GameDataStore;
   private _data: EnemyData;
   private _enemySprite: HTMLImageElement;
   private _gameArena: GameArenaInstance;
@@ -29,8 +31,10 @@ class Enemy implements EnemyInstance {
     context: GameDataStore,
     posX: number,
     posY: number,
-    heading: Heading
+    heading: Heading,
+    options: EnemySpawnOptions = {}
   ) {
+    this._context = context;
     this._gameArena = context._gameArena;
     this._player = context._player;
     this._gameTicker = context._gameTicker;
@@ -42,6 +46,7 @@ class Enemy implements EnemyInstance {
       level: context._level || 1,
       deathTick: false,
       tickOffset: Math.floor(Math.random() * 100),
+      ...options,
     };
 
     this._enemySprite = new Image();
@@ -134,7 +139,11 @@ class Enemy implements EnemyInstance {
     const levelData = this.getLevelData();
     const player = this._player.getData();
     const tick = this._gameTicker.getTicks() - this._data.tickOffset;
-    const canTurn = !this.removeMe && tick % levelData.turnLimiter === 0;
+    const formationActive =
+      this._data.formationUntilTick !== undefined &&
+      this._gameTicker.getTicks() < this._data.formationUntilTick;
+    const canTurn =
+      !formationActive && !this.removeMe && tick % levelData.turnLimiter === 0;
 
     enemy.posX += helpers.float(
       Math.sin(heading * (Math.PI / 180)) * levelData.velocity
@@ -142,6 +151,10 @@ class Enemy implements EnemyInstance {
     enemy.posY -= helpers.float(
       Math.cos(heading * (Math.PI / 180)) * levelData.velocity
     );
+
+    if (formationActive) {
+      this._applyFormationWave(tick);
+    }
 
     this._checkInArena();
 
@@ -154,6 +167,28 @@ class Enemy implements EnemyInstance {
 
       enemy.heading = helpers.rotateTo(turnTo, enemy.heading, 22.5);
     }
+  }
+
+  private _applyFormationWave(tick: number): void {
+    const amplitude = this._data.formationWaveAmplitude ?? 0;
+    const frequency = this._data.formationWaveFrequency ?? 0;
+
+    if (!amplitude || !frequency) {
+      return;
+    }
+
+    const phase = this._data.formationWavePhase ?? 0;
+    const currentWave = Math.sin(tick * frequency + phase) * amplitude;
+    const previousWave = Math.sin((tick - 1) * frequency + phase) * amplitude;
+    const waveDelta = currentWave - previousWave;
+    const perpendicularHeading = (this._data.heading + 90) % 360;
+
+    this._data.posX += helpers.float(
+      Math.sin(perpendicularHeading * (Math.PI / 180)) * waveDelta
+    );
+    this._data.posY -= helpers.float(
+      Math.cos(perpendicularHeading * (Math.PI / 180)) * waveDelta
+    );
   }
 
   private _render(): void {
@@ -232,6 +267,33 @@ class Enemy implements EnemyInstance {
     this._player.setData(
       "score",
       this._player.getData("score") + this.getLevelData("deathValue")!
+    );
+    this._trackFormationKill();
+  }
+
+  private _trackFormationKill(): void {
+    const formationId = this._data.formationId;
+
+    if (!formationId) {
+      return;
+    }
+
+    const formation = this._context._formations[formationId];
+
+    if (!formation || formation.awarded || formation.escaped) {
+      return;
+    }
+
+    formation.remaining = Math.max(0, formation.remaining - 1);
+
+    if (formation.remaining > 0) {
+      return;
+    }
+
+    formation.awarded = true;
+    this._player.setData(
+      "score",
+      this._player.getData("score") + CONSTS.scoring.formationBonus
     );
   }
 }

@@ -186,6 +186,7 @@ const createContext = ({
   };
   return {
     _level: 1,
+    _formations: {},
     _demoFadeStartedAtTick: demoFadeStartedAtTick,
     _demoFadeUntilTick: demoFadeUntilTick,
     _isDemoMode: demoMode,

@@ -148,6 +148,7 @@ export class TimePilot {
       up: false,
       activeController: "keyboard",
     };
+    this.context._formations = {};
     this.context._demoFadeStartedAtTick = 0;
     this.context._demoFadeUntilTick = 0;
     this.context._isDemoMode = false;
@@ -379,6 +380,7 @@ export class TimePilot {
 
   private resetWorld(level: number, options: { skipIntro?: boolean } = {}): void {
     this.context._level = level;
+    this.context._formations = {};
     this.context._enemies.clearAll();
     this.context._bullets.clearAll();
     this.context._enemyBullets.clearAll();
