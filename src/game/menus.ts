@@ -1,4 +1,5 @@
 /* Converted from TimePilot.Menu.js (AMD) to ESM TypeScript. */
+import palette from "./palette";
 import userOptions from "./user-options";
 import type {
   ControllerType,
@@ -175,7 +176,7 @@ class Menus implements MenuSystemInstance {
 
     const context = this._gameArena.getContext() as CanvasRenderingContext2D;
 
-    context.fillStyle = "rgba(4, 10, 18, 0.82)";
+    context.fillStyle = palette.menu.backplate;
     context.fillRect(
       -(this._gameArena.width / 2),
       -(this._gameArena.height / 2),
@@ -188,7 +189,7 @@ class Menus implements MenuSystemInstance {
       size: 18,
       align: "center",
       valign: "middle",
-      color: "#C7D5EB",
+      color: palette.menu.mutedText,
     });
 
     this._items.forEach((item, index) => {
@@ -200,7 +201,7 @@ class Menus implements MenuSystemInstance {
         size: 16,
         align: "center",
         valign: "middle",
-        color: "#7EDBD3",
+        color: palette.menu.waitingText,
       });
     }
   }
@@ -251,12 +252,12 @@ class Menus implements MenuSystemInstance {
     context.textBaseline = "middle";
 
     const layers = [
-      { x: 9, y: 9, color: "#3F0700" },
-      { x: 7, y: 7, color: "#7A1200" },
-      { x: 5, y: 5, color: "#A72A00" },
-      { x: 3, y: 3, color: "#C94F00" },
-      { x: 2, y: 2, color: "#FF8C00" },
-      { x: 1, y: 1, color: "#FFAA00" },
+      { x: 9, y: 9, color: palette.title.shadowDeep },
+      { x: 7, y: 7, color: palette.title.shadowDark },
+      { x: 5, y: 5, color: palette.title.shadowMid },
+      { x: 3, y: 3, color: palette.title.shadowOrange },
+      { x: 2, y: 2, color: palette.title.shadowLight },
+      { x: 1, y: 1, color: palette.title.shadowGold },
     ];
 
     for (const layer of layers) {
@@ -264,7 +265,7 @@ class Menus implements MenuSystemInstance {
       context.fillText(text, textX + layer.x, textY + layer.y);
     }
 
-    context.fillStyle = "#FFD400";
+    context.fillStyle = palette.title.face;
     context.fillText(text, textX, textY);
   }
 
@@ -423,27 +424,37 @@ class Menus implements MenuSystemInstance {
     const progress = this._getItemProgress(item);
     const progressWidth = progress === null ? 0 : item.rect.width * progress;
 
-    context.fillStyle = item.disabled ? "#152033" : isSelected ? "#F2B84B" : "#0B1727";
+    context.fillStyle = item.disabled
+      ? palette.menu.disabledBackground
+      : isSelected
+        ? palette.menu.selectedBackground
+        : palette.menu.itemBackground;
     context.fillRect(item.rect.x, item.rect.y, item.rect.width, item.rect.height);
 
     if (progress !== null) {
-      context.fillStyle = isSelected ? "#0B1727" : "#F2B84B";
+      context.fillStyle = isSelected
+        ? palette.menu.itemBackground
+        : palette.menu.progressFill;
       context.fillRect(item.rect.x, item.rect.y, progressWidth, item.rect.height);
     }
 
     context.strokeStyle = item.disabled
-      ? "#334158"
+      ? palette.menu.disabledBorder
       : isAwaiting
-        ? "#7EDBD3"
+        ? palette.menu.waitingBorder
         : isSelected
-          ? "#FFF1B8"
-          : "#466485";
+          ? palette.menu.selectedBorder
+          : palette.menu.itemBorder;
     context.lineWidth = 2;
     context.strokeRect(item.rect.x, item.rect.y, item.rect.width, item.rect.height);
 
     this._renderItemText(
       item,
-      item.disabled ? "#718099" : isSelected ? "#111927" : "#E9F3FF"
+      item.disabled
+        ? palette.menu.disabledText
+        : isSelected
+          ? palette.menu.selectedText
+          : palette.menu.itemText
     );
 
     if (progress !== null && progressWidth > 0) {
@@ -451,7 +462,10 @@ class Menus implements MenuSystemInstance {
       context.beginPath();
       context.rect(item.rect.x, item.rect.y, progressWidth, item.rect.height);
       context.clip();
-      this._renderItemText(item, isSelected ? "#E9F3FF" : "#111927");
+      this._renderItemText(
+        item,
+        isSelected ? palette.menu.itemText : palette.menu.selectedText
+      );
       context.restore();
     }
   }

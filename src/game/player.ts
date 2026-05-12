@@ -3,6 +3,7 @@ import CONSTS from "./constants";
 import userOptions from "./user-options";
 import SoundEngine from "./engine/Sound";
 import helpers from "./engine/helpers";
+import palette from "./palette";
 import type {
   BulletFactoryInstance,
   GameArenaInstance,
@@ -168,7 +169,7 @@ class Player implements PlayerInstance {
   }
 
   render(): void {
-    let color = "#F00";
+    let color: string = palette.aircraft.playerShield;
 
     if (!this._data.deathTick && this._data.isAlive) {
       this._gameArena.renderSprite(this._playerSprite, {

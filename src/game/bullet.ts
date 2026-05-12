@@ -2,6 +2,7 @@
 import CONSTS from "./constants";
 import userOptions from "./user-options";
 import helpers from "./engine/helpers";
+import palette from "./palette";
 import type {
   BulletData,
   BulletInstance,
@@ -117,7 +118,7 @@ class Bullet implements BulletInstance {
         this._data.posY,
         this._data.size,
         {
-          strokeColor: "#0F0",
+          strokeColor: palette.debug.playerHitbox,
         }
       );
     }

@@ -2,6 +2,7 @@
 import CONSTS from "./constants";
 import userOptions from "./user-options";
 import helpers from "./engine/helpers";
+import palette from "./palette";
 import type {
   EnemyConfig,
   EnemyData,
@@ -214,7 +215,7 @@ class Enemy implements EnemyInstance {
         this._data.posY - this._player.getData().posY,
         levelData.hitRadius,
         {
-          strokeColor: "#F00",
+          strokeColor: palette.debug.enemyHitbox,
         }
       );
     }

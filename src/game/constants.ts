@@ -1,5 +1,6 @@
 /* Converted from TimePilot.CONSTANTS.js (AMD) to ESM TypeScript. */
 import { assetPath } from "./asset-path";
+import palette from "./palette";
 import type { TimePilotConstants } from "./types";
 
 var CONSTS: TimePilotConstants = {
@@ -26,7 +27,7 @@ var CONSTS: TimePilotConstants = {
     projectile: {
       velocity: 7,
       size: 4,
-      color: "#FFF",
+      color: palette.aircraft.bullet,
       sound: {
         src: assetPath("sounds/player/bullet.mp3"),
       },
@@ -41,7 +42,7 @@ var CONSTS: TimePilotConstants = {
     1: {
       arena: {
         introText: "A.D 1910",
-        backgroundColor: "#007",
+        backgroundColor: palette.level.sky1910,
         spawningArc: 90,
         spawningRadius: 450,
         despawnRadius: 500,
@@ -67,7 +68,7 @@ var CONSTS: TimePilotConstants = {
           projectile: {
             velocity: 5,
             size: 6,
-            color: "#FF9",
+            color: palette.aircraft.enemyBullet,
           },
           explosion: {
             sprite: {

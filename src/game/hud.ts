@@ -1,5 +1,6 @@
 /* Converted from TimePilot.Hud.js (AMD) to ESM TypeScript. */
 import CONSTS from "./constants";
+import palette from "./palette";
 import userOptions from "./user-options";
 import type {
   ControlInputState,
@@ -61,13 +62,13 @@ class Hud implements HudInstance {
         size: 30,
         align: "center",
         valign: "middle",
-        color: "#FFF",
+        color: palette.text.white,
       });
       this._gameArena.renderText('Press "R" to reset', 0, 30, {
         size: 20,
         align: "center",
         valign: "middle",
-        color: "#FFF",
+        color: palette.text.white,
       });
     }
 
@@ -76,13 +77,13 @@ class Hud implements HudInstance {
         size: 25,
         align: "center",
         valign: "middle",
-        color: "#FFF",
+        color: palette.text.white,
       });
       this._gameArena.renderText('Press "P" to continue', 0, 45, {
         size: 20,
         align: "center",
         valign: "middle",
-        color: "#FFF",
+        color: palette.text.white,
       });
     }
 
@@ -107,7 +108,7 @@ class Hud implements HudInstance {
       size: 30,
       align: "center",
       valign: "middle",
-      color: "#FFF",
+      color: palette.text.white,
     });
   }
 
@@ -146,8 +147,8 @@ class Hud implements HudInstance {
     isPressed: boolean
   ): void {
     context.globalAlpha = isPressed ? 0.92 : 0.5;
-    context.fillStyle = isPressed ? "rgba(255, 212, 0, 0.22)" : "transparent";
-    context.strokeStyle = isPressed ? "#FFD400" : "#C7D5EB";
+    context.fillStyle = isPressed ? palette.overlay.activeWash : "transparent";
+    context.strokeStyle = isPressed ? palette.overlay.activeFill : palette.overlay.line;
     context.lineWidth = 2;
     context.fillRect(x, y, width, height);
     context.strokeRect(x, y, width, height);
@@ -157,7 +158,7 @@ class Hud implements HudInstance {
       size: 12,
       align: "center",
       valign: "middle",
-      color: isPressed ? "#FFD400" : "#C7D5EB",
+      color: isPressed ? palette.overlay.activeFill : palette.overlay.line,
     });
   }
 
@@ -168,7 +169,7 @@ class Hud implements HudInstance {
     inputState: ControlInputState
   ): void {
     context.globalAlpha = 0.5;
-    context.strokeStyle = "#C7D5EB";
+    context.strokeStyle = palette.overlay.line;
     context.lineWidth = 2;
     context.beginPath();
     context.moveTo(x + 32, y + 20);
@@ -202,14 +203,14 @@ class Hud implements HudInstance {
     const offsetY = inputState.up ? -5 : inputState.down ? 5 : 0;
 
     context.globalAlpha = 0.5;
-    context.strokeStyle = "#C7D5EB";
+    context.strokeStyle = palette.overlay.line;
     context.beginPath();
     context.arc(x, y, 16, 0, 2 * Math.PI);
     context.stroke();
 
     context.globalAlpha = isPressed ? 0.95 : 0.55;
-    context.fillStyle = isPressed ? "#FFD400" : "transparent";
-    context.strokeStyle = isPressed ? "#FFD400" : "#C7D5EB";
+    context.fillStyle = isPressed ? palette.overlay.activeFill : "transparent";
+    context.strokeStyle = isPressed ? palette.overlay.activeFill : palette.overlay.line;
     context.beginPath();
     context.arc(x + offsetX, y + offsetY, 9, 0, 2 * Math.PI);
     context.fill();
@@ -226,8 +227,8 @@ class Hud implements HudInstance {
     const radius = label.length > 1 ? 9 : 12;
 
     context.globalAlpha = isPressed ? 0.95 : 0.5;
-    context.fillStyle = isPressed ? "rgba(255, 212, 0, 0.24)" : "transparent";
-    context.strokeStyle = isPressed ? "#FFD400" : "#C7D5EB";
+    context.fillStyle = isPressed ? palette.overlay.activeWashStrong : "transparent";
+    context.strokeStyle = isPressed ? palette.overlay.activeFill : palette.overlay.line;
     context.beginPath();
     context.arc(x, y, radius, 0, 2 * Math.PI);
     context.fill();
@@ -238,7 +239,7 @@ class Hud implements HudInstance {
       size: label.length > 1 ? 7 : 10,
       align: "center",
       valign: "middle",
-      color: isPressed ? "#FFD400" : "#C7D5EB",
+      color: isPressed ? palette.overlay.activeFill : palette.overlay.line,
     });
   }
 }

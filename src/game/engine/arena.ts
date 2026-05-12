@@ -7,6 +7,7 @@ import type {
   SpriteFrame,
 } from "../types";
 import { assetPath } from "../asset-path";
+import palette from "../palette";
 import helpers from "./helpers";
 
 type CanvasContext = CanvasRenderingContext2D | WebGLRenderingContext;
@@ -211,7 +212,7 @@ class GameArena implements GameArenaInstance {
       size: newOptions.size || 12,
       align: newOptions.align || "left",
       valign: newOptions.valign || "top",
-      color: newOptions.color || "#fff",
+      color: newOptions.color || palette.text.white,
       font: newOptions.font || "theFont",
       stroke: newOptions.stroke || false,
       strokeWidth: newOptions.strokeWidth || 1,
@@ -289,7 +290,7 @@ class GameArena implements GameArenaInstance {
       context.lineTo(this.width, 0.5 + x);
     }
 
-    context.strokeStyle = "#AAA";
+    context.strokeStyle = palette.menu.disabledText;
     context.stroke();
   }
 
