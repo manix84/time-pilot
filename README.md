@@ -160,7 +160,7 @@ git config core.hooksPath .githooks
 The hook runs:
 
 ```bash
-node scripts/smart-version-bump.mjs
+npm run version:bump
 npm run typecheck
 npm run lint
 npm test

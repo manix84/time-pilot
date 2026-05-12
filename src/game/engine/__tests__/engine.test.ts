@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import GameArena from "../arena";
 import Sound from "../Sound";
 import Ticker from "../Ticker";
@@ -6,6 +6,10 @@ import Ticker from "../Ticker";
 describe("engine modules", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
   });
 
   it("creates a canvas arena, renders text, sprites, and circles", () => {
@@ -32,15 +36,30 @@ describe("engine modules", () => {
     expect(arena.height).toBe(480);
   });
 
-  it("registers and preloads assets", () => {
+  it("registers and preloads every asset", async () => {
     const host = document.createElement("div");
     const arena = new GameArena(host);
     const callback = vi.fn();
 
+    vi.stubGlobal(
+      "Image",
+      class {
+        onerror: (() => void) | null = null;
+        onload: (() => void) | null = null;
+
+        set src(_value: string) {
+          window.setTimeout(() => this.onload?.(), 0);
+        }
+      }
+    );
+
     arena.registerAssets(["/one.png", "/two.png"]);
     arena.preloadAssets(callback);
 
-    expect(callback).not.toHaveBeenCalled();
+    await new Promise((resolve) => window.setTimeout(resolve, 5));
+
+    expect(callback).toHaveBeenCalledTimes(2);
+    expect(callback).toHaveBeenLastCalledWith({ loaded: 2, remaining: 0 });
   });
 
   it("runs scheduled ticker callbacks and stop callbacks", async () => {

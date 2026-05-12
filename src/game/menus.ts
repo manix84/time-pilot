@@ -43,6 +43,9 @@ class Menus implements MenuSystemInstance {
   private _commands: MenuSystemCommands;
   private _gameArena: GameArenaInstance;
   private _items: MenuItem[] = [];
+  private _logoCanvas?: HTMLCanvasElement;
+  private readonly _logoHeight = 96;
+  private readonly _logoWidth = 420;
   private _screen: MenuScreen = "start";
   private _selectedIndex = 0;
 
@@ -180,23 +183,35 @@ class Menus implements MenuSystemInstance {
   }
 
   private _renderLogo(context: CanvasRenderingContext2D): void {
-    const logoCanvas = document.createElement("canvas");
-    const logoWidth = 420;
-    const logoHeight = 96;
-    logoCanvas.width = logoWidth;
-    logoCanvas.height = logoHeight;
-
-    const logoContext = logoCanvas.getContext("2d");
-    if (!logoContext) {
-      return;
-    }
-
-    this._drawLogoText(logoContext, logoWidth, logoHeight);
+    const logoCanvas = this._getLogoCanvas();
 
     context.save();
     context.translate(0, -126);
-    this._drawPerspectiveLogo(context, logoCanvas, logoWidth, logoHeight);
+    this._drawPerspectiveLogo(
+      context,
+      logoCanvas,
+      this._logoWidth,
+      this._logoHeight
+    );
     context.restore();
+  }
+
+  private _getLogoCanvas(): HTMLCanvasElement {
+    if (this._logoCanvas) {
+      return this._logoCanvas;
+    }
+
+    const logoCanvas = document.createElement("canvas");
+    logoCanvas.width = this._logoWidth;
+    logoCanvas.height = this._logoHeight;
+
+    const logoContext = logoCanvas.getContext("2d");
+    if (logoContext) {
+      this._drawLogoText(logoContext, this._logoWidth, this._logoHeight);
+    }
+
+    this._logoCanvas = logoCanvas;
+    return logoCanvas;
   }
 
   private _drawLogoText(

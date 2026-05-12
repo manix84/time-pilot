@@ -19,7 +19,7 @@ var pause: MenuDefinition = {
       getValue: () => {},
     },
     controllerType: {
-      name: "Contoller",
+      name: "Controller",
       type: "enum",
       options: {
         keyboard1: "Keyboard Set 1",

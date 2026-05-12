@@ -29,7 +29,7 @@ var debug: MenuDefinition = {
       getValue: () => {},
     },
     invincible: {
-      name: "Invinicibility",
+      name: "Invincibility",
       type: "toggle",
       setValue: () => {},
       getValue: () => {},

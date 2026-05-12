@@ -1,10 +1,11 @@
 /* Converted from TimePilot.CONSTANTS.js (AMD) to ESM TypeScript. */
+import { assetPath } from "./asset-path";
 import type { TimePilotConstants } from "./types";
 
 var CONSTS: TimePilotConstants = {
   player: {
     sprite: {
-      src: "/sprites/player/player.png",
+      src: assetPath("sprites/player/player.png"),
     },
     width: 32,
     height: 32,
@@ -12,10 +13,10 @@ var CONSTS: TimePilotConstants = {
     rotationFrameCount: 16,
     explosion: {
       sprite: {
-        src: "/sprites/player/explosion.png",
+        src: assetPath("sprites/player/explosion.png"),
       },
       sound: {
-        src: "/sounds/player/explosion.mp3",
+        src: assetPath("sounds/player/explosion.mp3"),
       },
       width: 64,
       height: 32,
@@ -27,7 +28,7 @@ var CONSTS: TimePilotConstants = {
       size: 4,
       color: "#FFF",
       sound: {
-        src: "/sounds/player/bullet.mp3",
+        src: assetPath("sounds/player/bullet.mp3"),
       },
     },
   },
@@ -53,7 +54,7 @@ var CONSTS: TimePilotConstants = {
         basic: {
           deathValue: 100,
           sprite: {
-            src: "/sprites/enemies/basic/level1.png",
+            src: assetPath("sprites/enemies/basic/level1.png"),
           },
           velocity: 3,
           turnLimiter: 25,
@@ -70,10 +71,10 @@ var CONSTS: TimePilotConstants = {
           },
           explosion: {
             sprite: {
-              src: "/sprites/enemies/basic/explosion.png",
+              src: assetPath("sprites/enemies/basic/explosion.png"),
             },
             sound: {
-              src: "/sounds/enemies/basic/explosion.mp3",
+              src: assetPath("sounds/enemies/basic/explosion.mp3"),
             },
             width: 32,
             height: 32,
@@ -84,7 +85,7 @@ var CONSTS: TimePilotConstants = {
       },
       bonus: {
         sprite: {
-          src: "/sprites/parachute.png",
+          src: assetPath("sprites/bonuses/parachute.png"),
         },
         velocity: 2,
         animationCycle: [1, 2, 3, 4, 4, 3, 2, 1],
@@ -94,7 +95,7 @@ var CONSTS: TimePilotConstants = {
       props: [
         {
           sprite: {
-            src: "/sprites/props/cloud1.png",
+            src: assetPath("sprites/props/cloud1.png"),
           },
           width: 32,
           height: 18,
@@ -104,7 +105,7 @@ var CONSTS: TimePilotConstants = {
         },
         {
           sprite: {
-            src: "/sprites/props/cloud2.png",
+            src: assetPath("sprites/props/cloud2.png"),
           },
           width: 60,
           height: 28,
@@ -114,7 +115,7 @@ var CONSTS: TimePilotConstants = {
         },
         {
           sprite: {
-            src: "/sprites/props/cloud3.png",
+            src: assetPath("sprites/props/cloud3.png"),
           },
           width: 92,
           height: 32,

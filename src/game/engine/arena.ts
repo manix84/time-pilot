@@ -6,6 +6,7 @@ import type {
   RenderTextOptions,
   SpriteFrame,
 } from "../types";
+import { assetPath } from "../asset-path";
 import helpers from "./helpers";
 
 type CanvasContext = CanvasRenderingContext2D | WebGLRenderingContext;
@@ -70,7 +71,7 @@ class GameArena implements GameArenaInstance {
     this._styles.innerText =
       "@font-face {" +
       "font-family: 'theFont';" +
-      "src: url('/fonts/font.ttf');" +
+      `src: url('${assetPath("fonts/font.ttf")}');` +
       " }";
 
     this._containerElement.appendChild(this._styles);
@@ -177,7 +178,7 @@ class GameArena implements GameArenaInstance {
 
   preloadAssets(callback: (progress: AssetProgress) => void = () => {}): void {
     let loadedCount = 0;
-    let remainingCount = this._assets.length - 1;
+    let remainingCount = this._assets.length;
     const images: HTMLImageElement[] = [];
     const completeAsset = () => {
       callback({
@@ -186,11 +187,16 @@ class GameArena implements GameArenaInstance {
       });
     };
 
-    for (let i = remainingCount; 0 < i; i--) {
+    if (!remainingCount) {
+      callback({ loaded: 0, remaining: 0 });
+      return;
+    }
+
+    for (let i = this._assets.length - 1; i >= 0; i--) {
       images[i] = new Image();
-      images[i].src = this._assets[i];
       images[i].onload = completeAsset;
       images[i].onerror = completeAsset;
+      images[i].src = this._assets[i];
       this._assets.splice(i, 1);
     }
   }

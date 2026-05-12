@@ -36,7 +36,7 @@ function stageFileContent(path, content) {
   const [mode] = indexEntry.split(/\s+/);
   const blob = gitWithInput(["hash-object", "-w", "--stdin"], content);
 
-  git(["update-index", "--cacheinfo", `${mode},${blob},${path}`]);
+  git(["update-index", "--cacheinfo", mode, blob, path]);
 }
 
 function updatePackageVersion(content, nextVersion) {
@@ -161,9 +161,7 @@ function bumpVersion(version, bump) {
   return `${nextMajor}.${nextMinor}.${nextPatch}${suffix}`;
 }
 
-const changes = stagedNameStatus().filter(
-  ({ path }) => !["package.json", "package-lock.json"].includes(path)
-);
+const changes = stagedNameStatus();
 const bump = classifyChange(changes);
 
 if (bump === "none") {

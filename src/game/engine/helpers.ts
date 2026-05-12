@@ -3,6 +3,7 @@ import type { Coordinates, Heading, PositionedRadius } from "../types";
 
 interface LegacyEventTarget extends EventTarget {
   attachEvent?: (eventName: string, callback: EventListener) => void;
+  detachEvent?: (eventName: string, callback: EventListener) => void;
 }
 
 interface Helpers {
@@ -32,6 +33,12 @@ interface Helpers {
   getRandomColor: () => string;
   cloneObject: <T>(oldObject: T) => T;
 }
+
+const boundListeners: Array<{
+  callback: EventListener;
+  element: LegacyEventTarget;
+  eventName: string;
+}> = [];
 
 var helpers: Helpers = {
   /**
@@ -209,15 +216,42 @@ var helpers: Helpers = {
       } else if (element.attachEvent) {
         element.attachEvent("on" + eventNames[i], callback);
       }
+
+      boundListeners.push({
+        callback,
+        element,
+        eventName: eventNames[i],
+      });
     }
   },
 
   /**
    * Unbind event.
    * @method unbind
-   * @unused
    */
-  unbind: () => {},
+  unbind: (...eventNames: string[]): void => {
+    const eventsToRemove = new Set(eventNames);
+
+    for (let i = boundListeners.length - 1; i >= 0; i--) {
+      const listener = boundListeners[i];
+
+      if (eventsToRemove.size && !eventsToRemove.has(listener.eventName)) {
+        continue;
+      }
+
+      if (typeof listener.element.removeEventListener === "function") {
+        listener.element.removeEventListener(
+          listener.eventName,
+          listener.callback,
+          false
+        );
+      } else if (listener.element.detachEvent) {
+        listener.element.detachEvent("on" + listener.eventName, listener.callback);
+      }
+
+      boundListeners.splice(i, 1);
+    }
+  },
 
   /**
    * Generate a random HEX colour value.

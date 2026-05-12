@@ -14,6 +14,7 @@ import PropFactory from "./prop-factory";
 import CollisionSystem from "./systems/collision";
 import RenderingSystem from "./systems/rendering";
 import SpawningSystem from "./systems/spawning";
+import { assetPath } from "./asset-path";
 import userOptions from "./user-options";
 import type {
   AssetProgress,
@@ -59,6 +60,7 @@ export class TimePilot {
 
       this.context._gameTicker.clearTicks();
       this.context._gameTicker.clearSchedule();
+      this.context._renderTicker.clearSchedule();
       this.context._enemies.clearAll();
       this.context._bullets.clearAll();
       this.context._props.clearAll();
@@ -148,19 +150,19 @@ export class TimePilot {
     this.context._gameArena.renderText("Loading", 20, 10, { size: 30 });
 
     this.context._gameArena.registerAssets([
-      "/fonts/font.ttf",
-      "/sprites/player/player.png",
-      "/sounds/player/bullet.mp3",
-      "/sprites/player/explosion.png",
-      "/sprites/enemies/basic/level1.png",
-      // "/sprites/enemies/basic/level2.png",
-      // "/sprites/enemies/basic/level3.png",
-      // "/sprites/enemies/basic/level4.png",
-      // "/sprites/enemies/basic/level5.png",
-      "/sprites/enemies/basic/explosion.png",
-      "/sprites/props/cloud1.png",
-      "/sprites/props/cloud2.png",
-      "/sprites/props/cloud3.png",
+      assetPath("fonts/font.ttf"),
+      assetPath("sprites/player/player.png"),
+      assetPath("sounds/player/bullet.mp3"),
+      assetPath("sprites/player/explosion.png"),
+      assetPath("sprites/enemies/basic/level1.png"),
+      // assetPath("sprites/enemies/basic/level2.png"),
+      // assetPath("sprites/enemies/basic/level3.png"),
+      // assetPath("sprites/enemies/basic/level4.png"),
+      // assetPath("sprites/enemies/basic/level5.png"),
+      assetPath("sprites/enemies/basic/explosion.png"),
+      assetPath("sprites/props/cloud1.png"),
+      assetPath("sprites/props/cloud2.png"),
+      assetPath("sprites/props/cloud3.png"),
     ]);
 
     this.context._gameArena.preloadAssets((progress: AssetProgress) => {

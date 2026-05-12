@@ -24,7 +24,7 @@ class SpawningSystem implements SpawningSystemInstance {
   }
 
   private _spawnEnemy(): void {
-    const randomTickInterval = Math.floor(Math.random() * (1 - 200 + 1)) + 200;
+    const randomTickInterval = Math.floor(Math.random() * 200) + 1;
 
     if (
       this._context._gameTicker.getTicks() % randomTickInterval !== 0 ||

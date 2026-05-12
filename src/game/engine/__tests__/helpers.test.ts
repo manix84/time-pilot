@@ -41,6 +41,17 @@ describe("engine/helpers", () => {
     expect(callback).toHaveBeenCalledTimes(2);
   });
 
+  it("unbinds callbacks registered through bind", () => {
+    const target = new EventTarget();
+    const callback = vi.fn();
+
+    helpers.bind("alpha", callback, target);
+    helpers.unbind("alpha");
+    target.dispatchEvent(new Event("alpha"));
+
+    expect(callback).not.toHaveBeenCalled();
+  });
+
   it("generates valid six-digit CSS hex colors", () => {
     vi.spyOn(Math, "random").mockReturnValueOnce(0).mockReturnValueOnce(0.999999);
 

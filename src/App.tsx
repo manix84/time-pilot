@@ -1,7 +1,7 @@
 import type { CSSProperties } from "react";
-import TimePilotGame from "./components/TimePilotGame";
 import coverArt from "../art/cover.png";
 import titleBanner from "../art/titleBanner.png";
+import TimePilotGame from "./components/TimePilotGame";
 
 const controlGroups = [
   {
@@ -10,11 +10,13 @@ const controlGroups = [
   },
   {
     title: "Rotate",
-    details: "Left and right rotate the ship around its current heading. Space fires.",
+    details:
+      "Left and right rotate the ship around its current heading. Space fires.",
   },
   {
     title: "Menus",
-    details: "Esc opens the start menu. Use keyboard, gamepad, or mouse to choose options.",
+    details:
+      "Esc opens the start menu. Use keyboard, gamepad, or mouse to choose options.",
   },
 ];
 
@@ -49,8 +51,12 @@ function App() {
               width={574}
               height={154}
             />
-            <p className={"hero-kicker"}>Arcade prototype rebuilt for the web</p>
-            <h1>Fly through time, survive the sky, and keep the screen moving.</h1>
+            <p className={"hero-kicker"}>
+              Arcade prototype rebuilt for the web
+            </p>
+            <h1>
+              Fly through time, survive the sky, and keep the screen moving.
+            </h1>
             <p className={"hero-summary"}>
               A modern React + TypeScript port of a canvas arcade game, packaged
               as a playable browser demo with typed engine modules, configurable
@@ -58,8 +64,11 @@ function App() {
             </p>
           </div>
 
-          <section className={"game-panel"} aria-label={"Playable Time Pilot demo"}>
-            <TimePilotGame debug />
+          <section
+            className={"game-panel"}
+            aria-label={"Playable Time Pilot demo"}
+          >
+            <TimePilotGame />
           </section>
         </div>
       </section>
@@ -72,9 +81,9 @@ function App() {
           </div>
           <p>
             Time Pilot is currently focused on the essentials: fast movement,
-            readable waves, canvas-rendered menus, and a codebase that is easy to
-            keep improving. The demo above is the project as it stands now, not a
-            mockup.
+            readable waves, canvas-rendered menus, and a codebase that is easy
+            to keep improving. The demo above is the project as it stands now,
+            not a mockup.
           </p>
         </div>
       </section>
