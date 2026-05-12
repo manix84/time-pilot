@@ -1,15 +1,30 @@
 /* Converted from TimePilot.Menu.js (AMD) to ESM TypeScript. */
+import { levels } from "./constants";
+import palette from "./palette";
+import i18n, {
+  availableLanguages,
+  getCurrentLanguage,
+  getLanguageName,
+} from "./i18n";
 import userOptions from "./user-options";
 import type {
   ControllerType,
+  GameLanguage,
   GameArenaInstance,
   KeyboardBindings,
   MenuPointerData,
   MenuSystemCommands,
   MenuSystemInstance,
+  ShowStartMenuOptions,
 } from "./types";
 
-type MenuScreen = "start" | "options" | "debug";
+type MenuScreen =
+  | "start"
+  | "options"
+  | "controls"
+  | "debug"
+  | "language"
+  | "level";
 type MenuItemKind = "action" | "enum" | "slider" | "key" | "toggle";
 type ToggleDebugOption =
   | "invincible"
@@ -25,7 +40,11 @@ interface MenuItem {
   getValue?: () => string;
   kind: MenuItemKind;
   label: string;
+  languageFlag?: GameLanguage;
+  isCurrent?: () => boolean;
+  levelIcon?: number;
   onAdjust?: (direction: -1 | 1) => void;
+  onSetValue?: (value: number) => void;
   rect: {
     height: number;
     width: number;
@@ -34,82 +53,118 @@ interface MenuItem {
   };
 }
 
+interface MenuViewport {
+  height: number;
+  width: number;
+  x: number;
+  y: number;
+}
+
+interface MenuTransition {
+  from: MenuScreen;
+  startedAt: number;
+  to: MenuScreen;
+}
+
 const controllerTypes: ControllerType[] = ["keyboard1", "keyboard2"];
+const menuEdgePadding = 24;
+const menuDesignHeight = 500;
+const menuDesignWidth = 438;
+const submenuItemOffsetY = 22;
+const menuTransitionDuration = 500;
+const startLogoScale = 2;
+const submenuLogoScale = 1;
+const logoBottomWidth = 390;
 const keyBindingRows: Array<{ binding: BindingAction; label: string }> = [
-  { binding: "up", label: "Key Up" },
-  { binding: "down", label: "Key Down" },
-  { binding: "left", label: "Key Left" },
-  { binding: "right", label: "Key Right" },
-  { binding: "fire", label: "Key Fire" },
+  { binding: "up", label: i18n.keys.up },
+  { binding: "left", label: i18n.keys.left },
+  { binding: "down", label: i18n.keys.down },
+  { binding: "right", label: i18n.keys.right },
+  { binding: "fire", label: i18n.menu.fire },
 ];
 const konamiCode = [38, 38, 40, 40, 37, 39, 37, 39, 66, 65];
-const debugUnlockedStorageKey = "timePilot.debugUnlocked";
 
 class Menus implements MenuSystemInstance {
   private _active = false;
   private _awaitingBinding: BindingAction | null = null;
+  private _bindingWarning = "";
   private _commands: MenuSystemCommands;
   private _debugUnlocked = false;
   private _gameArena: GameArenaInstance;
   private _items: MenuItem[] = [];
   private _konamiIndex = 0;
+  private _levelIconSprites: Partial<Record<number, HTMLImageElement>> = {};
+  private _logoLanguage?: GameLanguage;
   private _logoCanvas?: HTMLCanvasElement;
   private readonly _logoHeight = 96;
   private readonly _logoWidth = 420;
   private _screen: MenuScreen = "start";
   private _screenHistory: MenuScreen[] = [];
+  private _pressedItemIndex: number | null = null;
   private _selectedIndex = 0;
+  private _sliderDragIndex: number | null = null;
+  private _startLabel = i18n.menu.start;
+  private _scrollY = 0;
+  private _transition: MenuTransition | null = null;
 
   constructor(gameArena: GameArenaInstance, commands: MenuSystemCommands) {
     this._gameArena = gameArena;
     this._commands = commands;
-    this._debugUnlocked = sessionStorage.getItem(debugUnlockedStorageKey) === "true";
+    this._debugUnlocked = userOptions.enableDebug;
   }
 
-  isActive(): boolean {
+  isActive = (): boolean => {
     return this._active;
-  }
+  };
 
-  showStart(): void {
+  showStart = (options: ShowStartMenuOptions = {}): void => {
     this._active = true;
     this._awaitingBinding = null;
+    this._bindingWarning = "";
+    this._startLabel = options.startLabel ?? i18n.menu.start;
     this._screen = "start";
     this._screenHistory = [];
+    this._pressedItemIndex = null;
     this._selectedIndex = 0;
+    this._scrollY = 0;
+    this._transition = null;
     this._buildItems();
-  }
+  };
 
-  hide(): void {
+  hide = (): void => {
     this._active = false;
     this._awaitingBinding = null;
-  }
+    this._bindingWarning = "";
+    this._pressedItemIndex = null;
+    this._sliderDragIndex = null;
+  };
 
-  next(): void {
+  next = (): void => {
     if (!this._active || !this._items.length) {
       return;
     }
 
     this._selectedIndex = (this._selectedIndex + 1) % this._items.length;
-  }
+  };
 
-  previous(): void {
+  previous = (): void => {
     if (!this._active || !this._items.length) {
       return;
     }
 
     this._selectedIndex =
       (this._selectedIndex - 1 + this._items.length) % this._items.length;
-  }
+  };
 
-  adjust(direction: -1 | 1): void {
+  adjust = (direction: -1 | 1): void => {
     if (!this._active) {
       return;
     }
 
     this._items[this._selectedIndex]?.onAdjust?.(direction);
-  }
+  };
 
-  activate(): void {
+  activate = (): void => {
     if (!this._active) {
       return;
     }
@@ -122,6 +177,7 @@ class Menus implements MenuSystemInstance {
 
     if (item.kind === "key" && item.binding) {
       this._awaitingBinding = item.binding;
+      this._bindingWarning = "";
       return;
     }
 
@@ -131,9 +187,9 @@ class Menus implements MenuSystemInstance {
     }
 
     item.action?.();
-  }
+  };
 
-  captureKey(keyCode: number): boolean {
+  captureKey = (keyCode: number): boolean => {
     if (!this._active) {
       return false;
     }
@@ -143,18 +199,59 @@ class Menus implements MenuSystemInstance {
       return false;
     }
 
-    userOptions.keyboardBindings[this._awaitingBinding] = [keyCode];
-    this._awaitingBinding = null;
-    return true;
-  }
+    const duplicateBinding = this._getDuplicateBinding(keyCode);
 
-  handlePointer(pointer: MenuPointerData): void {
+    if (duplicateBinding && duplicateBinding !== this._awaitingBinding) {
+      this._bindingWarning = i18n.menu.alreadyAssignedTo(
+        this._formatBindingLabel(duplicateBinding)
+      );
+      return true;
+    }
+
+    userOptions.setKeyboardBinding(this._awaitingBinding, [keyCode]);
+    this._awaitingBinding = null;
+    this._bindingWarning = "";
+    return true;
+  };
+
+  handlePointer = (pointer: MenuPointerData): void => {
     if (!this._active) {
       return;
     }
 
+    const menuPointer = this._getScaledPointer(pointer);
+
+    if (pointer.type === "release") {
+      const releasedItemIndex = this._items.findIndex((item) =>
+        this._isInsideItem(menuPointer, item)
+      );
+      const pressedItemIndex = this._pressedItemIndex;
+
+      this._sliderDragIndex = null;
+      this._pressedItemIndex = null;
+
+      if (
+        pressedItemIndex !== null &&
+        releasedItemIndex === pressedItemIndex &&
+        this._items[pressedItemIndex].kind !== "slider"
+      ) {
+        this._selectedIndex = pressedItemIndex;
+        this.activate();
+      }
+
+      return;
+    }
+
+    if (pointer.type === "drag" && this._sliderDragIndex !== null) {
+      this._setSliderFromPointer(
+        this._items[this._sliderDragIndex],
+        menuPointer
+      );
+      return;
+    }
+
     const itemIndex = this._items.findIndex((item) =>
-      this._isInsideItem(pointer, item)
+      this._isInsideItem(menuPointer, item)
     );
 
     if (itemIndex === -1) {
@@ -163,19 +260,36 @@ class Menus implements MenuSystemInstance {
 
     this._selectedIndex = itemIndex;
 
+    if (pointer.type === "press") {
+      this._pressedItemIndex = itemIndex;
+
+      if (this._items[itemIndex].kind === "slider") {
+        this._sliderDragIndex = itemIndex;
+        this._setSliderFromPointer(this._items[itemIndex], menuPointer);
+      }
+
+      return;
+    }
+
     if (pointer.type === "click") {
+      if (this._items[itemIndex].kind === "slider") {
+        this._setSliderFromPointer(this._items[itemIndex], menuPointer);
+        return;
+      }
+
       this.activate();
     }
-  }
+  };
 
-  render(): void {
+  render = (): void => {
     if (!this._active) {
       return;
     }
 
     const context = this._gameArena.getContext() as CanvasRenderingContext2D;
+    const menuScale = this._getMenuScale();
 
-    context.fillStyle = "rgba(4, 10, 18, 0.82)";
+    context.fillStyle = palette.menu.backplate;
     context.fillRect(
       -(this._gameArena.width / 2),
       -(this._gameArena.height / 2),
@@ -183,33 +297,43 @@ class Menus implements MenuSystemInstance {
       this._gameArena.height
     );
 
-    this._renderLogo(context);
-    this._gameArena.renderText(this._getScreenTitle(), 0, -82, {
-      size: 18,
-      align: "center",
-      valign: "middle",
-      color: "#C7D5EB",
-    });
+    const transition = this._getTransitionState();
+    const layout = this._getAnimatedLayout(transition);
 
-    this._items.forEach((item, index) => {
-      this._renderItem(item, index === this._selectedIndex);
-    });
+    context.save();
+    context.scale(menuScale, menuScale);
+    this._renderLogo(context, layout.logoY, layout.logoScale);
+
+    if (this._screen !== "start") {
+      this._gameArena.renderText(this._getScreenTitle(), 0, layout.titleY, {
+        size: 18,
+        align: "center",
+        valign: "middle",
+        color: palette.menu.mutedText,
+      });
+    }
+
+    this._scrollY = this._getMenuScrollY();
+    this._renderItems(context, transition.progress);
 
     if (this._awaitingBinding) {
-      this._gameArena.renderText("Press a key", 0, 136, {
+      this._renderBindingWarning(context);
+      this._gameArena.renderText(i18n.menu.pressAKey, 0, 136, {
         size: 16,
         align: "center",
         valign: "middle",
-        color: "#7EDBD3",
+        color: palette.menu.waitingText,
       });
     }
-  }
+    context.restore();
+  };
 
-  private _renderLogo(context: CanvasRenderingContext2D): void {
+  private _renderLogo = (context: CanvasRenderingContext2D, y: number, scale = 1): void => {
     const logoCanvas = this._getLogoCanvas();
 
     context.save();
-    context.translate(0, -126);
+    context.translate(0, y);
+    context.scale(scale, scale);
     this._drawPerspectiveLogo(
       context,
       logoCanvas,
@@ -217,10 +341,31 @@ class Menus implements MenuSystemInstance {
       this._logoHeight
     );
     context.restore();
-  }
+  };
 
-  private _getLogoCanvas(): HTMLCanvasElement {
-    if (this._logoCanvas) {
+  private _renderItems = (context: CanvasRenderingContext2D, transitionProgress: number): void => {
+    const viewport = this._getMenuViewport();
+    const transitionOffset = (1 - transitionProgress) * this._getItemTransitionOffset();
+    const screenOffset = this._getScreenItemOffset(this._screen);
+
+    context.save();
+    context.beginPath();
+    context.rect(viewport.x, viewport.y, viewport.width, viewport.height);
+    context.clip();
+    context.globalAlpha *= 0.35 + transitionProgress * 0.65;
+    context.translate(0, this._scrollY + transitionOffset + screenOffset);
+
+    this._items.forEach((item, index) => {
+      this._renderItem(item, index === this._selectedIndex);
+    });
+
+    context.restore();
+  };
+
+  private _getLogoCanvas = (): HTMLCanvasElement => {
+    const logoLanguage = getCurrentLanguage();
+
+    if (this._logoCanvas && this._logoLanguage === logoLanguage) {
       return this._logoCanvas;
     }
 
@@ -234,29 +379,28 @@ class Menus implements MenuSystemInstance {
     }
 
     this._logoCanvas = logoCanvas;
+    this._logoLanguage = logoLanguage;
     return logoCanvas;
-  }
+  };
 
-  private _drawLogoText(
-    context: CanvasRenderingContext2D,
-    width: number,
-    height: number
-  ): void {
-    const text = "TIME PILOT";
+  private _drawLogoText = (context: CanvasRenderingContext2D, width: number, height: number): void => {
+    const text = i18n.title;
     const textX = width / 2;
     const textY = height / 2 + 3;
 
-    context.font = "900 52px 'Bookman Old Style', Georgia, serif";
+    const fontSize = Math.min(52, Math.floor(520 / text.length));
+
+    context.font = `900 ${fontSize}px 'Bookman Old Style', Georgia, serif`;
     context.textAlign = "center";
     context.textBaseline = "middle";
 
     const layers = [
-      { x: 9, y: 9, color: "#3F0700" },
-      { x: 7, y: 7, color: "#7A1200" },
-      { x: 5, y: 5, color: "#A72A00" },
-      { x: 3, y: 3, color: "#C94F00" },
-      { x: 2, y: 2, color: "#FF8C00" },
-      { x: 1, y: 1, color: "#FFAA00" },
+      { x: 9, y: 9, color: palette.title.shadowDeep },
+      { x: 7, y: 7, color: palette.title.shadowDark },
+      { x: 5, y: 5, color: palette.title.shadowMid },
+      { x: 3, y: 3, color: palette.title.shadowOrange },
+      { x: 2, y: 2, color: palette.title.shadowLight },
+      { x: 1, y: 1, color: palette.title.shadowGold },
     ];
 
     for (const layer of layers) {
@@ -264,16 +408,11 @@ class Menus implements MenuSystemInstance {
       context.fillText(text, textX + layer.x, textY + layer.y);
     }
 
-    context.fillStyle = "#FFD400";
+    context.fillStyle = palette.title.face;
     context.fillText(text, textX, textY);
-  }
+  };
 
-  private _drawPerspectiveLogo(
-    context: CanvasRenderingContext2D,
-    logoCanvas: HTMLCanvasElement,
-    logoWidth: number,
-    logoHeight: number
-  ): void {
+  private _drawPerspectiveLogo = (context: CanvasRenderingContext2D, logoCanvas: HTMLCanvasElement, logoWidth: number, logoHeight: number): void => {
     const topWidth = 260;
     const bottomWidth = 390;
     const targetHeight = 86;
@@ -297,113 +436,175 @@ class Menus implements MenuSystemInstance {
         targetSliceHeight
       );
     }
-  }
+  };
 
-  private _buildItems(): void {
+  private _buildItems = (): void => {
     if (this._screen === "start") {
       this._items = this._createStartItems();
     } else if (this._screen === "options") {
       this._items = this._createOptionsItems();
-    } else {
+    } else if (this._screen === "controls") {
+      this._items = this._createControlsItems();
+    } else if (this._screen === "language") {
+      this._items = this._createLanguageItems();
+    } else if (this._screen === "debug") {
       this._items = this._createDebugItems();
+    } else {
+      this._items = this._createLevelItems();
     }
-  }
+  };
 
-  private _createStartItems(): MenuItem[] {
+  private _createStartItems = (): MenuItem[] => {
     const items = [
-      this._createItem("Start", "action", -22, {
+      this._createItem(this._startLabel, "action", -22, {
         action: this._commands.start,
       }),
-      this._createItem("Options", "action", 28, {
+      this._createItem(i18n.menu.options, "action", 28, {
         action: () => this._goToScreen("options"),
       }),
     ];
 
     if (this._debugUnlocked) {
       items.push(
-        this._createItem("Debug", "action", 78, {
+        this._createItem(i18n.menu.debug, "action", 78, {
           action: () => this._goToScreen("debug"),
         })
       );
     }
 
     return items;
-  }
+  };
 
-  private _createOptionsItems(): MenuItem[] {
+  private _createOptionsItems = (): MenuItem[] => {
     const items = [
-      this._createItem("Master Volume", "slider", -54, {
+      this._createItem(i18n.menu.masterVolume, "slider", -54, {
         getValue: () => `${userOptions.masterVolume}`,
         onAdjust: (direction) => this._adjustVolume("masterVolume", direction),
+        onSetValue: (value) => this._setVolume("masterVolume", value),
       }),
-      this._createItem("Music Volume", "slider", -12, {
+      this._createItem(i18n.menu.musicVolume, "slider", -12, {
         getValue: () => `${userOptions.musicVolume}`,
         onAdjust: (direction) => this._adjustVolume("musicVolume", direction),
+        onSetValue: (value) => this._setVolume("musicVolume", value),
       }),
-      this._createItem("Effects Volume", "slider", 30, {
+      this._createItem(i18n.menu.effectsVolume, "slider", 30, {
         getValue: () => `${userOptions.effectsVolume}`,
         onAdjust: (direction) => this._adjustVolume("effectsVolume", direction),
+        onSetValue: (value) => this._setVolume("effectsVolume", value),
       }),
-      this._createItem("Control Type", "enum", 72, {
+      this._createItem(i18n.menu.language, "action", 72, {
+        getValue: () => getLanguageName(userOptions.language),
+        languageFlag: userOptions.language,
+        action: () => this._goToScreen("language"),
+      }),
+      this._createItem(i18n.menu.controlType, "enum", 114, {
         getValue: () =>
-          userOptions.controllerType === "keyboard1" ? "Directional" : "Rotate",
+          userOptions.controllerType === "keyboard1"
+            ? i18n.menu.directional
+            : i18n.menu.rotate,
         onAdjust: (direction) => this._adjustControllerType(direction),
+      }),
+      this._createItem(i18n.menu.remapControls, "action", 156, {
+        action: () => this._goToScreen("controls"),
       }),
     ];
 
-    keyBindingRows.forEach((row, index) => {
-      items.push(
-        this._createItem(row.label, "key", 114 + index * 34, {
-          binding: row.binding,
-          getValue: () => this._formatKey(userOptions.keyboardBindings[row.binding][0]),
-        })
-      );
-    });
-
     items.push(
-      this._createItem("Back", "action", 288, {
+      this._createItem(i18n.menu.back, "action", 206, {
         action: () => this._goBack(),
       })
     );
 
     return items;
-  }
+  };
 
-  private _createDebugItems(): MenuItem[] {
+  private _createControlsItems = (): MenuItem[] => {
     return [
-      this._createToggleItem("Invincibility Shield", "invincible", -54),
-      this._createToggleItem("Show Hit Boxes", "showHitboxes", -12),
-      this._createToggleItem("Show Controls Overlay", "showControlsOverlay", 30),
-      this._createToggleItem("Show Coordinates", "showPlayerCoordinates", 72),
-      this._createItem("Select Level", "enum", 114, {
-        disabled: true,
-        getValue: () => "Soon",
-      }),
-      this._createItem("Back", "action", 164, {
+      this._createKeyBindingItem("up", -43, -54, 86, 34),
+      this._createKeyBindingItem("left", -146, -12, 86, 34),
+      this._createKeyBindingItem("down", -43, -12, 86, 34),
+      this._createKeyBindingItem("right", 60, -12, 86, 34),
+      this._createKeyBindingItem("fire", -146, 30, 292, 34),
+      this._createItem(i18n.menu.back, "action", 92, {
         action: () => this._goBack(),
       }),
     ];
-  }
+  };
 
-  private _createToggleItem(
-    label: string,
-    option: ToggleDebugOption,
-    y: number
-  ): MenuItem {
-    return this._createItem(label, "toggle", y, {
-      getValue: () => (userOptions.debug[option] ? "On" : "Off"),
-      onAdjust: () => {
-        userOptions.debug[option] = !userOptions.debug[option];
+  private _createLanguageItems = (): MenuItem[] => {
+    return [
+      ...availableLanguages.map((language, index) =>
+        this._createItem(getLanguageName(language), "action", -54 + index * 42, {
+          action: () => this._setLanguage(language),
+          getValue: () =>
+            userOptions.language === language ? i18n.menu.current : "",
+          isCurrent: () => userOptions.language === language,
+          languageFlag: language,
+        })
+      ),
+      this._createItem(i18n.menu.back, "action", 30 + availableLanguages.length * 42, {
+        action: () => this._goBack(),
+      }),
+    ];
+  };
+
+  private _createLevelItems = (): MenuItem[] => {
+    const enabledLevels = this._getEnabledLevels();
+
+    return [
+      ...enabledLevels.map((level, index) =>
+        this._createItem(this._getLevelLabel(level), "action", -54 + index * 42, {
+          action: () => this._setSelectedLevel(level),
+          levelIcon: level,
+        })
+      ),
+      this._createItem(i18n.menu.back, "action", 30 + enabledLevels.length * 42, {
+        action: () => this._goBack(),
+      }),
+    ];
+  };
+
+  private _createKeyBindingItem = (binding: BindingAction, x: number, y: number, width: number, height: number): MenuItem => {
+    const row = keyBindingRows.find((item) => item.binding === binding);
+
+    return this._createItem(row?.label ?? binding, "key", y, {
+      binding,
+      getValue: () => this._formatKey(userOptions.keyboardBindings[binding][0]),
+      rect: {
+        x,
+        y,
+        width,
+        height,
       },
     });
-  }
+  };
 
-  private _createItem(
-    label: string,
-    kind: MenuItemKind,
-    y: number,
-    options: Partial<MenuItem> = {}
-  ): MenuItem {
+  private _createDebugItems = (): MenuItem[] => {
+    return [
+      this._createToggleItem(i18n.menu.invincibilityShield, "invincible", -54),
+      this._createToggleItem(i18n.menu.showHitBoxes, "showHitboxes", -12),
+      this._createToggleItem(i18n.menu.showControlsOverlay, "showControlsOverlay", 30),
+      this._createToggleItem(i18n.menu.showCoordinates, "showPlayerCoordinates", 72),
+      this._createItem(i18n.menu.selectLevel, "action", 114, {
+        action: () => this._goToScreen("level"),
+        getValue: () => this._getSelectedLevelLabel(),
+      }),
+      this._createItem(i18n.menu.back, "action", 164, {
+        action: () => this._goBack(),
+      }),
+    ];
+  };
+
+  private _createToggleItem = (label: string, option: ToggleDebugOption, y: number): MenuItem => {
+    return this._createItem(label, "toggle", y, {
+      getValue: () => (userOptions.debug[option] ? i18n.menu.on : i18n.menu.off),
+      onAdjust: () => {
+        userOptions.setDebugOption(option, !userOptions.debug[option]);
+      },
+    });
+  };
+
+  private _createItem = (label: string, kind: MenuItemKind, y: number, options: Partial<MenuItem> = {}): MenuItem => {
     return {
       label,
       kind,
@@ -415,35 +616,53 @@ class Menus implements MenuSystemInstance {
       },
       ...options,
     };
-  }
+  };
 
-  private _renderItem(item: MenuItem, isSelected: boolean): void {
+  private _renderItem = (item: MenuItem, isSelected: boolean): void => {
     const context = this._gameArena.getContext() as CanvasRenderingContext2D;
     const isAwaiting = item.binding === this._awaitingBinding;
     const progress = this._getItemProgress(item);
     const progressWidth = progress === null ? 0 : item.rect.width * progress;
 
-    context.fillStyle = item.disabled ? "#152033" : isSelected ? "#F2B84B" : "#0B1727";
+    const isCurrent = item.isCurrent?.() ?? false;
+
+    if (item.disabled) {
+      context.fillStyle = palette.menu.disabledBackground;
+    } else if (isSelected) {
+      context.fillStyle = palette.menu.selectedBackground;
+    } else if (isCurrent) {
+      context.fillStyle = palette.menu.progressFill;
+    } else {
+      context.fillStyle = palette.menu.itemBackground;
+    }
     context.fillRect(item.rect.x, item.rect.y, item.rect.width, item.rect.height);
 
     if (progress !== null) {
-      context.fillStyle = isSelected ? "#0B1727" : "#F2B84B";
+      context.fillStyle = isSelected
+        ? palette.menu.itemBackground
+        : palette.menu.progressFill;
       context.fillRect(item.rect.x, item.rect.y, progressWidth, item.rect.height);
     }
 
-    context.strokeStyle = item.disabled
-      ? "#334158"
-      : isAwaiting
-        ? "#7EDBD3"
-        : isSelected
-          ? "#FFF1B8"
-          : "#466485";
+    if (item.disabled) {
+      context.strokeStyle = palette.menu.disabledBorder;
+    } else if (isAwaiting) {
+      context.strokeStyle = palette.menu.waitingBorder;
+    } else if (isCurrent || isSelected) {
+      context.strokeStyle = palette.menu.selectedBorder;
+    } else {
+      context.strokeStyle = palette.menu.itemBorder;
+    }
     context.lineWidth = 2;
     context.strokeRect(item.rect.x, item.rect.y, item.rect.width, item.rect.height);
 
     this._renderItemText(
       item,
-      item.disabled ? "#718099" : isSelected ? "#111927" : "#E9F3FF"
+      item.disabled
+        ? palette.menu.disabledText
+        : isSelected
+          ? palette.menu.selectedText
+          : palette.menu.itemText
     );
 
     if (progress !== null && progressWidth > 0) {
@@ -451,12 +670,15 @@ class Menus implements MenuSystemInstance {
       context.beginPath();
       context.rect(item.rect.x, item.rect.y, progressWidth, item.rect.height);
       context.clip();
-      this._renderItemText(item, isSelected ? "#E9F3FF" : "#111927");
+      this._renderItemText(
+        item,
+        isSelected ? palette.menu.itemText : palette.menu.selectedText
+      );
       context.restore();
     }
-  }
+  };
 
-  private _renderItemText(item: MenuItem, color: string): void {
+  private _renderItemText = (item: MenuItem, color: string): void => {
     this._gameArena.renderText(
       item.label,
       item.rect.x + 14,
@@ -469,10 +691,18 @@ class Menus implements MenuSystemInstance {
       }
     );
 
+    if (item.levelIcon) {
+      this._renderLevelIcon(item, item.levelIcon);
+    }
+
     if (item.getValue) {
+      if (item.languageFlag) {
+        this._renderLanguageFlag(item, item.languageFlag);
+      }
+
       this._gameArena.renderText(
         item.getValue(),
-        item.rect.x + item.rect.width - 14,
+        item.rect.x + item.rect.width - (item.languageFlag || item.levelIcon ? 48 : 14),
         item.rect.y + item.rect.height / 2,
         {
           size: item.kind === "key" ? 13 : 16,
@@ -482,9 +712,156 @@ class Menus implements MenuSystemInstance {
         }
       );
     }
-  }
+  };
 
-  private _getItemProgress(item: MenuItem): number | null {
+  private _renderLevelIcon = (item: MenuItem, level: number): void => {
+    const levelConfig = levels[level];
+
+    if (!levelConfig) {
+      return;
+    }
+
+    const context = this._gameArena.getContext() as CanvasRenderingContext2D;
+    const sprite = this._getLevelIconSprite(level);
+    const enemyConfig = levelConfig.enemies.basic;
+    const upwardFrame = 0;
+    const size = 28;
+    const x = item.rect.x + item.rect.width - 38;
+    const y = item.rect.y + item.rect.height / 2 - size / 2;
+
+    context.imageSmoothingEnabled = false;
+    context.drawImage(
+      sprite,
+      upwardFrame * enemyConfig.width,
+      0,
+      enemyConfig.width,
+      enemyConfig.height,
+      x,
+      y,
+      size,
+      size
+    );
+  };
+
+  private _getLevelIconSprite = (level: number): HTMLImageElement => {
+    if (this._levelIconSprites[level]) {
+      return this._levelIconSprites[level];
+    }
+
+    const sprite = new Image();
+    sprite.src = levels[level].enemies.basic.sprite.src;
+    this._levelIconSprites[level] = sprite;
+    return sprite;
+  };
+
+  private _renderLanguageFlag = (item: MenuItem, language: GameLanguage): void => {
+    const context = this._gameArena.getContext() as CanvasRenderingContext2D;
+    const scale = 2;
+    const x = item.rect.x + item.rect.width - 38;
+    const y = item.rect.y + item.rect.height / 2 - 8;
+    const rect = (gridX: number, gridY: number, width: number, height: number, color: string): void => {
+      context.fillStyle = color;
+      context.fillRect(x + gridX * scale, y + gridY * scale, width * scale, height * scale);
+    };
+
+    const verticalTricolor = (colors: [string, string, string]): void => {
+      rect(0, 0, 5, 8, colors[0]);
+      rect(5, 0, 6, 8, colors[1]);
+      rect(11, 0, 5, 8, colors[2]);
+    };
+    const horizontalTricolor = (colors: [string, string, string]): void => {
+      rect(0, 0, 16, 3, colors[0]);
+      rect(0, 3, 16, 2, colors[1]);
+      rect(0, 5, 16, 3, colors[2]);
+    };
+    const drawUnionFlagPixel = (gridX: number, gridY: number): void => {
+      const diagonalA = Math.floor(gridX / 2);
+      const diagonalB = 7 - Math.floor(gridX / 2);
+      const isWhiteDiagonal =
+        Math.abs(gridY - diagonalA) <= 1 || Math.abs(gridY - diagonalB) <= 1;
+      const isRedDiagonal =
+        gridX % 2 === 0 && (gridY === diagonalA || gridY === diagonalB);
+      const isWhiteCross =
+        (gridX >= 6 && gridX <= 9) || (gridY >= 2 && gridY <= 5);
+      const isRedCross =
+        (gridX >= 7 && gridX <= 8) || (gridY >= 3 && gridY <= 4);
+
+      if (isRedCross || isRedDiagonal) {
+        rect(gridX, gridY, 1, 1, "#C8102E");
+      } else if (isWhiteCross || isWhiteDiagonal) {
+        rect(gridX, gridY, 1, 1, "#FFFFFF");
+      } else {
+        rect(gridX, gridY, 1, 1, "#012169");
+      }
+    };
+    const drawUsFlagPixel = (gridX: number, gridY: number): void => {
+      if (gridX < 7 && gridY < 4) {
+        rect(gridX, gridY, 1, 1, (gridX + gridY) % 2 === 0 ? "#FFFFFF" : "#3C3B6E");
+        return;
+      }
+
+      rect(gridX, gridY, 1, 1, gridY % 2 === 0 ? "#B22234" : "#FFFFFF");
+    };
+    const drawEnglishFlag = (): void => {
+      for (let gridY = 0; gridY < 8; gridY++) {
+        for (let gridX = 0; gridX < 16; gridX++) {
+          if (gridX < 8) {
+            drawUsFlagPixel(gridX, gridY);
+          } else {
+            drawUnionFlagPixel(gridX, gridY);
+          }
+        }
+      }
+    };
+
+    if (language === "fr") {
+      verticalTricolor(["#0055A4", "#FFFFFF", "#EF4135"]);
+      return;
+    }
+
+    if (language === "de") {
+      horizontalTricolor(["#000000", "#DD0000", "#FFCE00"]);
+      return;
+    }
+
+    if (language === "it") {
+      verticalTricolor(["#009246", "#FFFFFF", "#CE2B37"]);
+      return;
+    }
+
+    if (language === "nl") {
+      horizontalTricolor(["#AE1C28", "#FFFFFF", "#21468B"]);
+      return;
+    }
+
+    if (language === "ro") {
+      verticalTricolor(["#002B7F", "#FCD116", "#CE1126"]);
+      return;
+    }
+
+    drawEnglishFlag();
+  };
+
+  private _renderBindingWarning = (context: CanvasRenderingContext2D): void => {
+    if (!this._bindingWarning) {
+      return;
+    }
+
+    context.fillStyle = palette.menu.backplate;
+    context.fillRect(-154, 154, 308, 36);
+    context.strokeStyle = palette.menu.waitingBorder;
+    context.lineWidth = 2;
+    context.strokeRect(-154, 154, 308, 36);
+
+    this._gameArena.renderText(this._bindingWarning, 0, 172, {
+      size: 14,
+      align: "center",
+      valign: "middle",
+      color: palette.menu.waitingText,
+    });
+  };
+
+  private _getItemProgress = (item: MenuItem): number | null => {
     if (item.kind !== "slider" || !item.getValue) {
       return null;
     }
@@ -495,9 +872,242 @@ class Menus implements MenuSystemInstance {
     }
 
     return Math.max(0, Math.min(1, value / 10));
-  }
+  };
 
-  private _captureKonamiKey(keyCode: number): void {
+  private _setSliderFromPointer = (item: MenuItem, pointer: MenuPointerData): void => {
+    if (!item.onSetValue) {
+      return;
+    }
+
+    const progress = Math.max(
+      0,
+      Math.min(1, (pointer.posX - item.rect.x) / item.rect.width)
+    );
+
+    item.onSetValue(Math.round(progress * 10));
+  };
+
+  private _getMenuViewport = (): MenuViewport => {
+    const scale = this._getMenuScale();
+    const logicalWidth = this._gameArena.width / scale;
+    const logicalHeight = this._gameArena.height / scale;
+    const logicalPadding = menuEdgePadding / scale;
+
+    return {
+      x: -(logicalWidth / 2) + logicalPadding,
+      y: -(logicalHeight / 2) + logicalPadding,
+      width: logicalWidth - logicalPadding * 2,
+      height: logicalHeight - logicalPadding * 2,
+    };
+  };
+
+  private _getMenuScale = (): number => {
+    const designWidth = this._getMenuDesignWidth();
+    const availableWidth = Math.max(1, this._gameArena.width - menuEdgePadding * 2);
+    const availableHeight = Math.max(
+      1,
+      this._gameArena.height - menuEdgePadding * 2
+    );
+
+    return Math.min(
+      1,
+      availableWidth / designWidth,
+      availableHeight / menuDesignHeight
+    );
+  };
+
+  private _getMenuDesignWidth = (): number => {
+    const from = this._transition?.from ?? this._screen;
+    const to = this._transition?.to ?? this._screen;
+    const logoWidth =
+      Math.max(this._getLogoScale(from), this._getLogoScale(to)) * logoBottomWidth;
+
+    return Math.max(menuDesignWidth, logoWidth + menuEdgePadding * 2);
+  };
+
+  private _getScaledPointer = (pointer: MenuPointerData): MenuPointerData => {
+    const scale = this._getMenuScale();
+
+    return {
+      ...pointer,
+      posX: pointer.posX / scale,
+      posY: pointer.posY / scale,
+    };
+  };
+
+  private _getMenuScrollY = (): number => {
+    const selectedItem = this._items[this._selectedIndex];
+
+    if (!selectedItem) {
+      return 0;
+    }
+
+    const viewport = this._getMenuViewport();
+    const viewportTop = viewport.y;
+    const viewportBottom = viewport.y + viewport.height;
+    const bounds = this._getItemsBounds();
+
+    let scrollY = this._scrollY;
+    const selectedTop = selectedItem.rect.y + scrollY;
+    const selectedBottom = selectedTop + selectedItem.rect.height;
+
+    if (selectedTop < viewportTop) {
+      scrollY += viewportTop - selectedTop;
+    } else if (selectedBottom > viewportBottom) {
+      scrollY -= selectedBottom - viewportBottom;
+    }
+
+    const contentHeight = bounds.bottom - bounds.top;
+
+    if (contentHeight <= viewport.height) {
+      const contentTop = bounds.top + scrollY;
+      const contentBottom = bounds.bottom + scrollY;
+
+      if (contentTop < viewportTop) {
+        scrollY += viewportTop - contentTop;
+      }
+
+      if (contentBottom > viewportBottom) {
+        scrollY -= contentBottom - viewportBottom;
+      }
+
+      return scrollY;
+    }
+
+    const maxScrollY = viewportTop - bounds.top;
+    const minScrollY = viewportBottom - bounds.bottom;
+
+    return Math.min(maxScrollY, Math.max(minScrollY, scrollY));
+  };
+
+  private _getItemsBounds = (): { bottom: number; top: number } => {
+    const screenOffset = this._getScreenItemOffset(this._screen);
+
+    return this._items.reduce(
+      (bounds, item) => ({
+        bottom: Math.max(
+          bounds.bottom,
+          item.rect.y + item.rect.height + screenOffset
+        ),
+        top: Math.min(bounds.top, item.rect.y + screenOffset),
+      }),
+      { bottom: -Infinity, top: Infinity }
+    );
+  };
+
+  private _getScreenItemOffset = (screen: MenuScreen): number => {
+    return screen === "start" ? 0 : submenuItemOffsetY;
+  };
+
+  private _getTransitionState = (): { easedProgress: number; progress: number } => {
+    if (!this._transition) {
+      return {
+        easedProgress: 1,
+        progress: 1,
+      };
+    }
+
+    const elapsed = performance.now() - this._transition.startedAt;
+    const progress = Math.max(0, Math.min(1, elapsed / menuTransitionDuration));
+
+    if (progress >= 1) {
+      this._transition = null;
+    }
+
+    return {
+      easedProgress: this._easeInOutCubic(progress),
+      progress,
+    };
+  };
+
+  private _getAnimatedLayout = (transition: {
+    easedProgress: number;
+  }): { logoScale: number; logoY: number; titleY: number } => {
+    const from = this._transition?.from ?? this._screen;
+    const to = this._transition?.to ?? this._screen;
+
+    return {
+      logoScale: this._lerp(
+        this._getLogoScale(from),
+        this._getLogoScale(to),
+        transition.easedProgress
+      ),
+      logoY: this._lerp(
+        this._getLogoY(from),
+        this._getLogoY(to),
+        transition.easedProgress
+      ),
+      titleY: this._lerp(
+        this._getTitleY(from),
+        this._getTitleY(to),
+        transition.easedProgress
+      ),
+    };
+  };
+
+  private _getLogoY = (screen: MenuScreen): number => {
+    if (screen === "start") {
+      return -126;
+    }
+
+    return Math.min(-126, -(this._gameArena.height / 2) + 82);
+  };
+
+  private _getLogoScale = (screen: MenuScreen): number => {
+    return screen === "start" ? startLogoScale : submenuLogoScale;
+  };
+
+  private _getTitleY = (screen: MenuScreen): number => {
+    if (screen === "start") {
+      return -82;
+    }
+
+    return this._getLogoY(screen) + 52;
+  };
+
+  private _getItemTransitionOffset = (): number => {
+    if (!this._transition) {
+      return 0;
+    }
+
+    const fromY = this._getLogoY(this._transition.from);
+    const toY = this._getLogoY(this._transition.to);
+
+    if (toY < fromY) {
+      return 24;
+    }
+
+    if (toY > fromY) {
+      return -24;
+    }
+
+    return 0;
+  };
+
+  private _startTransition = (from: MenuScreen, to: MenuScreen): void => {
+    if (from === to) {
+      this._transition = null;
+      return;
+    }
+
+    this._transition = {
+      from,
+      startedAt: performance.now(),
+      to,
+    };
+  };
+
+  private _easeInOutCubic = (progress: number): number => {
+    return progress < 0.5
+      ? 4 * progress * progress * progress
+      : 1 - Math.pow(-2 * progress + 2, 3) / 2;
+  };
+
+  private _lerp = (from: number, to: number, progress: number): number => {
+    return from + (to - from) * progress;
+  };
+
+  private _captureKonamiKey = (keyCode: number): void => {
     if (this._screen !== "start" || this._debugUnlocked) {
       return;
     }
@@ -510,61 +1120,111 @@ class Menus implements MenuSystemInstance {
 
     if (this._konamiIndex === konamiCode.length) {
       this._debugUnlocked = true;
-      userOptions.enableDebug = true;
-      sessionStorage.setItem(debugUnlockedStorageKey, "true");
+      userOptions.setOption("enableDebug", true);
       this._konamiIndex = 0;
       this._buildItems();
     }
-  }
+  };
 
-  private _getScreenTitle(): string {
+  private _getScreenTitle = (): string => {
     if (this._screen === "options") {
-      return "Options";
+      return i18n.menu.options;
+    }
+
+    if (this._screen === "controls") {
+      return i18n.menu.controls;
     }
 
     if (this._screen === "debug") {
-      return "Debug";
+      return i18n.menu.debug;
     }
 
-    return "A.D. 1910";
-  }
+    if (this._screen === "language") {
+      return i18n.menu.language;
+    }
 
-  private _goToScreen(screen: MenuScreen): void {
+    if (this._screen === "level") {
+      return i18n.menu.selectLevel;
+    }
+
+    return i18n.levels[1].introText;
+  };
+
+  private _goToScreen = (screen: MenuScreen): void => {
+    const previousScreen = this._screen;
+
     this._screenHistory.push(this._screen);
     this._screen = screen;
     this._selectedIndex = 0;
     this._awaitingBinding = null;
+    this._bindingWarning = "";
+    this._pressedItemIndex = null;
+    this._sliderDragIndex = null;
+    this._scrollY = 0;
     this._buildItems();
-  }
+    this._startTransition(previousScreen, screen);
+  };
 
-  private _goBack(): void {
-    this._screen = this._screenHistory.pop() ?? "start";
+  private _goBack = (): void => {
+    const previousScreen = this._screen;
+    const nextScreen = this._screenHistory.pop() ?? "start";
+
+    this._screen = nextScreen;
     this._selectedIndex = 0;
     this._awaitingBinding = null;
+    this._bindingWarning = "";
+    this._pressedItemIndex = null;
+    this._sliderDragIndex = null;
+    this._scrollY = 0;
     this._buildItems();
-  }
+    this._startTransition(previousScreen, nextScreen);
+  };
 
-  private _adjustControllerType(direction: -1 | 1): void {
+  private _adjustControllerType = (direction: -1 | 1): void => {
     const currentIndex = controllerTypes.indexOf(userOptions.controllerType);
     const nextIndex =
       (currentIndex + direction + controllerTypes.length) % controllerTypes.length;
 
     userOptions.setOption("controllerType", controllerTypes[nextIndex]);
-  }
+  };
 
-  private _adjustVolume(
-    key: "masterVolume" | "musicVolume" | "effectsVolume",
-    direction: -1 | 1
-  ): void {
-    userOptions.setOption(
-      key,
-      Math.max(0, Math.min(10, userOptions[key] + direction))
-    );
-  }
+  private _getSelectedLevelLabel = (): string => {
+    return this._getLevelLabel(this._commands.getLevel?.() ?? 1);
+  };
 
-  private _formatKey(keyCode: number): string {
+  private _getLevelLabel = (level: number): string => {
+    const levelMessages = i18n.levels as Record<number, { introText: string }>;
+
+    return levelMessages[level]?.introText ?? `${level}`;
+  };
+
+  private _getEnabledLevels = (): number[] => {
+    return Object.keys(levels)
+      .map(Number)
+      .filter((level) => levels[level].enabled)
+      .sort((a, b) => a - b);
+  };
+
+  private _setSelectedLevel = (level: number): void => {
+    this._commands.selectLevel?.(level);
+  };
+
+  private _setLanguage = (language: GameLanguage): void => {
+    userOptions.setOption("language", language);
+    this._goBack();
+  };
+
+  private _adjustVolume = (key: "masterVolume" | "musicVolume" | "effectsVolume", direction: -1 | 1): void => {
+    this._setVolume(key, userOptions[key] + direction);
+  };
+
+  private _setVolume = (key: "masterVolume" | "musicVolume" | "effectsVolume", value: number): void => {
+    userOptions.setOption(key, Math.max(0, Math.min(10, value)));
+  };
+
+  private _formatKey = (keyCode: number): string => {
     if (keyCode === 32) {
-      return "Space";
+      return i18n.keys.space;
     }
 
     if (keyCode >= 65 && keyCode <= 90) {
@@ -572,23 +1232,43 @@ class Menus implements MenuSystemInstance {
     }
 
     const namedKeys: Record<number, string> = {
-      37: "Left",
-      38: "Up",
-      39: "Right",
-      40: "Down",
+      37: i18n.keys.left,
+      38: i18n.keys.up,
+      39: i18n.keys.right,
+      40: i18n.keys.down,
     };
 
     return namedKeys[keyCode] ?? `${keyCode}`;
-  }
+  };
 
-  private _isInsideItem(pointer: MenuPointerData, item: MenuItem): boolean {
+  private _formatBindingLabel = (binding: BindingAction): string => {
+    return keyBindingRows.find((row) => row.binding === binding)?.label ?? binding;
+  };
+
+  private _getDuplicateBinding = (keyCode: number): BindingAction | null => {
+    const duplicate = Object.entries(userOptions.keyboardBindings).find(
+      ([, keyCodes]) => keyCodes.includes(keyCode)
+    );
+
+    return (duplicate?.[0] as BindingAction | undefined) ?? null;
+  };
+
+  private _isInsideItem = (pointer: MenuPointerData, item: MenuItem): boolean => {
+    const viewport = this._getMenuViewport();
+    const itemPosY =
+      pointer.posY - this._scrollY - this._getScreenItemOffset(this._screen);
+
     return (
+      pointer.posX >= viewport.x &&
+      pointer.posX <= viewport.x + viewport.width &&
+      pointer.posY >= viewport.y &&
+      pointer.posY <= viewport.y + viewport.height &&
       pointer.posX >= item.rect.x &&
       pointer.posX <= item.rect.x + item.rect.width &&
-      pointer.posY >= item.rect.y &&
-      pointer.posY <= item.rect.y + item.rect.height
+      itemPosY >= item.rect.y &&
+      itemPosY <= item.rect.y + item.rect.height
     );
-  }
+  };
 }
 
 export default Menus;

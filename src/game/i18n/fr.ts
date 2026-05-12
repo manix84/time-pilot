@@ -1,0 +1,60 @@
+import type en from "./en";
+
+const fr: typeof en = {
+  language: {
+    code: "fr",
+    name: "Francais",
+  },
+  title: "PILOTE DU TEMPS",
+  hud: {
+    gameOver: "Partie terminee",
+    paused: "Pause",
+    pressPauseToContinue: 'Appuyez sur "P" pour continuer',
+    pressRestartToReset: 'Appuyez sur "R" pour recommencer',
+    restarting: "Redemarrage",
+  },
+  keys: {
+    down: "Bas",
+    left: "Gauche",
+    right: "Droite",
+    space: "Espace",
+    up: "Haut",
+  },
+  levels: {
+    1: { introText: "AP J-C 1910" },
+    2: { introText: "AP J-C 1940" },
+    3: { introText: "AP J-C 1970" },
+    4: { introText: "AP J-C 1982" },
+    5: { introText: "AP J-C 2001" },
+  },
+  menu: {
+    alreadyAssignedTo: (binding: string) => `Deja assigne a ${binding}`,
+    back: "Retour",
+    continue: "Continuer",
+    controlType: "Type de controle",
+    current: "Selectionne",
+    controls: "Commandes",
+    debug: "Debug",
+    directional: "Directionnel",
+    effectsVolume: "Volume des effets",
+    fire: "Tir",
+    invincibilityShield: "Bouclier d'invincibilite",
+    language: "Langue",
+    masterVolume: "Volume principal",
+    musicVolume: "Volume musique",
+    off: "Non",
+    on: "Oui",
+    options: "Options",
+    pressAKey: "Appuyez sur une touche",
+    remapControls: "Reconfigurer",
+    rotate: "Rotation",
+    selectLevel: "Choisir niveau",
+    showControlsOverlay: "Afficher commandes",
+    showCoordinates: "Afficher coordonnees",
+    showHitBoxes: "Afficher collisions",
+    soon: "Bientot",
+    start: "Demarrer",
+  },
+};
+
+export default fr;

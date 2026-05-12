@@ -3,7 +3,12 @@ import CollisionSystem from "../collision";
 import RenderingSystem from "../rendering";
 import SpawningSystem from "../spawning";
 import type {
+  BonusFactoryInstance,
+  BonusInstance,
+  BulletData,
+  BulletInstance,
   BulletFactoryInstance,
+  EnemyData,
   EnemyFactoryInstance,
   EnemyInstance,
   GameArenaInstance,
@@ -87,25 +92,101 @@ const createPlayer = (overrides: Partial<PlayerData> = {}): PlayerInstance => {
   };
 };
 
+const createEnemyBullet = (): BulletInstance => {
+  const enemyBulletData: BulletData = {
+    color: "#ff9",
+    coordinateSpace: "world",
+    heading: 180,
+    posX: 10,
+    posY: 20,
+    shape: "circle",
+    size: 6,
+    velocity: 5,
+  };
+
+  return {
+    removeMe: false,
+    getData: vi.fn((key?: keyof BulletData) =>
+      key ? enemyBulletData[key] : enemyBulletData
+    ) as BulletInstance["getData"],
+    setData: vi.fn(() => true),
+    setLevel: vi.fn(() => true),
+    reposition: vi.fn(),
+    render: vi.fn(),
+  };
+};
+
+const playerBulletData: BulletData[] = [
+  {
+    color: "#fff",
+    coordinateSpace: "screen",
+    heading: 90,
+    posX: 1,
+    posY: 2,
+    shape: "square",
+    size: 4,
+    velocity: 7,
+  },
+];
+
+const createPlayerBullet = (): BulletInstance => {
+  const bulletData = { ...playerBulletData[0] };
+
+  return {
+    removeMe: false,
+    getData: vi.fn((key?: keyof BulletData) =>
+      key ? bulletData[key] : bulletData
+    ) as BulletInstance["getData"],
+    setData: vi.fn(() => true),
+    setLevel: vi.fn(() => true),
+    reposition: vi.fn(),
+    render: vi.fn(),
+  };
+};
+
 const createContext = ({
+  arenaOverrides = {},
+  demoFadeStartedAtTick = 0,
+  demoFadeUntilTick = 0,
+  demoMode = false,
   enemyAlive = true,
   enemyCollides = true,
   enemyLimitAvailable = true,
+  levelIntroUntilTick = 0,
   playerOverrides = {},
   propCount = 0,
   ticks = 200,
+  level = 1,
 }: {
+  arenaOverrides?: Partial<GameArenaInstance>;
+  demoFadeStartedAtTick?: number;
+  demoFadeUntilTick?: number;
+  demoMode?: boolean;
   enemyAlive?: boolean;
   enemyCollides?: boolean;
   enemyLimitAvailable?: boolean;
+  levelIntroUntilTick?: number;
   playerOverrides?: Partial<PlayerData>;
   propCount?: number;
   ticks?: number;
+  level?: number;
 } = {}): GameDataStore => {
+  const enemyData: EnemyData = {
+    deathTick: false,
+    heading: 180,
+    hitPoints: 1,
+    level: 1,
+    posX: 100,
+    posY: 100,
+    tickOffset: 0,
+    type: "basic",
+  };
   const enemy: EnemyInstance = {
     isAlive: enemyAlive,
     removeMe: false,
-    getData: vi.fn(),
+    getData: vi.fn((key?: keyof EnemyData) =>
+      key ? enemyData[key] : enemyData
+    ) as EnemyInstance["getData"],
     setData: vi.fn(() => true),
     detectCollision: vi.fn(() => enemyCollides),
     reposition: vi.fn(),
@@ -114,9 +195,27 @@ const createContext = ({
       enemy.isAlive = false;
     }),
   };
-
+  const bonus: BonusInstance = {
+    removeMe: false,
+    getData: vi.fn(),
+    detectCollision: vi.fn(() => true),
+    collect: vi.fn(),
+    reposition: vi.fn(),
+    render: vi.fn(),
+  };
   return {
-    _level: 1,
+    _level: level,
+    _formations: {},
+    _levelProgress: {
+      bossDefeated: false,
+      bossKillThreshold: 56,
+      bossSpawned: false,
+      standardEnemyKills: 0,
+    },
+    _demoFadeStartedAtTick: demoFadeStartedAtTick,
+    _demoFadeUntilTick: demoFadeUntilTick,
+    _isDemoMode: demoMode,
+    _levelIntroUntilTick: levelIntroUntilTick,
     _controlInputState: {
       down: false,
       fire: false,
@@ -126,17 +225,42 @@ const createContext = ({
       restart: false,
       right: false,
       up: false,
+      activeController: "keyboard",
     },
-    _gameArena: createArena(),
+    _gameArena: {
+      ...createArena(),
+      ...arenaOverrides,
+    },
     _renderTicker: createTicker(),
     _gameTicker: {
       ...createTicker(),
       getTicks: vi.fn(() => ticks),
     },
+    _bonuses: {
+      create: vi.fn(),
+      getCount: vi.fn(() => 0),
+      getData: vi.fn(() => []),
+      getEntities: vi.fn(() => [bonus]),
+      cleanup: vi.fn(),
+      reposition: vi.fn(),
+      render: vi.fn(),
+      clearAll: vi.fn(),
+    } satisfies BonusFactoryInstance,
     _bullets: {
       create: vi.fn(),
       getCount: vi.fn(() => 1),
-      getData: vi.fn(() => [{ posX: 1, posY: 2, heading: 90, size: 4, velocity: 7, color: "#fff" }]),
+      getData: vi.fn(() => playerBulletData),
+      getEntities: vi.fn(() => [createPlayerBullet()]),
+      cleanup: vi.fn(),
+      reposition: vi.fn(),
+      render: vi.fn(),
+      clearAll: vi.fn(),
+    } satisfies BulletFactoryInstance,
+    _enemyBullets: {
+      create: vi.fn(),
+      getCount: vi.fn(() => 0),
+      getData: vi.fn(() => []),
+      getEntities: vi.fn(() => []),
       cleanup: vi.fn(),
       reposition: vi.fn(),
       render: vi.fn(),
@@ -199,6 +323,40 @@ describe("game systems", () => {
     expect(context._player.kill).toHaveBeenCalled();
   });
 
+  it("collects bonuses through player collision only", () => {
+    const context = createContext();
+    const system = new CollisionSystem(context);
+
+    system.detectCollisions();
+
+    const [bonus] = context._bonuses.getEntities();
+    expect(bonus.detectCollision).toHaveBeenCalledWith(10, 20, 8);
+    expect(bonus.collect).toHaveBeenCalled();
+  });
+
+  it("kills the player when enemy bullets hit them", () => {
+    const context = createContext();
+    const enemyBullet = createEnemyBullet();
+    vi.mocked(context._enemyBullets.getEntities).mockReturnValue([enemyBullet]);
+    const system = new CollisionSystem(context);
+
+    system.detectCollisions();
+
+    expect(context._player.kill).toHaveBeenCalled();
+    expect(enemyBullet.removeMe).toBe(true);
+  });
+
+  it("keeps the player alive while demo collisions continue resolving bullets", () => {
+    const context = createContext({ demoMode: true });
+    const system = new CollisionSystem(context);
+
+    system.detectCollisions();
+
+    const [enemy] = context._enemies.getEntities();
+    expect(enemy.kill).toHaveBeenCalled();
+    expect(context._player.kill).not.toHaveBeenCalled();
+  });
+
   it("skips collisions when enemies or the player are not alive", () => {
     const deadEnemyContext = createContext({ enemyAlive: false });
     const deadEnemySystem = new CollisionSystem(deadEnemyContext);
@@ -218,6 +376,17 @@ describe("game systems", () => {
     expect(enemy.detectCollision).not.toHaveBeenCalled();
   });
 
+  it("skips collisions while the level intro is active", () => {
+    const context = createContext({ levelIntroUntilTick: 250, ticks: 200 });
+    const system = new CollisionSystem(context);
+
+    system.detectCollisions();
+
+    const [enemy] = context._enemies.getEntities();
+    expect(enemy.detectCollision).not.toHaveBeenCalled();
+    expect(context._player.kill).not.toHaveBeenCalled();
+  });
+
   it("spawns initial props and tick-based entities", () => {
     const context = createContext();
     const system = new SpawningSystem(context);
@@ -229,6 +398,146 @@ describe("game systems", () => {
 
     expect(context._props.create).toHaveBeenCalled();
     expect(context._enemies.create).toHaveBeenCalled();
+    expect(context._enemyBullets.create).toHaveBeenCalledWith(
+      100,
+      100,
+      expect.any(Number),
+      6,
+      5,
+      "#FF9",
+      false,
+      "world",
+      "circle"
+    );
+    expect(context._bonuses.create).not.toHaveBeenCalled();
+  });
+
+  it("spawns the boss after the level kill threshold", () => {
+    const context = createContext();
+    context._levelProgress.standardEnemyKills = 56;
+    const system = new SpawningSystem(context);
+
+    system.spawnEntities();
+
+    expect(context._enemies.create).toHaveBeenCalledWith(
+      expect.any(Number),
+      expect.any(Number),
+      expect.any(Number),
+      { type: "boss" }
+    );
+    expect(context._levelProgress.bossSpawned).toBe(true);
+  });
+
+  it("spawns the 1940 special bomber as a horizontal non-progression enemy", () => {
+    const context = createContext({ level: 2, ticks: 900 });
+    const system = new SpawningSystem(context);
+
+    vi.spyOn(Math, "random").mockReturnValue(0);
+
+    system.spawnEntities();
+
+    expect(context._enemies.create).toHaveBeenCalledWith(
+      expect.any(Number),
+      expect.any(Number),
+      90,
+      { type: "specialBomber" }
+    );
+  });
+
+  it("drops bombs from the 1940 special bomber", () => {
+    const context = createContext({ level: 2, ticks: 225 });
+    const [bomber] = context._enemies.getEntities();
+    vi.mocked(bomber.getData).mockImplementation((key?: keyof EnemyData) => {
+      const data: EnemyData = {
+        deathTick: false,
+        heading: 90,
+        hitPoints: 3,
+        level: 2,
+        posX: 100,
+        posY: 100,
+        tickOffset: 0,
+        type: "specialBomber" as const,
+      };
+
+      return key ? data[key] : data;
+    });
+    const system = new SpawningSystem(context);
+
+    vi.spyOn(Math, "random").mockReturnValue(0);
+
+    system.spawnEntities();
+
+    expect(context._enemyBullets.create).toHaveBeenCalledWith(
+      100,
+      109,
+      180,
+      6,
+      4,
+      "#FF9",
+      false,
+      "world",
+      "sprite",
+      expect.objectContaining({
+        height: 3,
+        renderHeight: 6,
+        renderWidth: 24,
+        width: 12,
+      })
+    );
+  });
+
+  it("spawns bonuses along the top and upper side spawn areas", () => {
+    const context = createContext({ ticks: 600 });
+    const system = new SpawningSystem(context);
+
+    vi.spyOn(Math, "random").mockReturnValue(0);
+
+    system.spawnEntities();
+
+    expect(context._bonuses.create).toHaveBeenCalledWith(-390, -328);
+  });
+
+  it("expands spawn areas to cover wide or tall viewports", () => {
+    const context = createContext({
+      arenaOverrides: {
+        width: 1920,
+        height: 1080,
+      },
+      playerOverrides: {
+        heading: 90,
+        posX: 10,
+        posY: 20,
+      },
+    });
+    const system = new SpawningSystem(context);
+
+    vi.spyOn(Math, "random").mockReturnValue(0);
+
+    system.addInitialProps();
+    system.spawnEntities();
+
+    expect(context._props.create).toHaveBeenNthCalledWith(1, -1046, -616);
+
+    const [enemyX, enemyY] = vi.mocked(context._enemies.create).mock.calls[0];
+    const distanceFromPlayer = Math.hypot(enemyX - 10, enemyY - 20);
+
+    expect(distanceFromPlayer).toBeGreaterThan(1100);
+  });
+
+  it("scales initial prop density for larger viewports", () => {
+    const context = createContext({
+      arenaOverrides: {
+        width: 1920,
+        height: 1080,
+      },
+    });
+    const system = new SpawningSystem(context);
+
+    vi.spyOn(Math, "random").mockReturnValue(0);
+
+    system.addInitialProps();
+
+    expect(context._props.create).toHaveBeenCalledTimes(87);
   });
 
   it("does not spawn when limits or timing block new entities", () => {
@@ -245,6 +554,20 @@ describe("game systems", () => {
 
     expect(context._enemies.create).not.toHaveBeenCalled();
     expect(context._props.create).not.toHaveBeenCalled();
+    expect(context._bonuses.create).not.toHaveBeenCalled();
+  });
+
+  it("does not spawn enemies, props, or bonuses while the level intro is active", () => {
+    const context = createContext({ levelIntroUntilTick: 250, ticks: 200 });
+    const system = new SpawningSystem(context);
+
+    vi.spyOn(Math, "random").mockReturnValue(0);
+
+    system.spawnEntities();
+
+    expect(context._enemies.create).not.toHaveBeenCalled();
+    expect(context._props.create).not.toHaveBeenCalled();
+    expect(context._bonuses.create).not.toHaveBeenCalled();
   });
 
   it("renders a frame in the expected scene order", () => {
@@ -254,13 +577,89 @@ describe("game systems", () => {
     system.renderFrame();
 
     expect(context._gameArena.clear).toHaveBeenCalled();
-    expect(context._gameArena.setBackgroundColor).toHaveBeenCalledWith("#007");
+    expect(context._gameArena.setBackgroundColor).toHaveBeenCalledWith("#4FC3F7");
     expect(context._props.render).toHaveBeenNthCalledWith(1, 1);
+    expect(context._bonuses.render).toHaveBeenCalled();
     expect(context._bullets.render).toHaveBeenCalled();
     expect(context._enemies.render).toHaveBeenCalled();
+    expect(context._enemyBullets.render).toHaveBeenCalled();
     expect(context._player.render).toHaveBeenCalled();
     expect(context._props.render).toHaveBeenNthCalledWith(2, 2);
     expect(context._hud.render).toHaveBeenCalled();
     expect(context._menus.render).toHaveBeenCalled();
+  });
+
+  it("renders level intro text above gameplay and below menus while intro is active", () => {
+    const context = createContext({ levelIntroUntilTick: 250, ticks: 200 });
+    const system = new RenderingSystem(context);
+
+    system.renderFrame();
+
+    expect(context._gameArena.renderText).toHaveBeenCalledWith(
+      "A.D 1910",
+      0,
+      44,
+      expect.objectContaining({
+        align: "center",
+        size: 24,
+        valign: "middle",
+      })
+    );
+    expect(
+      vi.mocked(context._props.render).mock.invocationCallOrder[1]
+    ).toBeLessThan(
+      vi.mocked(context._gameArena.renderText).mock.invocationCallOrder[0]
+    );
+    expect(
+      vi.mocked(context._gameArena.renderText).mock.invocationCallOrder[0]
+    ).toBeLessThan(vi.mocked(context._menus.render).mock.invocationCallOrder[0]);
+  });
+
+  it("renders demo level fade behind active menus", () => {
+    const context = createContext({
+      demoFadeStartedAtTick: 100,
+      demoFadeUntilTick: 130,
+      demoMode: true,
+      ticks: 115,
+    });
+    vi.mocked(context._menus.isActive).mockReturnValue(true);
+    const system = new RenderingSystem(context);
+
+    system.renderFrame();
+
+    const canvasContext = vi.mocked(context._gameArena.getContext).mock.results[0]
+      .value as CanvasRenderingContext2D;
+
+    expect(canvasContext.fillRect).toHaveBeenCalledWith(-400, -300, 800, 600);
+    expect(context._menus.render).toHaveBeenCalled();
+    expect(vi.mocked(canvasContext.fillRect).mock.invocationCallOrder[0]).toBeLessThan(
+      vi.mocked(context._menus.render).mock.invocationCallOrder[0]
+    );
+  });
+
+  it("hides HUD rendering while menus are active", () => {
+    const context = createContext();
+    vi.mocked(context._menus.isActive).mockReturnValue(true);
+    const system = new RenderingSystem(context);
+
+    system.renderFrame();
+
+    expect(context._hud.render).not.toHaveBeenCalled();
+    expect(context._menus.render).toHaveBeenCalled();
+  });
+
+  it("hides level intro text while menus are active", () => {
+    const context = createContext({ levelIntroUntilTick: 250, ticks: 200 });
+    vi.mocked(context._menus.isActive).mockReturnValue(true);
+    const system = new RenderingSystem(context);
+
+    system.renderFrame();
+
+    expect(context._gameArena.renderText).not.toHaveBeenCalledWith(
+      "A.D 1910",
+      expect.any(Number),
+      expect.any(Number),
+      expect.anything()
+    );
   });
 });

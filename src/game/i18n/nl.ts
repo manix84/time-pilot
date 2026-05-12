@@ -1,0 +1,60 @@
+import type en from "./en";
+
+const nl: typeof en = {
+  language: {
+    code: "nl",
+    name: "Nederlands",
+  },
+  title: "TIJDPILOOT",
+  hud: {
+    gameOver: "Spel voorbij",
+    paused: "Gepauzeerd",
+    pressPauseToContinue: 'Druk op "P" om door te gaan',
+    pressRestartToReset: 'Druk op "R" om opnieuw te starten',
+    restarting: "Opnieuw starten",
+  },
+  keys: {
+    down: "Omlaag",
+    left: "Links",
+    right: "Rechts",
+    space: "Spatie",
+    up: "Omhoog",
+  },
+  levels: {
+    1: { introText: "N.C. 1910" },
+    2: { introText: "N.C. 1940" },
+    3: { introText: "N.C. 1970" },
+    4: { introText: "N.C. 1982" },
+    5: { introText: "N.C. 2001" },
+  },
+  menu: {
+    alreadyAssignedTo: (binding: string) => `Al toegewezen aan ${binding}`,
+    back: "Terug",
+    continue: "Doorgaan",
+    controlType: "Besturingstype",
+    current: "Geselecteerd",
+    controls: "Besturing",
+    debug: "Debug",
+    directional: "Richting",
+    effectsVolume: "Effectvolume",
+    fire: "Vuur",
+    invincibilityShield: "Onkwetsbaar schild",
+    language: "Taal",
+    masterVolume: "Hoofdvolume",
+    musicVolume: "Muziekvolume",
+    off: "Uit",
+    on: "Aan",
+    options: "Opties",
+    pressAKey: "Druk op een toets",
+    remapControls: "Toetsen instellen",
+    rotate: "Draaien",
+    selectLevel: "Level kiezen",
+    showControlsOverlay: "Besturing tonen",
+    showCoordinates: "Coordinaten tonen",
+    showHitBoxes: "Hitboxen tonen",
+    soon: "Binnenkort",
+    start: "Start",
+  },
+};
+
+export default nl;

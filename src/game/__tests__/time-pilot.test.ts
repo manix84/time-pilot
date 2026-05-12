@@ -17,6 +17,9 @@ describe("TimePilot engine", () => {
 
   afterEach(() => {
     host.remove();
+    userOptions.setOption("enableDebug", false);
+    userOptions.setDebugOption("invincible", true);
+    localStorage.clear();
     userOptions.setOption("controllerType", "keyboard1");
     userOptions.setOption("gamepadEnabled", true);
     vi.restoreAllMocks();
@@ -56,11 +59,65 @@ describe("TimePilot engine", () => {
     game.destroyGame();
   });
 
+  it("starts the player game from the selected debug level", async () => {
+    const game = new TimePilot(host, { debug: true });
+    const pilot = game as unknown as {
+      context: {
+        _isDemoMode: boolean;
+        _level: number;
+        _menus: {
+          activate: () => void;
+          next: () => void;
+          showStart: () => void;
+        };
+        _player: {
+          getData: (key: "level") => number | undefined;
+        };
+      };
+    };
+
+    await new Promise((resolve) => window.setTimeout(resolve, 5));
+
+    pilot.context._menus.showStart();
+    for (let i = 0; i < 2; i++) {
+      pilot.context._menus.next();
+    }
+    pilot.context._menus.activate();
+    for (let i = 0; i < 4; i++) {
+      pilot.context._menus.next();
+    }
+    pilot.context._menus.activate();
+    for (let i = 0; i < 2; i++) {
+      pilot.context._menus.next();
+    }
+    pilot.context._menus.activate();
+
+    expect(pilot.context._isDemoMode).toBe(false);
+    expect(pilot.context._level).toBe(3);
+    expect(pilot.context._player.getData("level")).toBe(3);
+
+    game.destroyGame();
+  });
+
   it("persists user option updates", () => {
     userOptions.setOption("controllerType", "keyboard1");
     userOptions.setOption("gamepadEnabled", true);
+    userOptions.setOption("enableDebug", true);
+    userOptions.setDebugOption("showControlsOverlay", true);
 
     expect(userOptions.controllerType).toBe("keyboard1");
     expect(userOptions.gamepadEnabled).toBe(true);
+    expect(localStorage.getItem("timePilot.userOptions")).toContain(
+      '"controllerType":"keyboard1"'
+    );
+    expect(localStorage.getItem("timePilot.userOptions")).toContain(
+      '"gamepadEnabled":true'
+    );
+    expect(localStorage.getItem("timePilot.userOptions")).toContain(
+      '"enableDebug":true'
+    );
+    expect(localStorage.getItem("timePilot.userOptions")).toContain(
+      '"showControlsOverlay":true'
+    );
   });
 });

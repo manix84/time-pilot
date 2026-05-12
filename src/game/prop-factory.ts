@@ -15,43 +15,43 @@ class PropFactory implements PropFactoryInstance {
     this._context = context;
   }
 
-  create(posX: number, posY: number): void {
+  create = (posX: number, posY: number): void => {
     this._props.push(new Prop(this._context, posX, posY));
-  }
+  };
 
-  getCount(): number {
+  getCount = (): number => {
     return this._props.length;
-  }
+  };
 
-  getData(): PropData[] {
+  getData = (): PropData[] => {
     return this._props.map((prop) => prop.getData());
-  }
+  };
 
-  cleanup(): void {
+  cleanup = (): void => {
     this._props = this._props.filter((prop) => !prop.removeMe);
-  }
+  };
 
-  reposition(): void {
+  reposition = (): void => {
     this._props.forEach((prop) => prop.reposition());
-  }
+  };
 
-  render(layer: number | false = false): void {
+  render = (layer: number | false = false): void => {
     this._props.forEach((prop) => {
       if (!layer || prop.getData().layer === layer) {
         prop.render();
       }
     });
-  }
+  };
 
-  private _despawn(entityId: number): void {
+  private _despawn = (entityId: number): void => {
     this._props.splice(entityId, 1);
-  }
+  };
 
-  clearAll(): void {
+  clearAll = (): void => {
     while (this._props.length) {
       this._despawn(0);
     }
-  }
+  };
 }
 
 export default PropFactory;

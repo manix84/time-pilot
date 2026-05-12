@@ -1,0 +1,158 @@
+.storybook-surface {
+  min-height: 100vh;
+  padding: 2rem;
+  color: #eef5ff;
+  background: #070b12;
+}
+
+.storybook-section {
+  width: min(1180px, 100%);
+  margin: 0 auto;
+}
+
+.storybook-eyebrow {
+  margin: 0 0 0.6rem;
+  color: #7edbd3;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.storybook-title {
+  margin: 0 0 1rem;
+  color: #fff4c1;
+  font-size: 2rem;
+  line-height: 1.08;
+}
+
+.palette-group {
+  margin-top: 2rem;
+}
+
+.palette-group h2 {
+  margin: 0 0 0.8rem;
+  color: #e9f3ff;
+  font-size: 1rem;
+  text-transform: capitalize;
+}
+
+.palette-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+  gap: 0.8rem;
+}
+
+.palette-swatch {
+  overflow: hidden;
+  border: 1px solid rgba(126, 219, 211, 0.22);
+  border-radius: 8px;
+  background: rgba(5, 12, 22, 0.72);
+}
+
+.palette-color {
+  min-height: 4.8rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.palette-shield {
+  transition: background-color 160ms linear;
+}
+
+.palette-meta {
+  display: grid;
+  gap: 0.2rem;
+  padding: 0.75rem;
+}
+
+.palette-name {
+  color: #e9f3ff;
+  font-weight: 800;
+}
+
+.palette-value {
+  color: #c7d5eb;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.82rem;
+}
+
+.storybook-game-frame {
+  width: min(100%, 840px);
+  margin: 1.2rem auto 0;
+}
+
+.storybook-demo-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr));
+  gap: 1rem;
+  margin-top: 1.2rem;
+}
+
+.storybook-card {
+  border: 1px solid rgba(126, 219, 211, 0.22);
+  border-radius: 8px;
+  padding: 1rem;
+  background: rgba(5, 12, 22, 0.72);
+}
+
+.storybook-card h2 {
+  margin: 0 0 0.7rem;
+  color: #ffd400;
+  font-size: 1rem;
+}
+
+.storybook-card p {
+  margin: 0.7rem 0 0;
+  color: #c7d5eb;
+  line-height: 1.5;
+}
+
+.storybook-canvas {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  border: 1px solid rgba(126, 219, 211, 0.22);
+  border-radius: 8px;
+  background: #06101d;
+}
+
+.ticker-readout {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.ticker-readout div {
+  padding: 0.8rem;
+  border-left: 3px solid #54c18a;
+  background: rgba(255, 255, 255, 0.055);
+}
+
+.ticker-readout strong {
+  display: block;
+  color: #fff4c1;
+  font-size: 1.4rem;
+}
+
+.storybook-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 1rem 0;
+}
+
+.storybook-controls button {
+  min-height: 2.25rem;
+  border: 1px solid #466485;
+  border-radius: 8px;
+  padding: 0 0.8rem;
+  color: #e9f3ff;
+  background: #08111d;
+  cursor: pointer;
+}
+
+.storybook-controls button[aria-pressed="true"] {
+  color: #111927;
+  background: #f2b84b;
+}

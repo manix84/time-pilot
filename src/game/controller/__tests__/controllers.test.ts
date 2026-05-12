@@ -3,10 +3,11 @@ import Gamepad from "../gamepad";
 import Keyboard1 from "../keyboard1";
 import Keyboard2 from "../keyboard2";
 import Mouse from "../mouse";
+import TouchController from "../touch";
 import type { ControlInputState, ControllerInterfaceInstance } from "../../types";
 import userOptions from "../../user-options";
 
-function createControls(): ControllerInterfaceInstance {
+const createControls = (): ControllerInterfaceInstance => {
   return {
     rotateToHeading: vi.fn(),
     rotateClockwise: vi.fn(),
@@ -25,9 +26,9 @@ function createControls(): ControllerInterfaceInstance {
     handlePointer: vi.fn(),
     isMenuActive: vi.fn(() => false),
   };
-}
+};
 
-function createInputState(): ControlInputState {
+const createInputState = (): ControlInputState => {
   return {
     down: false,
     fire: false,
@@ -37,8 +38,25 @@ function createInputState(): ControlInputState {
     restart: false,
     right: false,
     up: false,
+    activeController: "keyboard",
   };
-}
+};
+
+const dispatchTouch = (canvas: HTMLCanvasElement, type: string, touch: { clientX: number; clientY: number; identifier?: number }): void => {
+  const event = new Event(type, { bubbles: true, cancelable: true });
+
+  Object.defineProperty(event, "changedTouches", {
+    value: [
+      {
+        identifier: touch.identifier ?? 1,
+        clientX: touch.clientX,
+        clientY: touch.clientY,
+      },
+    ],
+  });
+
+  canvas.dispatchEvent(event);
+};
 
 describe("controller modules", () => {
   beforeEach(() => {
@@ -64,6 +82,7 @@ describe("controller modules", () => {
     expect(inputState.left).toBe(true);
     expect(inputState.fire).toBe(false);
     expect(inputState.menu).toBe(true);
+    expect(inputState.activeController).toBe("keyboard");
 
     keyboard.disconnect?.();
   });
@@ -78,6 +97,23 @@ describe("controller modules", () => {
 
     expect(controls.startShooting).toHaveBeenCalled();
     expect(inputState.fire).toBe(false);
+
+    keyboard.disconnect?.();
+  });
+
+  it("keeps rotating toward held keyboard directions when another direction is released", () => {
+    const controls = createControls();
+    const inputState = createInputState();
+    const keyboard = new Keyboard1(controls, inputState);
+
+    document.documentElement.dispatchEvent(new KeyboardEvent("keydown", { keyCode: 38 }));
+    document.documentElement.dispatchEvent(new KeyboardEvent("keydown", { keyCode: 39 }));
+    document.documentElement.dispatchEvent(new KeyboardEvent("keyup", { keyCode: 38 }));
+
+    expect(controls.rotateToHeading).toHaveBeenLastCalledWith(90);
+    expect(controls.stop).not.toHaveBeenCalled();
+    expect(inputState.up).toBe(false);
+    expect(inputState.right).toBe(true);
 
     keyboard.disconnect?.();
   });
@@ -105,6 +141,28 @@ describe("controller modules", () => {
     keyboard.disconnect?.();
   });
 
+  it("keeps directional menu navigation working in rotate control mode", () => {
+    const controls = createControls();
+    const inputState = createInputState();
+    userOptions.setOption("controllerType", "keyboard2");
+    vi.mocked(controls.isMenuActive).mockReturnValue(true);
+    const keyboard = new Keyboard2(controls, inputState);
+
+    document.documentElement.dispatchEvent(new KeyboardEvent("keydown", { keyCode: 38 }));
+    document.documentElement.dispatchEvent(new KeyboardEvent("keydown", { keyCode: 40 }));
+    document.documentElement.dispatchEvent(new KeyboardEvent("keydown", { keyCode: 37 }));
+    document.documentElement.dispatchEvent(new KeyboardEvent("keydown", { keyCode: 39 }));
+
+    expect(controls.rotateToHeading).toHaveBeenCalledWith(0);
+    expect(controls.rotateToHeading).toHaveBeenCalledWith(180);
+    expect(controls.rotateToHeading).toHaveBeenCalledWith(270);
+    expect(controls.rotateToHeading).toHaveBeenCalledWith(90);
+    expect(controls.rotateAntiClockwise).not.toHaveBeenCalled();
+    expect(controls.rotateClockwise).not.toHaveBeenCalled();
+
+    keyboard.disconnect?.();
+  });
+
   it("polls gamepad state and disconnects its animation frame", async () => {
     const controls = createControls();
     const inputState = createInputState();
@@ -125,10 +183,37 @@ describe("controller modules", () => {
     expect(controls.rotateToHeading).toHaveBeenCalled();
     expect(inputState.fire).toBe(true);
     expect(inputState.right).toBe(true);
+    expect(inputState.activeController).toBe("gamepad");
     expect(window.cancelAnimationFrame).toHaveBeenCalled();
   });
 
-  it("maps mouse movement and clicks to menu pointer actions", () => {
+  it("treats gamepad D-pad as directional and shoulder buttons as rotation", async () => {
+    const controls = createControls();
+    const inputState = createInputState();
+    userOptions.setOption("controllerType", "keyboard2");
+    const gamepad = {
+      axes: [0, 0],
+      buttons: Array.from({ length: 16 }, () => ({ pressed: false })),
+    };
+    gamepad.buttons[4].pressed = true;
+    gamepad.buttons[5].pressed = true;
+    gamepad.buttons[12].pressed = true;
+    vi.spyOn(navigator, "getGamepads").mockReturnValue([
+      gamepad as unknown as globalThis.Gamepad,
+    ]);
+
+    const controller = new Gamepad(controls, inputState);
+    await new Promise((resolve) => window.setTimeout(resolve, 5));
+    controller.disconnect?.();
+
+    expect(controls.rotateAntiClockwise).toHaveBeenCalled();
+    expect(controls.rotateClockwise).toHaveBeenCalled();
+    expect(controls.rotateToHeading).toHaveBeenCalledWith(0);
+    expect(inputState.up).toBe(true);
+    expect(inputState.activeController).toBe("gamepad");
+  });
+
+  it("maps mouse movement and button presses to menu pointer actions", () => {
     const controls = createControls();
     const canvas = document.createElement("canvas");
     canvas.width = 800;
@@ -150,7 +235,10 @@ describe("controller modules", () => {
       new MouseEvent("mousemove", { clientX: 200, clientY: 150 })
     );
     canvas.dispatchEvent(
-      new MouseEvent("click", { clientX: 200, clientY: 150 })
+      new MouseEvent("mousedown", { clientX: 200, clientY: 150 })
+    );
+    canvas.dispatchEvent(
+      new MouseEvent("mouseup", { clientX: 200, clientY: 150 })
     );
 
     expect(controls.handlePointer).toHaveBeenCalledWith({
@@ -161,9 +249,147 @@ describe("controller modules", () => {
     expect(controls.handlePointer).toHaveBeenCalledWith({
       posX: 0,
       posY: 0,
-      type: "click",
+      type: "press",
+    });
+    expect(controls.handlePointer).toHaveBeenCalledWith({
+      posX: 0,
+      posY: 0,
+      type: "release",
     });
 
     mouse.disconnect?.();
+  });
+
+  it("maps mouse drags to menu pointer drag actions", () => {
+    const controls = createControls();
+    const canvas = document.createElement("canvas");
+    canvas.width = 800;
+    canvas.height = 600;
+    vi.spyOn(canvas, "getBoundingClientRect").mockReturnValue({
+      bottom: 300,
+      height: 300,
+      left: 0,
+      right: 400,
+      top: 0,
+      width: 400,
+      x: 0,
+      y: 0,
+      toJSON: () => ({}),
+    });
+
+    const mouse = new Mouse(canvas, controls);
+    canvas.dispatchEvent(
+      new MouseEvent("mousedown", { clientX: 100, clientY: 150 })
+    );
+    canvas.dispatchEvent(
+      new MouseEvent("mousemove", { clientX: 250, clientY: 150 })
+    );
+    canvas.dispatchEvent(
+      new MouseEvent("mouseup", { clientX: 250, clientY: 150 })
+    );
+
+    expect(controls.handlePointer).toHaveBeenCalledWith({
+      posX: -200,
+      posY: 0,
+      type: "press",
+    });
+    expect(controls.handlePointer).toHaveBeenCalledWith({
+      posX: 100,
+      posY: 0,
+      type: "drag",
+    });
+    expect(controls.handlePointer).not.toHaveBeenCalledWith({
+      posX: 100,
+      posY: 0,
+      type: "click",
+    });
+    expect(controls.handlePointer).toHaveBeenCalledWith({
+      posX: 100,
+      posY: 0,
+      type: "release",
+    });
+
+    mouse.disconnect?.();
+  });
+
+  it("maps touch drag direction to heading with a dead zone", () => {
+    const controls = createControls();
+    const inputState = createInputState();
+    const canvas = document.createElement("canvas");
+    canvas.width = 800;
+    canvas.height = 600;
+    vi.spyOn(canvas, "getBoundingClientRect").mockReturnValue({
+      bottom: 300,
+      height: 300,
+      left: 0,
+      right: 400,
+      top: 0,
+      width: 400,
+      x: 0,
+      y: 0,
+      toJSON: () => ({}),
+    });
+
+    const touch = new TouchController(canvas, controls, inputState);
+    dispatchTouch(canvas, "touchstart", { clientX: 202, clientY: 151 });
+    expect(controls.rotateToHeading).not.toHaveBeenCalled();
+
+    dispatchTouch(canvas, "touchmove", { clientX: 200, clientY: 50 });
+    expect(controls.rotateToHeading).toHaveBeenCalledWith(0);
+    expect(inputState.up).toBe(true);
+    expect(inputState.activeController).toBe("touch");
+
+    dispatchTouch(canvas, "touchmove", { clientX: 300, clientY: 150 });
+    expect(controls.rotateToHeading).toHaveBeenCalledWith(90);
+    expect(inputState.right).toBe(true);
+
+    dispatchTouch(canvas, "touchend", { clientX: 300, clientY: 150 });
+    expect(inputState.right).toBe(false);
+    expect(controls.stop).not.toHaveBeenCalled();
+
+    touch.disconnect?.();
+  });
+
+  it("routes touch taps and movement to active menus", () => {
+    const controls = createControls();
+    vi.mocked(controls.isMenuActive).mockReturnValue(true);
+    const canvas = document.createElement("canvas");
+    canvas.width = 800;
+    canvas.height = 600;
+    vi.spyOn(canvas, "getBoundingClientRect").mockReturnValue({
+      bottom: 300,
+      height: 300,
+      left: 0,
+      right: 400,
+      top: 0,
+      width: 400,
+      x: 0,
+      y: 0,
+      toJSON: () => ({}),
+    });
+
+    const touch = new TouchController(canvas, controls);
+    dispatchTouch(canvas, "touchstart", { clientX: 200, clientY: 150 });
+    dispatchTouch(canvas, "touchmove", { clientX: 220, clientY: 160 });
+    dispatchTouch(canvas, "touchend", { clientX: 220, clientY: 160 });
+
+    expect(controls.handlePointer).toHaveBeenCalledWith({
+      posX: 0,
+      posY: 0,
+      type: "press",
+    });
+    expect(controls.handlePointer).toHaveBeenCalledWith({
+      posX: 40,
+      posY: 20,
+      type: "drag",
+    });
+    expect(controls.handlePointer).toHaveBeenCalledWith({
+      posX: 40,
+      posY: 20,
+      type: "release",
+    });
+    expect(controls.rotateToHeading).not.toHaveBeenCalled();
+
+    touch.disconnect?.();
   });
 });

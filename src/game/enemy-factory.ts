@@ -1,11 +1,13 @@
 /* Converted from TimePilot.EnemyFactory.js (AMD) to ESM TypeScript. */
-import CONSTS from "./constants";
+import { levels } from "./constants";
 import Enemy from "./enemy";
+import { getScaledEntityLimit } from "./viewport";
 import type {
   EnemyConfig,
   EnemyData,
   EnemyFactoryInstance,
   EnemyInstance,
+  EnemySpawnOptions,
   GameDataStore,
   Heading,
 } from "./types";
@@ -13,21 +15,19 @@ import type {
 class EnemyFactory implements EnemyFactoryInstance {
   private _context: GameDataStore;
   private _enemies: EnemyInstance[] = [];
-  private _level: number;
 
   constructor(context: GameDataStore) {
     this._context = context;
-    this._level = context._level;
   }
 
-  create(posX: number, posY: number, heading: Heading): void {
-    this._enemies.push(new Enemy(this._context, posX, posY, heading));
-  }
+  create = (posX: number, posY: number, heading: Heading, options: EnemySpawnOptions = {}): void => {
+    this._enemies.push(new Enemy(this._context, posX, posY, heading, options));
+  };
 
   getLevelData(): EnemyConfig;
   getLevelData<K extends keyof EnemyConfig>(key: K): EnemyConfig[K] | undefined;
   getLevelData<K extends keyof EnemyConfig>(key?: K) {
-    const data = CONSTS.levels[this._level].enemies.basic;
+    const data = levels[this._context._level].enemies.basic;
 
     if (key) {
       return data[key];
@@ -36,43 +36,62 @@ class EnemyFactory implements EnemyFactoryInstance {
     return data;
   }
 
-  getCount(): number {
+  getCount = (): number => {
     return this._enemies.length;
-  }
+  };
 
-  isUnderLimit(): boolean {
-    return this._enemies.length < this.getLevelData("spawnLimit")!;
-  }
+  isUnderLimit = (): boolean => {
+    return (
+      this._enemies.length <
+      getScaledEntityLimit(
+        this.getLevelData("spawnLimit")!,
+        this._context._gameArena
+      )
+    );
+  };
 
-  getData(): EnemyData[] {
+  getData = (): EnemyData[] => {
     return this._enemies.map((enemy) => enemy.getData() as EnemyData);
-  }
+  };
 
-  getEntities(): EnemyInstance[] {
+  getEntities = (): EnemyInstance[] => {
     return [...this._enemies];
-  }
+  };
 
-  cleanup(): void {
+  cleanup = (): void => {
+    this._enemies.forEach((enemy) => {
+      const formationId = enemy.getData("formationId");
+
+      if (
+        enemy.removeMe &&
+        enemy.isAlive &&
+        typeof formationId === "string" &&
+        this._context._formations[formationId]
+      ) {
+        this._context._formations[formationId].escaped = true;
+      }
+    });
+
     this._enemies = this._enemies.filter((enemy) => !enemy.removeMe);
-  }
+  };
 
-  reposition(): void {
+  reposition = (): void => {
     this._enemies.forEach((enemy) => enemy.reposition());
-  }
+  };
 
-  render(): void {
+  render = (): void => {
     this._enemies.forEach((enemy) => enemy.render());
-  }
+  };
 
-  private _despawn(entityId: number): void {
+  private _despawn = (entityId: number): void => {
     this._enemies.splice(entityId, 1);
-  }
+  };
 
-  clearAll(): void {
+  clearAll = (): void => {
     while (this._enemies.length) {
       this._despawn(0);
     }
-  }
+  };
 }
 
 export default EnemyFactory;

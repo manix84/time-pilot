@@ -1,6 +1,7 @@
 /* Converted from TimePilot.Prop.js (AMD) to ESM TypeScript. */
-import CONSTS from "./constants";
+import { levels } from "./constants";
 import helpers from "./engine/helpers";
+import { getDespawnRadius } from "./viewport";
 import type {
   GameArenaInstance,
   GameDataStore,
@@ -23,13 +24,13 @@ class Prop implements PropInstance {
     this._player = context._player;
 
     const level = 1;
-    const type = Math.floor(Math.random() * CONSTS.levels[level].props.length);
+    const type = Math.floor(Math.random() * levels[level].props.length);
     this._data = {
       posX,
       posY,
       level,
       type,
-      layer: CONSTS.levels[level].props[type].layer,
+      layer: levels[level].props[type].layer,
     };
 
     this._propSprite = new Image();
@@ -50,11 +51,11 @@ class Prop implements PropInstance {
     return undefined;
   }
 
-  private getLevelData(): PropConfig {
-    return CONSTS.levels[this._data.level].props[this._data.type];
-  }
+  private getLevelData = (): PropConfig => {
+    return levels[this._data.level].props[this._data.type];
+  };
 
-  private _checkInArena(): void {
+  private _checkInArena = (): void => {
     const levelData = this.getLevelData();
 
     if (this.removeMe) {
@@ -70,14 +71,14 @@ class Prop implements PropInstance {
         posX: this._data.posX,
         posY: this._data.posY,
       },
-      CONSTS.limits.despawnRadius
+      getDespawnRadius(this._gameArena)
     );
-  }
+  };
 
-  reposition(): void {
+  reposition = (): void => {
     const levelData = this.getLevelData();
     const player = this._player.getData();
-    const playerVelocity = CONSTS.levels[this._data.level].player.velocity;
+    const playerVelocity = levels[this._data.level].player.velocity;
     const heading = levelData.reversed
       ? (player.heading + 180) % 360
       : player.heading;
@@ -91,9 +92,9 @@ class Prop implements PropInstance {
     );
 
     this._checkInArena();
-  }
+  };
 
-  render(): void {
+  render = (): void => {
     const levelData = this.getLevelData();
     this._gameArena.renderSprite(this._propSprite, {
       frameWidth: levelData.width,
@@ -104,7 +105,7 @@ class Prop implements PropInstance {
       posY:
         this._data.posY - this._player.getData().posY - levelData.height / 2,
     });
-  }
+  };
 }
 
 export default Prop;

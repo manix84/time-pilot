@@ -104,4 +104,65 @@ describe("engine modules", () => {
 
     expect(HTMLMediaElement.prototype.pause).toHaveBeenCalled();
   });
+
+  it("pauses, resumes, and stops active sounds globally", () => {
+    Object.defineProperty(HTMLMediaElement.prototype, "canPlay", {
+      configurable: true,
+      value: true,
+    });
+    const play = vi.mocked(HTMLMediaElement.prototype.play);
+    const pause = vi.mocked(HTMLMediaElement.prototype.pause);
+    const sound = new Sound("/sounds/player/bullet.mp3", { autoplay: false });
+
+    sound.play();
+    Sound.pauseAll();
+    Sound.resumePaused();
+    Sound.stopAll();
+    sound.destroy();
+
+    expect(play).toHaveBeenCalledTimes(2);
+    expect(pause).toHaveBeenCalledTimes(3);
+  });
+
+  it("does not resume one-shot sounds that finished before pausing", () => {
+    Object.defineProperty(HTMLMediaElement.prototype, "canPlay", {
+      configurable: true,
+      value: true,
+    });
+    const play = vi.mocked(HTMLMediaElement.prototype.play);
+    const sound = new Sound("/sounds/game_start.wav", { autoplay: false });
+
+    sound.play();
+    play.mockClear();
+    HTMLMediaElement.prototype.dispatchEvent.call(
+      (sound as unknown as { _theSound: HTMLAudioElement })._theSound,
+      new Event("ended")
+    );
+
+    Sound.pauseAll();
+    Sound.resumePaused();
+    sound.destroy();
+
+    expect(play).not.toHaveBeenCalled();
+  });
+
+  it("handles browser autoplay rejections without leaking active sound state", async () => {
+    Object.defineProperty(HTMLMediaElement.prototype, "canPlay", {
+      configurable: true,
+      value: true,
+    });
+    const play = vi.mocked(HTMLMediaElement.prototype.play);
+
+    play.mockRejectedValueOnce(new DOMException("Blocked", "NotAllowedError"));
+
+    const sound = new Sound("/sounds/game_start.wav", { autoplay: false });
+
+    sound.play();
+    await Promise.resolve();
+    Sound.pauseAll();
+    Sound.resumePaused();
+    sound.destroy();
+
+    expect(play).toHaveBeenCalledTimes(1);
+  });
 });

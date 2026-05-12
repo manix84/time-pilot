@@ -10,7 +10,7 @@ export interface UseTimePilotResult {
   destroy: () => void;
 }
 
-export function useTimePilot(options: TimePilotOptions = {}): UseTimePilotResult {
+export const useTimePilot = (options: TimePilotOptions = {}): UseTimePilotResult => {
   const containerRef = useRef<HTMLDivElement>(null);
   const gameRef = useRef<TimePilot | null>(null);
 
@@ -61,4 +61,4 @@ export function useTimePilot(options: TimePilotOptions = {}): UseTimePilotResult
     restart,
     destroy,
   };
-}
+};

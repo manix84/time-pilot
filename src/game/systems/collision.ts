@@ -1,6 +1,7 @@
-import CONSTS from "../constants";
+import { levels, player } from "../constants";
 import SoundEngine from "../engine/Sound";
-import type { CollisionSystemInstance, GameDataStore } from "../types";
+import helpers from "../engine/helpers";
+import type { BulletData, CollisionSystemInstance, GameDataStore } from "../types";
 
 class CollisionSystem implements CollisionSystemInstance {
   private _context: GameDataStore;
@@ -9,13 +10,68 @@ class CollisionSystem implements CollisionSystemInstance {
   constructor(context: GameDataStore) {
     this._context = context;
     this._explosionSound = new SoundEngine(
-      CONSTS.levels[context._level].enemies.basic.explosion.sound.src
+      levels[context._level].enemies.basic.explosion.sound.src
     );
   }
 
-  detectCollisions(): void {
-    const bullets = this._context._bullets.getData();
+  detectCollisions = (): void => {
+    if (this.isLevelIntroActive()) {
+      return;
+    }
+
+    const bullets = this._context._bullets.getEntities();
     const playerData = this._context._player.getData();
+
+    if (!this._context._isDemoMode && playerData.isAlive) {
+      this._context._enemyBullets.getEntities().forEach((bullet) => {
+        const bulletData = bullet.getData() as BulletData;
+        const bulletPosition =
+          bulletData.coordinateSpace === "world"
+            ? { posX: bulletData.posX, posY: bulletData.posY }
+            : {
+              posX: bulletData.posX + playerData.posX,
+              posY: bulletData.posY + playerData.posY,
+            };
+
+        if (
+          helpers.detectCollision(
+            {
+              posX: bulletPosition.posX,
+              posY: bulletPosition.posY,
+              radius: bulletData.size,
+            },
+            {
+              posX: playerData.posX,
+              posY: playerData.posY,
+              radius: player.hitRadius,
+            }
+          )
+        ) {
+          bullet.removeMe = true;
+          this._context._player.kill();
+        }
+      });
+
+      if (!this._context._player.getData("isAlive")) {
+        return;
+      }
+    }
+
+    this._context._bonuses.getEntities().forEach((bonus) => {
+      if (!playerData.isAlive || bonus.removeMe) {
+        return;
+      }
+
+      if (
+        bonus.detectCollision(
+          playerData.posX,
+          playerData.posY,
+          player.hitRadius
+        )
+      ) {
+        bonus.collect();
+      }
+    });
 
     this._context._enemies.getEntities().forEach((enemy) => {
       if (!enemy.isAlive || !playerData.isAlive) {
@@ -23,36 +79,55 @@ class CollisionSystem implements CollisionSystemInstance {
       }
 
       if (
+        !this._context._isDemoMode &&
         enemy.detectCollision(
           playerData.posX,
           playerData.posY,
-          CONSTS.player.hitRadius
+          player.hitRadius
         )
       ) {
         enemy.kill();
-        this._playExplosion();
+        if (!enemy.isAlive) {
+          this._playExplosion();
+        }
         this._context._player.kill();
       }
 
       bullets.forEach((bullet) => {
+        if (bullet.removeMe) {
+          return;
+        }
+
+        const bulletData = bullet.getData() as BulletData;
+
         if (
           enemy.detectCollision(
-            bullet.posX + this._context._player.getData().posX,
-            bullet.posY + this._context._player.getData().posY,
-            CONSTS.player.projectile.size
+            bulletData.posX + this._context._player.getData().posX,
+            bulletData.posY + this._context._player.getData().posY,
+            bulletData.size
           )
         ) {
+          bullet.removeMe = true;
           enemy.kill();
-          this._playExplosion();
+          if (!enemy.isAlive) {
+            this._playExplosion();
+          }
         }
       });
     });
-  }
+  };
 
-  private _playExplosion(): void {
+  private _playExplosion = (): void => {
     this._explosionSound.stop();
     this._explosionSound.play();
-  }
+  };
+
+  private isLevelIntroActive = (): boolean => {
+    return (
+      !!this._context._levelIntroUntilTick &&
+      this._context._gameTicker.getTicks() < this._context._levelIntroUntilTick
+    );
+  };
 }
 
 export default CollisionSystem;

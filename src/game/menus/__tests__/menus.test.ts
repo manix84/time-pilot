@@ -30,15 +30,17 @@ const createArena = (): GameArenaInstance => ({
 
 describe("menu definitions", () => {
   afterEach(() => {
-    sessionStorage.clear();
-    userOptions.enableDebug = false;
-    userOptions.debug.invincible = true;
-    userOptions.debug.showControlsOverlay = false;
-    userOptions.debug.showHitboxes = true;
-    userOptions.debug.showPlayerCoordinates = true;
+    vi.restoreAllMocks();
+    localStorage.clear();
+    userOptions.setOption("enableDebug", false);
+    userOptions.setDebugOption("invincible", true);
+    userOptions.setDebugOption("showControlsOverlay", false);
+    userOptions.setDebugOption("showHitboxes", true);
+    userOptions.setDebugOption("showPlayerCoordinates", true);
     userOptions.setOption("controllerType", "keyboard1");
+    userOptions.setOption("language", "en");
     userOptions.setOption("masterVolume", 10);
-    userOptions.keyboardBindings.up = [38, 87];
+    userOptions.setKeyboardBinding("up", [38, 87]);
   });
 
   it("defines the main menu controls", () => {
@@ -86,6 +88,44 @@ describe("menu definitions", () => {
     expect(start).toHaveBeenCalled();
   });
 
+  it("can render a continue action on the start screen", () => {
+    const arena = createArena();
+    const menus = new Menus(arena, { start: vi.fn() });
+
+    menus.showStart({ startLabel: "Continue" });
+    menus.render();
+
+    expect(arena.renderText).toHaveBeenCalledWith(
+      "Continue",
+      expect.any(Number),
+      expect.any(Number),
+      expect.objectContaining({ align: "left" })
+    );
+  });
+
+  it("activates normal buttons from pointer press and release", () => {
+    const start = vi.fn();
+    const menus = new Menus(createArena(), { start });
+
+    menus.showStart();
+    menus.handlePointer({ posX: 0, posY: 0, type: "press" });
+    expect(start).not.toHaveBeenCalled();
+
+    menus.handlePointer({ posX: 0, posY: 0, type: "release" });
+    expect(start).toHaveBeenCalledTimes(1);
+  });
+
+  it("does not activate a pressed button when released outside it", () => {
+    const start = vi.fn();
+    const menus = new Menus(createArena(), { start });
+
+    menus.showStart();
+    menus.handlePointer({ posX: 0, posY: 0, type: "press" });
+    menus.handlePointer({ posX: 0, posY: 90, type: "release" });
+
+    expect(start).not.toHaveBeenCalled();
+  });
+
   it("opens options and adjusts volume and controller type", () => {
     const menus = new Menus(createArena(), { start: vi.fn() });
     userOptions.setOption("masterVolume", 5);
@@ -98,6 +138,7 @@ describe("menu definitions", () => {
     menus.adjust(1);
     expect(userOptions.masterVolume).toBe(6);
 
+    menus.next();
     menus.next();
     menus.next();
     menus.next();
@@ -138,6 +179,213 @@ describe("menu definitions", () => {
     );
   });
 
+  it("sets slider values from pointer clicks at the nearest step", () => {
+    const menus = new Menus(createArena(), { start: vi.fn() });
+    userOptions.setOption("masterVolume", 10);
+
+    menus.showStart();
+    menus.next();
+    menus.activate();
+
+    const transitionScale = 752 / 828;
+
+    menus.handlePointer({
+      posX: -9 * transitionScale,
+      posY: -14 * transitionScale,
+      type: "click",
+    });
+    expect(userOptions.masterVolume).toBe(5);
+
+    menus.handlePointer({
+      posX: -150 * transitionScale,
+      posY: -14 * transitionScale,
+      type: "click",
+    });
+    expect(userOptions.masterVolume).toBe(0);
+
+    menus.handlePointer({
+      posX: 150 * transitionScale,
+      posY: -14 * transitionScale,
+      type: "click",
+    });
+    expect(userOptions.masterVolume).toBe(10);
+  });
+
+  it("drags slider values to the pointer position until release", () => {
+    const menus = new Menus(createArena(), { start: vi.fn() });
+    userOptions.setOption("masterVolume", 10);
+
+    menus.showStart();
+    menus.next();
+    menus.activate();
+
+    const transitionScale = 752 / 828;
+
+    menus.handlePointer({
+      posX: -90 * transitionScale,
+      posY: -14 * transitionScale,
+      type: "press",
+    });
+    expect(userOptions.masterVolume).toBe(2);
+
+    menus.handlePointer({ posX: 0, posY: -14 * transitionScale, type: "drag" });
+    expect(userOptions.masterVolume).toBe(5);
+
+    menus.handlePointer({
+      posX: 210 * transitionScale,
+      posY: -14 * transitionScale,
+      type: "drag",
+    });
+    expect(userOptions.masterVolume).toBe(10);
+
+    menus.handlePointer({
+      posX: 60 * transitionScale,
+      posY: -14 * transitionScale,
+      type: "release",
+    });
+    menus.handlePointer({
+      posX: 60 * transitionScale,
+      posY: -14 * transitionScale,
+      type: "drag",
+    });
+    expect(userOptions.masterVolume).toBe(10);
+  });
+
+  it("scales menus uniformly inside the padded viewport", () => {
+    const performanceNow = vi.spyOn(performance, "now").mockReturnValue(0);
+    const arena = {
+      ...createArena(),
+      height: 220,
+    };
+    const menus = new Menus(arena, { start: vi.fn() });
+
+    menus.showStart();
+    menus.next();
+    menus.activate();
+
+    for (let i = 0; i < 4; i++) {
+      menus.next();
+    }
+
+    menus.activate();
+
+    for (let i = 0; i < 6; i++) {
+      menus.next();
+    }
+
+    performanceNow.mockReturnValue(1200);
+    menus.render();
+
+    const context = vi.mocked(arena.getContext).mock.results[0]
+      .value as CanvasRenderingContext2D;
+
+    expect(context.scale).toHaveBeenCalledWith(0.344, 0.344);
+    expect(context.rect).toHaveBeenCalledWith(
+      -1093.0232558139535,
+      -250.00000000000006,
+      2186.046511627907,
+      500.0000000000001
+    );
+    expect(context.clip).toHaveBeenCalled();
+  });
+
+  it("keeps pointer slider input aligned with scaled menus", () => {
+    const arena = {
+      ...createArena(),
+      width: 320,
+      height: 480,
+    };
+    const menus = new Menus(arena, { start: vi.fn() });
+    userOptions.setOption("masterVolume", 10);
+
+    menus.showStart();
+    menus.next();
+    menus.activate();
+    menus.render();
+
+    const context = vi.mocked(arena.getContext).mock.results[0]
+      .value as CanvasRenderingContext2D;
+    const scale = 272 / 828;
+
+    expect(context.scale).toHaveBeenCalledWith(scale, scale);
+
+    menus.handlePointer({
+      posX: -9 * scale,
+      posY: -14 * scale,
+      type: "click",
+    });
+
+    expect(userOptions.masterVolume).toBe(5);
+  });
+
+  it("animates the title position into and out of submenus", () => {
+    const performanceNow = vi.spyOn(performance, "now").mockReturnValue(0);
+    const arena = createArena();
+    const menus = new Menus(arena, { start: vi.fn() });
+
+    menus.showStart();
+    menus.next();
+    menus.activate();
+    menus.render();
+
+    expect(arena.renderText).toHaveBeenCalledWith(
+      "Options",
+      0,
+      -82,
+      expect.objectContaining({ align: "center" })
+    );
+
+    performanceNow.mockReturnValue(250);
+    menus.render();
+
+    expect(arena.renderText).toHaveBeenCalledWith(
+      "Options",
+      0,
+      -124,
+      expect.objectContaining({ align: "center" })
+    );
+
+    performanceNow.mockReturnValue(500);
+    menus.render();
+
+    expect(arena.renderText).toHaveBeenCalledWith(
+      "Options",
+      0,
+      -166,
+      expect.objectContaining({ align: "center" })
+    );
+
+    for (let i = 0; i < 6; i++) {
+      menus.next();
+    }
+
+    menus.activate();
+    menus.render();
+
+    expect(arena.renderText).toHaveBeenCalledWith(
+      "Start",
+      expect.any(Number),
+      expect.any(Number),
+      expect.objectContaining({ align: "left" })
+    );
+
+    performanceNow.mockReturnValue(1000);
+    menus.render();
+
+    expect(arena.renderText).toHaveBeenCalledWith(
+      "Start",
+      expect.any(Number),
+      expect.any(Number),
+      expect.objectContaining({ align: "left" })
+    );
+    expect(arena.renderText).not.toHaveBeenCalledWith(
+      "A.D. 1910",
+      expect.any(Number),
+      expect.any(Number),
+      expect.anything()
+    );
+  });
+
   it("unlocks the debug menu with the Konami code", () => {
     const arena = createArena();
     const menus = new Menus(arena, { start: vi.fn() });
@@ -150,7 +398,9 @@ describe("menu definitions", () => {
     menus.render();
 
     expect(userOptions.enableDebug).toBe(true);
-    expect(sessionStorage.getItem("timePilot.debugUnlocked")).toBe("true");
+    expect(localStorage.getItem("timePilot.userOptions")).toContain(
+      '"enableDebug":true'
+    );
     expect(arena.renderText).toHaveBeenCalledWith(
       "Debug",
       expect.any(Number),
@@ -168,7 +418,7 @@ describe("menu definitions", () => {
   });
 
   it("keeps the debug menu unlocked for the current browser session", () => {
-    sessionStorage.setItem("timePilot.debugUnlocked", "true");
+    userOptions.setOption("enableDebug", true);
     const arena = createArena();
     const menus = new Menus(arena, { start: vi.fn() });
 
@@ -206,6 +456,9 @@ describe("menu definitions", () => {
 
     menus.activate();
     expect(userOptions.debug.invincible).toBe(false);
+    expect(localStorage.getItem("timePilot.userOptions")).toContain(
+      '"invincible":false'
+    );
 
     for (let i = 0; i < 5; i++) {
       menus.next();
@@ -222,10 +475,24 @@ describe("menu definitions", () => {
     );
   });
 
-  it("captures a replacement keyboard binding", () => {
-    const menus = new Menus(createArena(), { start: vi.fn() });
+  it("opens level select as a submenu with enemy icons", () => {
+    const arena = createArena();
+    let selectedLevel = 1;
+    const selectLevel = vi.fn((level: number) => {
+      selectedLevel = level;
+    });
+    const menus = new Menus(arena, {
+      getLevel: () => selectedLevel,
+      selectLevel,
+      start: vi.fn(),
+    });
 
     menus.showStart();
+    for (const keyCode of [38, 38, 40, 40, 37, 39, 37, 39, 66, 65]) {
+      menus.captureKey(keyCode);
+    }
+
+    menus.next();
     menus.next();
     menus.activate();
 
@@ -234,8 +501,125 @@ describe("menu definitions", () => {
     }
 
     menus.activate();
+    menus.render();
+
+    const contexts = vi
+      .mocked(arena.getContext)
+      .mock.results.map((result) => result.value as CanvasRenderingContext2D);
+
+    expect(arena.renderText).toHaveBeenCalledWith(
+      "Select Level",
+      expect.any(Number),
+      expect.any(Number),
+      expect.objectContaining({ align: "center" })
+    );
+    expect(arena.renderText).toHaveBeenCalledWith(
+      "A.D 1910",
+      expect.any(Number),
+      expect.any(Number),
+      expect.objectContaining({ align: "left" })
+    );
+    expect(
+      contexts.some((context) => vi.mocked(context.drawImage).mock.calls.length > 0)
+    ).toBe(true);
+    expect(
+      contexts.some((context) =>
+        vi.mocked(context.drawImage).mock.calls.some(
+          (call) => call[1] === 0 && call[2] === 0 && call[3] === 32 && call[4] === 32
+        )
+      )
+    ).toBe(true);
+    expect(arena.renderText).not.toHaveBeenCalledWith(
+      "Selected",
+      expect.any(Number),
+      expect.any(Number),
+      expect.anything()
+    );
+
+    menus.next();
+    menus.activate();
+
+    expect(selectLevel).toHaveBeenCalledWith(2);
+  });
+
+  it("captures a replacement keyboard binding", () => {
+    const menus = new Menus(createArena(), { start: vi.fn() });
+
+    menus.showStart();
+    menus.next();
+    menus.activate();
+
+    for (let i = 0; i < 5; i++) {
+      menus.next();
+    }
+
+    menus.activate();
+    menus.activate();
     expect(menus.captureKey(73)).toBe(true);
     expect(userOptions.keyboardBindings.up).toEqual([73]);
+    expect(localStorage.getItem("timePilot.userOptions")).toContain('"up":[73]');
     expect(menus.captureKey(74)).toBe(false);
+  });
+
+  it("returns to options after selecting a language", () => {
+    const arena = createArena();
+    const menus = new Menus(arena, { start: vi.fn() });
+
+    menus.showStart();
+    menus.next();
+    menus.activate();
+
+    for (let i = 0; i < 3; i++) {
+      menus.next();
+    }
+
+    menus.activate();
+    menus.next();
+    menus.activate();
+    menus.render();
+
+    expect(userOptions.language).toBe("fr");
+    expect(arena.renderText).toHaveBeenCalledWith(
+      "Options",
+      expect.any(Number),
+      expect.any(Number),
+      expect.objectContaining({ align: "center" })
+    );
+    expect(arena.renderText).toHaveBeenCalledWith(
+      "Francais",
+      expect.any(Number),
+      expect.any(Number),
+      expect.objectContaining({ align: "right" })
+    );
+  });
+
+  it("denies duplicate keyboard bindings with a warning", () => {
+    const arena = createArena();
+    const menus = new Menus(arena, { start: vi.fn() });
+
+    menus.showStart();
+    menus.next();
+    menus.activate();
+
+    for (let i = 0; i < 5; i++) {
+      menus.next();
+    }
+
+    menus.activate();
+    menus.next();
+    menus.next();
+    menus.activate();
+
+    expect(menus.captureKey(87)).toBe(true);
+    expect(userOptions.keyboardBindings.down).toEqual([40, 83]);
+
+    menus.render();
+
+    expect(arena.renderText).toHaveBeenCalledWith(
+      "Already assigned to Up",
+      0,
+      172,
+      expect.objectContaining({ align: "center" })
+    );
   });
 });

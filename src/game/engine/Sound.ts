@@ -16,7 +16,44 @@ const canPlayListener = function (this: TimePilotAudioElement): void {
 };
 
 class Sound {
+  private static _instances = new Set<Sound>();
+  private static _isMuted = false;
+  private static _pausedInstances = new Set<Sound>();
+  private _isPlaying = false;
   private _theSound: TimePilotAudioElement;
+  private _markEnded = (): void => {
+    this._isPlaying = false;
+    Sound._pausedInstances.delete(this);
+  };
+
+  static setMuted = (isMuted: boolean): void => {
+    Sound._isMuted = isMuted;
+  };
+
+  static pauseAll = (): void => {
+    Sound._pausedInstances.clear();
+
+    Sound._instances.forEach((sound) => {
+      if (!sound.isActive()) {
+        return;
+      }
+
+      sound.pause();
+      Sound._pausedInstances.add(sound);
+    });
+  };
+
+  static resumePaused = (): void => {
+    const pausedInstances = [...Sound._pausedInstances];
+
+    Sound._pausedInstances.clear();
+    pausedInstances.forEach((sound) => sound.resume());
+  };
+
+  static stopAll = (): void => {
+    Sound._pausedInstances.clear();
+    Sound._instances.forEach((sound) => sound.stop());
+  };
 
   constructor(urls: string | string[], userOptions: SoundOptions = {}) {
     const options = {
@@ -48,44 +85,77 @@ class Sound {
     this._theSound.controls = false;
 
     this._theSound.addEventListener("canplay", canPlayListener, false);
+    this._theSound.addEventListener("ended", this._markEnded, false);
+    Sound._instances.add(this);
   }
 
-  play(): void {
+  play = (): void => {
     this._theSound.loop = false;
     if (this._theSound.canPlay) {
       this.applyVolume();
-      this._theSound.play();
+      this.playElement();
     }
-  }
+  };
 
-  loop(): void {
+  loop = (): void => {
     this._theSound.loop = true;
     if (this._theSound.canPlay) {
       this.applyVolume();
-      this._theSound.play();
+      this.playElement();
     }
-  }
+  };
 
-  pause(): void {
+  pause = (): void => {
     this._theSound.pause();
-  }
+    this._isPlaying = false;
+  };
 
-  stop(): void {
+  resume = (): void => {
+    if (this._theSound.canPlay) {
+      this.applyVolume();
+      this.playElement();
+    }
+  };
+
+  stop = (): void => {
     this._theSound.pause();
+    this._isPlaying = false;
     if (this._theSound.currentTime > 0) {
       this._theSound.currentTime = 0;
     }
-  }
+  };
 
-  destroy(): void {
+  destroy = (): void => {
     this.stop();
     this._theSound.removeEventListener("canplay", canPlayListener, false);
-  }
+    this._theSound.removeEventListener("ended", this._markEnded, false);
+    Sound._instances.delete(this);
+    Sound._pausedInstances.delete(this);
+  };
 
-  private applyVolume(): void {
+  private isActive = (): boolean => {
+    return this._isPlaying && !this._theSound.ended;
+  };
+
+  private applyVolume = (): void => {
     this._theSound.volume =
-      (userOptions.masterVolume / 10) * (userOptions.effectsVolume / 10);
-  }
+      Sound._isMuted
+        ? 0
+        : (userOptions.masterVolume / 10) * (userOptions.effectsVolume / 10);
+  };
+
+  private playElement = (): void => {
+    const playPromise = this._theSound.play();
+
+    this._isPlaying = true;
+
+    if (playPromise) {
+      void playPromise.catch(() => {
+        this._isPlaying = false;
+        Sound._pausedInstances.delete(this);
+      });
+    }
+  };
 }
 
 export default Sound;

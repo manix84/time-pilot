@@ -4,5 +4,6 @@ sounds/tmp/*
 sounds/src/*
 node_modules/
 dist/
+storybook-static/
 tsconfig.tsbuildinfo
 .DS_Store

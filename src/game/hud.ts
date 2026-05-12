@@ -1,37 +1,42 @@
 /* Converted from TimePilot.Hud.js (AMD) to ESM TypeScript. */
-import CONSTS from "./constants";
+import { player } from "./constants";
+import i18n from "./i18n";
+import palette from "./palette";
 import userOptions from "./user-options";
 import type {
   ControlInputState,
   GameArenaInstance,
   GameDataStore,
   HudInstance,
-  PlayerData,
   SpriteImage,
 } from "./types";
+
+const upFacingPlayerFrame =
+  Math.round(((0 + 270) % 360) / (360 / player.rotationFrameCount)) %
+  player.rotationFrameCount;
 
 class Hud implements HudInstance {
   private _context: GameDataStore;
   private _gameArena: GameArenaInstance;
-  private _playerData: PlayerData;
   private _playerSprite: SpriteImage;
 
   constructor(context: GameDataStore) {
     this._context = context;
     this._gameArena = context._gameArena;
-    this._playerData = context._player.getData();
 
     this._playerSprite = new Image() as SpriteImage;
-    this._playerSprite.src = CONSTS.player.sprite.src;
-    this._playerSprite.frameWidth = CONSTS.player.width;
-    this._playerSprite.frameHeight = CONSTS.player.height;
-    this._playerSprite.frameX = 0;
+    this._playerSprite.src = player.sprite.src;
+    this._playerSprite.frameWidth = player.frameWidth;
+    this._playerSprite.frameHeight = player.frameHeight;
+    this._playerSprite.frameX = upFacingPlayerFrame;
     this._playerSprite.frameY = 0;
   }
 
-  render(): void {
+  render = (): void => {
+    const playerData = this._context._player.getData();
+
     this._gameArena.renderText(
-      this._playerData.score,
+      playerData.score,
       -(this._gameArena.width / 2) + 20,
       -(this._gameArena.height / 2) + 10,
       { size: 30 }
@@ -39,13 +44,13 @@ class Hud implements HudInstance {
 
     if (userOptions.enableDebug && userOptions.debug.showPlayerCoordinates) {
       this._gameArena.renderText(
-        `${this._playerData.posX.toFixed(2)} x ${this._playerData.posY.toFixed(2)}`,
+        `${playerData.posX.toFixed(2)} x ${playerData.posY.toFixed(2)}`,
         -(this._gameArena.width / 2) + 20,
         -(this._gameArena.height / 2) + 40,
         { size: 15 }
       );
       this._gameArena.renderText(
-        `${this._playerData.heading}°`,
+        `${playerData.heading}°`,
         -(this._gameArena.width / 2) + 20,
         -(this._gameArena.height / 2) + 55,
         { size: 15 }
@@ -56,98 +61,128 @@ class Hud implements HudInstance {
       this.renderControlsOverlay();
     }
 
-    if (!this._playerData.isAlive) {
-      this._gameArena.renderText("Game Over", 0, 0, {
+    if (!playerData.isAlive && playerData.lives <= 0) {
+      this._gameArena.renderText(i18n.hud.gameOver, 0, 0, {
         size: 30,
         align: "center",
         valign: "middle",
-        color: "#FFF",
+        color: palette.text.white,
       });
-      this._gameArena.renderText('Press "R" to reset', 0, 30, {
+      this._gameArena.renderText(i18n.hud.pressRestartToReset, 0, 30, {
         size: 20,
         align: "center",
         valign: "middle",
-        color: "#FFF",
+        color: palette.text.white,
       });
     }
 
     if (!this._context._gameTicker.isRunning) {
-      this._gameArena.renderText("Paused", 0, 25, {
+      this._gameArena.renderText(i18n.hud.paused, 0, 25, {
         size: 25,
         align: "center",
         valign: "middle",
-        color: "#FFF",
+        color: palette.text.white,
       });
-      this._gameArena.renderText('Press "P" to continue', 0, 45, {
+      this._gameArena.renderText(i18n.hud.pressPauseToContinue, 0, 45, {
         size: 20,
         align: "center",
         valign: "middle",
-        color: "#FFF",
+        color: palette.text.white,
       });
     }
 
-    for (let i = 0; i < this._playerData.lives; ++i) {
+    for (let i = 0; i < playerData.lives; ++i) {
       this._gameArena.renderSprite(this._playerSprite, {
-        frameWidth: this._playerSprite.frameWidth ?? CONSTS.player.width,
-        frameHeight: this._playerSprite.frameHeight ?? CONSTS.player.height,
+        frameWidth: this._playerSprite.frameWidth ?? player.frameWidth,
+        frameHeight: this._playerSprite.frameHeight ?? player.frameHeight,
         frameX: this._playerSprite.frameX ?? 0,
         frameY: this._playerSprite.frameY ?? 0,
+        renderWidth: player.width,
+        renderHeight: player.height,
         posX:
           this._gameArena.width / 2 -
-          CONSTS.player.width -
-          (CONSTS.player.width + 10) * i -
+          player.width -
+          (player.width + 10) * i -
           10,
         posY: -(this._gameArena.height / 2 - 10),
       });
     }
-  }
+  };
 
-  restart(): void {
-    this._gameArena.renderText("Restarting", 0, 0, {
+  restart = (): void => {
+    this._gameArena.renderText(i18n.hud.restarting, 0, 0, {
       size: 30,
       align: "center",
       valign: "middle",
-      color: "#FFF",
+      color: palette.text.white,
     });
-  }
+  };
 
-  private renderControlsOverlay(): void {
+  private renderControlsOverlay = (): void => {
     const context = this._gameArena.getContext() as CanvasRenderingContext2D;
     const inputState = this._context._controlInputState;
-    const y = this._gameArena.height / 2 - 102;
 
     context.save();
     context.globalAlpha = 0.9;
-    this.renderKeyboardOverlay(context, -210, y, inputState);
-    this.renderGamepadOverlay(context, 120, y + 14, inputState);
-    context.restore();
-  }
 
-  private renderKeyboardOverlay(
-    context: CanvasRenderingContext2D,
-    x: number,
-    y: number,
-    inputState: ControlInputState
-  ): void {
+    if (inputState.activeController === "gamepad") {
+      this.renderGamepadOverlay(
+        context,
+        this._gameArena.width / 2 - 244,
+        this._gameArena.height / 2 - 114,
+        inputState
+      );
+    } else {
+      this.renderKeyboardOverlay(
+        context,
+        this._gameArena.width / 2 - 190,
+        this._gameArena.height / 2 - 124,
+        inputState
+      );
+    }
+
+    context.restore();
+  };
+
+  private renderKeyboardOverlay = (context: CanvasRenderingContext2D, x: number, y: number, inputState: ControlInputState): void => {
     this.renderKey(context, "W", x + 44, y, 34, 28, inputState.up);
     this.renderKey(context, "A", x, y + 32, 34, 28, inputState.left);
     this.renderKey(context, "S", x + 44, y + 32, 34, 28, inputState.down);
     this.renderKey(context, "D", x + 88, y + 32, 34, 28, inputState.right);
     this.renderKey(context, "Space", x, y + 68, 122, 28, inputState.fire);
-  }
+    this.renderMouseOverlay(context, x + 138, y + 10, inputState.fire);
+  };
 
-  private renderKey(
-    context: CanvasRenderingContext2D,
-    label: string,
-    x: number,
-    y: number,
-    width: number,
-    height: number,
-    isPressed: boolean
-  ): void {
+  private renderMouseOverlay = (context: CanvasRenderingContext2D, x: number, y: number, isPressed: boolean): void => {
     context.globalAlpha = isPressed ? 0.92 : 0.5;
-    context.fillStyle = isPressed ? "rgba(255, 212, 0, 0.22)" : "transparent";
-    context.strokeStyle = isPressed ? "#FFD400" : "#C7D5EB";
+    context.fillStyle = isPressed ? palette.overlay.activeWash : "transparent";
+    context.strokeStyle = isPressed ? palette.overlay.activeFill : palette.overlay.line;
+    context.lineWidth = 2;
+    context.beginPath();
+    context.roundRect(x, y, 30, 48, 14);
+    context.fill();
+    context.stroke();
+
+    context.beginPath();
+    context.moveTo(x + 15, y + 5);
+    context.lineTo(x + 15, y + 22);
+    context.moveTo(x + 3, y + 22);
+    context.lineTo(x + 27, y + 22);
+    context.stroke();
+
+    context.globalAlpha = isPressed ? 1 : 0.6;
+    this._gameArena.renderText("M1", x + 15, y + 36, {
+      size: 8,
+      align: "center",
+      valign: "middle",
+      color: isPressed ? palette.overlay.activeFill : palette.overlay.line,
+    });
+  };
+
+  private renderKey = (context: CanvasRenderingContext2D, label: string, x: number, y: number, width: number, height: number, isPressed: boolean): void => {
+    context.globalAlpha = isPressed ? 0.92 : 0.5;
+    context.fillStyle = isPressed ? palette.overlay.activeWash : "transparent";
+    context.strokeStyle = isPressed ? palette.overlay.activeFill : palette.overlay.line;
     context.lineWidth = 2;
     context.fillRect(x, y, width, height);
     context.strokeRect(x, y, width, height);
@@ -157,18 +192,13 @@ class Hud implements HudInstance {
       size: 12,
       align: "center",
       valign: "middle",
-      color: isPressed ? "#FFD400" : "#C7D5EB",
+      color: isPressed ? palette.overlay.activeFill : palette.overlay.line,
     });
-  }
+  };
 
-  private renderGamepadOverlay(
-    context: CanvasRenderingContext2D,
-    x: number,
-    y: number,
-    inputState: ControlInputState
-  ): void {
+  private renderGamepadOverlay = (context: CanvasRenderingContext2D, x: number, y: number, inputState: ControlInputState): void => {
     context.globalAlpha = 0.5;
-    context.strokeStyle = "#C7D5EB";
+    context.strokeStyle = palette.overlay.line;
     context.lineWidth = 2;
     context.beginPath();
     context.moveTo(x + 32, y + 20);
@@ -184,50 +214,58 @@ class Hud implements HudInstance {
     context.closePath();
     context.stroke();
 
-    this.renderStick(context, x + 70, y + 48, inputState);
-    this.renderButton(context, "A", x + 148, y + 52, inputState.fire);
-    this.renderButton(context, "Menu", x + 106, y + 38, inputState.menu);
-    this.renderButton(context, "P", x + 122, y + 38, inputState.pause);
-  }
+    const menuY = y + 27;
+    const faceButtonX = x + 152;
+    const faceButtonY = y + 58;
+    const faceButtonRadius = 6;
+    const faceButtonGap = 1;
+    const faceButtonOffset = faceButtonRadius * 2 + faceButtonGap;
 
-  private renderStick(
-    context: CanvasRenderingContext2D,
-    x: number,
-    y: number,
-    inputState: ControlInputState
-  ): void {
+    this.renderShoulderButton(context, "L", x + 48, y + 6, inputState.rotateLeft ?? false, -0.26);
+    this.renderShoulderButton(context, "R", x + 164, y + 6, inputState.rotateRight ?? false, 0.26);
+    this.renderStick(context, x + 60, y + 58, inputState);
+    this.renderButton(context, "Y", faceButtonX, faceButtonY - faceButtonOffset, inputState.fire, faceButtonRadius);
+    this.renderButton(context, "A", faceButtonX, faceButtonY + faceButtonOffset, inputState.fire, faceButtonRadius);
+    this.renderButton(context, "X", faceButtonX - faceButtonOffset, faceButtonY, inputState.fire, faceButtonRadius);
+    this.renderButton(context, "B", faceButtonX + faceButtonOffset, faceButtonY, inputState.fire, faceButtonRadius);
+    this.renderButton(context, "Menu", x + 106, menuY, inputState.menu);
+    this.renderOvalButton(context, "P", x + 74, menuY, inputState.pause);
+    this.renderOvalButton(context, "R", x + 138, menuY, inputState.restart);
+  };
+
+  private renderStick = (context: CanvasRenderingContext2D, x: number, y: number, inputState: ControlInputState): void => {
     const isPressed =
       inputState.up || inputState.right || inputState.down || inputState.left;
     const offsetX = inputState.left ? -5 : inputState.right ? 5 : 0;
     const offsetY = inputState.up ? -5 : inputState.down ? 5 : 0;
 
     context.globalAlpha = 0.5;
-    context.strokeStyle = "#C7D5EB";
+    context.strokeStyle = palette.overlay.line;
     context.beginPath();
     context.arc(x, y, 16, 0, 2 * Math.PI);
     context.stroke();
 
     context.globalAlpha = isPressed ? 0.95 : 0.55;
-    context.fillStyle = isPressed ? "#FFD400" : "transparent";
-    context.strokeStyle = isPressed ? "#FFD400" : "#C7D5EB";
+    context.fillStyle = isPressed ? palette.overlay.activeFill : "transparent";
+    context.strokeStyle = isPressed ? palette.overlay.activeFill : palette.overlay.line;
     context.beginPath();
     context.arc(x + offsetX, y + offsetY, 9, 0, 2 * Math.PI);
     context.fill();
     context.stroke();
-  }
+  };
 
-  private renderButton(
+  private renderButton = (
     context: CanvasRenderingContext2D,
     label: string,
     x: number,
     y: number,
-    isPressed: boolean
-  ): void {
-    const radius = label.length > 1 ? 9 : 12;
+    isPressed: boolean,
+    radius = label.length > 1 ? 9 : 12
+  ): void => {
 
     context.globalAlpha = isPressed ? 0.95 : 0.5;
-    context.fillStyle = isPressed ? "rgba(255, 212, 0, 0.24)" : "transparent";
-    context.strokeStyle = isPressed ? "#FFD400" : "#C7D5EB";
+    context.fillStyle = isPressed ? palette.overlay.activeWashStrong : "transparent";
+    context.strokeStyle = isPressed ? palette.overlay.activeFill : palette.overlay.line;
     context.beginPath();
     context.arc(x, y, radius, 0, 2 * Math.PI);
     context.fill();
@@ -238,9 +276,62 @@ class Hud implements HudInstance {
       size: label.length > 1 ? 7 : 10,
       align: "center",
       valign: "middle",
-      color: isPressed ? "#FFD400" : "#C7D5EB",
+      color: isPressed ? palette.overlay.activeFill : palette.overlay.line,
     });
-  }
+  };
+
+  private renderOvalButton = (context: CanvasRenderingContext2D, label: string, x: number, y: number, isPressed: boolean): void => {
+    const width = 28;
+    const height = 8;
+
+    context.globalAlpha = isPressed ? 0.95 : 0.5;
+    context.fillStyle = isPressed ? palette.overlay.activeWashStrong : "transparent";
+    context.strokeStyle = isPressed ? palette.overlay.activeFill : palette.overlay.line;
+    context.beginPath();
+    context.roundRect(x - width / 2, y - height / 2, width, height, height / 2);
+    context.fill();
+    context.stroke();
+
+    context.globalAlpha = isPressed ? 1 : 0.65;
+    this._gameArena.renderText(label, x, y, {
+      size: 9,
+      align: "center",
+      valign: "middle",
+      color: isPressed ? palette.overlay.activeFill : palette.overlay.line,
+    });
+  };
+
+  private renderShoulderButton = (
+    context: CanvasRenderingContext2D,
+    label: string,
+    x: number,
+    y: number,
+    isPressed: boolean,
+    rotation: number
+  ): void => {
+    const width = 46;
+    const height = 12;
+
+    context.save();
+    context.translate(x, y);
+    context.rotate(rotation);
+    context.globalAlpha = isPressed ? 0.95 : 0.5;
+    context.fillStyle = isPressed ? palette.overlay.activeWashStrong : "transparent";
+    context.strokeStyle = isPressed ? palette.overlay.activeFill : palette.overlay.line;
+    context.beginPath();
+    context.roundRect(-width / 2, -height / 2, width, height, 4);
+    context.fill();
+    context.stroke();
+
+    context.globalAlpha = isPressed ? 1 : 0.65;
+    this._gameArena.renderText(label, 0, 0, {
+      size: 8,
+      align: "center",
+      valign: "middle",
+      color: isPressed ? palette.overlay.activeFill : palette.overlay.line,
+    });
+    context.restore();
+  };
 }
 
 export default Hud;

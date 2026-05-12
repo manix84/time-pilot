@@ -13,7 +13,10 @@ interface Helpers {
     currentAngle: Heading,
     stepSize: number
   ) => Heading;
-  getSpawnCoords: (target: Coordinates & { heading: Heading }) => Coordinates;
+  getSpawnCoords: (
+    target: Coordinates & { heading: Heading },
+    options?: { spawnArc?: number; spawnRadius?: number }
+  ) => Coordinates;
   findHeading: (target: Coordinates, origin?: Coordinates) => Heading;
   detectCollision: (
     target: PositionedRadius,
@@ -47,7 +50,7 @@ var helpers: Helpers = {
    * @param   {Number} number - The number you wish to be cleaned up.
    * @returns {Float}
    */
-  float: function (number: number): number {
+  float: (number: number): number => {
     return parseFloat(number.toFixed(5));
   },
 
@@ -59,11 +62,7 @@ var helpers: Helpers = {
    * @param   {Number} stepSize         - Number of degrees that can be moved at a time.
    * @returns {Number}
    */
-  rotateTo: function (
-    destinationAngle: Heading,
-    currentAngle: Heading,
-    stepSize: number
-  ): Heading {
+  rotateTo: (destinationAngle: Heading, currentAngle: Heading, stepSize: number): Heading => {
     var direction = Math.atan2(
       parseFloat(
         Math.sin((destinationAngle - currentAngle) * (Math.PI / 180)).toFixed(
@@ -96,22 +95,24 @@ var helpers: Helpers = {
    * @property  {Number} target.posY        - Y position of the target.
    * @returns {Object}
    */
-  getSpawnCoords: function (
-    target: Coordinates & { heading: Heading }
-  ): Coordinates {
+  getSpawnCoords: (target: Coordinates & { heading: Heading }, options: { spawnArc?: number; spawnRadius?: number } = {}): Coordinates => {
     var data: Coordinates = {
       posX: target.posX,
       posY: target.posY,
     };
-    var spawnRadius = 450,
-      spawnArc = 80,
+    var spawnRadius = options.spawnRadius ?? 450,
+      spawnArc = options.spawnArc ?? 80,
       heading;
 
     heading =
       target.heading - spawnArc / 2 + Math.floor(Math.random() * spawnArc);
 
-    data.posX += this.float(Math.sin(heading * (Math.PI / 180)) * spawnRadius);
-    data.posY -= this.float(Math.cos(heading * (Math.PI / 180)) * spawnRadius);
+    data.posX += helpers.float(
+      Math.sin(heading * (Math.PI / 180)) * spawnRadius
+    );
+    data.posY -= helpers.float(
+      Math.cos(heading * (Math.PI / 180)) * spawnRadius
+    );
 
     return data;
   },
@@ -129,7 +130,7 @@ var helpers: Helpers = {
    * @property  {Number} [origin.heading]     - Heading of the origin.
    * @returns {Float} The number of degrees to turn (+/-) to be pointing towards target.
    */
-  findHeading: function (target: Coordinates, origin?: Coordinates): Heading {
+  findHeading: (target: Coordinates, origin?: Coordinates): Heading => {
     origin = origin || {
       posX: 0,
       posY: 0,
@@ -153,10 +154,7 @@ var helpers: Helpers = {
    * @property  {Number} [origin.radius]      - Radius of the origin.
    * @returns {Boolean}
    */
-  detectCollision: function (
-    target: PositionedRadius,
-    origin?: PositionedRadius
-  ): boolean {
+  detectCollision: (target: PositionedRadius, origin?: PositionedRadius): boolean => {
     origin = origin || {
       posX: 0,
       posY: 0,
@@ -181,11 +179,7 @@ var helpers: Helpers = {
    * @param     {Number} radius               - Distance from the radial center to be considered inside.
    * @returns   {Boolean}
    */
-  detectAreaExit: function (
-    radialCenter: Coordinates,
-    target: Coordinates,
-    radius: number
-  ): boolean {
+  detectAreaExit: (radialCenter: Coordinates, target: Coordinates, radius: number): boolean => {
     var dx = radialCenter.posX - target.posX,
       dy = radialCenter.posY - target.posY;
 
@@ -199,11 +193,7 @@ var helpers: Helpers = {
    * @param   {Function}      callback        - Function to be run when the event is fired.
    * @param   {DOM Node}      [element=body]  - Element to attach the listener too.
    */
-  bind: function (
-    eventNames: string | string[],
-    callback: EventListener,
-    element?: LegacyEventTarget
-  ): void {
+  bind: (eventNames: string | string[], callback: EventListener, element?: LegacyEventTarget): void => {
     element = element || document.documentElement;
 
     if (typeof eventNames === "string") {
@@ -254,14 +244,50 @@ var helpers: Helpers = {
   },
 
   /**
-   * Generate a random HEX colour value.
+   * Generate a bright, saturated HEX colour value.
    * @method getRandomColor
    * @return {String} #0-F(6)
    */
-  getRandomColor: function (): string {
-    var colors = Math.floor(Math.random() * 0x1000000);
+  getRandomColor: (): string => {
+    var hue = Math.floor(Math.random() * 360),
+      saturation = 85 + Math.random() * 15,
+      lightness = 48 + Math.random() * 10,
+      chroma = (1 - Math.abs((2 * lightness) / 100 - 1)) * (saturation / 100),
+      huePrime = hue / 60,
+      x = chroma * (1 - Math.abs((huePrime % 2) - 1)),
+      match = lightness / 100 - chroma / 2,
+      red = 0,
+      green = 0,
+      blue = 0;
 
-    return "#" + colors.toString(16).padStart(6, "0");
+    if (huePrime < 1) {
+      red = chroma;
+      green = x;
+    } else if (huePrime < 2) {
+      red = x;
+      green = chroma;
+    } else if (huePrime < 3) {
+      green = chroma;
+      blue = x;
+    } else if (huePrime < 4) {
+      green = x;
+      blue = chroma;
+    } else if (huePrime < 5) {
+      red = x;
+      blue = chroma;
+    } else {
+      red = chroma;
+      blue = x;
+    }
+
+    return [red, green, blue]
+      .map((channel) =>
+        Math.round((channel + match) * 255)
+          .toString(16)
+          .padStart(2, "0")
+      )
+      .join("")
+      .replace(/^/, "#");
   },
 
   /**
@@ -270,13 +296,13 @@ var helpers: Helpers = {
    * @param  {Object}    oldObject The object you want to be cloned.
    * @return {Object}    The new cloned object.
    */
-  cloneObject: function <T>(oldObject: T): T {
+  cloneObject: <T>(oldObject: T): T => {
     var newObject = {} as T;
     for (var prop in oldObject) {
       if (typeof oldObject[prop] !== "object") {
         newObject[prop] = oldObject[prop];
       } else {
-        newObject[prop] = this.cloneObject(oldObject[prop]);
+        newObject[prop] = helpers.cloneObject(oldObject[prop]);
       }
     }
     return newObject;

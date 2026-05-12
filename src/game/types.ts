@@ -14,6 +14,8 @@ export interface SpriteFrame extends Coordinates {
   frameHeight: number;
   frameX: number;
   frameY: number;
+  renderHeight?: number;
+  renderWidth?: number;
 }
 
 export interface RenderTextOptions {
@@ -30,7 +32,6 @@ export interface CircleOptions {
   backgroundColor?: string;
   borderColor?: string | false;
   borderWidth?: number;
-  strokeColor?: string;
 }
 
 export interface AssetProgress {
@@ -53,18 +54,18 @@ export interface PlayerData extends Coordinates {
   removeMe?: boolean;
 }
 
-export interface BulletData extends Coordinates {
-  heading: Heading;
-  size: number;
-  velocity: number;
-  color: string;
-}
-
 export interface EnemyData extends Coordinates {
   heading: Heading;
+  hitPoints: number;
   level: number;
   deathTick: number | false;
   tickOffset: number;
+  type: "basic" | "boss" | "specialBomber";
+  formationId?: string;
+  formationUntilTick?: number;
+  formationWaveAmplitude?: number;
+  formationWaveFrequency?: number;
+  formationWavePhase?: number;
 }
 
 export interface PropData extends Coordinates {
@@ -77,6 +78,7 @@ export interface BonusData extends Coordinates {
   level: number;
   layer: number;
   removeMe: boolean;
+  type: "parachute";
 }
 
 export interface SpriteImage extends HTMLImageElement {
@@ -87,11 +89,13 @@ export interface SpriteImage extends HTMLImageElement {
 }
 
 export interface ControllerCommands {
+  openMenu?: () => void;
   restart?: () => void;
   pause?: () => void;
 }
 
 export type ControllerType = "keyboard1" | "keyboard2";
+export type GameLanguage = "de" | "en" | "fr" | "it" | "nl" | "ro";
 export type ControlInputName =
   | "down"
   | "fire"
@@ -102,7 +106,13 @@ export type ControlInputName =
   | "right"
   | "up";
 
-export type ControlInputState = Record<ControlInputName, boolean>;
+export type ControlInputSource = "gamepad" | "keyboard" | "touch";
+
+export type ControlInputState = Record<ControlInputName, boolean> & {
+  activeController: ControlInputSource;
+  rotateLeft?: boolean;
+  rotateRight?: boolean;
+};
 
 export interface KeyboardBindings {
   down: number[];
@@ -121,7 +131,7 @@ export interface Controller {
 }
 
 export interface MenuPointerData extends Coordinates {
-  type: "click" | "move";
+  type: "click" | "drag" | "move" | "press" | "release";
 }
 
 export interface GameArenaInstance extends Coordinates {
@@ -183,10 +193,15 @@ export interface BulletFactoryInstance {
     heading: Heading,
     size: number,
     velocity: number,
-    color: string
+    color: string,
+    playSound?: boolean,
+    coordinateSpace?: BulletData["coordinateSpace"],
+    shape?: BulletData["shape"],
+    sprite?: BulletData["sprite"]
   ) => void;
   getCount: () => number;
   getData: () => BulletData[];
+  getEntities: () => BulletInstance[];
   cleanup: () => void;
   reposition: () => void;
   render: () => void;
@@ -226,8 +241,36 @@ export interface EnemyInstance {
   kill: () => void;
 }
 
+export interface EnemySpawnOptions {
+  type?: EnemyData["type"];
+  formationId?: string;
+  formationUntilTick?: number;
+  formationWaveAmplitude?: number;
+  formationWaveFrequency?: number;
+  formationWavePhase?: number;
+}
+
+export interface LevelProgressState {
+  bossDefeated: boolean;
+  bossKillThreshold: number;
+  bossSpawned: boolean;
+  standardEnemyKills: number;
+}
+
+export interface FormationState {
+  awarded: boolean;
+  escaped: boolean;
+  remaining: number;
+  total: number;
+}
+
 export interface EnemyFactoryInstance {
-  create: (posX: number, posY: number, heading: Heading) => void;
+  create: (
+    posX: number,
+    posY: number,
+    heading: Heading,
+    options?: EnemySpawnOptions
+  ) => void;
   getCount: () => number;
   isUnderLimit: () => boolean;
   getData: () => EnemyData[];
@@ -253,6 +296,31 @@ export interface PropFactoryInstance {
   cleanup: () => void;
   reposition: () => void;
   render: (layer?: number | false) => void;
+  clearAll: () => void;
+}
+
+export interface BonusInstance {
+  removeMe: boolean;
+  getData(): BonusData;
+  getData<K extends keyof BonusData>(key: K): BonusData[K] | undefined;
+  detectCollision: (
+    objectPosX: number,
+    objectPosY: number,
+    objectHitRadius: number
+  ) => boolean;
+  collect: () => void;
+  reposition: () => void;
+  render: () => void;
+}
+
+export interface BonusFactoryInstance {
+  create: (posX: number, posY: number, type?: BonusData["type"]) => void;
+  getCount: () => number;
+  getData: () => BonusData[];
+  getEntities: () => BonusInstance[];
+  cleanup: () => void;
+  reposition: () => void;
+  render: () => void;
   clearAll: () => void;
 }
 
@@ -283,11 +351,20 @@ export interface ControllerInterfaceInstance {
 
 export interface GameDataStore {
   _level: number;
+  _levelProgress: LevelProgressState;
+  _formations: Record<string, FormationState>;
+  _demoFadeStartedAtTick?: number;
+  _demoFadeUntilTick?: number;
+  _isDemoMode?: boolean;
+  _levelIntroUntilTick?: number;
+  _nextParachuteScore?: number;
   _controlInputState: ControlInputState;
   _gameArena: GameArenaInstance;
   _renderTicker: TickerInstance;
   _gameTicker: TickerInstance;
+  _bonuses: BonusFactoryInstance;
   _bullets: BulletFactoryInstance;
+  _enemyBullets: BulletFactoryInstance;
   _player: PlayerInstance;
   _enemies: EnemyFactoryInstance;
   _props: PropFactoryInstance;
@@ -310,14 +387,20 @@ export interface RenderingSystemInstance {
 }
 
 export interface MenuSystemCommands {
+  getLevel?: () => number;
+  selectLevel?: (level: number) => void;
   start: () => void;
+}
+
+export interface ShowStartMenuOptions {
+  startLabel?: string;
 }
 
 export interface MenuSystemInstance {
   adjust: (direction: -1 | 1) => void;
   captureKey: (keyCode: number) => boolean;
   isActive: () => boolean;
-  showStart: () => void;
+  showStart: (options?: ShowStartMenuOptions) => void;
   hide: () => void;
   render: () => void;
   next: () => void;
@@ -348,6 +431,24 @@ export interface SoundAsset {
   src: string;
 }
 
+export interface ProjectileSpriteConfig {
+  sprite: SpriteAsset;
+  width: number;
+  height: number;
+  renderWidth?: number;
+  renderHeight?: number;
+}
+
+export interface BulletData extends Coordinates {
+  coordinateSpace: "screen" | "world";
+  heading: Heading;
+  shape: "circle" | "sprite" | "square";
+  size: number;
+  velocity: number;
+  color: string;
+  sprite?: ProjectileSpriteConfig;
+}
+
 export interface ExplosionConfig {
   sprite: SpriteAsset;
   sound: SoundAsset;
@@ -361,11 +462,14 @@ export interface ProjectileConfig {
   velocity: number;
   size: number;
   color: string;
+  sprite?: ProjectileSpriteConfig;
   sound?: SoundAsset;
 }
 
 export interface PlayerConfig {
   sprite: SpriteAsset;
+  frameWidth: number;
+  frameHeight: number;
   width: number;
   height: number;
   hitRadius: number;
@@ -375,6 +479,9 @@ export interface PlayerConfig {
 }
 
 export interface EnemyConfig {
+  animationFrames?: number;
+  bossDamageFrames?: number;
+  countsTowardBoss: boolean;
   deathValue: number;
   sprite: SpriteAsset;
   velocity: number;
@@ -382,11 +489,31 @@ export interface EnemyConfig {
   width: number;
   height: number;
   firingChance: number;
+  hitPoints: number;
   hitRadius: number;
   canRotate: boolean;
+  tracksPlayer: boolean;
+  renderHeight?: number;
+  renderWidth?: number;
   spawnLimit: number;
   projectile: ProjectileConfig;
   explosion: ExplosionConfig;
+}
+
+export interface EnemyFormationConfig {
+  breakPattern?: string;
+  fireStaggerTicks?: number;
+  holdTicks: number;
+  movement: string;
+  name: string;
+  radiusChange?: number;
+  rotationSpeed?: number;
+  spawnChance: number;
+  slots: Coordinates[];
+  steering?: string;
+  transformSlots?: Coordinates[];
+  waveAmplitude: number;
+  waveFrequency: number;
 }
 
 export interface PropConfig {
@@ -402,11 +529,13 @@ export interface BonusConfig {
   sprite: SpriteAsset;
   velocity: number;
   animationCycle: number[];
+  hitRadius: number;
   width: number;
   height: number;
 }
 
 export interface LevelConfig {
+  enabled: boolean;
   arena: {
     introText: string;
     backgroundColor: string;
@@ -420,6 +549,9 @@ export interface LevelConfig {
   };
   enemies: {
     basic: EnemyConfig;
+    boss: EnemyConfig;
+    formations: EnemyFormationConfig[];
+    specialBomber?: EnemyConfig;
   };
   bonus: BonusConfig;
   props: PropConfig[];
@@ -427,7 +559,31 @@ export interface LevelConfig {
 
 export interface TimePilotConstants {
   player: PlayerConfig;
+  sounds: {
+    coinDrop: SoundAsset;
+    enemyShoot: SoundAsset;
+    gameStart: SoundAsset;
+    nextLevel: SoundAsset;
+    timeWarp: SoundAsset;
+    waveStart: SoundAsset;
+  };
+  scoring: {
+    bomber1940: number;
+    boss: number;
+    formationBonus: number;
+    missile: number;
+    parachute: {
+      max: number;
+      min: number;
+      step: number;
+    };
+    regularEnemy: number;
+  };
   limits: {
+    bossKillThresholdBase: number;
+    bossKillThresholdIncrementPerLevel: number;
+    bonuses: number;
+    enemyBullets: number;
     props: number;
     spawningRadius: number;
     despawnRadius: number;
@@ -448,8 +604,17 @@ export interface UserOptions {
   controllerType: ControllerType;
   gamepadEnabled: boolean;
   keyboardBindings: KeyboardBindings;
+  language: GameLanguage;
   masterVolume: number;
   musicVolume: number;
   effectsVolume: number;
+  setKeyboardBinding: <K extends keyof KeyboardBindings>(
+    key: K,
+    value: KeyboardBindings[K]
+  ) => void;
+  setDebugOption: <K extends keyof UserOptions["debug"]>(
+    key: K,
+    value: UserOptions["debug"][K]
+  ) => void;
   setOption: <K extends keyof UserOptions>(key: K, value: UserOptions[K]) => void;
 }

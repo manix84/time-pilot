@@ -1,6 +1,11 @@
 /* Converted from TimePilot.Controller.Gamepad.js (AMD) to ESM TypeScript. */
 import helpers from "../engine/helpers";
-import type { ControlInputState, Controller, ControllerInterfaceInstance } from "../types";
+import type {
+  ControlInputName,
+  ControlInputState,
+  Controller,
+  ControllerInterfaceInstance,
+} from "../types";
 
 type NavigatorWithGamepads = Navigator & {
   webkitGetGamepads?: () => (globalThis.Gamepad | null)[];
@@ -24,7 +29,7 @@ class Gamepad implements Controller {
     this.connect();
   }
 
-  private _gameLoop(): void {
+  private _gameLoop = (): void => {
     if (!this._isConnected) {
       return;
     }
@@ -41,11 +46,13 @@ class Gamepad implements Controller {
         continue;
       }
 
-      if (gamepad.buttons[0].pressed && !this._isFireButtonPressed) {
+      const isFaceButtonPressed = this._isFaceButtonPressed(gamepad);
+
+      if (isFaceButtonPressed && !this._isFireButtonPressed) {
         this._isFireButtonPressed = true;
         this._setInputState("fire", true);
         this._controllerInterface.startShooting();
-      } else if (!gamepad.buttons[0].pressed && this._isFireButtonPressed) {
+      } else if (!isFaceButtonPressed && this._isFireButtonPressed) {
         this._isFireButtonPressed = false;
         this._setInputState("fire", false);
         this._controllerInterface.stopShooting();
@@ -69,11 +76,29 @@ class Gamepad implements Controller {
         this._setInputState("restart", false);
       }
 
-      if (gamepad.axes[0] || gamepad.axes[1]) {
-        this._setAxisState(gamepad.axes[0], gamepad.axes[1]);
+      if (gamepad.buttons[4]?.pressed) {
+        this._setActiveController();
+        this._setRotationState("rotateLeft", true);
+        this._controllerInterface.rotateAntiClockwise();
+      } else {
+        this._setRotationState("rotateLeft", false);
+      }
+
+      if (gamepad.buttons[5]?.pressed) {
+        this._setActiveController();
+        this._setRotationState("rotateRight", true);
+        this._controllerInterface.rotateClockwise();
+      } else {
+        this._setRotationState("rotateRight", false);
+      }
+
+      const directionalInput = this._getDirectionalInput(gamepad);
+
+      if (directionalInput.axisX || directionalInput.axisY) {
+        this._setAxisState(directionalInput.axisX, directionalInput.axisY);
         const heading = helpers.findHeading({
-          posX: -gamepad.axes[0],
-          posY: -gamepad.axes[1],
+          posX: -directionalInput.axisX,
+          posY: -directionalInput.axisY,
         });
         this._controllerInterface.rotateToHeading(heading);
       } else {
@@ -82,27 +107,60 @@ class Gamepad implements Controller {
     }
 
     this._animationFrame = window.requestAnimationFrame(() => this._gameLoop());
-  }
+  };
 
-  connect(): void {
+  connect = (): void => {
     if (this._isConnected) {
       return;
     }
 
     this._isConnected = true;
     this._gameLoop();
-  }
+  };
 
-  disconnect(): void {
+  disconnect = (): void => {
     this._isConnected = false;
 
     if (this._animationFrame !== null) {
       window.cancelAnimationFrame(this._animationFrame);
       this._animationFrame = null;
     }
-  }
+  };
 
-  private _setAxisState(axisX: number, axisY: number): void {
+  private _getDirectionalInput = (gamepad: globalThis.Gamepad): {
+    axisX: number;
+    axisY: number;
+  } => {
+    const threshold = 0.2;
+    const stickX = Math.abs(gamepad.axes[0] ?? 0) > threshold ? gamepad.axes[0] : 0;
+    const stickY = Math.abs(gamepad.axes[1] ?? 0) > threshold ? gamepad.axes[1] : 0;
+
+    if (stickX || stickY) {
+      return {
+        axisX: stickX,
+        axisY: stickY,
+      };
+    }
+
+    return {
+      axisX: gamepad.buttons[14]?.pressed
+        ? -1
+        : gamepad.buttons[15]?.pressed
+          ? 1
+          : 0,
+      axisY: gamepad.buttons[12]?.pressed
+        ? -1
+        : gamepad.buttons[13]?.pressed
+          ? 1
+          : 0,
+    };
+  };
+
+  private _isFaceButtonPressed = (gamepad: globalThis.Gamepad): boolean => {
+    return [0, 1, 2, 3].some((buttonIndex) => gamepad.buttons[buttonIndex]?.pressed);
+  };
+
+  private _setAxisState = (axisX: number, axisY: number): void => {
     if (!this._inputState) {
       return;
     }
@@ -112,16 +170,42 @@ class Gamepad implements Controller {
     this._inputState.right = axisX > threshold;
     this._inputState.up = axisY < -threshold;
     this._inputState.down = axisY > threshold;
-  }
 
-  private _setInputState(
-    key: keyof ControlInputState,
-    isPressed: boolean
-  ): void {
+    if (
+      this._inputState.left ||
+      this._inputState.right ||
+      this._inputState.up ||
+      this._inputState.down
+    ) {
+      this._setActiveController();
+    }
+  };
+
+  private _setActiveController = (): void => {
     if (this._inputState) {
+      this._inputState.activeController = "gamepad";
+    }
+  };
+
+  private _setRotationState = (key: "rotateLeft" | "rotateRight", isPressed: boolean): void => {
+    if (this._inputState) {
+      if (isPressed) {
+        this._setActiveController();
+      }
+
       this._inputState[key] = isPressed;
     }
-  }
+  };
+
+  private _setInputState = (key: ControlInputName, isPressed: boolean): void => {
+    if (this._inputState) {
+      if (isPressed) {
+        this._setActiveController();
+      }
+
+      this._inputState[key] = isPressed;
+    }
+  };
 }
 
 export default Gamepad;

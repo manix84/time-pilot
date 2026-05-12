@@ -1,7 +1,7 @@
 #!/usr/bin/env sh
 set -eu
 
-npm run version:bump
 npm run typecheck
 npm run lint
 npm test
+npm run version:bump

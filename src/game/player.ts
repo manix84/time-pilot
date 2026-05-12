@@ -1,8 +1,9 @@
 /* Converted from TimePilot.Player.js (AMD) to ESM TypeScript. */
-import CONSTS from "./constants";
+import { levels, player } from "./constants";
 import userOptions from "./user-options";
 import SoundEngine from "./engine/Sound";
 import helpers from "./engine/helpers";
+import palette from "./palette";
 import type {
   BulletFactoryInstance,
   GameArenaInstance,
@@ -14,12 +15,13 @@ import type {
   TickerInstance,
 } from "./types";
 
-const playerConst = CONSTS.player;
+const playerConst = player;
 
 class Player implements PlayerInstance {
   private _bulletFactory: BulletFactoryInstance;
   private _data: PlayerData;
   private _dataDefaults: PlayerData;
+  private _enemyBulletFactory: BulletFactoryInstance;
   private _explosionSound: SoundEngine;
   private _gameArena: GameArenaInstance;
   private _gameTicker: TickerInstance;
@@ -31,6 +33,7 @@ class Player implements PlayerInstance {
     this._gameArena = context._gameArena;
     this._gameTicker = context._gameTicker;
     this._bulletFactory = context._bullets;
+    this._enemyBulletFactory = context._enemyBullets;
 
     this._playerSprite = new Image();
     this._playerSprite.src = playerConst.sprite.src;
@@ -73,11 +76,7 @@ class Player implements PlayerInstance {
     return undefined;
   }
 
-  setData<K extends keyof PlayerData>(
-    key: K,
-    value: PlayerData[K],
-    isLastKnownGood?: boolean
-  ): boolean {
+  setData = <K extends keyof PlayerData>(key: K, value: PlayerData[K], isLastKnownGood?: boolean): boolean => {
     if (this._data[key] !== undefined) {
       this._data[key] = value;
       if (isLastKnownGood) {
@@ -87,17 +86,17 @@ class Player implements PlayerInstance {
     }
 
     return false;
-  }
+  };
 
-  resetData(): void {
+  resetData = (): void => {
     this._data = helpers.cloneObject(this._dataDefaults);
-  }
+  };
 
-  private getLevelData(): LevelConfig["player"] {
-    return CONSTS.levels[this._data.level].player;
-  }
+  private getLevelData = (): LevelConfig["player"] => {
+    return levels[this._data.level].player;
+  };
 
-  reposition(): void {
+  reposition = (): void => {
     const { heading } = this._data;
     const velocity = this.getLevelData().velocity ?? 0;
 
@@ -109,9 +108,9 @@ class Player implements PlayerInstance {
     );
 
     this._gameArena.updatePosition(this._data.posX, this._data.posY);
-  }
+  };
 
-  rotate(): void {
+  rotate = (): void => {
     if (this._data.isAlive && this._data.newHeading !== false) {
       this._data.heading = helpers.rotateTo(
         this._data.newHeading,
@@ -119,17 +118,17 @@ class Player implements PlayerInstance {
         this._rotationStep
       );
     }
-  }
+  };
 
-  startShooting(): void {
+  startShooting = (): void => {
     this._data.isShooting = true;
-  }
+  };
 
-  stopShooting(): void {
+  stopShooting = (): void => {
     this._data.isShooting = false;
-  }
+  };
 
-  shoot(): void {
+  shoot = (): void => {
     if (this._data.isAlive && this._data.isShooting) {
       this._bulletFactory.create(
         0,
@@ -140,9 +139,9 @@ class Player implements PlayerInstance {
         playerConst.projectile.color
       );
     }
-  }
+  };
 
-  private _renderPlayerExplosion(): void {
+  private _renderPlayerExplosion = (): void => {
     if (this._data.deathTick === false) {
       return;
     }
@@ -162,20 +161,28 @@ class Player implements PlayerInstance {
       posY: -(explosionData.height / 2),
     });
 
-    if (frameX === explosionData.frames) {
-      this._data.removeMe = true;
+    if (frameX >= explosionData.frames) {
+      if (this._data.lives > 0) {
+        this._respawnAtLevelStart();
+      } else {
+        this._data.removeMe = true;
+      }
     }
-  }
+  };
 
-  render(): void {
-    let color = "#F00";
+  render = (): void => {
+    let color: string = palette.aircraft.playerShield;
 
     if (!this._data.deathTick && this._data.isAlive) {
       this._gameArena.renderSprite(this._playerSprite, {
-        frameWidth: playerConst.width,
-        frameHeight: playerConst.height,
-        frameX: Math.floor(this._data.heading / 22.5),
+        frameWidth: playerConst.frameWidth,
+        frameHeight: playerConst.frameHeight,
+        frameX:
+          Math.round(((this._data.heading + 270) % 360) / this._rotationStep) %
+          playerConst.rotationFrameCount,
         frameY: 0,
+        renderWidth: playerConst.width,
+        renderHeight: playerConst.height,
         posX: -(playerConst.width / 2),
         posY: -(playerConst.height / 2),
       });
@@ -195,9 +202,9 @@ class Player implements PlayerInstance {
         borderColor: color,
       });
     }
-  }
+  };
 
-  kill(): void {
+  kill = (): void => {
     if (userOptions.enableDebug && userOptions.debug.invincible) {
       return;
     }
@@ -206,11 +213,28 @@ class Player implements PlayerInstance {
       return;
     }
 
+    this._data.lives = Math.max(0, this._data.lives - 1);
     this._data.isAlive = false;
+    this._data.isShooting = false;
+    this._data.newHeading = false;
     this._data.deathTick = this._gameTicker.getTicks();
     this._explosionSound.stop();
     this._explosionSound.play();
-  }
+  };
+
+  private _respawnAtLevelStart = (): void => {
+    this._data.isAlive = true;
+    this._data.deathTick = false;
+    this._data.isShooting = false;
+    this._data.newHeading = false;
+    this._data.heading = this._dataDefaults.heading;
+    this._data.posX = 0;
+    this._data.posY = 0;
+    this._data.removeMe = false;
+    this._bulletFactory.clearAll();
+    this._enemyBulletFactory.clearAll();
+    this._gameArena.updatePosition(this._data.posX, this._data.posY);
+  };
 }
 
 export default Player;
