@@ -583,7 +583,7 @@ const timePilotConstants: TimePilotConstants = {
       enabled: false,
       arena: {
         introText: "A.D 1940",
-        backgroundColor: palette.level.sky1910,
+        backgroundColor: palette.level.sky1940,
         spawningArc: 90,
         spawningRadius: 450,
         despawnRadius: 500,
@@ -617,7 +617,7 @@ const timePilotConstants: TimePilotConstants = {
       enabled: false,
       arena: {
         introText: "A.D 1970",
-        backgroundColor: palette.level.sky1910,
+        backgroundColor: palette.level.sky1970,
         spawningArc: 90,
         spawningRadius: 450,
         despawnRadius: 500,
@@ -650,7 +650,7 @@ const timePilotConstants: TimePilotConstants = {
       enabled: false,
       arena: {
         introText: "A.D 1982",
-        backgroundColor: palette.level.sky1910,
+        backgroundColor: palette.level.sky1982,
         spawningArc: 90,
         spawningRadius: 450,
         despawnRadius: 500,
@@ -683,7 +683,7 @@ const timePilotConstants: TimePilotConstants = {
       enabled: false,
       arena: {
         introText: "A.D 2001",
-        backgroundColor: palette.level.sky1910,
+        backgroundColor: palette.level.sky2001,
         spawningArc: 100,
         spawningRadius: 470,
         despawnRadius: 520,

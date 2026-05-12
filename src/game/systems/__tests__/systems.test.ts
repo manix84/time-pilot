@@ -577,7 +577,7 @@ describe("game systems", () => {
     system.renderFrame();
 
     expect(context._gameArena.clear).toHaveBeenCalled();
-    expect(context._gameArena.setBackgroundColor).toHaveBeenCalledWith("#007");
+    expect(context._gameArena.setBackgroundColor).toHaveBeenCalledWith("#4FC3F7");
     expect(context._props.render).toHaveBeenNthCalledWith(1, 1);
     expect(context._bonuses.render).toHaveBeenCalled();
     expect(context._bullets.render).toHaveBeenCalled();

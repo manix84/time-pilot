@@ -10,7 +10,11 @@ const palette = {
     playerHitbox: "#0F0",
   },
   level: {
-    sky1910: "#007",
+    sky1910: "#4FC3F7",
+    sky1940: "#5BA892",
+    sky1970: "#D8A531",
+    sky1982: "#C75B2A",
+    sky2001: "#2A1B4A",
   },
   menu: {
     backplate: "rgba(4, 10, 18, 0.82)",
