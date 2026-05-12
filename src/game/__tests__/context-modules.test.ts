@@ -14,7 +14,7 @@ import type {
   TickerInstance,
 } from "../types";
 
-function createArena(): GameArenaInstance {
+const createArena = (): GameArenaInstance => {
   const context = document.createElement("canvas").getContext("2d")!;
 
   return {
@@ -45,9 +45,9 @@ function createArena(): GameArenaInstance {
     drawDebugGrid: vi.fn(),
     getElement: vi.fn(() => document.createElement("canvas")),
   };
-}
+};
 
-function createTicker(): TickerInstance {
+const createTicker = (): TickerInstance => {
   let frame = 0;
 
   return {
@@ -68,9 +68,9 @@ function createTicker(): TickerInstance {
     }),
     getTicks: vi.fn(() => ++frame),
   };
-}
+};
 
-function createContext(): GameDataStore {
+const createContext = (): GameDataStore => {
   const context = {
     _level: 1,
     _formations: {},
@@ -119,7 +119,7 @@ function createContext(): GameDataStore {
   } satisfies MenuSystemInstance;
 
   return context;
-}
+};
 
 describe("context-backed game modules", () => {
   beforeEach(() => {

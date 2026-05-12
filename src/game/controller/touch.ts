@@ -25,7 +25,7 @@ class TouchController implements Controller {
     this.connect();
   }
 
-  connect(): void {
+  connect = (): void => {
     this._canvas.addEventListener("touchstart", this.handleTouchStart, {
       passive: false,
     });
@@ -38,14 +38,14 @@ class TouchController implements Controller {
     this._canvas.addEventListener("touchcancel", this.handleTouchEnd, {
       passive: false,
     });
-  }
+  };
 
-  disconnect(): void {
+  disconnect = (): void => {
     this._canvas.removeEventListener("touchstart", this.handleTouchStart);
     this._canvas.removeEventListener("touchmove", this.handleTouchMove);
     this._canvas.removeEventListener("touchend", this.handleTouchEnd);
     this._canvas.removeEventListener("touchcancel", this.handleTouchEnd);
-  }
+  };
 
   private handleTouchStart = (event: TouchEvent): void => {
     event.preventDefault();
@@ -111,7 +111,7 @@ class TouchController implements Controller {
     this.clearDirectionState();
   };
 
-  private getActiveTouch(touchList: TouchList): Touch | null {
+  private getActiveTouch = (touchList: TouchList): Touch | null => {
     for (const touch of Array.from(touchList)) {
       if (touch.identifier === this._activeTouchId) {
         return touch;
@@ -119,9 +119,9 @@ class TouchController implements Controller {
     }
 
     return null;
-  }
+  };
 
-  private getCanvasPoint(touch: Touch): Coordinates {
+  private getCanvasPoint = (touch: Touch): Coordinates => {
     const bounds = this._canvas.getBoundingClientRect();
     const scaleX = this._canvas.width / bounds.width;
     const scaleY = this._canvas.height / bounds.height;
@@ -130,9 +130,9 @@ class TouchController implements Controller {
       posX: (touch.clientX - bounds.left) * scaleX - this._canvas.width / 2,
       posY: (touch.clientY - bounds.top) * scaleY - this._canvas.height / 2,
     };
-  }
+  };
 
-  private updateHeadingFromPoint(point: Coordinates): void {
+  private updateHeadingFromPoint = (point: Coordinates): void => {
     const distance = Math.hypot(point.posX, point.posY);
 
     if (distance < this._deadZone) {
@@ -145,9 +145,9 @@ class TouchController implements Controller {
     });
     this._controllerInterface.rotateToHeading(heading);
     this.setDirectionalInput(point);
-  }
+  };
 
-  private setDirectionalInput(point: Coordinates): void {
+  private setDirectionalInput = (point: Coordinates): void => {
     if (!this._inputState) {
       return;
     }
@@ -160,9 +160,9 @@ class TouchController implements Controller {
     this._inputState.right = horizontal && point.posX > 0;
     this._inputState.up = vertical && point.posY < 0;
     this._inputState.down = vertical && point.posY > 0;
-  }
+  };
 
-  private clearDirectionState(): void {
+  private clearDirectionState = (): void => {
     if (!this._inputState) {
       return;
     }
@@ -171,7 +171,7 @@ class TouchController implements Controller {
     this._inputState.right = false;
     this._inputState.up = false;
     this._inputState.down = false;
-  }
+  };
 }
 
 export default TouchController;

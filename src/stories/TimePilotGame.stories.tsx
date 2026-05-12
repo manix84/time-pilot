@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import TimePilotGame from "../components/TimePilotGame";
 import "./storybook.css";
 
-function GameSandbox() {
+const GameSandbox = () => {
   return (
     <main className={"storybook-surface"}>
       <section className={"storybook-section"}>
@@ -16,7 +16,7 @@ function GameSandbox() {
       </section>
     </main>
   );
-}
+};
 
 const meta = {
   title: "Game/Playable Demo",

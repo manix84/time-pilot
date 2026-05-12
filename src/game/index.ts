@@ -82,7 +82,7 @@ export class TimePilot {
     this.init();
   }
 
-  restartGame(): void {
+  restartGame = (): void => {
     window.console.info("Restarting");
     this.context._gameTicker.stop(() => {
       this.context._hud.restart();
@@ -102,9 +102,9 @@ export class TimePilot {
       this.configureGameLoop();
       this.startDemoMode();
     });
-  }
+  };
 
-  destroyGame(): void {
+  destroyGame = (): void => {
     this.isDestroyed = true;
     this.isDemoMode = false;
     this.context._isDemoMode = false;
@@ -123,9 +123,9 @@ export class TimePilot {
       }
     });
     this.context._currentController = [];
-  }
+  };
 
-  pauseGame(forcePause?: boolean): void {
+  pauseGame = (forcePause?: boolean): void => {
     if (this.context._gameTicker.isRunning || !!forcePause) {
       window.console.info("Pausing");
       this.context._gameTicker.stop();
@@ -133,16 +133,16 @@ export class TimePilot {
       window.console.info("Unpausing");
       this.context._gameTicker.start();
     }
-  }
+  };
 
-  resumeGame(): void {
+  resumeGame = (): void => {
     if (!this.context._gameTicker.isRunning) {
       window.console.info("Unpausing");
       this.context._gameTicker.start();
     }
-  }
+  };
 
-  private init(): void {
+  private init = (): void => {
     userOptions.setOption("enableDebug", this.options.debug);
     userOptions.setOption("controllerType", this.options.controllerType);
     userOptions.setOption("gamepadEnabled", this.options.gamepadEnabled);
@@ -247,9 +247,9 @@ export class TimePilot {
         this.context._renderTicker.start();
       }
     });
-  }
+  };
 
-  private configureGameLoop(): void {
+  private configureGameLoop = (): void => {
     this.context._gameTicker.addSchedule(() => {
       if (this.isDestroyed) {
         return;
@@ -358,9 +358,9 @@ export class TimePilot {
         this.advanceAfterBossDefeat();
       }
     }, 1);
-  }
+  };
 
-  private beginGame(): void {
+  private beginGame = (): void => {
     if (this.isDestroyed) {
       return;
     }
@@ -389,9 +389,9 @@ export class TimePilot {
     }
 
     this.context._gameTicker.start();
-  }
+  };
 
-  private startDemoMode(): void {
+  private startDemoMode = (): void => {
     if (this.isDestroyed) {
       return;
     }
@@ -405,9 +405,9 @@ export class TimePilot {
     this.hasSeededInitialProps = true;
     this.context._menus.showStart({ startLabel: "Start" });
     this.context._gameTicker.start();
-  }
+  };
 
-  private openPauseMenu(): void {
+  private openPauseMenu = (): void => {
     if (!this.hasStartedGame || this.isDemoMode) {
       return;
     }
@@ -418,9 +418,9 @@ export class TimePilot {
 
     this.playMenuMusic();
     this.context._menus.showStart({ startLabel: "Continue" });
-  }
+  };
 
-  private updateDemoAutopilot(): void {
+  private updateDemoAutopilot = (): void => {
     if (!this.isDemoMode) {
       return;
     }
@@ -436,9 +436,9 @@ export class TimePilot {
     );
     this.context._player.setData("isAlive", true);
     this.context._player.startShooting();
-  }
+  };
 
-  private advanceDemoLevel(): void {
+  private advanceDemoLevel = (): void => {
     if (!this.isDemoMode) {
       return;
     }
@@ -447,9 +447,9 @@ export class TimePilot {
     this.resetWorld(this.getRandomDemoLevel(), { skipIntro: true });
     this.spawningSystem.addInitialProps();
     this.hasSeededInitialProps = true;
-  }
+  };
 
-  private resetWorld(level: number, options: { skipIntro?: boolean } = {}): void {
+  private resetWorld = (level: number, options: { skipIntro?: boolean } = {}): void => {
     this.context._level = level;
     this.context._formations = {};
     this.context._levelProgress = this.createLevelProgress(level);
@@ -468,9 +468,9 @@ export class TimePilot {
       ? 0
       : this.context._gameTicker.getTicks() + levelIntroDurationFrames;
     this.hasSeededInitialProps = false;
-  }
+  };
 
-  private advanceAfterBossDefeat(): void {
+  private advanceAfterBossDefeat = (): void => {
     const score = this.context._player.getData("score") ?? 0;
     const lives = this.context._player.getData("lives") ?? 3;
     const nextLevel = this.getNextEnabledLevel();
@@ -489,9 +489,9 @@ export class TimePilot {
     this.context._player.setData("lives", lives, true);
     this.spawningSystem.addInitialProps();
     this.hasSeededInitialProps = true;
-  }
+  };
 
-  private createLevelProgress(level: number) {
+  private createLevelProgress = (level: number) => {
     return {
       bossDefeated: false,
       bossKillThreshold:
@@ -500,9 +500,9 @@ export class TimePilot {
       bossSpawned: false,
       standardEnemyKills: 0,
     };
-  }
+  };
 
-  private getNextEnabledLevel(): number {
+  private getNextEnabledLevel = (): number => {
     const levelNumbers = Object.keys(levels)
       .map(Number)
       .sort((a, b) => a - b)
@@ -514,9 +514,9 @@ export class TimePilot {
     }
 
     return levelNumbers[(currentIndex + 1) % levelNumbers.length] ?? 1;
-  }
+  };
 
-  private getRandomDemoLevel(): number {
+  private getRandomDemoLevel = (): number => {
     const levelNumbers = Object.keys(levels)
       .map(Number)
       .filter((level) => levels[level].enabled);
@@ -532,44 +532,42 @@ export class TimePilot {
     return availableLevels[
       Math.floor(Math.random() * availableLevels.length)
     ] ?? 1;
-  }
+  };
 
-  private startDemoLevelFade(): void {
+  private startDemoLevelFade = (): void => {
     const ticks = this.context._gameTicker.getTicks();
 
     this.context._demoFadeStartedAtTick = ticks;
     this.context._demoFadeUntilTick = ticks + demoLevelFadeFrames;
-  }
+  };
 
-  private isLevelIntroActive(): boolean {
+  private isLevelIntroActive = (): boolean => {
     return (
       !!this.context._levelIntroUntilTick &&
       this.context._gameTicker.getTicks() < this.context._levelIntroUntilTick
     );
-  }
+  };
 
-  private clearIntroControls(): void {
+  private clearIntroControls = (): void => {
     this.context._player.setData("newHeading", false);
     this.context._player.stopShooting();
-  }
+  };
 
-  private playMenuMusic(): void {
+  private playMenuMusic = (): void => {
     // Menu music will be wired here when the asset is available.
-  }
+  };
 
-  private stopMenuMusic(): void {
+  private stopMenuMusic = (): void => {
     // Menu music will be stopped here when the asset is available.
-  }
+  };
 
-  private createKeyboardController(
-    controllerInterface: ControllerInterface
-  ): Controller {
+  private createKeyboardController = (controllerInterface: ControllerInterface): Controller => {
     if (this.options.controllerType === "keyboard2") {
       return new Keyboard2(controllerInterface, this.context._controlInputState);
     }
 
     return new Keyboard1(controllerInterface, this.context._controlInputState);
-  }
+  };
 }
 
 export default TimePilot;

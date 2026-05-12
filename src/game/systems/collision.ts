@@ -14,7 +14,7 @@ class CollisionSystem implements CollisionSystemInstance {
     );
   }
 
-  detectCollisions(): void {
+  detectCollisions = (): void => {
     if (this.isLevelIntroActive()) {
       return;
     }
@@ -115,19 +115,19 @@ class CollisionSystem implements CollisionSystemInstance {
         }
       });
     });
-  }
+  };
 
-  private _playExplosion(): void {
+  private _playExplosion = (): void => {
     this._explosionSound.stop();
     this._explosionSound.play();
-  }
+  };
 
-  private isLevelIntroActive(): boolean {
+  private isLevelIntroActive = (): boolean => {
     return (
       !!this._context._levelIntroUntilTick &&
       this._context._gameTicker.getTicks() < this._context._levelIntroUntilTick
     );
-  }
+  };
 }
 
 export default CollisionSystem;

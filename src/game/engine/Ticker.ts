@@ -40,7 +40,7 @@ class Ticker implements TickerInstance {
     this._frameInterval = options.fps ? 1000 / options.fps : undefined;
   }
 
-  start(): void {
+  start = (): void => {
     if (this.isRunning) {
       return;
     }
@@ -48,14 +48,14 @@ class Ticker implements TickerInstance {
     this.isRunning = true;
     this._lastStepTime = null;
     this._step();
-  }
+  };
 
-  stop(callback?: () => void): void {
+  stop = (callback?: () => void): void => {
     this.isRunning = false;
     this.killCallback = callback || (() => {});
-  }
+  };
 
-  private _step(): void {
+  private _step = (): void => {
     requestAnimationFrame((timestamp) => {
       if (!this.isRunning) {
         this.runKillCallback();
@@ -85,16 +85,16 @@ class Ticker implements TickerInstance {
         this.runKillCallback();
       }
     });
-  }
+  };
 
-  private runKillCallback(): void {
+  private runKillCallback = (): void => {
     if (this.killCallback) {
       this.killCallback();
       delete this.killCallback;
     }
-  }
+  };
 
-  private shouldRunFrame(timestamp: number): boolean {
+  private shouldRunFrame = (timestamp: number): boolean => {
     if (!this._frameInterval) {
       return true;
     }
@@ -105,9 +105,9 @@ class Ticker implements TickerInstance {
     }
 
     return timestamp - this._lastStepTime >= this._frameInterval;
-  }
+  };
 
-  addSchedule(callback: TickerScheduleCallback, nthFrame: number): number {
+  addSchedule = (callback: TickerScheduleCallback, nthFrame: number): number => {
     const eventId = ++this._scheduleCount;
     this._schedule[eventId] = {
       callback,
@@ -115,29 +115,29 @@ class Ticker implements TickerInstance {
     };
 
     return eventId;
-  }
+  };
 
-  removeSchedule(eventId: number): boolean {
+  removeSchedule = (eventId: number): boolean => {
     if (this._schedule[eventId]) {
       delete this._schedule[eventId];
     }
 
     return !this._schedule[eventId];
-  }
+  };
 
-  clearSchedule(): void {
+  clearSchedule = (): void => {
     this._schedule = {};
-  }
+  };
 
-  clearTicks(): boolean {
+  clearTicks = (): boolean => {
     this._frame = 0;
 
     return !this._frame;
-  }
+  };
 
-  getTicks(): number {
+  getTicks = (): number => {
     return this._frame;
-  }
+  };
 }
 
 export default Ticker;

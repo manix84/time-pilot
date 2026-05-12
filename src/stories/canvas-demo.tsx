@@ -6,7 +6,7 @@ type CanvasDemoProps = {
   width?: number;
 };
 
-export function CanvasDemo({ draw, height = 360, width = 560 }: CanvasDemoProps) {
+export const CanvasDemo = ({ draw, height = 360, width = 560 }: CanvasDemoProps) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
   useEffect(() => {
@@ -29,4 +29,4 @@ export function CanvasDemo({ draw, height = 360, width = 560 }: CanvasDemoProps)
       width={width}
     />
   );
-}
+};

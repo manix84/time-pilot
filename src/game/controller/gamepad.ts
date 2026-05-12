@@ -29,7 +29,7 @@ class Gamepad implements Controller {
     this.connect();
   }
 
-  private _gameLoop(): void {
+  private _gameLoop = (): void => {
     if (!this._isConnected) {
       return;
     }
@@ -99,30 +99,30 @@ class Gamepad implements Controller {
     }
 
     this._animationFrame = window.requestAnimationFrame(() => this._gameLoop());
-  }
+  };
 
-  connect(): void {
+  connect = (): void => {
     if (this._isConnected) {
       return;
     }
 
     this._isConnected = true;
     this._gameLoop();
-  }
+  };
 
-  disconnect(): void {
+  disconnect = (): void => {
     this._isConnected = false;
 
     if (this._animationFrame !== null) {
       window.cancelAnimationFrame(this._animationFrame);
       this._animationFrame = null;
     }
-  }
+  };
 
-  private _getDirectionalInput(gamepad: globalThis.Gamepad): {
+  private _getDirectionalInput = (gamepad: globalThis.Gamepad): {
     axisX: number;
     axisY: number;
-  } {
+  } => {
     const threshold = 0.2;
     const stickX = Math.abs(gamepad.axes[0] ?? 0) > threshold ? gamepad.axes[0] : 0;
     const stickY = Math.abs(gamepad.axes[1] ?? 0) > threshold ? gamepad.axes[1] : 0;
@@ -146,9 +146,9 @@ class Gamepad implements Controller {
           ? 1
           : 0,
     };
-  }
+  };
 
-  private _setAxisState(axisX: number, axisY: number): void {
+  private _setAxisState = (axisX: number, axisY: number): void => {
     if (!this._inputState) {
       return;
     }
@@ -167,18 +167,15 @@ class Gamepad implements Controller {
     ) {
       this._setActiveController();
     }
-  }
+  };
 
-  private _setActiveController(): void {
+  private _setActiveController = (): void => {
     if (this._inputState) {
       this._inputState.activeController = "gamepad";
     }
-  }
+  };
 
-  private _setInputState(
-    key: ControlInputName,
-    isPressed: boolean
-  ): void {
+  private _setInputState = (key: ControlInputName, isPressed: boolean): void => {
     if (this._inputState) {
       if (isPressed) {
         this._setActiveController();
@@ -186,7 +183,7 @@ class Gamepad implements Controller {
 
       this._inputState[key] = isPressed;
     }
-  }
+  };
 }
 
 export default Gamepad;

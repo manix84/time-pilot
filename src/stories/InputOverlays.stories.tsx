@@ -20,7 +20,7 @@ const keyMap: Record<string, ControlInputName> = {
   Escape: "menu",
 };
 
-function createInputState(): ControlInputState {
+const createInputState = (): ControlInputState => {
   return {
     down: false,
     fire: false,
@@ -32,32 +32,17 @@ function createInputState(): ControlInputState {
     up: false,
     activeController: "keyboard",
   };
-}
+};
 
-function renderText(
-  context: CanvasRenderingContext2D,
-  label: string,
-  x: number,
-  y: number,
-  size: number,
-  color: string
-): void {
+const renderText = (context: CanvasRenderingContext2D, label: string, x: number, y: number, size: number, color: string): void => {
   context.fillStyle = color;
   context.font = `${size}px theFont, Trebuchet MS, Segoe UI, sans-serif`;
   context.textAlign = "center";
   context.textBaseline = "middle";
   context.fillText(label, x, y);
-}
+};
 
-function renderKey(
-  context: CanvasRenderingContext2D,
-  label: string,
-  x: number,
-  y: number,
-  width: number,
-  height: number,
-  isPressed: boolean
-): void {
+const renderKey = (context: CanvasRenderingContext2D, label: string, x: number, y: number, width: number, height: number, isPressed: boolean): void => {
   context.globalAlpha = isPressed ? 0.92 : 0.5;
   context.fillStyle = isPressed ? palette.overlay.activeWash : "transparent";
   context.strokeStyle = isPressed ? palette.overlay.activeFill : palette.overlay.line;
@@ -74,27 +59,17 @@ function renderKey(
     14,
     isPressed ? palette.overlay.activeFill : palette.overlay.line
   );
-}
+};
 
-function renderKeyboardOverlay(
-  context: CanvasRenderingContext2D,
-  x: number,
-  y: number,
-  inputState: ControlInputState
-): void {
+const renderKeyboardOverlay = (context: CanvasRenderingContext2D, x: number, y: number, inputState: ControlInputState): void => {
   renderKey(context, "W", x + 54, y, 42, 34, inputState.up);
   renderKey(context, "A", x, y + 40, 42, 34, inputState.left);
   renderKey(context, "S", x + 54, y + 40, 42, 34, inputState.down);
   renderKey(context, "D", x + 108, y + 40, 42, 34, inputState.right);
   renderKey(context, "Space", x, y + 86, 150, 34, inputState.fire);
-}
+};
 
-function renderStick(
-  context: CanvasRenderingContext2D,
-  x: number,
-  y: number,
-  inputState: ControlInputState
-): void {
+const renderStick = (context: CanvasRenderingContext2D, x: number, y: number, inputState: ControlInputState): void => {
   const isPressed =
     inputState.up || inputState.right || inputState.down || inputState.left;
   const offsetX = inputState.left ? -7 : inputState.right ? 7 : 0;
@@ -114,15 +89,9 @@ function renderStick(
   context.arc(x + offsetX, y + offsetY, 13, 0, 2 * Math.PI);
   context.fill();
   context.stroke();
-}
+};
 
-function renderButton(
-  context: CanvasRenderingContext2D,
-  label: string,
-  x: number,
-  y: number,
-  isPressed: boolean
-): void {
+const renderButton = (context: CanvasRenderingContext2D, label: string, x: number, y: number, isPressed: boolean): void => {
   const radius = label.length > 1 ? 12 : 16;
 
   context.globalAlpha = isPressed ? 0.95 : 0.5;
@@ -142,14 +111,9 @@ function renderButton(
     label.length > 1 ? 8 : 12,
     isPressed ? palette.overlay.activeFill : palette.overlay.line
   );
-}
+};
 
-function renderGamepadOverlay(
-  context: CanvasRenderingContext2D,
-  x: number,
-  y: number,
-  inputState: ControlInputState
-): void {
+const renderGamepadOverlay = (context: CanvasRenderingContext2D, x: number, y: number, inputState: ControlInputState): void => {
   context.globalAlpha = 0.5;
   context.strokeStyle = palette.overlay.line;
   context.lineWidth = 2;
@@ -172,9 +136,9 @@ function renderGamepadOverlay(
   renderButton(context, "Menu", x + 130, y + 56, inputState.menu);
   renderButton(context, "P", x + 154, y + 56, inputState.pause);
   renderButton(context, "R", x + 212, y + 48, inputState.restart);
-}
+};
 
-function InputOverlayDemo() {
+const InputOverlayDemo = () => {
   const [inputState, setInputState] = useState(createInputState);
   const controls = useMemo(
     () => [
@@ -264,7 +228,7 @@ function InputOverlayDemo() {
       </section>
     </main>
   );
-}
+};
 
 const meta = {
   title: "Game/Input Overlays",

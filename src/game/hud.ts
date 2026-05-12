@@ -31,7 +31,7 @@ class Hud implements HudInstance {
     this._playerSprite.frameY = 0;
   }
 
-  render(): void {
+  render = (): void => {
     const playerData = this._context._player.getData();
 
     this._gameArena.renderText(
@@ -106,18 +106,18 @@ class Hud implements HudInstance {
         posY: -(this._gameArena.height / 2 - 10),
       });
     }
-  }
+  };
 
-  restart(): void {
+  restart = (): void => {
     this._gameArena.renderText("Restarting", 0, 0, {
       size: 30,
       align: "center",
       valign: "middle",
       color: palette.text.white,
     });
-  }
+  };
 
-  private renderControlsOverlay(): void {
+  private renderControlsOverlay = (): void => {
     const context = this._gameArena.getContext() as CanvasRenderingContext2D;
     const inputState = this._context._controlInputState;
 
@@ -141,28 +141,18 @@ class Hud implements HudInstance {
     }
 
     context.restore();
-  }
+  };
 
-  private renderKeyboardOverlay(
-    context: CanvasRenderingContext2D,
-    x: number,
-    y: number,
-    inputState: ControlInputState
-  ): void {
+  private renderKeyboardOverlay = (context: CanvasRenderingContext2D, x: number, y: number, inputState: ControlInputState): void => {
     this.renderKey(context, "W", x + 44, y, 34, 28, inputState.up);
     this.renderKey(context, "A", x, y + 32, 34, 28, inputState.left);
     this.renderKey(context, "S", x + 44, y + 32, 34, 28, inputState.down);
     this.renderKey(context, "D", x + 88, y + 32, 34, 28, inputState.right);
     this.renderKey(context, "Space", x, y + 68, 122, 28, inputState.fire);
     this.renderMouseOverlay(context, x + 138, y + 10, inputState.fire);
-  }
+  };
 
-  private renderMouseOverlay(
-    context: CanvasRenderingContext2D,
-    x: number,
-    y: number,
-    isPressed: boolean
-  ): void {
+  private renderMouseOverlay = (context: CanvasRenderingContext2D, x: number, y: number, isPressed: boolean): void => {
     context.globalAlpha = isPressed ? 0.92 : 0.5;
     context.fillStyle = isPressed ? palette.overlay.activeWash : "transparent";
     context.strokeStyle = isPressed ? palette.overlay.activeFill : palette.overlay.line;
@@ -186,17 +176,9 @@ class Hud implements HudInstance {
       valign: "middle",
       color: isPressed ? palette.overlay.activeFill : palette.overlay.line,
     });
-  }
+  };
 
-  private renderKey(
-    context: CanvasRenderingContext2D,
-    label: string,
-    x: number,
-    y: number,
-    width: number,
-    height: number,
-    isPressed: boolean
-  ): void {
+  private renderKey = (context: CanvasRenderingContext2D, label: string, x: number, y: number, width: number, height: number, isPressed: boolean): void => {
     context.globalAlpha = isPressed ? 0.92 : 0.5;
     context.fillStyle = isPressed ? palette.overlay.activeWash : "transparent";
     context.strokeStyle = isPressed ? palette.overlay.activeFill : palette.overlay.line;
@@ -211,14 +193,9 @@ class Hud implements HudInstance {
       valign: "middle",
       color: isPressed ? palette.overlay.activeFill : palette.overlay.line,
     });
-  }
+  };
 
-  private renderGamepadOverlay(
-    context: CanvasRenderingContext2D,
-    x: number,
-    y: number,
-    inputState: ControlInputState
-  ): void {
+  private renderGamepadOverlay = (context: CanvasRenderingContext2D, x: number, y: number, inputState: ControlInputState): void => {
     context.globalAlpha = 0.5;
     context.strokeStyle = palette.overlay.line;
     context.lineWidth = 2;
@@ -240,14 +217,9 @@ class Hud implements HudInstance {
     this.renderButton(context, "A", x + 148, y + 52, inputState.fire);
     this.renderButton(context, "Menu", x + 106, y + 38, inputState.menu);
     this.renderButton(context, "P", x + 122, y + 38, inputState.pause);
-  }
+  };
 
-  private renderStick(
-    context: CanvasRenderingContext2D,
-    x: number,
-    y: number,
-    inputState: ControlInputState
-  ): void {
+  private renderStick = (context: CanvasRenderingContext2D, x: number, y: number, inputState: ControlInputState): void => {
     const isPressed =
       inputState.up || inputState.right || inputState.down || inputState.left;
     const offsetX = inputState.left ? -5 : inputState.right ? 5 : 0;
@@ -266,15 +238,9 @@ class Hud implements HudInstance {
     context.arc(x + offsetX, y + offsetY, 9, 0, 2 * Math.PI);
     context.fill();
     context.stroke();
-  }
+  };
 
-  private renderButton(
-    context: CanvasRenderingContext2D,
-    label: string,
-    x: number,
-    y: number,
-    isPressed: boolean
-  ): void {
+  private renderButton = (context: CanvasRenderingContext2D, label: string, x: number, y: number, isPressed: boolean): void => {
     const radius = label.length > 1 ? 9 : 12;
 
     context.globalAlpha = isPressed ? 0.95 : 0.5;
@@ -292,7 +258,7 @@ class Hud implements HudInstance {
       valign: "middle",
       color: isPressed ? palette.overlay.activeFill : palette.overlay.line,
     });
-  }
+  };
 }
 
 export default Hud;

@@ -70,14 +70,14 @@ class Enemy implements EnemyInstance {
     return undefined;
   }
 
-  setData<K extends keyof EnemyData>(key: K, value: EnemyData[K]): boolean {
+  setData = <K extends keyof EnemyData>(key: K, value: EnemyData[K]): boolean => {
     if (this._data[key] !== undefined) {
       this._data[key] = value;
       return this._data[key] === value;
     }
 
     return false;
-  }
+  };
 
   getLevelData(): EnemyConfig;
   getLevelData<K extends keyof EnemyConfig>(key: K): EnemyConfig[K] | undefined;
@@ -97,11 +97,7 @@ class Enemy implements EnemyInstance {
     return undefined;
   }
 
-  detectCollision(
-    objectPosX: number,
-    objectPosY: number,
-    objectHitRadius: number
-  ): boolean {
+  detectCollision = (objectPosX: number, objectPosY: number, objectHitRadius: number): boolean => {
     const levelData = this.getLevelData();
 
     return helpers.detectCollision(
@@ -116,9 +112,9 @@ class Enemy implements EnemyInstance {
         radius: levelData.hitRadius,
       }
     );
-  }
+  };
 
-  private _checkInArena(): void {
+  private _checkInArena = (): void => {
     const levelData = this.getLevelData();
 
     if (this.removeMe) {
@@ -140,9 +136,9 @@ class Enemy implements EnemyInstance {
       },
       getDespawnRadius(this._gameArena)
     );
-  }
+  };
 
-  reposition(): void {
+  reposition = (): void => {
     const enemy = this._data;
     const { heading } = this._data;
     const levelData = this.getLevelData();
@@ -179,9 +175,9 @@ class Enemy implements EnemyInstance {
 
       enemy.heading = helpers.rotateTo(turnTo, enemy.heading, 22.5);
     }
-  }
+  };
 
-  private _applyFormationWave(tick: number): void {
+  private _applyFormationWave = (tick: number): void => {
     const amplitude = this._data.formationWaveAmplitude ?? 0;
     const frequency = this._data.formationWaveFrequency ?? 0;
 
@@ -201,9 +197,9 @@ class Enemy implements EnemyInstance {
     this._data.posY -= helpers.float(
       Math.cos(perpendicularHeading * (Math.PI / 180)) * waveDelta
     );
-  }
+  };
 
-  private _render(): void {
+  private _render = (): void => {
     const levelData = this.getLevelData();
     const renderWidth = levelData.renderWidth ?? levelData.width;
     const renderHeight = levelData.renderHeight ?? levelData.height;
@@ -224,9 +220,9 @@ class Enemy implements EnemyInstance {
       renderHeight,
       renderWidth,
     });
-  }
+  };
 
-  private _renderDeath(): void {
+  private _renderDeath = (): void => {
     if (this._data.deathTick === false) {
       return;
     }
@@ -255,9 +251,9 @@ class Enemy implements EnemyInstance {
     if (frameX === explosionData.frames) {
       this.removeMe = true;
     }
-  }
+  };
 
-  render(): void {
+  render = (): void => {
     const levelData = this.getLevelData();
 
     if (!this._data.deathTick) {
@@ -276,9 +272,9 @@ class Enemy implements EnemyInstance {
         }
       );
     }
-  }
+  };
 
-  kill(): void {
+  kill = (): void => {
     if (!this.isAlive) {
       return;
     }
@@ -298,9 +294,9 @@ class Enemy implements EnemyInstance {
     this._trackBossKillProgress();
     this._trackBossDefeat();
     this._trackFormationKill();
-  }
+  };
 
-  private _trackBossKillProgress(): void {
+  private _trackBossKillProgress = (): void => {
     if (!this.getLevelData("countsTowardBoss")) {
       return;
     }
@@ -312,17 +308,17 @@ class Enemy implements EnemyInstance {
     }
 
     progress.standardEnemyKills += 1;
-  }
+  };
 
-  private _trackBossDefeat(): void {
+  private _trackBossDefeat = (): void => {
     if (this._data.type !== "boss") {
       return;
     }
 
     this._context._levelProgress.bossDefeated = true;
-  }
+  };
 
-  private _trackFormationKill(): void {
+  private _trackFormationKill = (): void => {
     const formationId = this._data.formationId;
 
     if (!formationId) {
@@ -346,7 +342,7 @@ class Enemy implements EnemyInstance {
       "score",
       this._player.getData("score") + scoring.formationBonus
     );
-  }
+  };
 }
 
 export default Enemy;

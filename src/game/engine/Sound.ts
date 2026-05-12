@@ -19,9 +19,9 @@ class Sound {
   private static _isMuted = false;
   private _theSound: TimePilotAudioElement;
 
-  static setMuted(isMuted: boolean): void {
+  static setMuted = (isMuted: boolean): void => {
     Sound._isMuted = isMuted;
-  }
+  };
 
   constructor(urls: string | string[], userOptions: SoundOptions = {}) {
     const options = {
@@ -55,44 +55,44 @@ class Sound {
     this._theSound.addEventListener("canplay", canPlayListener, false);
   }
 
-  play(): void {
+  play = (): void => {
     this._theSound.loop = false;
     if (this._theSound.canPlay) {
       this.applyVolume();
       this._theSound.play();
     }
-  }
+  };
 
-  loop(): void {
+  loop = (): void => {
     this._theSound.loop = true;
     if (this._theSound.canPlay) {
       this.applyVolume();
       this._theSound.play();
     }
-  }
+  };
 
-  pause(): void {
+  pause = (): void => {
     this._theSound.pause();
-  }
+  };
 
-  stop(): void {
+  stop = (): void => {
     this._theSound.pause();
     if (this._theSound.currentTime > 0) {
       this._theSound.currentTime = 0;
     }
-  }
+  };
 
-  destroy(): void {
+  destroy = (): void => {
     this.stop();
     this._theSound.removeEventListener("canplay", canPlayListener, false);
-  }
+  };
 
-  private applyVolume(): void {
+  private applyVolume = (): void => {
     this._theSound.volume =
       Sound._isMuted
         ? 0
         : (userOptions.masterVolume / 10) * (userOptions.effectsVolume / 10);
-  }
+  };
 }
 
 export default Sound;

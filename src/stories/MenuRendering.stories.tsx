@@ -8,7 +8,7 @@ import "./storybook.css";
 
 type MenuScreenDemo = "start" | "options" | "debug";
 
-function prepareMenu(menu: Menus, screen: MenuScreenDemo): void {
+const prepareMenu = (menu: Menus, screen: MenuScreenDemo): void => {
   menu.showStart();
 
   if (screen === "options") {
@@ -25,13 +25,9 @@ function prepareMenu(menu: Menus, screen: MenuScreenDemo): void {
     menu.next();
     menu.activate();
   }
-}
+};
 
-function drawMenu(
-  context: CanvasRenderingContext2D,
-  canvas: HTMLCanvasElement,
-  screen: MenuScreenDemo
-): void {
+const drawMenu = (context: CanvasRenderingContext2D, canvas: HTMLCanvasElement, screen: MenuScreenDemo): void => {
   context.fillStyle = palette.level.sky1910;
   context.fillRect(0, 0, canvas.width, canvas.height);
 
@@ -43,9 +39,9 @@ function drawMenu(
   context.translate(canvas.width / 2, canvas.height / 2);
   menu.render();
   context.restore();
-}
+};
 
-function MenuRenderingDemo() {
+const MenuRenderingDemo = () => {
   const drawStart = useCallback(
     (context: CanvasRenderingContext2D, canvas: HTMLCanvasElement) => {
       drawMenu(context, canvas, "start");
@@ -87,7 +83,7 @@ function MenuRenderingDemo() {
       </section>
     </main>
   );
-}
+};
 
 const meta = {
   title: "Game/Menu Rendering",

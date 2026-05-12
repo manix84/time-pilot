@@ -20,14 +20,9 @@ class EnemyFactory implements EnemyFactoryInstance {
     this._context = context;
   }
 
-  create(
-    posX: number,
-    posY: number,
-    heading: Heading,
-    options: EnemySpawnOptions = {}
-  ): void {
+  create = (posX: number, posY: number, heading: Heading, options: EnemySpawnOptions = {}): void => {
     this._enemies.push(new Enemy(this._context, posX, posY, heading, options));
-  }
+  };
 
   getLevelData(): EnemyConfig;
   getLevelData<K extends keyof EnemyConfig>(key: K): EnemyConfig[K] | undefined;
@@ -41,11 +36,11 @@ class EnemyFactory implements EnemyFactoryInstance {
     return data;
   }
 
-  getCount(): number {
+  getCount = (): number => {
     return this._enemies.length;
-  }
+  };
 
-  isUnderLimit(): boolean {
+  isUnderLimit = (): boolean => {
     return (
       this._enemies.length <
       getScaledEntityLimit(
@@ -53,17 +48,17 @@ class EnemyFactory implements EnemyFactoryInstance {
         this._context._gameArena
       )
     );
-  }
+  };
 
-  getData(): EnemyData[] {
+  getData = (): EnemyData[] => {
     return this._enemies.map((enemy) => enemy.getData() as EnemyData);
-  }
+  };
 
-  getEntities(): EnemyInstance[] {
+  getEntities = (): EnemyInstance[] => {
     return [...this._enemies];
-  }
+  };
 
-  cleanup(): void {
+  cleanup = (): void => {
     this._enemies.forEach((enemy) => {
       const formationId = enemy.getData("formationId");
 
@@ -78,25 +73,25 @@ class EnemyFactory implements EnemyFactoryInstance {
     });
 
     this._enemies = this._enemies.filter((enemy) => !enemy.removeMe);
-  }
+  };
 
-  reposition(): void {
+  reposition = (): void => {
     this._enemies.forEach((enemy) => enemy.reposition());
-  }
+  };
 
-  render(): void {
+  render = (): void => {
     this._enemies.forEach((enemy) => enemy.render());
-  }
+  };
 
-  private _despawn(entityId: number): void {
+  private _despawn = (entityId: number): void => {
     this._enemies.splice(entityId, 1);
-  }
+  };
 
-  clearAll(): void {
+  clearAll = (): void => {
     while (this._enemies.length) {
       this._despawn(0);
     }
-  }
+  };
 }
 
 export default EnemyFactory;

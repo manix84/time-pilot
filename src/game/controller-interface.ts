@@ -48,7 +48,7 @@ class ControllerInterface implements ControllerInterfaceInstance {
     this._rotationStep = 360 / player.rotationFrameCount;
   }
 
-  rotateToHeading(desiredHeading: Heading): void {
+  rotateToHeading = (desiredHeading: Heading): void => {
     if (this._menus.isActive()) {
       if (desiredHeading === 0) {
         this._menus.previous();
@@ -63,9 +63,9 @@ class ControllerInterface implements ControllerInterfaceInstance {
     }
 
     this._player.setData("newHeading", this._quantizeHeading(desiredHeading));
-  }
+  };
 
-  rotateClockwise(): void {
+  rotateClockwise = (): void => {
     if (this._menus.isActive()) {
       this._menus.adjust(1);
       return;
@@ -75,9 +75,9 @@ class ControllerInterface implements ControllerInterfaceInstance {
     const desiredHeading = (currentHeading + this._rotationStep) % 360;
 
     this._player.setData("newHeading", this._quantizeHeading(desiredHeading));
-  }
+  };
 
-  rotateAntiClockwise(): void {
+  rotateAntiClockwise = (): void => {
     if (this._menus.isActive()) {
       this._menus.adjust(-1);
       return;
@@ -89,89 +89,89 @@ class ControllerInterface implements ControllerInterfaceInstance {
     desiredHeading = desiredHeading < 0 ? 360 + desiredHeading : desiredHeading;
 
     this._player.setData("newHeading", this._quantizeHeading(desiredHeading));
-  }
+  };
 
-  stop(): void {
+  stop = (): void => {
     this._player.setData("newHeading", false);
-  }
+  };
 
-  toggleMenu(): void {
+  toggleMenu = (): void => {
     if (this._menus.isActive()) {
       this._menus.hide();
     } else {
       this._menus.showStart();
     }
-  }
+  };
 
-  openMenu(): void {
+  openMenu = (): void => {
     this._commands.openMenu();
-  }
+  };
 
-  startShooting(): void {
+  startShooting = (): void => {
     if (this._menus.isActive()) {
       this._menus.activate();
       return;
     }
 
     this._player.startShooting();
-  }
+  };
 
-  stopShooting(): void {
+  stopShooting = (): void => {
     this._player.stopShooting();
-  }
+  };
 
-  toggleFullScreen(): void {
+  toggleFullScreen = (): void => {
     this._gameArena.toggleFullScreen();
-  }
+  };
 
-  togglePause(): void {
+  togglePause = (): void => {
     if (this._menus.isActive()) {
       this._menus.activate();
       return;
     }
 
     this._commands.pause();
-  }
+  };
 
-  restart(): void {
+  restart = (): void => {
     if (this._menus.isActive()) {
       this._menus.activate();
       return;
     }
 
     this._commands.restart();
-  }
+  };
 
-  rotateCounterClockwise(): void {
+  rotateCounterClockwise = (): void => {
     this.rotateAntiClockwise();
-  }
+  };
 
-  rotateRight(): void {
+  rotateRight = (): void => {
     this.rotateClockwise();
-  }
+  };
 
-  rotateLeft(): void {
+  rotateLeft = (): void => {
     this.rotateAntiClockwise();
-  }
+  };
 
-  handlePointer(pointer: MenuPointerData): void {
+  handlePointer = (pointer: MenuPointerData): void => {
     this._menus.handlePointer(pointer);
-  }
+  };
 
-  captureKey(keyCode: number): boolean {
+  captureKey = (keyCode: number): boolean => {
     return this._menus.captureKey(keyCode);
-  }
+  };
 
-  isMenuActive(): boolean {
+  isMenuActive = (): boolean => {
     return this._menus.isActive();
-  }
+  };
 
-  private _quantizeHeading(heading: Heading): Heading {
+  private _quantizeHeading = (heading: Heading): Heading => {
     const quantized =
       Math.round(heading / this._rotationStep) * this._rotationStep;
 
     return (quantized + 360) % 360;
-  }
+  };
 }
 
 export default ControllerInterface;

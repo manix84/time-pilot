@@ -15,17 +15,17 @@ class Mouse implements Controller {
     this.connect();
   }
 
-  connect(): void {
+  connect = (): void => {
     this._canvas.addEventListener("mousedown", this.handlePress);
     this._canvas.addEventListener("mousemove", this.handleMove);
     this._canvas.addEventListener("mouseup", this.handleRelease);
-  }
+  };
 
-  disconnect(): void {
+  disconnect = (): void => {
     this._canvas.removeEventListener("mousedown", this.handlePress);
     this._canvas.removeEventListener("mousemove", this.handleMove);
     this._canvas.removeEventListener("mouseup", this.handleRelease);
-  }
+  };
 
   private handlePress = (event: MouseEvent): void => {
     this._isPressed = true;
@@ -63,7 +63,7 @@ class Mouse implements Controller {
     this._isDragging = false;
   };
 
-  private getCanvasPoint(event: MouseEvent) {
+  private getCanvasPoint = (event: MouseEvent) => {
     const bounds = this._canvas.getBoundingClientRect();
     const scaleX = this._canvas.width / bounds.width;
     const scaleY = this._canvas.height / bounds.height;
@@ -74,7 +74,7 @@ class Mouse implements Controller {
       posY:
         (event.clientY - bounds.top) * scaleY - this._canvas.height / 2,
     };
-  }
+  };
 }
 
 export default Mouse;

@@ -67,24 +67,21 @@ class Bullet implements BulletInstance {
     return undefined;
   }
 
-  setData<K extends keyof BulletData>(
-    key: K,
-    value: BulletData[K]
-  ): boolean {
+  setData = <K extends keyof BulletData>(key: K, value: BulletData[K]): boolean => {
     if (this._data[key] !== undefined) {
       this._data[key] = value;
       return this._data[key] === value;
     }
 
     return false;
-  }
+  };
 
-  setLevel(level: number): boolean {
+  setLevel = (level: number): boolean => {
     this._level = level;
     return this._level === level;
-  }
+  };
 
-  private _checkInArena(): void {
+  private _checkInArena = (): void => {
     if (this.removeMe) {
       return;
     }
@@ -109,9 +106,9 @@ class Bullet implements BulletInstance {
       { posX: this._data.posX, posY: this._data.posY },
       getDespawnRadius(this._gameArena)
     );
-  }
+  };
 
-  reposition(): void {
+  reposition = (): void => {
     const { heading, velocity } = this._data;
 
     this._data.posX += helpers.float(
@@ -122,9 +119,9 @@ class Bullet implements BulletInstance {
     );
 
     this._checkInArena();
-  }
+  };
 
-  render(): void {
+  render = (): void => {
     const { color, size } = this._data;
     const context = this._gameArena.getContext() as CanvasRenderingContext2D;
     const posX =
@@ -175,7 +172,7 @@ class Bullet implements BulletInstance {
         }
       );
     }
-  }
+  };
 }
 
 export default Bullet;

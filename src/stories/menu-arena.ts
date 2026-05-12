@@ -5,10 +5,7 @@ import type {
   SpriteFrame,
 } from "../game/types";
 
-export function createCanvasArena(
-  canvas: HTMLCanvasElement,
-  context: CanvasRenderingContext2D
-): GameArenaInstance {
+export const createCanvasArena = (canvas: HTMLCanvasElement, context: CanvasRenderingContext2D): GameArenaInstance => {
   const arena = {
     width: canvas.width,
     height: canvas.height,
@@ -104,4 +101,4 @@ export function createCanvasArena(
   } satisfies GameArenaInstance;
 
   return arena;
-}
+};

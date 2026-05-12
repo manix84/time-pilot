@@ -15,43 +15,43 @@ class BonusFactory implements BonusFactoryInstance {
     this._context = context;
   }
 
-  create(posX: number, posY: number, type: BonusData["type"] = "parachute"): void {
+  create = (posX: number, posY: number, type: BonusData["type"] = "parachute"): void => {
     this._bonuses.push(new Bonus(this._context, posX, posY, type));
-  }
+  };
 
-  getCount(): number {
+  getCount = (): number => {
     return this._bonuses.length;
-  }
+  };
 
-  getData(): BonusData[] {
+  getData = (): BonusData[] => {
     return this._bonuses.map((bonus) => bonus.getData());
-  }
+  };
 
-  getEntities(): BonusInstance[] {
+  getEntities = (): BonusInstance[] => {
     return [...this._bonuses];
-  }
+  };
 
-  cleanup(): void {
+  cleanup = (): void => {
     this._bonuses = this._bonuses.filter((bonus) => !bonus.removeMe);
-  }
+  };
 
-  reposition(): void {
+  reposition = (): void => {
     this._bonuses.forEach((bonus) => bonus.reposition());
-  }
+  };
 
-  render(): void {
+  render = (): void => {
     this._bonuses.forEach((bonus) => bonus.render());
-  }
+  };
 
-  private _despawn(entityId: number): void {
+  private _despawn = (entityId: number): void => {
     this._bonuses.splice(entityId, 1);
-  }
+  };
 
-  clearAll(): void {
+  clearAll = (): void => {
     while (this._bonuses.length) {
       this._despawn(0);
     }
-  }
+  };
 }
 
 export default BonusFactory;

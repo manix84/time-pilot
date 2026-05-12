@@ -66,11 +66,11 @@ class Bonus implements BonusInstance {
     return undefined;
   }
 
-  private getLevelData(): BonusConfig {
+  private getLevelData = (): BonusConfig => {
     return levels[this._data.level].bonus;
-  }
+  };
 
-  private _checkInArena(): void {
+  private _checkInArena = (): void => {
     if (this.removeMe) {
       return;
     }
@@ -87,13 +87,9 @@ class Bonus implements BonusInstance {
       getDespawnRadius(this._canvas)
     );
     this._data.removeMe = this.removeMe;
-  }
+  };
 
-  detectCollision(
-    objectPosX: number,
-    objectPosY: number,
-    objectHitRadius: number
-  ): boolean {
+  detectCollision = (objectPosX: number, objectPosY: number, objectHitRadius: number): boolean => {
     if (this._collectedScore !== false) {
       return false;
     }
@@ -112,9 +108,9 @@ class Bonus implements BonusInstance {
         radius: levelData.hitRadius,
       }
     );
-  }
+  };
 
-  collect(): void {
+  collect = (): void => {
     if (this.removeMe) {
       return;
     }
@@ -129,9 +125,9 @@ class Bonus implements BonusInstance {
     );
     this._collectedScore = value;
     this._collectedTick = this._gameTicker.getTicks();
-  }
+  };
 
-  reposition(): void {
+  reposition = (): void => {
     if (this._collectedScore !== false) {
       this._checkCollectedPopupDuration();
       return;
@@ -142,9 +138,9 @@ class Bonus implements BonusInstance {
     this._data.posY += levelData.velocity;
 
     this._checkInArena();
-  }
+  };
 
-  render(): void {
+  render = (): void => {
     if (this._collectedScore !== false) {
       this._renderCollectedScore();
       return;
@@ -176,9 +172,9 @@ class Bonus implements BonusInstance {
         }
       );
     }
-  }
+  };
 
-  private _checkCollectedPopupDuration(): void {
+  private _checkCollectedPopupDuration = (): void => {
     if (
       this._collectedTick === false ||
       this._gameTicker.getTicks() - this._collectedTick <
@@ -189,9 +185,9 @@ class Bonus implements BonusInstance {
 
     this.removeMe = true;
     this._data.removeMe = true;
-  }
+  };
 
-  private _renderCollectedScore(): void {
+  private _renderCollectedScore = (): void => {
     this._checkCollectedPopupDuration();
 
     if (this.removeMe || this._collectedScore === false) {
@@ -209,7 +205,7 @@ class Bonus implements BonusInstance {
         valign: "middle",
       }
     );
-  }
+  };
 }
 
 export default Bonus;

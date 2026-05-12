@@ -8,7 +8,7 @@ class RenderingSystem implements RenderingSystemInstance {
     this._context = context;
   }
 
-  renderFrame(): void {
+  renderFrame = (): void => {
     this._context._gameArena.clear();
     this._context._gameArena.setBackgroundColor(
       levels[this._context._level].arena.backgroundColor
@@ -29,9 +29,9 @@ class RenderingSystem implements RenderingSystemInstance {
     this.renderLevelIntroText();
     this.renderDemoLevelFade();
     this._context._menus.render();
-  }
+  };
 
-  private renderLevelIntroText(): void {
+  private renderLevelIntroText = (): void => {
     if (!this.isLevelIntroActive() || this._context._menus.isActive()) {
       return;
     }
@@ -46,16 +46,16 @@ class RenderingSystem implements RenderingSystemInstance {
         valign: "middle",
       }
     );
-  }
+  };
 
-  private isLevelIntroActive(): boolean {
+  private isLevelIntroActive = (): boolean => {
     return (
       !!this._context._levelIntroUntilTick &&
       this._context._gameTicker.getTicks() < this._context._levelIntroUntilTick
     );
-  }
+  };
 
-  private renderDemoLevelFade(): void {
+  private renderDemoLevelFade = (): void => {
     if (
       !this._context._isDemoMode ||
       this._context._demoFadeStartedAtTick === undefined ||
@@ -86,7 +86,7 @@ class RenderingSystem implements RenderingSystemInstance {
       this._context._gameArena.height
     );
     context.restore();
-  }
+  };
 }
 
 export default RenderingSystem;

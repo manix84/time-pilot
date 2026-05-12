@@ -51,11 +51,11 @@ class Prop implements PropInstance {
     return undefined;
   }
 
-  private getLevelData(): PropConfig {
+  private getLevelData = (): PropConfig => {
     return levels[this._data.level].props[this._data.type];
-  }
+  };
 
-  private _checkInArena(): void {
+  private _checkInArena = (): void => {
     const levelData = this.getLevelData();
 
     if (this.removeMe) {
@@ -73,9 +73,9 @@ class Prop implements PropInstance {
       },
       getDespawnRadius(this._gameArena)
     );
-  }
+  };
 
-  reposition(): void {
+  reposition = (): void => {
     const levelData = this.getLevelData();
     const player = this._player.getData();
     const playerVelocity = levels[this._data.level].player.velocity;
@@ -92,9 +92,9 @@ class Prop implements PropInstance {
     );
 
     this._checkInArena();
-  }
+  };
 
-  render(): void {
+  render = (): void => {
     const levelData = this.getLevelData();
     this._gameArena.renderSprite(this._propSprite, {
       frameWidth: levelData.width,
@@ -105,7 +105,7 @@ class Prop implements PropInstance {
       posY:
         this._data.posY - this._player.getData().posY - levelData.height / 2,
     });
-  }
+  };
 }
 
 export default Prop;

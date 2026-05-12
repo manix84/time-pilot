@@ -30,7 +30,7 @@ class SpawningSystem implements SpawningSystemInstance {
     this._context = context;
   }
 
-  addInitialProps(): void {
+  addInitialProps = (): void => {
     const player = this._context._player.getData();
     const halfWidth = this._context._gameArena.width / 2;
     const halfHeight = this._context._gameArena.height / 2;
@@ -52,9 +52,9 @@ class SpawningSystem implements SpawningSystemInstance {
           spawnPadding
       );
     }
-  }
+  };
 
-  spawnEntities(): void {
+  spawnEntities = (): void => {
     if (this.isLevelIntroActive()) {
       return;
     }
@@ -64,16 +64,16 @@ class SpawningSystem implements SpawningSystemInstance {
     this._spawnEnemyBullet();
     this._spawnSpecialBomberBomb();
     this._spawnBonus();
-  }
+  };
 
-  private isLevelIntroActive(): boolean {
+  private isLevelIntroActive = (): boolean => {
     return (
       !!this._context._levelIntroUntilTick &&
       this._context._gameTicker.getTicks() < this._context._levelIntroUntilTick
     );
-  }
+  };
 
-  private _spawnEnemy(): void {
+  private _spawnEnemy = (): void => {
     if (this._spawnBoss()) {
       return;
     }
@@ -108,9 +108,9 @@ class SpawningSystem implements SpawningSystemInstance {
     });
 
     this._context._enemies.create(data.posX, data.posY, heading);
-  }
+  };
 
-  private _spawnBoss(): boolean {
+  private _spawnBoss = (): boolean => {
     const progress = this._context._levelProgress;
 
     if (
@@ -135,9 +135,9 @@ class SpawningSystem implements SpawningSystemInstance {
     progress.bossSpawned = true;
 
     return true;
-  }
+  };
 
-  private _spawnSpecialBomber(): boolean {
+  private _spawnSpecialBomber = (): boolean => {
     const levelData = levels[this._context._level].enemies.specialBomber;
 
     if (!levelData || this._context._level !== 2) {
@@ -174,9 +174,9 @@ class SpawningSystem implements SpawningSystemInstance {
     });
 
     return true;
-  }
+  };
 
-  private _spawnFormation(): boolean {
+  private _spawnFormation = (): boolean => {
     const formation = this._pickFormation();
 
     if (
@@ -224,9 +224,9 @@ class SpawningSystem implements SpawningSystemInstance {
     });
 
     return true;
-  }
+  };
 
-  private _pickFormation(): EnemyFormationConfig | false {
+  private _pickFormation = (): EnemyFormationConfig | false => {
     const formations = levels[this._context._level].enemies.formations;
 
     if (!formations.length) {
@@ -236,13 +236,9 @@ class SpawningSystem implements SpawningSystemInstance {
     const formation = formations[Math.floor(Math.random() * formations.length)];
 
     return Math.random() <= formation.spawnChance ? formation : false;
-  }
+  };
 
-  private _rotateFormationSlot(
-    center: Coordinates,
-    slot: Coordinates,
-    heading: Heading
-  ): Coordinates {
+  private _rotateFormationSlot = (center: Coordinates, slot: Coordinates, heading: Heading): Coordinates => {
     const radians = heading * (Math.PI / 180);
 
     return {
@@ -253,9 +249,9 @@ class SpawningSystem implements SpawningSystemInstance {
         center.posY +
         helpers.float(slot.posX * Math.sin(radians) + slot.posY * Math.cos(radians)),
     };
-  }
+  };
 
-  private _spawnProp(): void {
+  private _spawnProp = (): void => {
     if (this._context._props.getCount() >= this.getPropLimit()) {
       return;
     }
@@ -267,9 +263,9 @@ class SpawningSystem implements SpawningSystemInstance {
       }
     );
     this._context._props.create(data.posX, data.posY);
-  }
+  };
 
-  private _spawnEnemyBullet(): void {
+  private _spawnEnemyBullet = (): void => {
     if (
       this._context._enemyBullets.getCount() >=
         getScaledEntityLimit(
@@ -317,9 +313,9 @@ class SpawningSystem implements SpawningSystemInstance {
     );
     this._enemyShootSound.stop();
     this._enemyShootSound.play();
-  }
+  };
 
-  private _spawnSpecialBomberBomb(): void {
+  private _spawnSpecialBomberBomb = (): void => {
     if (
       this._context._enemyBullets.getCount() >=
         getScaledEntityLimit(
@@ -363,9 +359,9 @@ class SpawningSystem implements SpawningSystemInstance {
       levelData.projectile.sprite ? "sprite" : "circle",
       levelData.projectile.sprite
     );
-  }
+  };
 
-  private _spawnBonus(): void {
+  private _spawnBonus = (): void => {
     if (this._context._bonuses.getCount() >= limits.bonuses) {
       return;
     }
@@ -380,9 +376,9 @@ class SpawningSystem implements SpawningSystemInstance {
 
     const data = this._getBonusSpawnCoords();
     this._context._bonuses.create(data.posX, data.posY);
-  }
+  };
 
-  private _getBonusSpawnCoords(): Coordinates {
+  private _getBonusSpawnCoords = (): Coordinates => {
     const player = this._context._player.getData();
     const halfWidth = this._context._gameArena.width / 2;
     const halfHeight = this._context._gameArena.height / 2;
@@ -407,11 +403,11 @@ class SpawningSystem implements SpawningSystemInstance {
         player.posX - halfWidth + Math.random() * this._context._gameArena.width,
       posY: player.posY - halfHeight - bonusSpawnPadding,
     };
-  }
+  };
 
-  private getPropLimit(): number {
+  private getPropLimit = (): number => {
     return getScaledEntityLimit(limits.props, this._context._gameArena);
-  }
+  };
 }
 
 export default SpawningSystem;

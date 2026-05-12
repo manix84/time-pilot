@@ -6,13 +6,13 @@ import "./storybook.css";
 
 type PaletteGroup = Record<string, string>;
 
-function toTitleCase(value: string): string {
+const toTitleCase = (value: string): string => {
   return value
     .replace(/([A-Z])/g, " $1")
     .replace(/^./, (letter) => letter.toUpperCase());
-}
+};
 
-function PaletteStory() {
+const PaletteStory = () => {
   const [shieldColor, setShieldColor] = useState<string>(
     palette.aircraft.playerShield
   );
@@ -67,7 +67,7 @@ function PaletteStory() {
       </section>
     </main>
   );
-}
+};
 
 const meta = {
   title: "Design System/Palette",

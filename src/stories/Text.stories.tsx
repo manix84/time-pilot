@@ -5,23 +5,15 @@ import { CanvasDemo } from "./canvas-demo";
 import { drawLabel } from "./canvas-label";
 import "./storybook.css";
 
-function drawGameText(
-  context: CanvasRenderingContext2D,
-  message: string,
-  x: number,
-  y: number,
-  size: number,
-  color: string,
-  align: CanvasTextAlign = "left"
-): void {
+const drawGameText = (context: CanvasRenderingContext2D, message: string, x: number, y: number, size: number, color: string, align: CanvasTextAlign = "left"): void => {
   context.fillStyle = color;
   context.font = `${size}px theFont, Trebuchet MS, Segoe UI, sans-serif`;
   context.textAlign = align;
   context.textBaseline = "middle";
   context.fillText(message, x, y);
-}
+};
 
-function TextSamples() {
+const TextSamples = () => {
   const draw = useCallback((context: CanvasRenderingContext2D) => {
     context.fillStyle = "#06101d";
     context.fillRect(0, 0, 560, 360);
@@ -52,7 +44,7 @@ function TextSamples() {
       </section>
     </main>
   );
-}
+};
 
 const meta = {
   title: "Design System/Text",

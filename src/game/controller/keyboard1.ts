@@ -21,7 +21,7 @@ class Keyboard1 implements Controller {
     this.connect();
   }
 
-  connect(): void {
+  connect = (): void => {
     helpers.bind(
       "keydown",
       (event: KeyboardEvent) => {
@@ -140,14 +140,14 @@ class Keyboard1 implements Controller {
         }
       },
     );
-  }
+  };
 
-  disconnect(): void {
+  disconnect = (): void => {
     helpers.unbind("keydown");
     helpers.unbind("keyup");
-  }
+  };
 
-  private _setInputState(key: ControlInputName, isPressed: boolean): void {
+  private _setInputState = (key: ControlInputName, isPressed: boolean): void => {
     if (this._inputState) {
       if (isPressed) {
         this._inputState.activeController = "keyboard";
@@ -155,9 +155,9 @@ class Keyboard1 implements Controller {
 
       this._inputState[key] = isPressed;
     }
-  }
+  };
 
-  private _setReleasedDirection(keyCode: number): void {
+  private _setReleasedDirection = (keyCode: number): void => {
     const bindings = userOptions.keyboardBindings;
 
     if (bindings.left.includes(keyCode)) {
@@ -175,18 +175,18 @@ class Keyboard1 implements Controller {
     if (bindings.down.includes(keyCode)) {
       this._setInputState("down", false);
     }
-  }
+  };
 
-  private _hasDirectionalInput(): boolean {
+  private _hasDirectionalInput = (): boolean => {
     return !!(
       this._inputState?.left ||
       this._inputState?.up ||
       this._inputState?.right ||
       this._inputState?.down
     );
-  }
+  };
 
-  private _applyDirectionalHeading(): void {
+  private _applyDirectionalHeading = (): void => {
     if (!this._inputState) {
       return;
     }
@@ -207,7 +207,7 @@ class Keyboard1 implements Controller {
         posY: -axisY,
       })
     );
-  }
+  };
 }
 
 export default Keyboard1;

@@ -7,7 +7,7 @@ import TouchController from "../touch";
 import type { ControlInputState, ControllerInterfaceInstance } from "../../types";
 import userOptions from "../../user-options";
 
-function createControls(): ControllerInterfaceInstance {
+const createControls = (): ControllerInterfaceInstance => {
   return {
     rotateToHeading: vi.fn(),
     rotateClockwise: vi.fn(),
@@ -26,9 +26,9 @@ function createControls(): ControllerInterfaceInstance {
     handlePointer: vi.fn(),
     isMenuActive: vi.fn(() => false),
   };
-}
+};
 
-function createInputState(): ControlInputState {
+const createInputState = (): ControlInputState => {
   return {
     down: false,
     fire: false,
@@ -40,13 +40,9 @@ function createInputState(): ControlInputState {
     up: false,
     activeController: "keyboard",
   };
-}
+};
 
-function dispatchTouch(
-  canvas: HTMLCanvasElement,
-  type: string,
-  touch: { clientX: number; clientY: number; identifier?: number }
-): void {
+const dispatchTouch = (canvas: HTMLCanvasElement, type: string, touch: { clientX: number; clientY: number; identifier?: number }): void => {
   const event = new Event(type, { bubbles: true, cancelable: true });
 
   Object.defineProperty(event, "changedTouches", {
@@ -60,7 +56,7 @@ function dispatchTouch(
   });
 
   canvas.dispatchEvent(event);
-}
+};
 
 describe("controller modules", () => {
   beforeEach(() => {

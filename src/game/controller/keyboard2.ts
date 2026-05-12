@@ -21,7 +21,7 @@ class Keyboard2 implements Controller {
     this.connect();
   }
 
-  connect(): void {
+  connect = (): void => {
     helpers.bind(
       "keydown",
       (event: KeyboardEvent) => {
@@ -127,14 +127,14 @@ class Keyboard2 implements Controller {
         }
       },
     );
-  }
+  };
 
-  disconnect(): void {
+  disconnect = (): void => {
     helpers.unbind("keydown");
     helpers.unbind("keyup");
-  }
+  };
 
-  private _setInputState(key: ControlInputName, isPressed: boolean): void {
+  private _setInputState = (key: ControlInputName, isPressed: boolean): void => {
     if (this._inputState) {
       if (isPressed) {
         this._inputState.activeController = "keyboard";
@@ -142,7 +142,7 @@ class Keyboard2 implements Controller {
 
       this._inputState[key] = isPressed;
     }
-  }
+  };
 }
 
 export default Keyboard2;

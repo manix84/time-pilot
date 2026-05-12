@@ -20,18 +20,7 @@ class BulletFactory implements BulletFactoryInstance {
     this._bulletSound = new SoundEngine(player.projectile.sound.src);
   }
 
-  create(
-    originX: number,
-    originY: number,
-    heading: Heading,
-    size: number,
-    velocity: number,
-    color: string,
-    playSound = true,
-    coordinateSpace: BulletData["coordinateSpace"] = "screen",
-    shape: BulletData["shape"] = "square",
-    sprite?: BulletData["sprite"]
-  ): void {
+  create = (originX: number, originY: number, heading: Heading, size: number, velocity: number, color: string, playSound = true, coordinateSpace: BulletData["coordinateSpace"] = "screen", shape: BulletData["shape"] = "square", sprite?: BulletData["sprite"]): void => {
     this._bullets.push(
       new Bullet(
         this._context,
@@ -51,41 +40,41 @@ class BulletFactory implements BulletFactoryInstance {
       this._bulletSound.stop();
       this._bulletSound.play();
     }
-  }
+  };
 
-  getCount(): number {
+  getCount = (): number => {
     return this._bullets.length;
-  }
+  };
 
-  getData(): BulletData[] {
+  getData = (): BulletData[] => {
     return this._bullets.map((bullet) => bullet.getData() as BulletData);
-  }
+  };
 
-  getEntities(): BulletInstance[] {
+  getEntities = (): BulletInstance[] => {
     return [...this._bullets];
-  }
+  };
 
-  cleanup(): void {
+  cleanup = (): void => {
     this._bullets = this._bullets.filter((bullet) => !bullet.removeMe);
-  }
+  };
 
-  reposition(): void {
+  reposition = (): void => {
     this._bullets.forEach((bullet) => bullet.reposition());
-  }
+  };
 
-  render(): void {
+  render = (): void => {
     this._bullets.forEach((bullet) => bullet.render());
-  }
+  };
 
-  private _despawn(entityId: number): void {
+  private _despawn = (entityId: number): void => {
     this._bullets.splice(entityId, 1);
-  }
+  };
 
-  clearAll(): void {
+  clearAll = (): void => {
     while (this._bullets.length) {
       this._despawn(0);
     }
-  }
+  };
 }
 
 export default BulletFactory;

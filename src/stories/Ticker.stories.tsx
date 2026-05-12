@@ -4,7 +4,7 @@ import Ticker from "../game/engine/Ticker";
 import palette from "../game/palette";
 import "./storybook.css";
 
-function GeneralTickerDemo() {
+const GeneralTickerDemo = () => {
   const [counts, setCounts] = useState({
     everyFrame: 0,
     everyFiveFrames: 0,
@@ -51,9 +51,9 @@ function GeneralTickerDemo() {
       </div>
     </article>
   );
-}
+};
 
-function RenderTickerDemo() {
+const RenderTickerDemo = () => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [frame, setFrame] = useState(0);
 
@@ -112,9 +112,9 @@ function RenderTickerDemo() {
       <p>Render frame: {frame}</p>
     </article>
   );
-}
+};
 
-function TickerStories() {
+const TickerStories = () => {
   return (
     <main className={"storybook-surface"}>
       <section className={"storybook-section"}>
@@ -127,7 +127,7 @@ function TickerStories() {
       </section>
     </main>
   );
-}
+};
 
 const meta = {
   title: "Engine/Ticker",

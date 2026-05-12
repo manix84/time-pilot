@@ -76,11 +76,7 @@ class Player implements PlayerInstance {
     return undefined;
   }
 
-  setData<K extends keyof PlayerData>(
-    key: K,
-    value: PlayerData[K],
-    isLastKnownGood?: boolean
-  ): boolean {
+  setData = <K extends keyof PlayerData>(key: K, value: PlayerData[K], isLastKnownGood?: boolean): boolean => {
     if (this._data[key] !== undefined) {
       this._data[key] = value;
       if (isLastKnownGood) {
@@ -90,17 +86,17 @@ class Player implements PlayerInstance {
     }
 
     return false;
-  }
+  };
 
-  resetData(): void {
+  resetData = (): void => {
     this._data = helpers.cloneObject(this._dataDefaults);
-  }
+  };
 
-  private getLevelData(): LevelConfig["player"] {
+  private getLevelData = (): LevelConfig["player"] => {
     return levels[this._data.level].player;
-  }
+  };
 
-  reposition(): void {
+  reposition = (): void => {
     const { heading } = this._data;
     const velocity = this.getLevelData().velocity ?? 0;
 
@@ -112,9 +108,9 @@ class Player implements PlayerInstance {
     );
 
     this._gameArena.updatePosition(this._data.posX, this._data.posY);
-  }
+  };
 
-  rotate(): void {
+  rotate = (): void => {
     if (this._data.isAlive && this._data.newHeading !== false) {
       this._data.heading = helpers.rotateTo(
         this._data.newHeading,
@@ -122,17 +118,17 @@ class Player implements PlayerInstance {
         this._rotationStep
       );
     }
-  }
+  };
 
-  startShooting(): void {
+  startShooting = (): void => {
     this._data.isShooting = true;
-  }
+  };
 
-  stopShooting(): void {
+  stopShooting = (): void => {
     this._data.isShooting = false;
-  }
+  };
 
-  shoot(): void {
+  shoot = (): void => {
     if (this._data.isAlive && this._data.isShooting) {
       this._bulletFactory.create(
         0,
@@ -143,9 +139,9 @@ class Player implements PlayerInstance {
         playerConst.projectile.color
       );
     }
-  }
+  };
 
-  private _renderPlayerExplosion(): void {
+  private _renderPlayerExplosion = (): void => {
     if (this._data.deathTick === false) {
       return;
     }
@@ -172,9 +168,9 @@ class Player implements PlayerInstance {
         this._data.removeMe = true;
       }
     }
-  }
+  };
 
-  render(): void {
+  render = (): void => {
     let color: string = palette.aircraft.playerShield;
 
     if (!this._data.deathTick && this._data.isAlive) {
@@ -206,9 +202,9 @@ class Player implements PlayerInstance {
         borderColor: color,
       });
     }
-  }
+  };
 
-  kill(): void {
+  kill = (): void => {
     if (userOptions.enableDebug && userOptions.debug.invincible) {
       return;
     }
@@ -224,9 +220,9 @@ class Player implements PlayerInstance {
     this._data.deathTick = this._gameTicker.getTicks();
     this._explosionSound.stop();
     this._explosionSound.play();
-  }
+  };
 
-  private _respawnAtLevelStart(): void {
+  private _respawnAtLevelStart = (): void => {
     this._data.isAlive = true;
     this._data.deathTick = false;
     this._data.isShooting = false;
@@ -238,7 +234,7 @@ class Player implements PlayerInstance {
     this._bulletFactory.clearAll();
     this._enemyBulletFactory.clearAll();
     this._gameArena.updatePosition(this._data.posX, this._data.posY);
-  }
+  };
 }
 
 export default Player;
