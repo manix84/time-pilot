@@ -1,5 +1,5 @@
 /* Converted from TimePilot.Prop.js (AMD) to ESM TypeScript. */
-import CONSTS from "./constants";
+import { levels } from "./constants";
 import helpers from "./engine/helpers";
 import { getDespawnRadius } from "./viewport";
 import type {
@@ -24,13 +24,13 @@ class Prop implements PropInstance {
     this._player = context._player;
 
     const level = 1;
-    const type = Math.floor(Math.random() * CONSTS.levels[level].props.length);
+    const type = Math.floor(Math.random() * levels[level].props.length);
     this._data = {
       posX,
       posY,
       level,
       type,
-      layer: CONSTS.levels[level].props[type].layer,
+      layer: levels[level].props[type].layer,
     };
 
     this._propSprite = new Image();
@@ -52,7 +52,7 @@ class Prop implements PropInstance {
   }
 
   private getLevelData(): PropConfig {
-    return CONSTS.levels[this._data.level].props[this._data.type];
+    return levels[this._data.level].props[this._data.type];
   }
 
   private _checkInArena(): void {
@@ -78,7 +78,7 @@ class Prop implements PropInstance {
   reposition(): void {
     const levelData = this.getLevelData();
     const player = this._player.getData();
-    const playerVelocity = CONSTS.levels[this._data.level].player.velocity;
+    const playerVelocity = levels[this._data.level].player.velocity;
     const heading = levelData.reversed
       ? (player.heading + 180) % 360
       : player.heading;

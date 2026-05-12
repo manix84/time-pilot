@@ -1,5 +1,5 @@
 /* Converted from TimePilot.Hud.js (AMD) to ESM TypeScript. */
-import CONSTS from "./constants";
+import { player } from "./constants";
 import palette from "./palette";
 import userOptions from "./user-options";
 import type {
@@ -11,8 +11,8 @@ import type {
 } from "./types";
 
 const upFacingPlayerFrame =
-  Math.round(((0 + 270) % 360) / (360 / CONSTS.player.rotationFrameCount)) %
-  CONSTS.player.rotationFrameCount;
+  Math.round(((0 + 270) % 360) / (360 / player.rotationFrameCount)) %
+  player.rotationFrameCount;
 
 class Hud implements HudInstance {
   private _context: GameDataStore;
@@ -24,9 +24,9 @@ class Hud implements HudInstance {
     this._gameArena = context._gameArena;
 
     this._playerSprite = new Image() as SpriteImage;
-    this._playerSprite.src = CONSTS.player.sprite.src;
-    this._playerSprite.frameWidth = CONSTS.player.frameWidth;
-    this._playerSprite.frameHeight = CONSTS.player.frameHeight;
+    this._playerSprite.src = player.sprite.src;
+    this._playerSprite.frameWidth = player.frameWidth;
+    this._playerSprite.frameHeight = player.frameHeight;
     this._playerSprite.frameX = upFacingPlayerFrame;
     this._playerSprite.frameY = 0;
   }
@@ -92,16 +92,16 @@ class Hud implements HudInstance {
 
     for (let i = 0; i < playerData.lives; ++i) {
       this._gameArena.renderSprite(this._playerSprite, {
-        frameWidth: this._playerSprite.frameWidth ?? CONSTS.player.frameWidth,
-        frameHeight: this._playerSprite.frameHeight ?? CONSTS.player.frameHeight,
+        frameWidth: this._playerSprite.frameWidth ?? player.frameWidth,
+        frameHeight: this._playerSprite.frameHeight ?? player.frameHeight,
         frameX: this._playerSprite.frameX ?? 0,
         frameY: this._playerSprite.frameY ?? 0,
-        renderWidth: CONSTS.player.width,
-        renderHeight: CONSTS.player.height,
+        renderWidth: player.width,
+        renderHeight: player.height,
         posX:
           this._gameArena.width / 2 -
-          CONSTS.player.width -
-          (CONSTS.player.width + 10) * i -
+          player.width -
+          (player.width + 10) * i -
           10,
         posY: -(this._gameArena.height / 2 - 10),
       });

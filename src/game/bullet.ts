@@ -1,5 +1,4 @@
 /* Converted from TimePilot.Bullet.js (AMD) to ESM TypeScript. */
-import CONSTS from "./constants";
 import userOptions from "./user-options";
 import helpers from "./engine/helpers";
 import palette from "./palette";

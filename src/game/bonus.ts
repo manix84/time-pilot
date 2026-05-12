@@ -1,5 +1,5 @@
 /* Converted from TimePilot.Bonus.js (AMD) to ESM TypeScript. */
-import CONSTS from "./constants";
+import { levels, scoring } from "./constants";
 import helpers from "./engine/helpers";
 import palette from "./palette";
 import userOptions from "./user-options";
@@ -67,7 +67,7 @@ class Bonus implements BonusInstance {
   }
 
   private getLevelData(): BonusConfig {
-    return CONSTS.levels[this._data.level].bonus;
+    return levels[this._data.level].bonus;
   }
 
   private _checkInArena(): void {
@@ -119,13 +119,13 @@ class Bonus implements BonusInstance {
       return;
     }
 
-    const scoring = CONSTS.scoring.parachute;
-    const value = this._context._nextParachuteScore ?? scoring.min;
+    const parachuteScoring = scoring.parachute;
+    const value = this._context._nextParachuteScore ?? parachuteScoring.min;
 
     this._player.setData("score", this._player.getData("score") + value);
     this._context._nextParachuteScore = Math.min(
-      value + scoring.step,
-      scoring.max
+      value + parachuteScoring.step,
+      parachuteScoring.max
     );
     this._collectedScore = value;
     this._collectedTick = this._gameTicker.getTicks();

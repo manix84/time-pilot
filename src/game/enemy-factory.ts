@@ -1,5 +1,5 @@
 /* Converted from TimePilot.EnemyFactory.js (AMD) to ESM TypeScript. */
-import CONSTS from "./constants";
+import { levels } from "./constants";
 import Enemy from "./enemy";
 import { getScaledEntityLimit } from "./viewport";
 import type {
@@ -32,7 +32,7 @@ class EnemyFactory implements EnemyFactoryInstance {
   getLevelData(): EnemyConfig;
   getLevelData<K extends keyof EnemyConfig>(key: K): EnemyConfig[K] | undefined;
   getLevelData<K extends keyof EnemyConfig>(key?: K) {
-    const data = CONSTS.levels[this._context._level].enemies.basic;
+    const data = levels[this._context._level].enemies.basic;
 
     if (key) {
       return data[key];

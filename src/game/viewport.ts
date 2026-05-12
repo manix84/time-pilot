@@ -1,4 +1,4 @@
-import CONSTS from "./constants";
+import { limits } from "./constants";
 import type { GameArenaInstance } from "./types";
 
 const spawnPadding = 96;
@@ -14,7 +14,7 @@ export function getSpawnRadius(
   gameArena: Pick<GameArenaInstance, "height" | "width">
 ): number {
   return Math.max(
-    CONSTS.limits.spawningRadius,
+    limits.spawningRadius,
     getViewportRadius(gameArena) + spawnPadding
   );
 }
@@ -36,7 +36,7 @@ export function getDespawnRadius(
   gameArena: Pick<GameArenaInstance, "height" | "width">
 ): number {
   return Math.max(
-    CONSTS.limits.despawnRadius,
+    limits.despawnRadius,
     getViewportRadius(gameArena) + despawnPadding
   );
 }

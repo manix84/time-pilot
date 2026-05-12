@@ -1,4 +1,4 @@
-import CONSTS from "../constants";
+import { levels, limits, sounds } from "../constants";
 import SoundEngine from "../engine/Sound";
 import helpers from "../engine/helpers";
 import type {
@@ -23,8 +23,8 @@ let nextFormationId = 1;
 
 class SpawningSystem implements SpawningSystemInstance {
   private _context: GameDataStore;
-  private _enemyShootSound = new SoundEngine(CONSTS.sounds.enemyShoot.src);
-  private _waveStartSound = new SoundEngine(CONSTS.sounds.waveStart.src);
+  private _enemyShootSound = new SoundEngine(sounds.enemyShoot.src);
+  private _waveStartSound = new SoundEngine(sounds.waveStart.src);
 
   constructor(context: GameDataStore) {
     this._context = context;
@@ -138,7 +138,7 @@ class SpawningSystem implements SpawningSystemInstance {
   }
 
   private _spawnSpecialBomber(): boolean {
-    const levelData = CONSTS.levels[this._context._level].enemies.specialBomber;
+    const levelData = levels[this._context._level].enemies.specialBomber;
 
     if (!levelData || this._context._level !== 2) {
       return false;
@@ -183,7 +183,7 @@ class SpawningSystem implements SpawningSystemInstance {
       !formation ||
       this._context._enemies.getCount() + formation.slots.length >
         getScaledEntityLimit(
-          CONSTS.levels[this._context._level].enemies.basic.spawnLimit,
+          levels[this._context._level].enemies.basic.spawnLimit,
           this._context._gameArena
         )
     ) {
@@ -227,7 +227,7 @@ class SpawningSystem implements SpawningSystemInstance {
   }
 
   private _pickFormation(): EnemyFormationConfig | false {
-    const formations = CONSTS.levels[this._context._level].enemies.formations;
+    const formations = levels[this._context._level].enemies.formations;
 
     if (!formations.length) {
       return false;
@@ -273,7 +273,7 @@ class SpawningSystem implements SpawningSystemInstance {
     if (
       this._context._enemyBullets.getCount() >=
         getScaledEntityLimit(
-          CONSTS.limits.enemyBullets,
+          limits.enemyBullets,
           this._context._gameArena
         ) ||
       this._context._gameTicker.getTicks() % enemyFireIntervalTicks !== 0
@@ -281,7 +281,7 @@ class SpawningSystem implements SpawningSystemInstance {
       return;
     }
 
-    const levelData = CONSTS.levels[this._context._level].enemies.basic;
+    const levelData = levels[this._context._level].enemies.basic;
 
     if (Math.random() > levelData.firingChance) {
       return;
@@ -323,7 +323,7 @@ class SpawningSystem implements SpawningSystemInstance {
     if (
       this._context._enemyBullets.getCount() >=
         getScaledEntityLimit(
-          CONSTS.limits.enemyBullets,
+          limits.enemyBullets,
           this._context._gameArena
         ) ||
       this._context._gameTicker.getTicks() % specialBomberBombIntervalTicks !==
@@ -345,7 +345,7 @@ class SpawningSystem implements SpawningSystemInstance {
     }
 
     const bomberData = bomber.getData() as EnemyData;
-    const levelData = CONSTS.levels[this._context._level].enemies.specialBomber;
+    const levelData = levels[this._context._level].enemies.specialBomber;
 
     if (!levelData) {
       return;
@@ -366,7 +366,7 @@ class SpawningSystem implements SpawningSystemInstance {
   }
 
   private _spawnBonus(): void {
-    if (this._context._bonuses.getCount() >= CONSTS.limits.bonuses) {
+    if (this._context._bonuses.getCount() >= limits.bonuses) {
       return;
     }
 
@@ -410,7 +410,7 @@ class SpawningSystem implements SpawningSystemInstance {
   }
 
   private getPropLimit(): number {
-    return getScaledEntityLimit(CONSTS.limits.props, this._context._gameArena);
+    return getScaledEntityLimit(limits.props, this._context._gameArena);
   }
 }
 

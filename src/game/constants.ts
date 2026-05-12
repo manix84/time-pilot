@@ -488,7 +488,7 @@ const futureLevelFormations: Record<number, EnemyFormationConfig[]> = {
   ],
 };
 
-var CONSTS: TimePilotConstants = {
+const timePilotConstants: TimePilotConstants = {
   player: {
     sprite: {
       src: assetPath("sprites/player/player.png"),
@@ -715,4 +715,6 @@ var CONSTS: TimePilotConstants = {
   },
 };
 
-export default CONSTS;
+export const { player, sounds, limits, levels } = timePilotConstants;
+export { scoring };
+export default timePilotConstants;

@@ -1,5 +1,5 @@
 /* Converted from TimePilot.Player.js (AMD) to ESM TypeScript. */
-import CONSTS from "./constants";
+import { levels, player } from "./constants";
 import userOptions from "./user-options";
 import SoundEngine from "./engine/Sound";
 import helpers from "./engine/helpers";
@@ -15,7 +15,7 @@ import type {
   TickerInstance,
 } from "./types";
 
-const playerConst = CONSTS.player;
+const playerConst = player;
 
 class Player implements PlayerInstance {
   private _bulletFactory: BulletFactoryInstance;
@@ -97,7 +97,7 @@ class Player implements PlayerInstance {
   }
 
   private getLevelData(): LevelConfig["player"] {
-    return CONSTS.levels[this._data.level].player;
+    return levels[this._data.level].player;
   }
 
   reposition(): void {

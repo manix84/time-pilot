@@ -1,5 +1,5 @@
 /* Converted from TimePilot.ControllerInterface.js (AMD) to ESM TypeScript. */
-import CONSTS from "./constants";
+import { player } from "./constants";
 import type {
   ControllerCommands,
   ControllerInterfaceInstance,
@@ -45,7 +45,7 @@ class ControllerInterface implements ControllerInterfaceInstance {
       pause: commands.pause || (() => {}),
     };
 
-    this._rotationStep = 360 / CONSTS.player.rotationFrameCount;
+    this._rotationStep = 360 / player.rotationFrameCount;
   }
 
   rotateToHeading(desiredHeading: Heading): void {

@@ -1,4 +1,4 @@
-import CONSTS from "../constants";
+import { levels } from "../constants";
 import type { GameDataStore, RenderingSystemInstance } from "../types";
 
 class RenderingSystem implements RenderingSystemInstance {
@@ -11,7 +11,7 @@ class RenderingSystem implements RenderingSystemInstance {
   renderFrame(): void {
     this._context._gameArena.clear();
     this._context._gameArena.setBackgroundColor(
-      CONSTS.levels[this._context._level].arena.backgroundColor
+      levels[this._context._level].arena.backgroundColor
     );
 
     this._context._props.render(1);
@@ -37,7 +37,7 @@ class RenderingSystem implements RenderingSystemInstance {
     }
 
     this._context._gameArena.renderText(
-      CONSTS.levels[this._context._level].arena.introText,
+      levels[this._context._level].arena.introText,
       0,
       44,
       {

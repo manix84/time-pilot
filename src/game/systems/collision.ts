@@ -1,4 +1,4 @@
-import CONSTS from "../constants";
+import { levels, player } from "../constants";
 import SoundEngine from "../engine/Sound";
 import helpers from "../engine/helpers";
 import type { BulletData, CollisionSystemInstance, GameDataStore } from "../types";
@@ -10,7 +10,7 @@ class CollisionSystem implements CollisionSystemInstance {
   constructor(context: GameDataStore) {
     this._context = context;
     this._explosionSound = new SoundEngine(
-      CONSTS.levels[context._level].enemies.basic.explosion.sound.src
+      levels[context._level].enemies.basic.explosion.sound.src
     );
   }
 
@@ -43,7 +43,7 @@ class CollisionSystem implements CollisionSystemInstance {
             {
               posX: playerData.posX,
               posY: playerData.posY,
-              radius: CONSTS.player.hitRadius,
+              radius: player.hitRadius,
             }
           )
         ) {
@@ -66,7 +66,7 @@ class CollisionSystem implements CollisionSystemInstance {
         bonus.detectCollision(
           playerData.posX,
           playerData.posY,
-          CONSTS.player.hitRadius
+          player.hitRadius
         )
       ) {
         bonus.collect();
@@ -83,7 +83,7 @@ class CollisionSystem implements CollisionSystemInstance {
         enemy.detectCollision(
           playerData.posX,
           playerData.posY,
-          CONSTS.player.hitRadius
+          player.hitRadius
         )
       ) {
         enemy.kill();

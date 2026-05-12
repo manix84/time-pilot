@@ -17,7 +17,7 @@ import CollisionSystem from "./systems/collision";
 import RenderingSystem from "./systems/rendering";
 import SpawningSystem from "./systems/spawning";
 import { assetPath } from "./asset-path";
-import CONSTS from "./constants";
+import { levels, limits, player, scoring, sounds } from "./constants";
 import SoundEngine from "./engine/Sound";
 import userOptions from "./user-options";
 import type {
@@ -46,7 +46,7 @@ const levelIntroDurationFrames = Math.max(
   1,
   Math.round((LEVEL_INTRO_DURATION_MS / 1000) * gameFps)
 );
-const playerRotationStep = 360 / CONSTS.player.rotationFrameCount;
+const playerRotationStep = 360 / player.rotationFrameCount;
 
 export interface TimePilotOptions {
   controllerType?: ControllerType;
@@ -63,12 +63,12 @@ export class TimePilot {
   private hasStartedGame = false;
   private isDestroyed = false;
   private isDemoMode = false;
-  private readonly coinDropSound = new SoundEngine(CONSTS.sounds.coinDrop.src);
-  private readonly gameStartSound = new SoundEngine(CONSTS.sounds.gameStart.src);
-  private readonly nextLevelSound = new SoundEngine(CONSTS.sounds.nextLevel.src);
+  private readonly coinDropSound = new SoundEngine(sounds.coinDrop.src);
+  private readonly gameStartSound = new SoundEngine(sounds.gameStart.src);
+  private readonly nextLevelSound = new SoundEngine(sounds.nextLevel.src);
   private renderingSystem!: RenderingSystemInstance;
   private spawningSystem!: SpawningSystemInstance;
-  private readonly timeWarpSound = new SoundEngine(CONSTS.sounds.timeWarp.src);
+  private readonly timeWarpSound = new SoundEngine(sounds.timeWarp.src);
 
   constructor(element: HTMLElement, options: TimePilotOptions = {}) {
     this.container = element;
@@ -164,7 +164,7 @@ export class TimePilot {
     this.context._demoFadeUntilTick = 0;
     this.context._isDemoMode = false;
     this.context._levelIntroUntilTick = 0;
-    this.context._nextParachuteScore = CONSTS.scoring.parachute.min;
+    this.context._nextParachuteScore = scoring.parachute.min;
     this.context._gameArena = new GameArena(this.container);
     this.context._renderTicker = new Ticker();
     this.context._gameTicker = new Ticker({ fps: 30 });
@@ -458,7 +458,7 @@ export class TimePilot {
     this.context._enemyBullets.clearAll();
     this.context._props.clearAll();
     this.context._bonuses.clearAll();
-    this.context._nextParachuteScore = CONSTS.scoring.parachute.min;
+    this.context._nextParachuteScore = scoring.parachute.min;
     this.context._player.resetData();
     this.context._player.setData("level", level);
     this.context._player.setData("isAlive", true);
@@ -495,18 +495,18 @@ export class TimePilot {
     return {
       bossDefeated: false,
       bossKillThreshold:
-        CONSTS.limits.bossKillThresholdBase +
-        (level - 1) * CONSTS.limits.bossKillThresholdIncrementPerLevel,
+        limits.bossKillThresholdBase +
+        (level - 1) * limits.bossKillThresholdIncrementPerLevel,
       bossSpawned: false,
       standardEnemyKills: 0,
     };
   }
 
   private getNextEnabledLevel(): number {
-    const levelNumbers = Object.keys(CONSTS.levels)
+    const levelNumbers = Object.keys(levels)
       .map(Number)
       .sort((a, b) => a - b)
-      .filter((level) => CONSTS.levels[level].enabled);
+      .filter((level) => levels[level].enabled);
     const currentIndex = levelNumbers.indexOf(this.context._level);
 
     if (currentIndex === -1 || levelNumbers.length === 0) {
@@ -517,9 +517,9 @@ export class TimePilot {
   }
 
   private getRandomDemoLevel(): number {
-    const levelNumbers = Object.keys(CONSTS.levels)
+    const levelNumbers = Object.keys(levels)
       .map(Number)
-      .filter((level) => CONSTS.levels[level].enabled);
+      .filter((level) => levels[level].enabled);
 
     if (levelNumbers.length <= 1) {
       return levelNumbers[0] ?? 1;

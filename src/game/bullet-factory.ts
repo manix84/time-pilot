@@ -1,6 +1,6 @@
 /* Converted from TimePilot.BulletFactory.js (AMD) to ESM TypeScript. */
 import Bullet from "./bullet";
-import CONSTS from "./constants";
+import { player } from "./constants";
 import SoundEngine from "./engine/Sound";
 import type {
   BulletData,
@@ -17,7 +17,7 @@ class BulletFactory implements BulletFactoryInstance {
 
   constructor(context: GameDataStore) {
     this._context = context;
-    this._bulletSound = new SoundEngine(CONSTS.player.projectile.sound.src);
+    this._bulletSound = new SoundEngine(player.projectile.sound.src);
   }
 
   create(

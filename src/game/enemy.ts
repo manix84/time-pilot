@@ -1,5 +1,5 @@
 /* Converted from TimePilot.Enemy.js (AMD) to ESM TypeScript. */
-import CONSTS from "./constants";
+import { levels, scoring } from "./constants";
 import userOptions from "./user-options";
 import helpers from "./engine/helpers";
 import palette from "./palette";
@@ -83,7 +83,7 @@ class Enemy implements EnemyInstance {
   getLevelData<K extends keyof EnemyConfig>(key: K): EnemyConfig[K] | undefined;
   getLevelData<K extends keyof EnemyConfig>(key?: K) {
     const enemyType = this._data.type ?? "basic";
-    const levelEnemies = CONSTS.levels[this._data.level].enemies;
+    const levelEnemies = levels[this._data.level].enemies;
     const levelData = levelEnemies[enemyType] ?? levelEnemies.basic;
 
     if (!key) {
@@ -344,7 +344,7 @@ class Enemy implements EnemyInstance {
     formation.awarded = true;
     this._player.setData(
       "score",
-      this._player.getData("score") + CONSTS.scoring.formationBonus
+      this._player.getData("score") + scoring.formationBonus
     );
   }
 }
