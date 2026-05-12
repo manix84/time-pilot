@@ -1,0 +1,60 @@
+import type en from "./en";
+
+const de: typeof en = {
+  language: {
+    code: "de",
+    name: "Deutsch",
+  },
+  title: "TIME PILOT",
+  hud: {
+    gameOver: "Spiel vorbei",
+    paused: "Pausiert",
+    pressPauseToContinue: 'Druecke "P" zum Fortsetzen',
+    pressRestartToReset: 'Druecke "R" zum Neustart',
+    restarting: "Neustart",
+  },
+  keys: {
+    down: "Runter",
+    left: "Links",
+    right: "Rechts",
+    space: "Leertaste",
+    up: "Hoch",
+  },
+  levels: {
+    1: { introText: "A.D 1910" },
+    2: { introText: "A.D 1940" },
+    3: { introText: "A.D 1970" },
+    4: { introText: "A.D 1982" },
+    5: { introText: "A.D 2001" },
+  },
+  menu: {
+    alreadyAssignedTo: (binding: string) => `Bereits ${binding} zugewiesen`,
+    back: "Zurueck",
+    continue: "Weiter",
+    controlType: "Steuerung",
+    current: "Ausgewaehlt",
+    controls: "Tasten",
+    debug: "Debug",
+    directional: "Richtung",
+    effectsVolume: "Effektlautstaerke",
+    fire: "Feuer",
+    invincibilityShield: "Unverwundbarkeit",
+    language: "Sprache",
+    masterVolume: "Gesamtlautstaerke",
+    musicVolume: "Musiklautstaerke",
+    off: "Aus",
+    on: "Ein",
+    options: "Optionen",
+    pressAKey: "Taste druecken",
+    remapControls: "Tasten belegen",
+    rotate: "Drehen",
+    selectLevel: "Level waehlen",
+    showControlsOverlay: "Steuerung anzeigen",
+    showCoordinates: "Koordinaten anzeigen",
+    showHitBoxes: "Hitboxen anzeigen",
+    soon: "Bald",
+    start: "Start",
+  },
+};
+
+export default de;

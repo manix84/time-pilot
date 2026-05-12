@@ -95,6 +95,7 @@ export interface ControllerCommands {
 }
 
 export type ControllerType = "keyboard1" | "keyboard2";
+export type GameLanguage = "de" | "en" | "fr" | "it" | "nl" | "ro";
 export type ControlInputName =
   | "down"
   | "fire"
@@ -601,6 +602,7 @@ export interface UserOptions {
   controllerType: ControllerType;
   gamepadEnabled: boolean;
   keyboardBindings: KeyboardBindings;
+  language: GameLanguage;
   masterVolume: number;
   musicVolume: number;
   effectsVolume: number;

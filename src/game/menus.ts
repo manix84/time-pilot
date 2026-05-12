@@ -1,9 +1,10 @@
 /* Converted from TimePilot.Menu.js (AMD) to ESM TypeScript. */
 import palette from "./palette";
-import i18n from "./i18n";
+import i18n, { availableLanguages, getLanguageName } from "./i18n";
 import userOptions from "./user-options";
 import type {
   ControllerType,
+  GameLanguage,
   GameArenaInstance,
   KeyboardBindings,
   MenuPointerData,
@@ -12,7 +13,7 @@ import type {
   ShowStartMenuOptions,
 } from "./types";
 
-type MenuScreen = "start" | "options" | "controls" | "debug";
+type MenuScreen = "start" | "options" | "controls" | "debug" | "language";
 type MenuItemKind = "action" | "enum" | "slider" | "key" | "toggle";
 type ToggleDebugOption =
   | "invincible"
@@ -28,6 +29,8 @@ interface MenuItem {
   getValue?: () => string;
   kind: MenuItemKind;
   label: string;
+  languageFlag?: GameLanguage;
+  isCurrent?: () => boolean;
   onAdjust?: (direction: -1 | 1) => void;
   onSetValue?: (value: number) => void;
   rect: {
@@ -423,6 +426,8 @@ class Menus implements MenuSystemInstance {
       this._items = this._createOptionsItems();
     } else if (this._screen === "controls") {
       this._items = this._createControlsItems();
+    } else if (this._screen === "language") {
+      this._items = this._createLanguageItems();
     } else {
       this._items = this._createDebugItems();
     }
@@ -466,20 +471,25 @@ class Menus implements MenuSystemInstance {
         onAdjust: (direction) => this._adjustVolume("effectsVolume", direction),
         onSetValue: (value) => this._setVolume("effectsVolume", value),
       }),
-      this._createItem(i18n.menu.controlType, "enum", 72, {
+      this._createItem(i18n.menu.language, "action", 72, {
+        getValue: () => getLanguageName(userOptions.language),
+        languageFlag: userOptions.language,
+        action: () => this._goToScreen("language"),
+      }),
+      this._createItem(i18n.menu.controlType, "enum", 114, {
         getValue: () =>
           userOptions.controllerType === "keyboard1"
             ? i18n.menu.directional
             : i18n.menu.rotate,
         onAdjust: (direction) => this._adjustControllerType(direction),
       }),
-      this._createItem(i18n.menu.remapControls, "action", 114, {
+      this._createItem(i18n.menu.remapControls, "action", 156, {
         action: () => this._goToScreen("controls"),
       }),
     ];
 
     items.push(
-      this._createItem(i18n.menu.back, "action", 164, {
+      this._createItem(i18n.menu.back, "action", 206, {
         action: () => this._goBack(),
       })
     );
@@ -495,6 +505,23 @@ class Menus implements MenuSystemInstance {
       this._createKeyBindingItem("right", 60, -12, 86, 34),
       this._createKeyBindingItem("fire", -146, 30, 292, 34),
       this._createItem(i18n.menu.back, "action", 92, {
+        action: () => this._goBack(),
+      }),
+    ];
+  };
+
+  private _createLanguageItems = (): MenuItem[] => {
+    return [
+      ...availableLanguages.map((language, index) =>
+        this._createItem(getLanguageName(language), "action", -54 + index * 42, {
+          action: () => this._setLanguage(language),
+          getValue: () =>
+            userOptions.language === language ? i18n.menu.current : "",
+          isCurrent: () => userOptions.language === language,
+          languageFlag: language,
+        })
+      ),
+      this._createItem(i18n.menu.back, "action", 30 + availableLanguages.length * 42, {
         action: () => this._goBack(),
       }),
     ];
@@ -560,11 +587,17 @@ class Menus implements MenuSystemInstance {
     const progress = this._getItemProgress(item);
     const progressWidth = progress === null ? 0 : item.rect.width * progress;
 
-    context.fillStyle = item.disabled
-      ? palette.menu.disabledBackground
-      : isSelected
-        ? palette.menu.selectedBackground
-        : palette.menu.itemBackground;
+    const isCurrent = item.isCurrent?.() ?? false;
+
+    if (item.disabled) {
+      context.fillStyle = palette.menu.disabledBackground;
+    } else if (isSelected) {
+      context.fillStyle = palette.menu.selectedBackground;
+    } else if (isCurrent) {
+      context.fillStyle = palette.menu.progressFill;
+    } else {
+      context.fillStyle = palette.menu.itemBackground;
+    }
     context.fillRect(item.rect.x, item.rect.y, item.rect.width, item.rect.height);
 
     if (progress !== null) {
@@ -574,13 +607,15 @@ class Menus implements MenuSystemInstance {
       context.fillRect(item.rect.x, item.rect.y, progressWidth, item.rect.height);
     }
 
-    context.strokeStyle = item.disabled
-      ? palette.menu.disabledBorder
-      : isAwaiting
-        ? palette.menu.waitingBorder
-        : isSelected
-          ? palette.menu.selectedBorder
-          : palette.menu.itemBorder;
+    if (item.disabled) {
+      context.strokeStyle = palette.menu.disabledBorder;
+    } else if (isAwaiting) {
+      context.strokeStyle = palette.menu.waitingBorder;
+    } else if (isCurrent || isSelected) {
+      context.strokeStyle = palette.menu.selectedBorder;
+    } else {
+      context.strokeStyle = palette.menu.itemBorder;
+    }
     context.lineWidth = 2;
     context.strokeRect(item.rect.x, item.rect.y, item.rect.width, item.rect.height);
 
@@ -620,9 +655,13 @@ class Menus implements MenuSystemInstance {
     );
 
     if (item.getValue) {
+      if (item.languageFlag) {
+        this._renderLanguageFlag(item, item.languageFlag);
+      }
+
       this._gameArena.renderText(
         item.getValue(),
-        item.rect.x + item.rect.width - 14,
+        item.rect.x + item.rect.width - (item.languageFlag ? 48 : 14),
         item.rect.y + item.rect.height / 2,
         {
           size: item.kind === "key" ? 13 : 16,
@@ -632,6 +671,94 @@ class Menus implements MenuSystemInstance {
         }
       );
     }
+  };
+
+  private _renderLanguageFlag = (item: MenuItem, language: GameLanguage): void => {
+    const context = this._gameArena.getContext() as CanvasRenderingContext2D;
+    const scale = 2;
+    const x = item.rect.x + item.rect.width - 38;
+    const y = item.rect.y + item.rect.height / 2 - 8;
+    const rect = (gridX: number, gridY: number, width: number, height: number, color: string): void => {
+      context.fillStyle = color;
+      context.fillRect(x + gridX * scale, y + gridY * scale, width * scale, height * scale);
+    };
+
+    const verticalTricolor = (colors: [string, string, string]): void => {
+      rect(0, 0, 5, 8, colors[0]);
+      rect(5, 0, 6, 8, colors[1]);
+      rect(11, 0, 5, 8, colors[2]);
+    };
+    const horizontalTricolor = (colors: [string, string, string]): void => {
+      rect(0, 0, 16, 3, colors[0]);
+      rect(0, 3, 16, 2, colors[1]);
+      rect(0, 5, 16, 3, colors[2]);
+    };
+    const drawUnionFlagPixel = (gridX: number, gridY: number): void => {
+      const diagonalA = Math.floor(gridX / 2);
+      const diagonalB = 7 - Math.floor(gridX / 2);
+      const isWhiteDiagonal =
+        Math.abs(gridY - diagonalA) <= 1 || Math.abs(gridY - diagonalB) <= 1;
+      const isRedDiagonal =
+        gridX % 2 === 0 && (gridY === diagonalA || gridY === diagonalB);
+      const isWhiteCross =
+        (gridX >= 6 && gridX <= 9) || (gridY >= 2 && gridY <= 5);
+      const isRedCross =
+        (gridX >= 7 && gridX <= 8) || (gridY >= 3 && gridY <= 4);
+
+      if (isRedCross || isRedDiagonal) {
+        rect(gridX, gridY, 1, 1, "#C8102E");
+      } else if (isWhiteCross || isWhiteDiagonal) {
+        rect(gridX, gridY, 1, 1, "#FFFFFF");
+      } else {
+        rect(gridX, gridY, 1, 1, "#012169");
+      }
+    };
+    const drawUsFlagPixel = (gridX: number, gridY: number): void => {
+      if (gridX < 7 && gridY < 4) {
+        rect(gridX, gridY, 1, 1, (gridX + gridY) % 2 === 0 ? "#FFFFFF" : "#3C3B6E");
+        return;
+      }
+
+      rect(gridX, gridY, 1, 1, gridY % 2 === 0 ? "#B22234" : "#FFFFFF");
+    };
+    const drawEnglishFlag = (): void => {
+      for (let gridY = 0; gridY < 8; gridY++) {
+        for (let gridX = 0; gridX < 16; gridX++) {
+          if (gridX < 8) {
+            drawUsFlagPixel(gridX, gridY);
+          } else {
+            drawUnionFlagPixel(gridX, gridY);
+          }
+        }
+      }
+    };
+
+    if (language === "fr") {
+      verticalTricolor(["#0055A4", "#FFFFFF", "#EF4135"]);
+      return;
+    }
+
+    if (language === "de") {
+      horizontalTricolor(["#000000", "#DD0000", "#FFCE00"]);
+      return;
+    }
+
+    if (language === "it") {
+      verticalTricolor(["#009246", "#FFFFFF", "#CE2B37"]);
+      return;
+    }
+
+    if (language === "nl") {
+      horizontalTricolor(["#AE1C28", "#FFFFFF", "#21468B"]);
+      return;
+    }
+
+    if (language === "ro") {
+      verticalTricolor(["#002B7F", "#FCD116", "#CE1126"]);
+      return;
+    }
+
+    drawEnglishFlag();
   };
 
   private _renderBindingWarning = (context: CanvasRenderingContext2D): void => {
@@ -931,6 +1058,10 @@ class Menus implements MenuSystemInstance {
       return i18n.menu.debug;
     }
 
+    if (this._screen === "language") {
+      return i18n.menu.language;
+    }
+
     return i18n.levels[1].introText;
   };
 
@@ -970,6 +1101,11 @@ class Menus implements MenuSystemInstance {
       (currentIndex + direction + controllerTypes.length) % controllerTypes.length;
 
     userOptions.setOption("controllerType", controllerTypes[nextIndex]);
+  };
+
+  private _setLanguage = (language: GameLanguage): void => {
+    userOptions.setOption("language", language);
+    this._goBack();
   };
 
   private _adjustVolume = (key: "masterVolume" | "musicVolume" | "effectsVolume", direction: -1 | 1): void => {

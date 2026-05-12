@@ -1,0 +1,60 @@
+import type en from "./en";
+
+const ro: typeof en = {
+  language: {
+    code: "ro",
+    name: "Romana",
+  },
+  title: "TIME PILOT",
+  hud: {
+    gameOver: "Joc terminat",
+    paused: "Pauza",
+    pressPauseToContinue: 'Apasa "P" pentru continuare',
+    pressRestartToReset: 'Apasa "R" pentru restart',
+    restarting: "Repornire",
+  },
+  keys: {
+    down: "Jos",
+    left: "Stanga",
+    right: "Dreapta",
+    space: "Spatiu",
+    up: "Sus",
+  },
+  levels: {
+    1: { introText: "A.D 1910" },
+    2: { introText: "A.D 1940" },
+    3: { introText: "A.D 1970" },
+    4: { introText: "A.D 1982" },
+    5: { introText: "A.D 2001" },
+  },
+  menu: {
+    alreadyAssignedTo: (binding: string) => `Deja atribuit la ${binding}`,
+    back: "Inapoi",
+    continue: "Continua",
+    controlType: "Tip control",
+    current: "Selectat",
+    controls: "Controale",
+    debug: "Debug",
+    directional: "Directional",
+    effectsVolume: "Volum efecte",
+    fire: "Foc",
+    invincibilityShield: "Scut invincibil",
+    language: "Limba",
+    masterVolume: "Volum principal",
+    musicVolume: "Volum muzica",
+    off: "Oprit",
+    on: "Pornit",
+    options: "Optiuni",
+    pressAKey: "Apasa o tasta",
+    remapControls: "Reconfigureaza",
+    rotate: "Rotire",
+    selectLevel: "Alege nivelul",
+    showControlsOverlay: "Arata controale",
+    showCoordinates: "Arata coordonate",
+    showHitBoxes: "Arata hitbox-uri",
+    soon: "In curand",
+    start: "Start",
+  },
+};
+
+export default ro;

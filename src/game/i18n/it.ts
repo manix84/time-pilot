@@ -1,0 +1,60 @@
+import type en from "./en";
+
+const it: typeof en = {
+  language: {
+    code: "it",
+    name: "Italiano",
+  },
+  title: "TIME PILOT",
+  hud: {
+    gameOver: "Fine partita",
+    paused: "Pausa",
+    pressPauseToContinue: 'Premi "P" per continuare',
+    pressRestartToReset: 'Premi "R" per riavviare',
+    restarting: "Riavvio",
+  },
+  keys: {
+    down: "Giu",
+    left: "Sinistra",
+    right: "Destra",
+    space: "Spazio",
+    up: "Su",
+  },
+  levels: {
+    1: { introText: "A.D 1910" },
+    2: { introText: "A.D 1940" },
+    3: { introText: "A.D 1970" },
+    4: { introText: "A.D 1982" },
+    5: { introText: "A.D 2001" },
+  },
+  menu: {
+    alreadyAssignedTo: (binding: string) => `Gia assegnato a ${binding}`,
+    back: "Indietro",
+    continue: "Continua",
+    controlType: "Tipo controlli",
+    current: "Selezionato",
+    controls: "Controlli",
+    debug: "Debug",
+    directional: "Direzionale",
+    effectsVolume: "Volume effetti",
+    fire: "Fuoco",
+    invincibilityShield: "Scudo invincibile",
+    language: "Lingua",
+    masterVolume: "Volume principale",
+    musicVolume: "Volume musica",
+    off: "No",
+    on: "Si",
+    options: "Opzioni",
+    pressAKey: "Premi un tasto",
+    remapControls: "Rimappa controlli",
+    rotate: "Rotazione",
+    selectLevel: "Seleziona livello",
+    showControlsOverlay: "Mostra controlli",
+    showCoordinates: "Mostra coordinate",
+    showHitBoxes: "Mostra hitbox",
+    soon: "Presto",
+    start: "Inizia",
+  },
+};
+
+export default it;

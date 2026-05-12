@@ -38,6 +38,7 @@ describe("menu definitions", () => {
     userOptions.setDebugOption("showHitboxes", true);
     userOptions.setDebugOption("showPlayerCoordinates", true);
     userOptions.setOption("controllerType", "keyboard1");
+    userOptions.setOption("language", "en");
     userOptions.setOption("masterVolume", 10);
     userOptions.setKeyboardBinding("up", [38, 87]);
   });
@@ -137,6 +138,7 @@ describe("menu definitions", () => {
     menus.adjust(1);
     expect(userOptions.masterVolume).toBe(6);
 
+    menus.next();
     menus.next();
     menus.next();
     menus.next();
@@ -267,7 +269,7 @@ describe("menu definitions", () => {
 
     menus.activate();
 
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i < 6; i++) {
       menus.next();
     }
 
@@ -353,7 +355,7 @@ describe("menu definitions", () => {
       expect.objectContaining({ align: "center" })
     );
 
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i < 6; i++) {
       menus.next();
     }
 
@@ -480,7 +482,7 @@ describe("menu definitions", () => {
     menus.next();
     menus.activate();
 
-    for (let i = 0; i < 4; i++) {
+    for (let i = 0; i < 5; i++) {
       menus.next();
     }
 
@@ -492,6 +494,38 @@ describe("menu definitions", () => {
     expect(menus.captureKey(74)).toBe(false);
   });
 
+  it("returns to options after selecting a language", () => {
+    const arena = createArena();
+    const menus = new Menus(arena, { start: vi.fn() });
+
+    menus.showStart();
+    menus.next();
+    menus.activate();
+
+    for (let i = 0; i < 3; i++) {
+      menus.next();
+    }
+
+    menus.activate();
+    menus.next();
+    menus.activate();
+    menus.render();
+
+    expect(userOptions.language).toBe("fr");
+    expect(arena.renderText).toHaveBeenCalledWith(
+      "Options",
+      expect.any(Number),
+      expect.any(Number),
+      expect.objectContaining({ align: "center" })
+    );
+    expect(arena.renderText).toHaveBeenCalledWith(
+      "Francais",
+      expect.any(Number),
+      expect.any(Number),
+      expect.objectContaining({ align: "right" })
+    );
+  });
+
   it("denies duplicate keyboard bindings with a warning", () => {
     const arena = createArena();
     const menus = new Menus(arena, { start: vi.fn() });
@@ -500,7 +534,7 @@ describe("menu definitions", () => {
     menus.next();
     menus.activate();
 
-    for (let i = 0; i < 4; i++) {
+    for (let i = 0; i < 5; i++) {
       menus.next();
     }
 

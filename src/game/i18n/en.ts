@@ -1,4 +1,8 @@
 const en = {
+  language: {
+    code: "en",
+    name: "English",
+  },
   title: "TIME PILOT",
   hud: {
     gameOver: "Game Over",
@@ -36,12 +40,14 @@ const en = {
     back: "Back",
     continue: "Continue",
     controlType: "Control Type",
+    current: "Selected",
     controls: "Controls",
     debug: "Debug",
     directional: "Directional",
     effectsVolume: "Effects Volume",
     fire: "Fire",
     invincibilityShield: "Invincibility Shield",
+    language: "Language",
     masterVolume: "Master Volume",
     musicVolume: "Music Volume",
     off: "Off",

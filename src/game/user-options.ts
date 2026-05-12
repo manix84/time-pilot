@@ -1,5 +1,12 @@
 /* Converted from TimePilot.userOptions.js (AMD) to ESM TypeScript. */
-import type { ControllerType, KeyboardBindings, UserOptions } from "./types";
+import type {
+  ControllerType,
+  GameLanguage,
+  KeyboardBindings,
+  UserOptions,
+} from "./types";
+
+const supportedLanguages: GameLanguage[] = ["en", "fr", "de", "it", "nl", "ro"];
 
 type PersistedUserOptions = Pick<
   UserOptions,
@@ -9,6 +16,7 @@ type PersistedUserOptions = Pick<
   | "effectsVolume"
   | "gamepadEnabled"
   | "keyboardBindings"
+  | "language"
   | "masterVolume"
   | "musicVolume"
 >;
@@ -41,6 +49,7 @@ const defaultPersistedOptions: PersistedUserOptions = {
   controllerType: "keyboard1" as ControllerType,
   gamepadEnabled: true,
   keyboardBindings: defaultKeyboardBindings,
+  language: "en",
   masterVolume: 10,
   musicVolume: 8,
   effectsVolume: 8,
@@ -87,6 +96,9 @@ const readStoredOptions = (): Partial<PersistedUserOptions> => {
 };
 
 const storedOptions = readStoredOptions();
+const storedLanguage = supportedLanguages.includes(storedOptions.language as GameLanguage)
+  ? storedOptions.language as GameLanguage
+  : defaultPersistedOptions.language;
 
 const writeUserOptions = (): void => {
   const storage = getOptionsStorage();
@@ -105,6 +117,7 @@ const writeUserOptions = (): void => {
         effectsVolume: userOptions.effectsVolume,
         gamepadEnabled: userOptions.gamepadEnabled,
         keyboardBindings: userOptions.keyboardBindings,
+        language: userOptions.language,
         masterVolume: userOptions.masterVolume,
         musicVolume: userOptions.musicVolume,
       } satisfies PersistedUserOptions)
@@ -190,6 +203,7 @@ var userOptions: UserOptions = {
     ...storedOptions.keyboardBindings,
   },
 
+  language: storedLanguage,
   masterVolume: storedOptions.masterVolume ?? defaultPersistedOptions.masterVolume,
   musicVolume: storedOptions.musicVolume ?? defaultPersistedOptions.musicVolume,
   effectsVolume: storedOptions.effectsVolume ?? defaultPersistedOptions.effectsVolume,
