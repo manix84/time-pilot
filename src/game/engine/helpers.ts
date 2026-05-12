@@ -254,14 +254,50 @@ var helpers: Helpers = {
   },
 
   /**
-   * Generate a random HEX colour value.
+   * Generate a bright, saturated HEX colour value.
    * @method getRandomColor
    * @return {String} #0-F(6)
    */
   getRandomColor: function (): string {
-    var colors = Math.floor(Math.random() * 0x1000000);
+    var hue = Math.floor(Math.random() * 360),
+      saturation = 85 + Math.random() * 15,
+      lightness = 48 + Math.random() * 10,
+      chroma = (1 - Math.abs((2 * lightness) / 100 - 1)) * (saturation / 100),
+      huePrime = hue / 60,
+      x = chroma * (1 - Math.abs((huePrime % 2) - 1)),
+      match = lightness / 100 - chroma / 2,
+      red = 0,
+      green = 0,
+      blue = 0;
 
-    return "#" + colors.toString(16).padStart(6, "0");
+    if (huePrime < 1) {
+      red = chroma;
+      green = x;
+    } else if (huePrime < 2) {
+      red = x;
+      green = chroma;
+    } else if (huePrime < 3) {
+      green = chroma;
+      blue = x;
+    } else if (huePrime < 4) {
+      green = x;
+      blue = chroma;
+    } else if (huePrime < 5) {
+      red = x;
+      blue = chroma;
+    } else {
+      red = chroma;
+      blue = x;
+    }
+
+    return [red, green, blue]
+      .map((channel) =>
+        Math.round((channel + match) * 255)
+          .toString(16)
+          .padStart(2, "0")
+      )
+      .join("")
+      .replace(/^/, "#");
   },
 
   /**

@@ -52,11 +52,17 @@ describe("engine/helpers", () => {
     expect(callback).not.toHaveBeenCalled();
   });
 
-  it("generates valid six-digit CSS hex colors", () => {
-    vi.spyOn(Math, "random").mockReturnValueOnce(0).mockReturnValueOnce(0.999999);
+  it("generates valid bright six-digit CSS hex colors", () => {
+    vi.spyOn(Math, "random")
+      .mockReturnValueOnce(0)
+      .mockReturnValueOnce(0)
+      .mockReturnValueOnce(0)
+      .mockReturnValueOnce(0.999999)
+      .mockReturnValueOnce(0.999999)
+      .mockReturnValueOnce(0.999999);
 
-    expect(helpers.getRandomColor()).toBe("#000000");
-    expect(helpers.getRandomColor()).toMatch(/^#[0-9a-f]{6}$/);
+    expect(helpers.getRandomColor()).toBe("#e21212");
+    expect(helpers.getRandomColor()).toBe("#ff292c");
   });
 
   it("clones nested objects without retaining references", () => {
