@@ -46,6 +46,7 @@ const levelIntroDurationFrames = Math.max(
   1,
   Math.round((LEVEL_INTRO_DURATION_MS / 1000) * gameFps)
 );
+const playerRotationStep = 360 / CONSTS.player.rotationFrameCount;
 
 export interface TimePilotOptions {
   controllerType?: ControllerType;
@@ -60,6 +61,7 @@ export class TimePilot {
   private collisionSystem!: CollisionSystemInstance;
   private hasSeededInitialProps = false;
   private hasStartedGame = false;
+  private isDestroyed = false;
   private isDemoMode = false;
   private renderingSystem!: RenderingSystemInstance;
   private spawningSystem!: SpawningSystemInstance;
@@ -99,6 +101,10 @@ export class TimePilot {
   }
 
   destroyGame(): void {
+    this.isDestroyed = true;
+    this.isDemoMode = false;
+    this.context._isDemoMode = false;
+
     this.context._gameTicker.stop();
     this.context._gameTicker.clearSchedule();
     this.context._gameTicker.clearTicks();
@@ -222,6 +228,10 @@ export class TimePilot {
     ]);
 
     this.context._gameArena.preloadAssets((progress: AssetProgress) => {
+      if (this.isDestroyed) {
+        return;
+      }
+
       if (!progress.remaining) {
         this.configureGameLoop();
         this.startDemoMode();
@@ -232,6 +242,10 @@ export class TimePilot {
 
   private configureGameLoop(): void {
     this.context._gameTicker.addSchedule(() => {
+      if (this.isDestroyed) {
+        return;
+      }
+
       if (this.isDemoMode) {
         return;
       }
@@ -241,14 +255,26 @@ export class TimePilot {
     }, 50000);
 
     this.context._gameTicker.addSchedule(() => {
+      if (this.isDestroyed) {
+        return;
+      }
+
       this.updateDemoAutopilot();
     }, 1);
 
     this.context._gameTicker.addSchedule(() => {
+      if (this.isDestroyed) {
+        return;
+      }
+
       this.advanceDemoLevel();
     }, demoLevelDurationFrames);
 
     this.context._gameTicker.addSchedule(() => {
+      if (this.isDestroyed) {
+        return;
+      }
+
       if (this.isLevelIntroActive()) {
         this.clearIntroControls();
         return;
@@ -265,6 +291,10 @@ export class TimePilot {
     }, 1);
 
     this.context._gameTicker.addSchedule(() => {
+      if (this.isDestroyed) {
+        return;
+      }
+
       if (this.isLevelIntroActive()) {
         return;
       }
@@ -273,6 +303,10 @@ export class TimePilot {
     }, 3);
 
     this.context._gameTicker.addSchedule(() => {
+      if (this.isDestroyed) {
+        return;
+      }
+
       if (this.isLevelIntroActive()) {
         return;
       }
@@ -281,10 +315,18 @@ export class TimePilot {
     }, 5);
 
     this.context._renderTicker.addSchedule(() => {
+      if (this.isDestroyed) {
+        return;
+      }
+
       this.renderingSystem.renderFrame();
     }, 1);
 
     this.context._gameTicker.addSchedule(() => {
+      if (this.isDestroyed) {
+        return;
+      }
+
       if (this.isLevelIntroActive()) {
         return;
       }
@@ -293,6 +335,10 @@ export class TimePilot {
     }, 1);
 
     this.context._gameTicker.addSchedule(() => {
+      if (this.isDestroyed) {
+        return;
+      }
+
       this.context._enemies.cleanup();
       this.context._bullets.cleanup();
       this.context._enemyBullets.cleanup();
@@ -302,6 +348,10 @@ export class TimePilot {
   }
 
   private beginGame(): void {
+    if (this.isDestroyed) {
+      return;
+    }
+
     const shouldStartFreshGame = this.isDemoMode || !this.hasStartedGame;
 
     this.stopMenuMusic();
@@ -325,6 +375,10 @@ export class TimePilot {
   }
 
   private startDemoMode(): void {
+    if (this.isDestroyed) {
+      return;
+    }
+
     this.stopMenuMusic();
     this.isDemoMode = true;
     this.context._isDemoMode = true;
@@ -361,7 +415,7 @@ export class TimePilot {
 
     this.context._player.setData(
       "newHeading",
-      Math.floor(desiredHeading / 22.5) * 22.5
+      Math.round(desiredHeading / playerRotationStep) * playerRotationStep
     );
     this.context._player.setData("isAlive", true);
     this.context._player.startShooting();

@@ -255,8 +255,8 @@ class GameArena implements GameArenaInstance {
       spriteData.frameHeight,
       spriteData.posX,
       spriteData.posY,
-      spriteData.frameWidth,
-      spriteData.frameHeight
+      spriteData.renderWidth ?? spriteData.frameWidth,
+      spriteData.renderHeight ?? spriteData.frameHeight
     );
   }
 

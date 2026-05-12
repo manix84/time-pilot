@@ -14,6 +14,8 @@ export interface SpriteFrame extends Coordinates {
   frameHeight: number;
   frameX: number;
   frameY: number;
+  renderHeight?: number;
+  renderWidth?: number;
 }
 
 export interface RenderTextOptions {
@@ -439,6 +441,8 @@ export interface ProjectileConfig {
 
 export interface PlayerConfig {
   sprite: SpriteAsset;
+  frameWidth: number;
+  frameHeight: number;
   width: number;
   height: number;
   hitRadius: number;

@@ -173,10 +173,14 @@ class Player implements PlayerInstance {
 
     if (!this._data.deathTick && this._data.isAlive) {
       this._gameArena.renderSprite(this._playerSprite, {
-        frameWidth: playerConst.width,
-        frameHeight: playerConst.height,
-        frameX: Math.floor(this._data.heading / 22.5),
+        frameWidth: playerConst.frameWidth,
+        frameHeight: playerConst.frameHeight,
+        frameX:
+          Math.round(((this._data.heading + 270) % 360) / this._rotationStep) %
+          playerConst.rotationFrameCount,
         frameY: 0,
+        renderWidth: playerConst.width,
+        renderHeight: playerConst.height,
         posX: -(playerConst.width / 2),
         posY: -(playerConst.height / 2),
       });

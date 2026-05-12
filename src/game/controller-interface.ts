@@ -62,10 +62,7 @@ class ControllerInterface implements ControllerInterfaceInstance {
       return;
     }
 
-    this._player.setData(
-      "newHeading",
-      Math.floor(desiredHeading / 22.5) * 22.5
-    );
+    this._player.setData("newHeading", this._quantizeHeading(desiredHeading));
   }
 
   rotateClockwise(): void {
@@ -77,10 +74,7 @@ class ControllerInterface implements ControllerInterfaceInstance {
     const currentHeading = this._player.getData().heading;
     const desiredHeading = (currentHeading + this._rotationStep) % 360;
 
-    this._player.setData(
-      "newHeading",
-      Math.floor(desiredHeading / 22.5) * 22.5
-    );
+    this._player.setData("newHeading", this._quantizeHeading(desiredHeading));
   }
 
   rotateAntiClockwise(): void {
@@ -94,10 +88,7 @@ class ControllerInterface implements ControllerInterfaceInstance {
 
     desiredHeading = desiredHeading < 0 ? 360 + desiredHeading : desiredHeading;
 
-    this._player.setData(
-      "newHeading",
-      Math.floor(desiredHeading / 22.5) * 22.5
-    );
+    this._player.setData("newHeading", this._quantizeHeading(desiredHeading));
   }
 
   stop(): void {
@@ -173,6 +164,13 @@ class ControllerInterface implements ControllerInterfaceInstance {
 
   isMenuActive(): boolean {
     return this._menus.isActive();
+  }
+
+  private _quantizeHeading(heading: Heading): Heading {
+    const quantized =
+      Math.round(heading / this._rotationStep) * this._rotationStep;
+
+    return (quantized + 360) % 360;
   }
 }
 
