@@ -138,6 +138,41 @@ describe("menu definitions", () => {
     );
   });
 
+  it("scrolls long menus inside a padded viewport", () => {
+    const arena = {
+      ...createArena(),
+      height: 220,
+    };
+    const menus = new Menus(arena, { start: vi.fn() });
+
+    menus.showStart();
+    menus.next();
+    menus.activate();
+
+    for (let i = 0; i < 9; i++) {
+      menus.next();
+    }
+
+    menus.render();
+
+    const context = vi.mocked(arena.getContext).mock.results[0]
+      .value as CanvasRenderingContext2D;
+
+    expect(context.rect).toHaveBeenCalledWith(-376, -86, 752, 172);
+    expect(context.clip).toHaveBeenCalled();
+    expect(context.translate).toHaveBeenCalledWith(0, -238);
+
+    menus.handlePointer({ posX: 0, posY: 70, type: "click" });
+    menus.render();
+
+    expect(arena.renderText).toHaveBeenCalledWith(
+      "Start",
+      expect.any(Number),
+      expect.any(Number),
+      expect.objectContaining({ align: "left" })
+    );
+  });
+
   it("unlocks the debug menu with the Konami code", () => {
     const arena = createArena();
     const menus = new Menus(arena, { start: vi.fn() });
