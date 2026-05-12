@@ -8,6 +8,7 @@ import type {
   MenuPointerData,
   MenuSystemCommands,
   MenuSystemInstance,
+  ShowStartMenuOptions,
 } from "./types";
 
 type MenuScreen = "start" | "options" | "controls" | "debug";
@@ -78,8 +79,10 @@ class Menus implements MenuSystemInstance {
   private readonly _logoWidth = 420;
   private _screen: MenuScreen = "start";
   private _screenHistory: MenuScreen[] = [];
+  private _pressedItemIndex: number | null = null;
   private _selectedIndex = 0;
   private _sliderDragIndex: number | null = null;
+  private _startLabel = "Start";
   private _scrollY = 0;
   private _transition: MenuTransition | null = null;
 
@@ -93,12 +96,14 @@ class Menus implements MenuSystemInstance {
     return this._active;
   }
 
-  showStart(): void {
+  showStart(options: ShowStartMenuOptions = {}): void {
     this._active = true;
     this._awaitingBinding = null;
     this._bindingWarning = "";
+    this._startLabel = options.startLabel ?? "Start";
     this._screen = "start";
     this._screenHistory = [];
+    this._pressedItemIndex = null;
     this._selectedIndex = 0;
     this._scrollY = 0;
     this._transition = null;
@@ -109,6 +114,8 @@ class Menus implements MenuSystemInstance {
     this._active = false;
     this._awaitingBinding = null;
     this._bindingWarning = "";
+    this._pressedItemIndex = null;
+    this._sliderDragIndex = null;
   }
 
   next(): void {
@@ -194,7 +201,23 @@ class Menus implements MenuSystemInstance {
     const menuPointer = this._getScaledPointer(pointer);
 
     if (pointer.type === "release") {
+      const releasedItemIndex = this._items.findIndex((item) =>
+        this._isInsideItem(menuPointer, item)
+      );
+      const pressedItemIndex = this._pressedItemIndex;
+
       this._sliderDragIndex = null;
+      this._pressedItemIndex = null;
+
+      if (
+        pressedItemIndex !== null &&
+        releasedItemIndex === pressedItemIndex &&
+        this._items[pressedItemIndex].kind !== "slider"
+      ) {
+        this._selectedIndex = pressedItemIndex;
+        this.activate();
+      }
+
       return;
     }
 
@@ -217,6 +240,8 @@ class Menus implements MenuSystemInstance {
     this._selectedIndex = itemIndex;
 
     if (pointer.type === "press") {
+      this._pressedItemIndex = itemIndex;
+
       if (this._items[itemIndex].kind === "slider") {
         this._sliderDragIndex = itemIndex;
         this._setSliderFromPointer(this._items[itemIndex], menuPointer);
@@ -409,7 +434,7 @@ class Menus implements MenuSystemInstance {
 
   private _createStartItems(): MenuItem[] {
     const items = [
-      this._createItem("Start", "action", -22, {
+      this._createItem(this._startLabel, "action", -22, {
         action: this._commands.start,
       }),
       this._createItem("Options", "action", 28, {
@@ -915,6 +940,8 @@ class Menus implements MenuSystemInstance {
     this._selectedIndex = 0;
     this._awaitingBinding = null;
     this._bindingWarning = "";
+    this._pressedItemIndex = null;
+    this._sliderDragIndex = null;
     this._scrollY = 0;
     this._buildItems();
     this._startTransition(previousScreen, screen);
@@ -928,6 +955,8 @@ class Menus implements MenuSystemInstance {
     this._selectedIndex = 0;
     this._awaitingBinding = null;
     this._bindingWarning = "";
+    this._pressedItemIndex = null;
+    this._sliderDragIndex = null;
     this._scrollY = 0;
     this._buildItems();
     this._startTransition(previousScreen, nextScreen);

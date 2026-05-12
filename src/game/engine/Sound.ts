@@ -16,7 +16,12 @@ const canPlayListener = function (this: TimePilotAudioElement): void {
 };
 
 class Sound {
+  private static _isMuted = false;
   private _theSound: TimePilotAudioElement;
+
+  static setMuted(isMuted: boolean): void {
+    Sound._isMuted = isMuted;
+  }
 
   constructor(urls: string | string[], userOptions: SoundOptions = {}) {
     const options = {
@@ -84,7 +89,9 @@ class Sound {
 
   private applyVolume(): void {
     this._theSound.volume =
-      (userOptions.masterVolume / 10) * (userOptions.effectsVolume / 10);
+      Sound._isMuted
+        ? 0
+        : (userOptions.masterVolume / 10) * (userOptions.effectsVolume / 10);
   }
 }
 

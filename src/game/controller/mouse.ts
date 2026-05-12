@@ -54,13 +54,6 @@ class Mouse implements Controller {
 
     const point = this.getCanvasPoint(event);
 
-    if (!this._isDragging) {
-      this._controllerInterface.handlePointer?.({
-        ...point,
-        type: "click",
-      });
-    }
-
     this._controllerInterface.handlePointer?.({
       ...point,
       type: "release",

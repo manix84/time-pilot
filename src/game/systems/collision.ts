@@ -23,6 +23,7 @@ class CollisionSystem implements CollisionSystemInstance {
       }
 
       if (
+        !this._context._isDemoMode &&
         enemy.detectCollision(
           playerData.posX,
           playerData.posY,

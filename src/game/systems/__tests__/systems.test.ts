@@ -89,6 +89,7 @@ const createPlayer = (overrides: Partial<PlayerData> = {}): PlayerInstance => {
 
 const createContext = ({
   arenaOverrides = {},
+  demoMode = false,
   enemyAlive = true,
   enemyCollides = true,
   enemyLimitAvailable = true,
@@ -97,6 +98,7 @@ const createContext = ({
   ticks = 200,
 }: {
   arenaOverrides?: Partial<GameArenaInstance>;
+  demoMode?: boolean;
   enemyAlive?: boolean;
   enemyCollides?: boolean;
   enemyLimitAvailable?: boolean;
@@ -119,6 +121,7 @@ const createContext = ({
 
   return {
     _level: 1,
+    _isDemoMode: demoMode,
     _controlInputState: {
       down: false,
       fire: false,
@@ -203,6 +206,17 @@ describe("game systems", () => {
     const [enemy] = context._enemies.getEntities();
     expect(enemy.kill).toHaveBeenCalled();
     expect(context._player.kill).toHaveBeenCalled();
+  });
+
+  it("keeps the player alive while demo collisions continue resolving bullets", () => {
+    const context = createContext({ demoMode: true });
+    const system = new CollisionSystem(context);
+
+    system.detectCollisions();
+
+    const [enemy] = context._enemies.getEntities();
+    expect(enemy.kill).toHaveBeenCalled();
+    expect(context._player.kill).not.toHaveBeenCalled();
   });
 
   it("skips collisions when enemies or the player are not alive", () => {
@@ -294,6 +308,17 @@ describe("game systems", () => {
     expect(context._player.render).toHaveBeenCalled();
     expect(context._props.render).toHaveBeenNthCalledWith(2, 2);
     expect(context._hud.render).toHaveBeenCalled();
+    expect(context._menus.render).toHaveBeenCalled();
+  });
+
+  it("hides HUD rendering while menus are active", () => {
+    const context = createContext();
+    vi.mocked(context._menus.isActive).mockReturnValue(true);
+    const system = new RenderingSystem(context);
+
+    system.renderFrame();
+
+    expect(context._hud.render).not.toHaveBeenCalled();
     expect(context._menus.render).toHaveBeenCalled();
   });
 });

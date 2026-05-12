@@ -200,7 +200,7 @@ describe("controller modules", () => {
     expect(inputState.activeController).toBe("gamepad");
   });
 
-  it("maps mouse movement and clicks to menu pointer actions", () => {
+  it("maps mouse movement and button presses to menu pointer actions", () => {
     const controls = createControls();
     const canvas = document.createElement("canvas");
     canvas.width = 800;
@@ -237,11 +237,6 @@ describe("controller modules", () => {
       posX: 0,
       posY: 0,
       type: "press",
-    });
-    expect(controls.handlePointer).toHaveBeenCalledWith({
-      posX: 0,
-      posY: 0,
-      type: "click",
     });
     expect(controls.handlePointer).toHaveBeenCalledWith({
       posX: 0,
@@ -363,6 +358,7 @@ describe("controller modules", () => {
     const touch = new TouchController(canvas, controls);
     dispatchTouch(canvas, "touchstart", { clientX: 200, clientY: 150 });
     dispatchTouch(canvas, "touchmove", { clientX: 220, clientY: 160 });
+    dispatchTouch(canvas, "touchend", { clientX: 220, clientY: 160 });
 
     expect(controls.handlePointer).toHaveBeenCalledWith({
       posX: 0,
@@ -373,6 +369,11 @@ describe("controller modules", () => {
       posX: 40,
       posY: 20,
       type: "drag",
+    });
+    expect(controls.handlePointer).toHaveBeenCalledWith({
+      posX: 40,
+      posY: 20,
+      type: "release",
     });
     expect(controls.rotateToHeading).not.toHaveBeenCalled();
 

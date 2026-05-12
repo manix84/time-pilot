@@ -86,6 +86,7 @@ export interface SpriteImage extends HTMLImageElement {
 }
 
 export interface ControllerCommands {
+  openMenu?: () => void;
   restart?: () => void;
   pause?: () => void;
 }
@@ -286,6 +287,7 @@ export interface ControllerInterfaceInstance {
 
 export interface GameDataStore {
   _level: number;
+  _isDemoMode?: boolean;
   _controlInputState: ControlInputState;
   _gameArena: GameArenaInstance;
   _renderTicker: TickerInstance;
@@ -316,11 +318,15 @@ export interface MenuSystemCommands {
   start: () => void;
 }
 
+export interface ShowStartMenuOptions {
+  startLabel?: string;
+}
+
 export interface MenuSystemInstance {
   adjust: (direction: -1 | 1) => void;
   captureKey: (keyCode: number) => boolean;
   isActive: () => boolean;
-  showStart: () => void;
+  showStart: (options?: ShowStartMenuOptions) => void;
   hide: () => void;
   render: () => void;
   next: () => void;

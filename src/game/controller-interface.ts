@@ -30,6 +30,17 @@ class ControllerInterface implements ControllerInterfaceInstance {
     this._menus = context._menus;
 
     this._commands = {
+      openMenu:
+        commands.openMenu ||
+        (() => {
+          if (!this._menus.isActive()) {
+            if (this._gameTicker.isRunning) {
+              this._commands.pause();
+            }
+
+            this._menus.showStart({ startLabel: "Continue" });
+          }
+        }),
       restart: commands.restart || (() => {}),
       pause: commands.pause || (() => {}),
     };
@@ -102,13 +113,7 @@ class ControllerInterface implements ControllerInterfaceInstance {
   }
 
   openMenu(): void {
-    if (!this._menus.isActive()) {
-      if (this._gameTicker.isRunning) {
-        this._commands.pause();
-      }
-
-      this._menus.showStart();
-    }
+    this._commands.openMenu();
   }
 
   startShooting(): void {

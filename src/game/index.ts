@@ -16,6 +16,8 @@ import CollisionSystem from "./systems/collision";
 import RenderingSystem from "./systems/rendering";
 import SpawningSystem from "./systems/spawning";
 import { assetPath } from "./asset-path";
+import CONSTS from "./constants";
+import SoundEngine from "./engine/Sound";
 import userOptions from "./user-options";
 import type {
   AssetProgress,
@@ -26,6 +28,13 @@ import type {
   RenderingSystemInstance,
   SpawningSystemInstance,
 } from "./types";
+
+export const DEMO_LEVEL_DURATION_MS = 30000;
+const gameFps = 30;
+const demoLevelDurationFrames = Math.max(
+  1,
+  Math.round((DEMO_LEVEL_DURATION_MS / 1000) * gameFps)
+);
 
 export interface TimePilotOptions {
   controllerType?: ControllerType;
@@ -39,6 +48,8 @@ export class TimePilot {
   private readonly context = {} as GameDataStore;
   private collisionSystem!: CollisionSystemInstance;
   private hasSeededInitialProps = false;
+  private hasStartedGame = false;
+  private isDemoMode = false;
   private renderingSystem!: RenderingSystemInstance;
   private spawningSystem!: SpawningSystemInstance;
 
@@ -67,9 +78,10 @@ export class TimePilot {
       this.context._props.clearAll();
       this.context._player.resetData();
       this.hasSeededInitialProps = false;
+      this.hasStartedGame = false;
 
       this.configureGameLoop();
-      this.context._menus.showStart();
+      this.startDemoMode();
     });
   }
 
@@ -123,6 +135,7 @@ export class TimePilot {
       up: false,
       activeController: "keyboard",
     };
+    this.context._isDemoMode = false;
     this.context._gameArena = new GameArena(this.container);
     this.context._renderTicker = new Ticker();
     this.context._gameTicker = new Ticker({ fps: 30 });
@@ -143,6 +156,9 @@ export class TimePilot {
     const controllerInterface = new ControllerInterface(this.context, {
       restart: () => {
         this.restartGame();
+      },
+      openMenu: () => {
+        this.openPauseMenu();
       },
       pause: () => {
         this.pauseGame();
@@ -187,7 +203,7 @@ export class TimePilot {
     this.context._gameArena.preloadAssets((progress: AssetProgress) => {
       if (!progress.remaining) {
         this.configureGameLoop();
-        this.context._menus.showStart();
+        this.startDemoMode();
         this.context._renderTicker.start();
       }
     });
@@ -195,9 +211,21 @@ export class TimePilot {
 
   private configureGameLoop(): void {
     this.context._gameTicker.addSchedule(() => {
+      if (this.isDemoMode) {
+        return;
+      }
+
       this.pauseGame();
       window.console.warn("Stopping: 50,000 ticks");
     }, 50000);
+
+    this.context._gameTicker.addSchedule(() => {
+      this.updateDemoAutopilot();
+    }, 1);
+
+    this.context._gameTicker.addSchedule(() => {
+      this.advanceDemoLevel();
+    }, demoLevelDurationFrames);
 
     this.context._gameTicker.addSchedule(() => {
       this.context._player.reposition();
@@ -232,6 +260,18 @@ export class TimePilot {
   }
 
   private beginGame(): void {
+    const shouldStartFreshGame = this.isDemoMode || !this.hasStartedGame;
+
+    this.stopMenuMusic();
+    SoundEngine.setMuted(false);
+    this.isDemoMode = false;
+    this.context._isDemoMode = false;
+
+    if (shouldStartFreshGame) {
+      this.resetWorld(1);
+      this.hasStartedGame = true;
+    }
+
     this.context._menus.hide();
 
     if (!this.hasSeededInitialProps) {
@@ -240,6 +280,86 @@ export class TimePilot {
     }
 
     this.context._gameTicker.start();
+  }
+
+  private startDemoMode(): void {
+    this.stopMenuMusic();
+    this.isDemoMode = true;
+    this.context._isDemoMode = true;
+    SoundEngine.setMuted(true);
+    this.resetWorld(1);
+    this.spawningSystem.addInitialProps();
+    this.hasSeededInitialProps = true;
+    this.context._menus.showStart({ startLabel: "Start" });
+    this.context._gameTicker.start();
+  }
+
+  private openPauseMenu(): void {
+    if (!this.hasStartedGame || this.isDemoMode) {
+      return;
+    }
+
+    if (this.context._gameTicker.isRunning) {
+      this.pauseGame(true);
+    }
+
+    this.playMenuMusic();
+    this.context._menus.showStart({ startLabel: "Continue" });
+  }
+
+  private updateDemoAutopilot(): void {
+    if (!this.isDemoMode) {
+      return;
+    }
+
+    const frame = this.context._gameTicker.getTicks();
+    const desiredHeading =
+      (90 + Math.sin(frame / 45) * 90 + Math.sin(frame / 120) * 45 + 360) %
+      360;
+
+    this.context._player.setData(
+      "newHeading",
+      Math.floor(desiredHeading / 22.5) * 22.5
+    );
+    this.context._player.setData("isAlive", true);
+    this.context._player.startShooting();
+  }
+
+  private advanceDemoLevel(): void {
+    if (!this.isDemoMode) {
+      return;
+    }
+
+    const levelNumbers = Object.keys(CONSTS.levels).map(Number);
+    const currentIndex = levelNumbers.indexOf(this.context._level);
+    const nextLevel =
+      levelNumbers[(currentIndex + 1 + levelNumbers.length) % levelNumbers.length] ??
+      1;
+
+    this.resetWorld(nextLevel);
+    this.spawningSystem.addInitialProps();
+    this.hasSeededInitialProps = true;
+  }
+
+  private resetWorld(level: number): void {
+    this.context._level = level;
+    this.context._enemies.clearAll();
+    this.context._bullets.clearAll();
+    this.context._props.clearAll();
+    this.context._player.resetData();
+    this.context._player.setData("level", level);
+    this.context._player.setData("isAlive", true);
+    this.context._player.setData("deathTick", false);
+    this.context._player.stopShooting();
+    this.hasSeededInitialProps = false;
+  }
+
+  private playMenuMusic(): void {
+    // Menu music will be wired here when the asset is available.
+  }
+
+  private stopMenuMusic(): void {
+    // Menu music will be stopped here when the asset is available.
   }
 
   private createKeyboardController(

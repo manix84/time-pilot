@@ -13,7 +13,6 @@ class TouchController implements Controller {
   private readonly _deadZone = 18;
   private readonly _inputState?: ControlInputState;
   private _activeTouchId: number | null = null;
-  private _touchMoved = false;
 
   constructor(
     canvas: HTMLCanvasElement,
@@ -57,7 +56,6 @@ class TouchController implements Controller {
     }
 
     this._activeTouchId = touch.identifier;
-    this._touchMoved = false;
     const point = this.getCanvasPoint(touch);
 
     if (this._controllerInterface.isMenuActive?.()) {
@@ -82,7 +80,6 @@ class TouchController implements Controller {
     const point = this.getCanvasPoint(touch);
 
     if (this._controllerInterface.isMenuActive?.()) {
-      this._touchMoved = true;
       this._controllerInterface.handlePointer?.({
         ...point,
         type: "drag",
@@ -104,13 +101,6 @@ class TouchController implements Controller {
     if (this._controllerInterface.isMenuActive?.()) {
       const point = this.getCanvasPoint(touch);
 
-      if (!this._touchMoved) {
-        this._controllerInterface.handlePointer?.({
-          ...point,
-          type: "click",
-        });
-      }
-
       this._controllerInterface.handlePointer?.({
         ...point,
         type: "release",
@@ -118,7 +108,6 @@ class TouchController implements Controller {
     }
 
     this._activeTouchId = null;
-    this._touchMoved = false;
     this.clearDirectionState();
   };
 

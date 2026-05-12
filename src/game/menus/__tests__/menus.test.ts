@@ -87,6 +87,44 @@ describe("menu definitions", () => {
     expect(start).toHaveBeenCalled();
   });
 
+  it("can render a continue action on the start screen", () => {
+    const arena = createArena();
+    const menus = new Menus(arena, { start: vi.fn() });
+
+    menus.showStart({ startLabel: "Continue" });
+    menus.render();
+
+    expect(arena.renderText).toHaveBeenCalledWith(
+      "Continue",
+      expect.any(Number),
+      expect.any(Number),
+      expect.objectContaining({ align: "left" })
+    );
+  });
+
+  it("activates normal buttons from pointer press and release", () => {
+    const start = vi.fn();
+    const menus = new Menus(createArena(), { start });
+
+    menus.showStart();
+    menus.handlePointer({ posX: 0, posY: 0, type: "press" });
+    expect(start).not.toHaveBeenCalled();
+
+    menus.handlePointer({ posX: 0, posY: 0, type: "release" });
+    expect(start).toHaveBeenCalledTimes(1);
+  });
+
+  it("does not activate a pressed button when released outside it", () => {
+    const start = vi.fn();
+    const menus = new Menus(createArena(), { start });
+
+    menus.showStart();
+    menus.handlePointer({ posX: 0, posY: 0, type: "press" });
+    menus.handlePointer({ posX: 0, posY: 90, type: "release" });
+
+    expect(start).not.toHaveBeenCalled();
+  });
+
   it("opens options and adjusts volume and controller type", () => {
     const menus = new Menus(createArena(), { start: vi.fn() });
     userOptions.setOption("masterVolume", 5);
