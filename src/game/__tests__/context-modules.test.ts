@@ -1,10 +1,11 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import BulletFactory from "../bullet-factory";
 import ControllerInterface from "../controller-interface";
 import EnemyFactory from "../enemy-factory";
 import Hud from "../hud";
 import Player from "../player";
 import PropFactory from "../prop-factory";
+import userOptions from "../user-options";
 import type {
   GameArenaInstance,
   GameDataStore,
@@ -113,6 +114,12 @@ describe("context-backed game modules", () => {
     vi.clearAllMocks();
   });
 
+  afterEach(() => {
+    userOptions.setOption("enableDebug", false);
+    userOptions.setDebugOption("showHitboxes", true);
+    localStorage.clear();
+  });
+
   it("creates, moves, renders, and clears bullets", () => {
     const context = createContext();
 
@@ -159,6 +166,28 @@ describe("context-backed game modules", () => {
 
     expect(context._enemies.getCount()).toBe(0);
     expect(context._props.getCount()).toBe(0);
+  });
+
+  it("renders hitboxes for every active damage collision participant", () => {
+    const context = createContext();
+    userOptions.setOption("enableDebug", true);
+    userOptions.setDebugOption("showHitboxes", true);
+
+    context._bullets.create(0, 0, 90, 4, 7, "#fff");
+    context._enemies.create(100, 100, 180);
+    context._player.render();
+    context._bullets.render();
+    context._enemies.render();
+
+    expect(context._gameArena.drawCircle).toHaveBeenCalledWith(0, 0, 16, {
+      borderColor: expect.stringMatching(/^#[0-9a-f]{6}$/),
+    });
+    expect(context._gameArena.drawCircle).toHaveBeenCalledWith(0, 0, 4, {
+      borderColor: "#0F0",
+    });
+    expect(context._gameArena.drawCircle).toHaveBeenCalledWith(100, 100, 8, {
+      borderColor: "#F00",
+    });
   });
 
   it("renders HUD and delegates controller commands", () => {

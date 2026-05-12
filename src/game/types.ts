@@ -30,7 +30,6 @@ export interface CircleOptions {
   backgroundColor?: string;
   borderColor?: string | false;
   borderWidth?: number;
-  strokeColor?: string;
 }
 
 export interface AssetProgress {
@@ -451,5 +450,13 @@ export interface UserOptions {
   masterVolume: number;
   musicVolume: number;
   effectsVolume: number;
+  setKeyboardBinding: <K extends keyof KeyboardBindings>(
+    key: K,
+    value: KeyboardBindings[K]
+  ) => void;
+  setDebugOption: <K extends keyof UserOptions["debug"]>(
+    key: K,
+    value: UserOptions["debug"][K]
+  ) => void;
   setOption: <K extends keyof UserOptions>(key: K, value: UserOptions[K]) => void;
 }

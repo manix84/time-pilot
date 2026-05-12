@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import userOptions from "../game/user-options";
 import type { ControllerType } from "../game/types";
 import { useTimePilot } from "../game/use-time-pilot";
 
@@ -11,10 +12,10 @@ const keyboardOptions: Array<{ label: string; value: ControllerType }> = [
   { label: "Rotate", value: "keyboard2" },
 ];
 
-function TimePilotGame({ debug = false }: TimePilotGameProps) {
+function TimePilotGame({ debug }: TimePilotGameProps) {
   const [controllerType, setControllerType] =
-    useState<ControllerType>("keyboard1");
-  const [gamepadEnabled, setGamepadEnabled] = useState(true);
+    useState<ControllerType>(userOptions.controllerType);
+  const [gamepadEnabled, setGamepadEnabled] = useState(userOptions.gamepadEnabled);
   const options = useMemo(
     () => ({ controllerType, debug, gamepadEnabled }),
     [controllerType, debug, gamepadEnabled]

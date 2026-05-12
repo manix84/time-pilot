@@ -45,7 +45,7 @@ export class TimePilot {
     this.container = element;
     this.options = {
       controllerType: options.controllerType ?? userOptions.controllerType,
-      debug: options.debug ?? false,
+      debug: options.debug ?? userOptions.enableDebug,
       gamepadEnabled: options.gamepadEnabled ?? userOptions.gamepadEnabled,
     };
 
@@ -107,7 +107,7 @@ export class TimePilot {
   }
 
   private init(): void {
-    userOptions.enableDebug = this.options.debug;
+    userOptions.setOption("enableDebug", this.options.debug);
     userOptions.setOption("controllerType", this.options.controllerType);
     userOptions.setOption("gamepadEnabled", this.options.gamepadEnabled);
 

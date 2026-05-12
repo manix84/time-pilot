@@ -60,7 +60,6 @@ const keyBindingRows: Array<{ binding: BindingAction; label: string }> = [
   { binding: "fire", label: "Key Fire" },
 ];
 const konamiCode = [38, 38, 40, 40, 37, 39, 37, 39, 66, 65];
-const debugUnlockedStorageKey = "timePilot.debugUnlocked";
 
 class Menus implements MenuSystemInstance {
   private _active = false;
@@ -82,7 +81,7 @@ class Menus implements MenuSystemInstance {
   constructor(gameArena: GameArenaInstance, commands: MenuSystemCommands) {
     this._gameArena = gameArena;
     this._commands = commands;
-    this._debugUnlocked = sessionStorage.getItem(debugUnlockedStorageKey) === "true";
+    this._debugUnlocked = userOptions.enableDebug;
   }
 
   isActive(): boolean {
@@ -164,7 +163,7 @@ class Menus implements MenuSystemInstance {
       return false;
     }
 
-    userOptions.keyboardBindings[this._awaitingBinding] = [keyCode];
+    userOptions.setKeyboardBinding(this._awaitingBinding, [keyCode]);
     this._awaitingBinding = null;
     return true;
   }
@@ -438,7 +437,7 @@ class Menus implements MenuSystemInstance {
     return this._createItem(label, "toggle", y, {
       getValue: () => (userOptions.debug[option] ? "On" : "Off"),
       onAdjust: () => {
-        userOptions.debug[option] = !userOptions.debug[option];
+        userOptions.setDebugOption(option, !userOptions.debug[option]);
       },
     });
   }
@@ -740,8 +739,7 @@ class Menus implements MenuSystemInstance {
 
     if (this._konamiIndex === konamiCode.length) {
       this._debugUnlocked = true;
-      userOptions.enableDebug = true;
-      sessionStorage.setItem(debugUnlockedStorageKey, "true");
+      userOptions.setOption("enableDebug", true);
       this._konamiIndex = 0;
       this._buildItems();
     }

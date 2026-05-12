@@ -31,15 +31,15 @@ const createArena = (): GameArenaInstance => ({
 describe("menu definitions", () => {
   afterEach(() => {
     vi.restoreAllMocks();
-    sessionStorage.clear();
-    userOptions.enableDebug = false;
-    userOptions.debug.invincible = true;
-    userOptions.debug.showControlsOverlay = false;
-    userOptions.debug.showHitboxes = true;
-    userOptions.debug.showPlayerCoordinates = true;
+    localStorage.clear();
+    userOptions.setOption("enableDebug", false);
+    userOptions.setDebugOption("invincible", true);
+    userOptions.setDebugOption("showControlsOverlay", false);
+    userOptions.setDebugOption("showHitboxes", true);
+    userOptions.setDebugOption("showPlayerCoordinates", true);
     userOptions.setOption("controllerType", "keyboard1");
     userOptions.setOption("masterVolume", 10);
-    userOptions.keyboardBindings.up = [38, 87];
+    userOptions.setKeyboardBinding("up", [38, 87]);
   });
 
   it("defines the main menu controls", () => {
@@ -250,7 +250,9 @@ describe("menu definitions", () => {
     menus.render();
 
     expect(userOptions.enableDebug).toBe(true);
-    expect(sessionStorage.getItem("timePilot.debugUnlocked")).toBe("true");
+    expect(localStorage.getItem("timePilot.userOptions")).toContain(
+      '"enableDebug":true'
+    );
     expect(arena.renderText).toHaveBeenCalledWith(
       "Debug",
       expect.any(Number),
@@ -268,7 +270,7 @@ describe("menu definitions", () => {
   });
 
   it("keeps the debug menu unlocked for the current browser session", () => {
-    sessionStorage.setItem("timePilot.debugUnlocked", "true");
+    userOptions.setOption("enableDebug", true);
     const arena = createArena();
     const menus = new Menus(arena, { start: vi.fn() });
 
@@ -306,6 +308,9 @@ describe("menu definitions", () => {
 
     menus.activate();
     expect(userOptions.debug.invincible).toBe(false);
+    expect(localStorage.getItem("timePilot.userOptions")).toContain(
+      '"invincible":false'
+    );
 
     for (let i = 0; i < 5; i++) {
       menus.next();
@@ -336,6 +341,7 @@ describe("menu definitions", () => {
     menus.activate();
     expect(menus.captureKey(73)).toBe(true);
     expect(userOptions.keyboardBindings.up).toEqual([73]);
+    expect(localStorage.getItem("timePilot.userOptions")).toContain('"up":[73]');
     expect(menus.captureKey(74)).toBe(false);
   });
 });

@@ -1,6 +1,7 @@
 import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import userOptions from "../../game/user-options";
 import TimePilotGame from "../TimePilotGame";
 
 describe("TimePilotGame", () => {
@@ -21,6 +22,8 @@ describe("TimePilotGame", () => {
       root.unmount();
     });
     container.remove();
+    userOptions.setOption("enableDebug", false);
+    localStorage.clear();
     vi.restoreAllMocks();
   });
 

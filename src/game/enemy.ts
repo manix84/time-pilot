@@ -215,7 +215,7 @@ class Enemy implements EnemyInstance {
         this._data.posY - this._player.getData().posY,
         levelData.hitRadius,
         {
-          strokeColor: palette.debug.enemyHitbox,
+          borderColor: palette.debug.enemyHitbox,
         }
       );
     }

@@ -5,6 +5,27 @@ type CanvasCall = {
   args: unknown[];
 };
 
+function createStorageMock(): Storage {
+  let store: Record<string, string> = {};
+
+  return {
+    get length() {
+      return Object.keys(store).length;
+    },
+    clear: vi.fn(() => {
+      store = {};
+    }),
+    getItem: vi.fn((key: string) => store[key] ?? null),
+    key: vi.fn((index: number) => Object.keys(store)[index] ?? null),
+    removeItem: vi.fn((key: string) => {
+      delete store[key];
+    }),
+    setItem: vi.fn((key: string, value: string) => {
+      store[key] = String(value);
+    }),
+  };
+}
+
 export function createCanvasContextMock() {
   const calls: CanvasCall[] = [];
 
@@ -44,6 +65,11 @@ export function createCanvasContextMock() {
 Object.defineProperty(HTMLCanvasElement.prototype, "getContext", {
   configurable: true,
   value: vi.fn(() => createCanvasContextMock()),
+});
+
+Object.defineProperty(globalThis, "localStorage", {
+  configurable: true,
+  value: createStorageMock(),
 });
 
 Object.defineProperty(HTMLCanvasElement.prototype, "moveTo", {

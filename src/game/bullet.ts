@@ -118,7 +118,7 @@ class Bullet implements BulletInstance {
         this._data.posY,
         this._data.size,
         {
-          strokeColor: palette.debug.playerHitbox,
+          borderColor: palette.debug.playerHitbox,
         }
       );
     }
