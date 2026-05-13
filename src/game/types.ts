@@ -388,6 +388,7 @@ export interface RenderingSystemInstance {
 }
 
 export interface MenuSystemCommands {
+  clearLevelPreview?: () => void;
   getLevel?: () => number;
   previewLevel?: (level: number) => void;
   selectLevel?: (level: number) => void;

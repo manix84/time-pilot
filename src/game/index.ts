@@ -64,6 +64,7 @@ export class TimePilot {
   private hasStartedGame = false;
   private isDestroyed = false;
   private isDemoMode = false;
+  private isDebugLevelPreviewLocked = false;
   private selectedStartLevel = 1;
   private readonly coinDropSound = new SoundEngine(sounds.coinDrop.src);
   private readonly gameStartSound = new SoundEngine(sounds.gameStart.src);
@@ -184,6 +185,9 @@ export class TimePilot {
     this.context._bonuses = new BonusFactory(this.context);
     this.context._hud = new Hud(this.context);
     this.context._menus = new Menus(this.context._gameArena, {
+      clearLevelPreview: () => {
+        this.clearDebugLevelPreview();
+      },
       getLevel: () => this.selectedStartLevel,
       previewLevel: (level) => {
         this.previewDebugLevel(level);
@@ -421,6 +425,7 @@ export class TimePilot {
     SoundEngine.stopAll();
     this.isDemoMode = true;
     this.context._isDemoMode = true;
+    this.isDebugLevelPreviewLocked = false;
     SoundEngine.setMuted(true);
     this.resetWorld(this.getRandomDemoLevel(), { skipIntro: true });
     this.spawningSystem.addInitialProps();
@@ -460,7 +465,7 @@ export class TimePilot {
   };
 
   private advanceDemoLevel = (): void => {
-    if (!this.isDemoMode) {
+    if (!this.isDemoMode || this.isDebugLevelPreviewLocked) {
       return;
     }
 
@@ -536,12 +541,20 @@ export class TimePilot {
 
   private previewDebugLevel = (level: number): void => {
     if (!this.isDemoMode || !levels[level]?.enabled || this.context._level === level) {
+      if (this.isDemoMode && levels[level]?.enabled) {
+        this.isDebugLevelPreviewLocked = true;
+      }
       return;
     }
 
+    this.isDebugLevelPreviewLocked = true;
     this.resetWorld(level, { skipIntro: true });
     this.spawningSystem.addInitialProps();
     this.hasSeededInitialProps = true;
+  };
+
+  private clearDebugLevelPreview = (): void => {
+    this.isDebugLevelPreviewLocked = false;
   };
 
   private createLevelProgress = (level: number) => {

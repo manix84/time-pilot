@@ -481,8 +481,10 @@ describe("menu definitions", () => {
     const selectLevel = vi.fn((level: number) => {
       selectedLevel = level;
     });
+    const clearLevelPreview = vi.fn();
     const previewLevel = vi.fn();
     const menus = new Menus(arena, {
+      clearLevelPreview,
       getLevel: () => selectedLevel,
       previewLevel,
       selectLevel,
@@ -572,6 +574,7 @@ describe("menu definitions", () => {
     expect(selectLevel).not.toHaveBeenCalled();
     menus.activate();
 
+    expect(clearLevelPreview).toHaveBeenCalled();
     expect(selectLevel).toHaveBeenCalledWith(2);
   });
 

@@ -152,6 +152,10 @@ class Menus implements MenuSystemInstance {
   };
 
   showStart = (options: ShowStartMenuOptions = {}): void => {
+    if (this._active && this._screen === "level") {
+      this._commands.clearLevelPreview?.();
+    }
+
     this._active = true;
     this._awaitingBinding = null;
     this._bindingWarning = "";
@@ -168,6 +172,10 @@ class Menus implements MenuSystemInstance {
   };
 
   hide = (): void => {
+    if (this._screen === "level") {
+      this._commands.clearLevelPreview?.();
+    }
+
     this._active = false;
     this._awaitingBinding = null;
     this._bindingWarning = "";
@@ -1570,6 +1578,10 @@ class Menus implements MenuSystemInstance {
   private _goToScreen = (screen: MenuScreen): void => {
     const previousScreen = this._screen;
 
+    if (previousScreen === "level" && screen !== "level") {
+      this._commands.clearLevelPreview?.();
+    }
+
     this._screenHistory.push(this._screen);
     this._screen = screen;
     this._selectedIndex = 0;
@@ -1589,6 +1601,10 @@ class Menus implements MenuSystemInstance {
   private _goBack = (): void => {
     const previousScreen = this._screen;
     const nextScreen = this._screenHistory.pop() ?? "start";
+
+    if (previousScreen === "level" && nextScreen !== "level") {
+      this._commands.clearLevelPreview?.();
+    }
 
     this._screen = nextScreen;
     this._selectedIndex = 0;
@@ -1631,6 +1647,7 @@ class Menus implements MenuSystemInstance {
   };
 
   private _setSelectedLevel = (level: number): void => {
+    this._commands.clearLevelPreview?.();
     this._commands.selectLevel?.(level);
   };
 
