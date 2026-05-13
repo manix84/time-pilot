@@ -46,6 +46,7 @@
 - Added UI zoom and game POV zoom options, both with automatic viewport scaling.
 - Kept pixel art crisp when the game POV zoom changes.
 - Added a live player scale preview beside the Game Zoom option.
+- Added debug heading and steering vector overlays, with an optional turn-arc fill.
 - Added keyboard shortcuts for UI zoom with `+`/`=` and `-`.
 - Added `M` and the gamepad menu button as root-menu shortcuts.
 - Added Escape, Backspace, and gamepad back navigation for submenus.

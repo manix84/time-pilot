@@ -36,9 +36,11 @@ type MenuScreen =
 type MenuItemKind = "action" | "enum" | "slider" | "key" | "toggle";
 type ToggleDebugOption =
   | "invincible"
+  | "showHeadingVectors"
   | "showControlsOverlay"
   | "showHitboxes"
-  | "showPlayerCoordinates";
+  | "showPlayerCoordinates"
+  | "showSteeringArc";
 type BindingAction = keyof KeyboardBindings;
 
 interface MenuItem {
@@ -800,11 +802,21 @@ class Menus implements MenuSystemInstance {
         "showPlayerCoordinates",
         72
       ),
-      this._createItem(i18n.menu.selectLevel, "action", 114, {
+      this._createToggleItem(
+        i18n.menu.showHeadingVectors,
+        "showHeadingVectors",
+        114
+      ),
+      this._createToggleItem(
+        i18n.menu.showSteeringArc,
+        "showSteeringArc",
+        156
+      ),
+      this._createItem(i18n.menu.selectLevel, "action", 198, {
         action: () => this._goToScreen("level"),
         getValue: () => this._getSelectedLevelLabel(),
       }),
-      this._createItem(i18n.menu.back, "action", 164, {
+      this._createItem(i18n.menu.back, "action", 248, {
         action: () => this._goBack(),
       }),
     ];

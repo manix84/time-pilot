@@ -109,7 +109,9 @@ paused root menu resumes play, matching the Continue button. In submenus,
 When debug mode is unlocked, the level select menu includes translated era
 blurbs on the left, level buttons in the centre, and animated enemy, special,
 boss, and bonus previews on the right. Focusing a level also pins the background
-demo preview to that era until the level select screen is closed.
+demo preview to that era until the level select screen is closed. Debug overlays
+can also show hitboxes, heading and steering vectors, and an optional turn-arc
+fill for intentional moving entities.
 
 ## 🧭 Project Structure
 

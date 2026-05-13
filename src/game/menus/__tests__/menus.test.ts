@@ -34,9 +34,11 @@ describe("menu definitions", () => {
     localStorage.clear();
     userOptions.setOption("enableDebug", false);
     userOptions.setDebugOption("invincible", true);
+    userOptions.setDebugOption("showHeadingVectors", false);
     userOptions.setDebugOption("showControlsOverlay", false);
     userOptions.setDebugOption("showHitboxes", true);
     userOptions.setDebugOption("showPlayerCoordinates", true);
+    userOptions.setDebugOption("showSteeringArc", false);
     userOptions.setOption("controllerType", "keyboard1");
     userOptions.setOption("language", "en");
     userOptions.setOption("gameZoom", 5);
@@ -551,7 +553,24 @@ describe("menu definitions", () => {
       '"invincible":false'
     );
 
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i < 4; i++) {
+      menus.next();
+    }
+
+    menus.activate();
+    expect(userOptions.debug.showHeadingVectors).toBe(true);
+    expect(localStorage.getItem("timePilot.userOptions")).toContain(
+      '"showHeadingVectors":true'
+    );
+
+    menus.next();
+    menus.activate();
+    expect(userOptions.debug.showSteeringArc).toBe(true);
+    expect(localStorage.getItem("timePilot.userOptions")).toContain(
+      '"showSteeringArc":true'
+    );
+
+    for (let i = 0; i < 2; i++) {
       menus.next();
     }
 
@@ -591,7 +610,7 @@ describe("menu definitions", () => {
     menus.next();
     menus.activate();
 
-    for (let i = 0; i < 4; i++) {
+    for (let i = 0; i < 6; i++) {
       menus.next();
     }
 
@@ -687,7 +706,7 @@ describe("menu definitions", () => {
     menus.next();
     menus.next();
     menus.activate();
-    for (let i = 0; i < 4; i++) {
+    for (let i = 0; i < 6; i++) {
       menus.next();
     }
     menus.activate();

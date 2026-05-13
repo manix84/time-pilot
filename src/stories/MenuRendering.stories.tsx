@@ -51,7 +51,7 @@ const prepareMenu = (menu: Menus, screen: MenuScreenDemo): void => {
     menu.activate();
 
     if (screen === "level") {
-      for (let i = 0; i < 4; i++) {
+      for (let i = 0; i < 6; i++) {
         menu.next();
       }
       menu.activate();

@@ -1,6 +1,7 @@
 /* Converted from TimePilot.Player.js (AMD) to ESM TypeScript. */
 import { levels, player } from "./constants";
 import userOptions from "./user-options";
+import { drawDebugVectors } from "./debug-vectors";
 import SoundEngine from "./engine/Sound";
 import helpers from "./engine/helpers";
 import palette from "./palette";
@@ -215,6 +216,17 @@ class Player implements PlayerInstance {
       }
       this._gameArena.drawCircle(0, 0, playerConst.hitRadius, {
         borderColor: color,
+      });
+    }
+
+    if (userOptions.enableDebug && userOptions.debug.showHeadingVectors) {
+      const context = this._gameArena.getContext() as CanvasRenderingContext2D;
+      const steeringHeading =
+        this._data.newHeading === false ? this._data.heading : this._data.newHeading;
+
+      drawDebugVectors(context, 0, 0, this._data.heading, steeringHeading, {
+        fillTurnArc: userOptions.debug.showSteeringArc,
+        length: 38,
       });
     }
   };

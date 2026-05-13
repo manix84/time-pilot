@@ -611,7 +611,9 @@ export interface UserOptions {
     showSpriteCorners: boolean;
     showSpriteCenters: boolean;
     showControlsOverlay: boolean;
+    showHeadingVectors: boolean;
     showPlayerCoordinates: boolean;
+    showSteeringArc: boolean;
     invincible: boolean;
   };
   enableDebug: boolean;

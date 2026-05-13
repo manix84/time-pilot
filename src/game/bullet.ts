@@ -1,5 +1,6 @@
 /* Converted from TimePilot.Bullet.js (AMD) to ESM TypeScript. */
 import userOptions from "./user-options";
+import { drawDebugVectors } from "./debug-vectors";
 import helpers from "./engine/helpers";
 import palette from "./palette";
 import { getDespawnRadius } from "./viewport";
@@ -169,6 +170,20 @@ class Bullet implements BulletInstance {
         this._data.size,
         {
           borderColor: palette.debug.playerHitbox,
+        }
+      );
+    }
+
+    if (userOptions.enableDebug && userOptions.debug.showHeadingVectors) {
+      drawDebugVectors(
+        context,
+        posX,
+        posY,
+        this._data.heading,
+        this._data.heading,
+        {
+          fillTurnArc: userOptions.debug.showSteeringArc,
+          length: Math.max(14, this._data.size * 2),
         }
       );
     }

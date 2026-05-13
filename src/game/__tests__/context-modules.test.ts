@@ -133,7 +133,9 @@ describe("context-backed game modules", () => {
   afterEach(() => {
     userOptions.setOption("enableDebug", false);
     userOptions.setOption("gameZoom", 5);
+    userOptions.setDebugOption("showHeadingVectors", false);
     userOptions.setDebugOption("showHitboxes", true);
+    userOptions.setDebugOption("showSteeringArc", false);
     userOptions.setOption("uiZoom", 5);
     localStorage.clear();
   });
@@ -699,6 +701,39 @@ describe("context-backed game modules", () => {
     expect(context._gameArena.drawCircle).toHaveBeenCalledWith(80, 80, 10, {
       borderColor: "#0FF",
     });
+  });
+
+  it("renders heading and steering vectors for intentional moving entities only", () => {
+    const context = createContext();
+    const canvasContext = context._gameArena.getContext() as CanvasRenderingContext2D;
+    userOptions.setOption("enableDebug", true);
+    userOptions.setDebugOption("showHeadingVectors", true);
+    userOptions.setDebugOption("showSteeringArc", true);
+    context._player.setData("heading", 90);
+    context._player.setData("newHeading", 0);
+
+    context._bullets.create(0, 0, 90, 4, 7, "#fff");
+    context._enemies.create(100, 100, 180);
+    context._bonuses.create(80, 80);
+    context._enemies.reposition();
+
+    context._player.render();
+    context._bullets.render();
+    context._enemies.render();
+    const lineCountBeforeBonus = vi.mocked(canvasContext.lineTo).mock.calls.length;
+    context._bonuses.render();
+
+    expect(vi.mocked(canvasContext.lineTo).mock.calls).toEqual(
+      expect.arrayContaining([
+        [expect.closeTo(38), expect.closeTo(0)],
+        [expect.closeTo(0), expect.closeTo(-38)],
+      ])
+    );
+    expect(canvasContext.fill).toHaveBeenCalled();
+    expect(canvasContext.stroke).toHaveBeenCalled();
+    expect(vi.mocked(canvasContext.lineTo).mock.calls.length).toBe(
+      lineCountBeforeBonus
+    );
   });
 
   it("renders HUD and delegates controller commands", () => {

@@ -52,7 +52,9 @@ const defaultPersistedOptions: PersistedUserOptions = {
     showSpriteCorners: true,
     showSpriteCenters: true,
     showControlsOverlay: false,
+    showHeadingVectors: false,
     showPlayerCoordinates: true,
+    showSteeringArc: false,
     invincible: true,
   },
   enableDebug: false,
@@ -176,12 +178,28 @@ var userOptions: UserOptions = {
       defaultPersistedOptions.debug.showControlsOverlay,
 
     /**
+     * Draw facing and steering vectors for intentional moving entities.
+     * @type {Boolean}
+     */
+    showHeadingVectors:
+      storedOptions.debug?.showHeadingVectors ??
+      defaultPersistedOptions.debug.showHeadingVectors,
+
+    /**
      * Write the current player coordinates on screen.
      * @type {Boolean}
      */
     showPlayerCoordinates:
       storedOptions.debug?.showPlayerCoordinates ??
       defaultPersistedOptions.debug.showPlayerCoordinates,
+
+    /**
+     * Fill the shortest turning arc between heading and steering vectors.
+     * @type {Boolean}
+     */
+    showSteeringArc:
+      storedOptions.debug?.showSteeringArc ??
+      defaultPersistedOptions.debug.showSteeringArc,
 
     /**
      * Make the player immortal.
