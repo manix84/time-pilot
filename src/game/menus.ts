@@ -223,6 +223,39 @@ class Menus implements MenuSystemInstance {
     this._items[this._selectedIndex]?.onAdjust?.(direction);
   };
 
+  goBack = (): void => {
+    if (!this._active || this._screen === "start") {
+      return;
+    }
+
+    this._goBack();
+  };
+
+  goToRoot = (): void => {
+    if (!this._active || this._screen === "start") {
+      return;
+    }
+
+    const previousScreen = this._screen;
+
+    if (previousScreen === "level") {
+      this._commands.clearLevelPreview?.();
+    }
+
+    this._screen = "start";
+    this._screenHistory = [];
+    this._selectedIndex = 0;
+    this._awaitingBinding = null;
+    this._bindingWarning = "";
+    this._pressedItemIndex = null;
+    this._sliderDragIndex = null;
+    this._scrollY = 0;
+    this._buildItems();
+    this._startTransition(previousScreen, "start");
+    this._levelPreviewedLevel = undefined;
+    this._resetLevelMenuIdleState();
+  };
+
   activate = (): void => {
     if (!this._active) {
       return;
@@ -256,6 +289,13 @@ class Menus implements MenuSystemInstance {
     }
 
     this._resetLevelMenuIdleState();
+
+    if (!this._awaitingBinding && (keyCode === 8 || keyCode === 27)) {
+      const previousScreen = this._screen;
+
+      this.goBack();
+      return previousScreen !== this._screen;
+    }
 
     if (!this._awaitingBinding) {
       this._captureKonamiKey(keyCode);

@@ -32,7 +32,11 @@ class Keyboard2 implements Controller {
 
         const bindings = userOptions.keyboardBindings;
 
-        if (event.keyCode === 187 || event.keyCode === 107) {
+        if (event.keyCode === 77) {
+          event.preventDefault();
+          this._setInputState("menu", true);
+          this._controllerInterface.openMainMenu?.();
+        } else if (event.keyCode === 187 || event.keyCode === 107) {
           event.preventDefault();
           this._controllerInterface.adjustUiZoom?.(1);
         } else if (event.keyCode === 189 || event.keyCode === 109) {
@@ -92,6 +96,7 @@ class Keyboard2 implements Controller {
         } else if (bindings.menu.includes(event.keyCode)) {
           event.preventDefault();
           this._setInputState("menu", true);
+          this._controllerInterface.goBack?.();
           this._controllerInterface.openMenu?.();
         } else if (bindings.pause.includes(event.keyCode)) {
           event.preventDefault();

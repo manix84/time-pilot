@@ -116,6 +116,8 @@ const createContext = (): GameDataStore => {
     render: vi.fn(),
     next: vi.fn(),
     previous: vi.fn(),
+    goBack: vi.fn(),
+    goToRoot: vi.fn(),
     activate: vi.fn(),
     handlePointer: vi.fn(),
   } satisfies MenuSystemInstance;

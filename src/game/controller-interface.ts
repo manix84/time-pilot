@@ -108,6 +108,15 @@ class ControllerInterface implements ControllerInterfaceInstance {
     this._commands.openMenu();
   };
 
+  openMainMenu = (): void => {
+    if (this._menus.isActive()) {
+      this._menus.goToRoot();
+      return;
+    }
+
+    this._commands.openMenu();
+  };
+
   startShooting = (): void => {
     if (this._menus.isActive()) {
       this._menus.activate();
@@ -161,6 +170,10 @@ class ControllerInterface implements ControllerInterfaceInstance {
 
   captureKey = (keyCode: number): boolean => {
     return this._menus.captureKey(keyCode);
+  };
+
+  goBack = (): void => {
+    this._menus.goBack();
   };
 
   isMenuActive = (): boolean => {

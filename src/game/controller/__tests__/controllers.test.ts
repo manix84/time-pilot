@@ -15,6 +15,7 @@ const createControls = (): ControllerInterfaceInstance => {
     rotateAntiClockwise: vi.fn(),
     stop: vi.fn(),
     toggleMenu: vi.fn(),
+    openMainMenu: vi.fn(),
     openMenu: vi.fn(),
     startShooting: vi.fn(),
     stopShooting: vi.fn(),
@@ -25,6 +26,7 @@ const createControls = (): ControllerInterfaceInstance => {
     rotateRight: vi.fn(),
     rotateLeft: vi.fn(),
     handlePointer: vi.fn(),
+    goBack: vi.fn(),
     isMenuActive: vi.fn(() => false),
   };
 };
@@ -80,12 +82,27 @@ describe("controller modules", () => {
     expect(controls.rotateToHeading).toHaveBeenCalledWith(270);
     expect(controls.startShooting).toHaveBeenCalled();
     expect(controls.stopShooting).toHaveBeenCalled();
+    expect(controls.goBack).toHaveBeenCalled();
     expect(controls.openMenu).toHaveBeenCalled();
     expect(controls.togglePause).not.toHaveBeenCalled();
     expect(inputState.left).toBe(true);
     expect(inputState.fire).toBe(false);
     expect(inputState.menu).toBe(true);
     expect(inputState.activeController).toBe("keyboard");
+
+    keyboard.disconnect?.();
+  });
+
+  it("uses M to open the main menu", () => {
+    const controls = createControls();
+    const inputState = createInputState();
+    const keyboard = new Keyboard1(controls, inputState);
+
+    document.documentElement.dispatchEvent(new KeyboardEvent("keydown", { keyCode: 77 }));
+
+    expect(controls.openMainMenu).toHaveBeenCalled();
+    expect(controls.openMenu).not.toHaveBeenCalled();
+    expect(inputState.menu).toBe(true);
 
     keyboard.disconnect?.();
   });
@@ -102,6 +119,30 @@ describe("controller modules", () => {
     expect(inputState.fire).toBe(false);
 
     keyboard.disconnect?.();
+  });
+
+  it("maps gamepad menu and back buttons to menu actions", async () => {
+    const controls = createControls();
+    const inputState = createInputState();
+    vi.mocked(controls.isMenuActive).mockReturnValue(true);
+    const gamepad = {
+      axes: [0, 0],
+      buttons: Array.from({ length: 16 }, () => ({ pressed: false })),
+    };
+    gamepad.buttons[8].pressed = true;
+    gamepad.buttons[9].pressed = true;
+    vi.spyOn(navigator, "getGamepads").mockReturnValue([
+      gamepad as unknown as globalThis.Gamepad,
+    ]);
+
+    const controller = new Gamepad(controls, inputState);
+    await new Promise((resolve) => window.setTimeout(resolve, 5));
+    controller.disconnect?.();
+
+    expect(controls.goBack).toHaveBeenCalled();
+    expect(controls.openMainMenu).toHaveBeenCalled();
+    expect(controls.restart).not.toHaveBeenCalled();
+    expect(inputState.menu).toBe(true);
   });
 
   it("maps plus and minus keys to UI zoom controls", () => {

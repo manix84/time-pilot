@@ -150,6 +150,40 @@ describe("menu definitions", () => {
     expect(userOptions.controllerType).toBe("keyboard2");
   });
 
+  it("uses escape and backspace to return from submenus", () => {
+    const arena = createArena();
+    const menus = new Menus(arena, { start: vi.fn() });
+
+    menus.showStart();
+    menus.next();
+    menus.activate();
+
+    expect(menus.captureKey(8)).toBe(true);
+    menus.render();
+    expect(arena.renderText).toHaveBeenCalledWith(
+      "Start",
+      expect.any(Number),
+      expect.any(Number),
+      expect.objectContaining({ align: "left" })
+    );
+
+    menus.next();
+    menus.activate();
+    for (let i = 0; i < 5; i++) {
+      menus.next();
+    }
+    menus.activate();
+
+    expect(menus.captureKey(27)).toBe(true);
+    menus.render();
+    expect(arena.renderText).toHaveBeenCalledWith(
+      "Options",
+      expect.any(Number),
+      expect.any(Number),
+      expect.objectContaining({ align: "center" })
+    );
+  });
+
   it("renders slider values with a clipped progress underlay", () => {
     const arena = createArena();
     const menus = new Menus(arena, { start: vi.fn() });

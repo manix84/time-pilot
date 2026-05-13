@@ -337,6 +337,7 @@ export interface ControllerInterfaceInstance {
   rotateAntiClockwise: () => void;
   stop: () => void;
   toggleMenu: () => void;
+  openMainMenu?: () => void;
   openMenu?: () => void;
   startShooting: () => void;
   stopShooting: () => void;
@@ -348,6 +349,7 @@ export interface ControllerInterfaceInstance {
   rotateLeft: () => void;
   handlePointer?: (pointer: MenuPointerData) => void;
   captureKey?: (keyCode: number) => boolean;
+  goBack?: () => void;
   isMenuActive?: () => boolean;
 }
 
@@ -410,6 +412,8 @@ export interface MenuSystemInstance {
   render: () => void;
   next: () => void;
   previous: () => void;
+  goBack: () => void;
+  goToRoot: () => void;
   activate: () => void;
   handlePointer: (pointer: MenuPointerData) => void;
 }
