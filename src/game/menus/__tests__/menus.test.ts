@@ -41,9 +41,9 @@ describe("menu definitions", () => {
     userOptions.setDebugOption("showSteeringArc", false);
     userOptions.setOption("controllerType", "keyboard1");
     userOptions.setOption("language", "en");
-    userOptions.setOption("gameZoom", 5);
+    userOptions.setOption("gameZoom", 100);
     userOptions.setOption("masterVolume", 10);
-    userOptions.setOption("uiZoom", 5);
+    userOptions.setOption("uiZoom", 100);
     userOptions.setKeyboardBinding("up", [38, 87]);
   });
 
@@ -171,8 +171,8 @@ describe("menu definitions", () => {
   it("adjusts UI and game zoom from the options menu", () => {
     const arena = createArena();
     const menus = new Menus(arena, { start: vi.fn() });
-    userOptions.setOption("uiZoom", 5);
-    userOptions.setOption("gameZoom", 5);
+    userOptions.setOption("uiZoom", 100);
+    userOptions.setOption("gameZoom", 100);
 
     menus.showStart();
     menus.next();
@@ -183,11 +183,11 @@ describe("menu definitions", () => {
     }
 
     menus.adjust(1);
-    expect(userOptions.uiZoom).toBe(6);
+    expect(userOptions.uiZoom).toBe(105);
 
     menus.next();
     menus.adjust(-1);
-    expect(userOptions.gameZoom).toBe(4);
+    expect(userOptions.gameZoom).toBe(95);
 
     menus.render();
 

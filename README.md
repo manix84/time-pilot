@@ -98,7 +98,8 @@ and gamepad commands move, adjust, and activate menu items through the same
 controller interface used for gameplay, while mouse input is limited to menu
 interaction. Options currently include volume levels, UI zoom, game POV zoom,
 language, controller style, and custom keyboard bindings. UI zoom can also be
-adjusted from the keyboard with `+`/`=` and `-`.
+adjusted from the keyboard with `+`/`=` and `-`. Both zoom options default to
+100% and range from 25% to 250% in 5% steps.
 
 During play, `P` pauses the game and `Escape` opens the root menu with a
 `Paused` subtitle and a `Continue` action. Pressing `Escape` again from that

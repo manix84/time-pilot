@@ -15,6 +15,11 @@ const supportedLanguages: GameLanguage[] = [
   "nl",
   "ro",
 ];
+const zoomDefaultPercent = 100;
+const zoomMaxPercent = 250;
+const zoomMinPercent = 25;
+const oldZoomBasePercent = 75;
+const oldZoomStepPercent = 5;
 
 type PersistedUserOptions = Pick<
   UserOptions,
@@ -59,14 +64,27 @@ const defaultPersistedOptions: PersistedUserOptions = {
   },
   enableDebug: false,
   controllerType: "keyboard1" as ControllerType,
-  gameZoom: 5,
+  gameZoom: zoomDefaultPercent,
   gamepadEnabled: true,
   keyboardBindings: defaultKeyboardBindings,
   language: "en",
   masterVolume: 10,
   musicVolume: 8,
   effectsVolume: 8,
-  uiZoom: 5,
+  uiZoom: zoomDefaultPercent,
+};
+
+const normalizeZoomOption = (value: unknown): number => {
+  if (typeof value !== "number" || !Number.isFinite(value)) {
+    return zoomDefaultPercent;
+  }
+
+  const percent =
+    value >= 0 && value <= 10
+      ? oldZoomBasePercent + value * oldZoomStepPercent
+      : value;
+
+  return Math.max(zoomMinPercent, Math.min(zoomMaxPercent, percent));
 };
 
 const getOptionsStorage = (): Storage | null => {
@@ -223,7 +241,7 @@ var userOptions: UserOptions = {
    */
   controllerType:
     storedOptions.controllerType ?? defaultPersistedOptions.controllerType,
-  gameZoom: storedOptions.gameZoom ?? defaultPersistedOptions.gameZoom,
+  gameZoom: normalizeZoomOption(storedOptions.gameZoom),
 
   /**
    * Poll the browser Gamepad API alongside the selected keyboard layout.
@@ -240,7 +258,7 @@ var userOptions: UserOptions = {
   masterVolume: storedOptions.masterVolume ?? defaultPersistedOptions.masterVolume,
   musicVolume: storedOptions.musicVolume ?? defaultPersistedOptions.musicVolume,
   effectsVolume: storedOptions.effectsVolume ?? defaultPersistedOptions.effectsVolume,
-  uiZoom: storedOptions.uiZoom ?? defaultPersistedOptions.uiZoom,
+  uiZoom: normalizeZoomOption(storedOptions.uiZoom),
 
   /**
    * Set options in this object (userOptions), and store it so that the user doesn't have to set options each time

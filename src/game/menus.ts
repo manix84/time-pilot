@@ -23,6 +23,9 @@ import {
   formatUiZoom,
   getGameScale,
   getUiScale,
+  zoomMaxPercent,
+  zoomMinPercent,
+  zoomStepPercent,
 } from "./ui-scale";
 import userOptions from "./user-options";
 
@@ -61,6 +64,7 @@ interface MenuItem {
     x: number;
     y: number;
   };
+  sliderSteps?: number;
 }
 
 interface MenuViewport {
@@ -656,12 +660,14 @@ class Menus implements MenuSystemInstance {
       this._createItem(i18n.menu.uiZoom, "slider", 72, {
         getValue: () => formatUiZoom(),
         onAdjust: (direction) => this.adjustUiZoom(direction),
-        onSetValue: (value) => this._setUiZoom(value),
+        onSetValue: (value) => this._setUiZoom(this._getZoomValueFromStep(value)),
+        sliderSteps: this._getZoomSliderSteps(),
       }),
       this._createItem(i18n.menu.gameZoom, "slider", 114, {
         getValue: () => formatGameZoom(),
         onAdjust: (direction) => this._adjustGameZoom(direction),
-        onSetValue: (value) => this._setGameZoom(value),
+        onSetValue: (value) => this._setGameZoom(this._getZoomValueFromStep(value)),
+        sliderSteps: this._getZoomSliderSteps(),
       }),
       this._createItem(i18n.menu.language, "action", 156, {
         getValue: () => getLanguageName(userOptions.language),
@@ -1634,6 +1640,13 @@ class Menus implements MenuSystemInstance {
       return null;
     }
 
+    if (item.label === i18n.menu.uiZoom || item.label === i18n.menu.gameZoom) {
+      return Math.max(
+        0,
+        Math.min(1, (value - zoomMinPercent) / (zoomMaxPercent - zoomMinPercent))
+      );
+    }
+
     return Math.max(0, Math.min(1, value / 10));
   };
 
@@ -1650,7 +1663,7 @@ class Menus implements MenuSystemInstance {
       Math.min(1, (pointer.posX - item.rect.x) / item.rect.width)
     );
 
-    item.onSetValue(Math.round(progress * 10));
+    item.onSetValue(Math.round(progress * (item.sliderSteps ?? 10)));
   };
 
   private _getMenuViewport = (): MenuViewport => {
@@ -2007,19 +2020,33 @@ class Menus implements MenuSystemInstance {
   };
 
   adjustUiZoom = (direction: -1 | 1): void => {
-    this._setUiZoom(userOptions.uiZoom + direction);
+    this._setUiZoom(userOptions.uiZoom + direction * zoomStepPercent);
   };
 
   private _setUiZoom = (value: number): void => {
-    userOptions.setOption("uiZoom", Math.max(0, Math.min(10, value)));
+    userOptions.setOption(
+      "uiZoom",
+      Math.max(zoomMinPercent, Math.min(zoomMaxPercent, value))
+    );
   };
 
   private _adjustGameZoom = (direction: -1 | 1): void => {
-    this._setGameZoom(userOptions.gameZoom + direction);
+    this._setGameZoom(userOptions.gameZoom + direction * zoomStepPercent);
   };
 
   private _setGameZoom = (value: number): void => {
-    userOptions.setOption("gameZoom", Math.max(0, Math.min(10, value)));
+    userOptions.setOption(
+      "gameZoom",
+      Math.max(zoomMinPercent, Math.min(zoomMaxPercent, value))
+    );
+  };
+
+  private _getZoomSliderSteps = (): number => {
+    return (zoomMaxPercent - zoomMinPercent) / zoomStepPercent;
+  };
+
+  private _getZoomValueFromStep = (step: number): number => {
+    return zoomMinPercent + step * zoomStepPercent;
   };
 
   private _getLevelMenuOpacity = (idleProgress: number): number => {

@@ -132,11 +132,11 @@ describe("context-backed game modules", () => {
 
   afterEach(() => {
     userOptions.setOption("enableDebug", false);
-    userOptions.setOption("gameZoom", 5);
+    userOptions.setOption("gameZoom", 100);
     userOptions.setDebugOption("showHeadingVectors", false);
     userOptions.setDebugOption("showHitboxes", true);
     userOptions.setDebugOption("showSteeringArc", false);
-    userOptions.setOption("uiZoom", 5);
+    userOptions.setOption("uiZoom", 100);
     localStorage.clear();
   });
 

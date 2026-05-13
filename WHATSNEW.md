@@ -44,6 +44,7 @@
 - Made focused debug levels pin the background demo preview until leaving level select.
 - Added idle fading on the level select menu so the background demo is easier to inspect.
 - Added UI zoom and game POV zoom options, both with automatic viewport scaling.
+- Expanded UI and game POV zoom limits to 25%-250%, with 100% as the default.
 - Kept pixel art crisp when the game POV zoom changes.
 - Added a live player scale preview beside the Game Zoom option.
 - Added debug heading and steering vector overlays, with an optional turn-arc fill.

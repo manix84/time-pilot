@@ -313,7 +313,7 @@ const createContext = ({
 
 describe("game systems", () => {
   beforeEach(() => {
-    userOptions.setOption("gameZoom", 5);
+    userOptions.setOption("gameZoom", 100);
   });
 
   beforeEach(() => {

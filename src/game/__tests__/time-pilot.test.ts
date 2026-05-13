@@ -21,10 +21,10 @@ describe("TimePilot engine", () => {
     userOptions.setDebugOption("invincible", true);
     localStorage.clear();
     userOptions.setOption("controllerType", "keyboard1");
-    userOptions.setOption("gameZoom", 5);
+    userOptions.setOption("gameZoom", 100);
     userOptions.setOption("gamepadEnabled", true);
     userOptions.setOption("language", "en");
-    userOptions.setOption("uiZoom", 5);
+    userOptions.setOption("uiZoom", 100);
     vi.restoreAllMocks();
   });
 
@@ -105,9 +105,9 @@ describe("TimePilot engine", () => {
   it("persists user option updates", () => {
     userOptions.setOption("controllerType", "keyboard1");
     userOptions.setOption("gamepadEnabled", true);
-    userOptions.setOption("gameZoom", 6);
+    userOptions.setOption("gameZoom", 125);
     userOptions.setOption("language", "es");
-    userOptions.setOption("uiZoom", 7);
+    userOptions.setOption("uiZoom", 150);
     userOptions.setOption("enableDebug", true);
     userOptions.setDebugOption("showControlsOverlay", true);
 
@@ -119,9 +119,9 @@ describe("TimePilot engine", () => {
     expect(localStorage.getItem("timePilot.userOptions")).toContain(
       '"gamepadEnabled":true'
     );
-    expect(localStorage.getItem("timePilot.userOptions")).toContain('"gameZoom":6');
+    expect(localStorage.getItem("timePilot.userOptions")).toContain('"gameZoom":125');
     expect(localStorage.getItem("timePilot.userOptions")).toContain('"language":"es"');
-    expect(localStorage.getItem("timePilot.userOptions")).toContain('"uiZoom":7');
+    expect(localStorage.getItem("timePilot.userOptions")).toContain('"uiZoom":150');
     expect(localStorage.getItem("timePilot.userOptions")).toContain(
       '"enableDebug":true'
     );

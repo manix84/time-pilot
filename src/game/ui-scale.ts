@@ -6,19 +6,22 @@ const gameViewportMinScale = 0.75;
 const gameViewportMaxScale = 1.35;
 const viewportMinScale = 0.72;
 const viewportMaxScale = 1.35;
-const gameZoomBase = 0.75;
-const gameZoomStep = 0.05;
-const uiZoomBase = 0.75;
-const uiZoomStep = 0.05;
+export const zoomMinPercent = 25;
+export const zoomMaxPercent = 250;
+export const zoomDefaultPercent = 100;
+export const zoomStepPercent = 5;
 
 const clamp = (value: number, min: number, max: number): number =>
   Math.max(min, Math.min(max, value));
 
+export const clampZoomPercent = (value: number): number =>
+  clamp(value, zoomMinPercent, zoomMaxPercent);
+
 export const getManualUiScale = (): number =>
-  uiZoomBase + userOptions.uiZoom * uiZoomStep;
+  clampZoomPercent(userOptions.uiZoom) / 100;
 
 export const getManualGameScale = (): number =>
-  gameZoomBase + userOptions.gameZoom * gameZoomStep;
+  clampZoomPercent(userOptions.gameZoom) / 100;
 
 export const getViewportGameScale = (width: number, height: number): number => {
   const scale = Math.min(
