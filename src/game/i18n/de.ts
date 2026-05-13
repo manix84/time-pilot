@@ -63,6 +63,24 @@ const de: typeof en = {
     directional: "Richtung",
     effectsVolume: "Effektlautstaerke",
     fire: "Feuer",
+    levelShowcase: {
+      basic: {
+        label: "Feinde",
+        description: "Hauptgegner dieser Epoche.",
+      },
+      special: {
+        label: "Spezial",
+        description: "Seltene Bedrohung mit Sonderangriffen.",
+      },
+      boss: {
+        label: "Boss",
+        description: "Schweres Ziel mit Schadensphasen.",
+      },
+      bonus: {
+        label: "Bonus",
+        description: "Sammeln fuer steigende Punkte.",
+      },
+    },
     invincibilityShield: "Unverwundbarkeit",
     language: "Sprache",
     masterVolume: "Gesamtlautstaerke",

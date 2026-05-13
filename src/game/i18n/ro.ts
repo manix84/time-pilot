@@ -63,6 +63,24 @@ const ro: typeof en = {
     directional: "Directional",
     effectsVolume: "Volum efecte",
     fire: "Foc",
+    levelShowcase: {
+      basic: {
+        label: "Inamici",
+        description: "Aeronava principala a erei.",
+      },
+      special: {
+        label: "Special",
+        description: "Amenintare rara cu atacuri neobisnuite.",
+      },
+      boss: {
+        label: "Boss",
+        description: "Tinta grea cu stari de avarie.",
+      },
+      bonus: {
+        label: "Bonus",
+        description: "Colecteaza pentru scor crescut.",
+      },
+    },
     invincibilityShield: "Scut invincibil",
     language: "Limba",
     masterVolume: "Volum principal",

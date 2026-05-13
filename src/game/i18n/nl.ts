@@ -63,6 +63,24 @@ const nl: typeof en = {
     directional: "Richting",
     effectsVolume: "Effectvolume",
     fire: "Vuur",
+    levelShowcase: {
+      basic: {
+        label: "Vijanden",
+        description: "Belangrijkste dreiging van dit tijdperk.",
+      },
+      special: {
+        label: "Speciaal",
+        description: "Zeldzame dreiging met aparte aanvallen.",
+      },
+      boss: {
+        label: "Boss",
+        description: "Zwaar doel met schadefasen.",
+      },
+      bonus: {
+        label: "Bonus",
+        description: "Verzamel voor oplopende score.",
+      },
+    },
     invincibilityShield: "Onkwetsbaar schild",
     language: "Taal",
     masterVolume: "Hoofdvolume",

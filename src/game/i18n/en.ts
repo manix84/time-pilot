@@ -61,6 +61,24 @@ const en = {
     directional: "Directional",
     effectsVolume: "Effects Volume",
     fire: "Fire",
+    levelShowcase: {
+      basic: {
+        label: "Enemies",
+        description: "Main attack craft for this era.",
+      },
+      special: {
+        label: "Special",
+        description: "Rare threat with unusual attacks.",
+      },
+      boss: {
+        label: "Boss",
+        description: "Heavy target with damage states.",
+      },
+      bonus: {
+        label: "Bonus",
+        description: "Collect for a rising score award.",
+      },
+    },
     invincibilityShield: "Invincibility Shield",
     language: "Language",
     masterVolume: "Master Volume",

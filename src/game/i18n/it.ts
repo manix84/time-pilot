@@ -63,6 +63,24 @@ const it: typeof en = {
     directional: "Direzionale",
     effectsVolume: "Volume effetti",
     fire: "Fuoco",
+    levelShowcase: {
+      basic: {
+        label: "Nemici",
+        description: "Minaccia principale dell'era.",
+      },
+      special: {
+        label: "Speciale",
+        description: "Minaccia rara con attacchi insoliti.",
+      },
+      boss: {
+        label: "Boss",
+        description: "Bersaglio pesante con danni visibili.",
+      },
+      bonus: {
+        label: "Bonus",
+        description: "Raccoglilo per piu punti.",
+      },
+    },
     invincibilityShield: "Scudo invincibile",
     language: "Lingua",
     masterVolume: "Volume principale",

@@ -63,6 +63,12 @@ const fr: typeof en = {
     directional: "Directionnel",
     effectsVolume: "Volume des effets",
     fire: "Tir",
+    levelShowcase: {
+      basic: { label: "Ennemis", description: "Appareil principal de cette ere." },
+      special: { label: "Special", description: "Menace rare aux attaques etranges." },
+      boss: { label: "Boss", description: "Cible lourde avec degats visibles." },
+      bonus: { label: "Bonus", description: "A collecter pour plus de points." },
+    },
     invincibilityShield: "Bouclier d'invincibilite",
     language: "Langue",
     masterVolume: "Volume principal",

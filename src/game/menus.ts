@@ -15,6 +15,7 @@ import type {
   MenuPointerData,
   MenuSystemCommands,
   MenuSystemInstance,
+  BonusConfig,
   EnemyConfig,
   ShowStartMenuOptions,
 } from "./types";
@@ -73,10 +74,25 @@ interface LevelBlurb {
   title?: string;
 }
 
+interface LevelShowcaseEntry {
+  description: string;
+  frame: {
+    x: number;
+    y: number;
+  };
+  frameHeight: number;
+  frameWidth: number;
+  key: string;
+  label: string;
+  renderHeight?: number;
+  renderWidth?: number;
+  spriteSrc: string;
+}
+
 const controllerTypes: ControllerType[] = ["keyboard1", "keyboard2"];
 const menuEdgePadding = 24;
 const menuDesignHeight = 500;
-const menuDesignWidth = 438;
+const menuDesignWidth = 520;
 const submenuItemOffsetY = 22;
 const menuTransitionDuration = 500;
 const startLogoScale = 2;
@@ -84,6 +100,8 @@ const submenuLogoScale = 0.78;
 const logoBottomWidth = 390;
 const levelIconFrameDuration = 140;
 const levelBlurbLineWidth = 24;
+const levelShowcaseDescriptionLineWidth = 18;
+const levelShowcaseFrameDuration = 260;
 const submenuHeaderTopGap = 34;
 const keyBindingRows: Array<{ binding: BindingAction; label: string }> = [
   { binding: "up", label: i18n.keys.up },
@@ -104,6 +122,7 @@ class Menus implements MenuSystemInstance {
   private _items: MenuItem[] = [];
   private _konamiIndex = 0;
   private _levelIconSprites: Partial<Record<number, HTMLImageElement>> = {};
+  private _levelShowcaseSprites: Partial<Record<string, HTMLImageElement>> = {};
   private _logoLanguage?: GameLanguage;
   private _logoCanvas?: HTMLCanvasElement;
   private readonly _logoHeight = 96;
@@ -373,6 +392,7 @@ class Menus implements MenuSystemInstance {
 
     if (this._screen === "level") {
       this._renderLevelBlurb();
+      this._renderLevelShowcase();
     }
   };
 
@@ -571,9 +591,9 @@ class Menus implements MenuSystemInstance {
           action: () => this._setSelectedLevel(level),
           levelIcon: level,
           rect: {
-            x: 36,
+            x: -90,
             y: -54 + index * 42,
-            width: 330,
+            width: 180,
             height: 36,
           },
         })
@@ -581,9 +601,9 @@ class Menus implements MenuSystemInstance {
       this._createItem(i18n.menu.back, "action", 30 + enabledLevels.length * 42, {
         action: () => this._goBack(),
         rect: {
-          x: 36,
+          x: -90,
           y: 30 + enabledLevels.length * 42,
-          width: 330,
+          width: 180,
           height: 36,
         },
       }),
@@ -779,6 +799,220 @@ class Menus implements MenuSystemInstance {
       });
       y += 14;
     });
+  };
+
+  private _renderLevelShowcase = (): void => {
+    const level = this._getBlurbLevel();
+    const levelConfig = levels[level];
+
+    if (!levelConfig) {
+      return;
+    }
+
+    const entries = this._getLevelShowcaseEntries(level);
+    const context = this._gameArena.getContext() as CanvasRenderingContext2D;
+    const x = 118;
+    let y = -58 + this._scrollY;
+
+    context.imageSmoothingEnabled = false;
+
+    entries.forEach((entry) => {
+      const sprite = this._getLevelShowcaseSprite(entry.key, entry.spriteSrc);
+      const maxSpriteWidth = 36;
+      const maxSpriteHeight = 28;
+      const baseRenderWidth = entry.renderWidth ?? entry.frameWidth;
+      const baseRenderHeight = entry.renderHeight ?? entry.frameHeight;
+      const spriteScale = Math.min(
+        maxSpriteWidth / baseRenderWidth,
+        maxSpriteHeight / baseRenderHeight
+      );
+      const renderWidth = Math.max(1, Math.round(baseRenderWidth * spriteScale));
+      const renderHeight = Math.max(1, Math.round(baseRenderHeight * spriteScale));
+      const spriteX = x;
+      const spriteY = y + 2;
+      const textX = x + 46;
+
+      context.drawImage(
+        sprite,
+        entry.frame.x * entry.frameWidth,
+        entry.frame.y * entry.frameHeight,
+        entry.frameWidth,
+        entry.frameHeight,
+        spriteX,
+        spriteY,
+        renderWidth,
+        renderHeight
+      );
+
+      this._gameArena.renderText(entry.label, textX, y, {
+        size: 10,
+        align: "left",
+        valign: "top",
+        color: palette.menu.selectedBackground,
+      });
+
+      let descriptionY = y + 13;
+      this._wrapText(entry.description, levelShowcaseDescriptionLineWidth).forEach(
+        (line) => {
+          this._gameArena.renderText(line, textX, descriptionY, {
+            size: 8,
+            align: "left",
+            valign: "top",
+            color: palette.menu.itemText,
+          });
+          descriptionY += 10;
+        }
+      );
+
+      y += 52;
+    });
+  };
+
+  private _getLevelShowcaseEntries = (level: number): LevelShowcaseEntry[] => {
+    const levelConfig = levels[level];
+    const labels = i18n.menu.levelShowcase;
+    const entries: LevelShowcaseEntry[] = [
+      this._getEnemyShowcaseEntry(
+        `${level}-basic`,
+        labels.basic.label,
+        labels.basic.description,
+        levelConfig.enemies.basic
+      ),
+    ];
+
+    if (levelConfig.enemies.specialBomber) {
+      entries.push(
+        this._getEnemyShowcaseEntry(
+          `${level}-special`,
+          labels.special.label,
+          labels.special.description,
+          levelConfig.enemies.specialBomber
+        )
+      );
+    }
+
+    entries.push(
+      this._getEnemyShowcaseEntry(
+        `${level}-boss`,
+        labels.boss.label,
+        labels.boss.description,
+        levelConfig.enemies.boss
+      ),
+      this._getBonusShowcaseEntry(
+        `${level}-bonus`,
+        labels.bonus.label,
+        labels.bonus.description,
+        levelConfig.bonus
+      )
+    );
+
+    return entries;
+  };
+
+  private _getEnemyShowcaseEntry = (
+    key: string,
+    label: string,
+    description: string,
+    enemyConfig: EnemyConfig
+  ): LevelShowcaseEntry => ({
+    description,
+    frame: this._getLevelShowcaseEnemyFrame(enemyConfig),
+    frameHeight: enemyConfig.height,
+    frameWidth: enemyConfig.width,
+    key,
+    label,
+    renderHeight: enemyConfig.renderHeight,
+    renderWidth: enemyConfig.renderWidth,
+    spriteSrc: enemyConfig.sprite.src,
+  });
+
+  private _getBonusShowcaseEntry = (
+    key: string,
+    label: string,
+    description: string,
+    bonusConfig: BonusConfig
+  ): LevelShowcaseEntry => ({
+    description,
+    frame: this._getLevelShowcaseBonusFrame(bonusConfig),
+    frameHeight: bonusConfig.height,
+    frameWidth: bonusConfig.width,
+    key,
+    label,
+    spriteSrc: bonusConfig.sprite.src,
+  });
+
+  private _getLevelShowcaseEnemyFrame = (
+    enemyConfig: EnemyConfig
+  ): { x: number; y: number } => {
+    const tick = Math.floor(performance.now() / levelShowcaseFrameDuration);
+
+    if (enemyConfig.bossDamageFrames) {
+      return {
+        x: tick % enemyConfig.bossDamageFrames,
+        y: 0,
+      };
+    }
+
+    if (enemyConfig.animationRows && enemyConfig.horizontalDirectionFrames) {
+      return {
+        x: Math.floor(enemyConfig.horizontalDirectionFrames / 2),
+        y: tick % enemyConfig.animationRows,
+      };
+    }
+
+    if (enemyConfig.animationRows) {
+      return {
+        x: enemyConfig.canRotate
+          ? tick % 16
+          : tick % (enemyConfig.animationFrames ?? 1),
+        y: Math.floor(tick / 2) % enemyConfig.animationRows,
+      };
+    }
+
+    if (enemyConfig.animationFrames && !enemyConfig.canRotate) {
+      return {
+        x: tick % enemyConfig.animationFrames,
+        y: 0,
+      };
+    }
+
+    if (enemyConfig.canRotate) {
+      return {
+        x: tick % 16,
+        y: 0,
+      };
+    }
+
+    return { x: 0, y: 0 };
+  };
+
+  private _getLevelShowcaseBonusFrame = (
+    bonusConfig: BonusConfig
+  ): { x: number; y: number } => {
+    const tick = Math.floor(performance.now() / levelShowcaseFrameDuration);
+    const cycle = bonusConfig.animationCycle;
+    const frame = cycle[tick % cycle.length] ?? 1;
+
+    return {
+      x: Math.max(0, frame - 1),
+      y: 0,
+    };
+  };
+
+  private _getLevelShowcaseSprite = (
+    key: string,
+    spriteSrc: string
+  ): HTMLImageElement => {
+    const cachedSprite = this._levelShowcaseSprites[key];
+
+    if (cachedSprite) {
+      return cachedSprite;
+    }
+
+    const sprite = new Image();
+    sprite.src = spriteSrc;
+    this._levelShowcaseSprites[key] = sprite;
+    return sprite;
   };
 
   private _getBlurbLevel = (): number => {
