@@ -15,6 +15,7 @@ import type {
   MenuPointerData,
   MenuSystemCommands,
   MenuSystemInstance,
+  EnemyConfig,
   ShowStartMenuOptions,
 } from "./types";
 
@@ -66,6 +67,12 @@ interface MenuTransition {
   to: MenuScreen;
 }
 
+interface LevelBlurb {
+  description?: string;
+  introText: string;
+  title?: string;
+}
+
 const controllerTypes: ControllerType[] = ["keyboard1", "keyboard2"];
 const menuEdgePadding = 24;
 const menuDesignHeight = 500;
@@ -73,8 +80,11 @@ const menuDesignWidth = 438;
 const submenuItemOffsetY = 22;
 const menuTransitionDuration = 500;
 const startLogoScale = 2;
-const submenuLogoScale = 1;
+const submenuLogoScale = 0.78;
 const logoBottomWidth = 390;
+const levelIconFrameDuration = 140;
+const levelBlurbLineWidth = 24;
+const submenuHeaderTopGap = 34;
 const keyBindingRows: Array<{ binding: BindingAction; label: string }> = [
   { binding: "up", label: i18n.keys.up },
   { binding: "left", label: i18n.keys.left },
@@ -360,6 +370,10 @@ class Menus implements MenuSystemInstance {
     });
 
     context.restore();
+
+    if (this._screen === "level") {
+      this._renderLevelBlurb();
+    }
   };
 
   private _getLogoCanvas = (): HTMLCanvasElement => {
@@ -556,10 +570,22 @@ class Menus implements MenuSystemInstance {
         this._createItem(this._getLevelLabel(level), "action", -54 + index * 42, {
           action: () => this._setSelectedLevel(level),
           levelIcon: level,
+          rect: {
+            x: 36,
+            y: -54 + index * 42,
+            width: 330,
+            height: 36,
+          },
         })
       ),
       this._createItem(i18n.menu.back, "action", 30 + enabledLevels.length * 42, {
         action: () => this._goBack(),
+        rect: {
+          x: 36,
+          y: 30 + enabledLevels.length * 42,
+          width: 330,
+          height: 36,
+        },
       }),
     ];
   };
@@ -714,6 +740,80 @@ class Menus implements MenuSystemInstance {
     }
   };
 
+  private _renderLevelBlurb = (): void => {
+    const level = this._getBlurbLevel();
+    const levelMessages = i18n.levels as Record<number, LevelBlurb>;
+    const blurb = levelMessages[level];
+
+    if (!blurb) {
+      return;
+    }
+
+    const x = -190;
+    let y = -54 + this._scrollY;
+    const title = blurb.title ?? blurb.introText;
+    const description = blurb.description ?? "";
+
+    this._gameArena.renderText(blurb.introText, x, y, {
+      size: 11,
+      align: "left",
+      valign: "top",
+      color: palette.menu.mutedText,
+    });
+    y += 18;
+
+    this._gameArena.renderText(title, x, y, {
+      size: 15,
+      align: "left",
+      valign: "top",
+      color: palette.menu.selectedBackground,
+    });
+    y += 24;
+
+    this._wrapText(description, levelBlurbLineWidth).forEach((line) => {
+      this._gameArena.renderText(line, x, y, {
+        size: 10,
+        align: "left",
+        valign: "top",
+        color: palette.menu.itemText,
+      });
+      y += 14;
+    });
+  };
+
+  private _getBlurbLevel = (): number => {
+    const selectedLevel = this._items[this._selectedIndex]?.levelIcon;
+
+    if (selectedLevel) {
+      return selectedLevel;
+    }
+
+    return this._commands.getLevel?.() ?? 1;
+  };
+
+  private _wrapText = (text: string, maxLineLength: number): string[] => {
+    const words = text.split(/\s+/).filter(Boolean);
+    const lines: string[] = [];
+    let line = "";
+
+    words.forEach((word) => {
+      const nextLine = line ? `${line} ${word}` : word;
+
+      if (nextLine.length > maxLineLength && line) {
+        lines.push(line);
+        line = word;
+      } else {
+        line = nextLine;
+      }
+    });
+
+    if (line) {
+      lines.push(line);
+    }
+
+    return lines;
+  };
+
   private _renderLevelIcon = (item: MenuItem, level: number): void => {
     const levelConfig = levels[level];
 
@@ -724,7 +824,7 @@ class Menus implements MenuSystemInstance {
     const context = this._gameArena.getContext() as CanvasRenderingContext2D;
     const sprite = this._getLevelIconSprite(level);
     const enemyConfig = levelConfig.enemies.basic;
-    const upwardFrame = 0;
+    const frame = this._getLevelIconFrame(enemyConfig);
     const size = 28;
     const x = item.rect.x + item.rect.width - 38;
     const y = item.rect.y + item.rect.height / 2 - size / 2;
@@ -732,8 +832,8 @@ class Menus implements MenuSystemInstance {
     context.imageSmoothingEnabled = false;
     context.drawImage(
       sprite,
-      upwardFrame * enemyConfig.width,
-      0,
+      frame.x * enemyConfig.width,
+      frame.y * enemyConfig.height,
       enemyConfig.width,
       enemyConfig.height,
       x,
@@ -741,6 +841,40 @@ class Menus implements MenuSystemInstance {
       size,
       size
     );
+  };
+
+  private _getLevelIconFrame = (enemyConfig: EnemyConfig): { x: number; y: number } => {
+    const tick = Math.floor(performance.now() / levelIconFrameDuration);
+
+    if (enemyConfig.animationRows && enemyConfig.horizontalDirectionFrames) {
+      return {
+        x: Math.floor(enemyConfig.horizontalDirectionFrames / 2),
+        y: tick % enemyConfig.animationRows,
+      };
+    }
+
+    if (enemyConfig.animationRows) {
+      return {
+        x: enemyConfig.canRotate ? 0 : tick % (enemyConfig.animationFrames ?? 1),
+        y: tick % enemyConfig.animationRows,
+      };
+    }
+
+    if (enemyConfig.animationFrames && !enemyConfig.canRotate) {
+      return {
+        x: tick % enemyConfig.animationFrames,
+        y: 0,
+      };
+    }
+
+    if (enemyConfig.canRotate) {
+      return {
+        x: tick % 16,
+        y: 0,
+      };
+    }
+
+    return { x: 0, y: 0 };
   };
 
   private _getLevelIconSprite = (level: number): HTMLImageElement => {
@@ -1050,7 +1184,7 @@ class Menus implements MenuSystemInstance {
       return -126;
     }
 
-    return Math.min(-126, -(this._gameArena.height / 2) + 82);
+    return this._getMenuViewport().y + submenuHeaderTopGap;
   };
 
   private _getLogoScale = (screen: MenuScreen): number => {
@@ -1062,7 +1196,7 @@ class Menus implements MenuSystemInstance {
       return -82;
     }
 
-    return this._getLogoY(screen) + 52;
+    return this._getLogoY(screen) + 42;
   };
 
   private _getItemTransitionOffset = (): number => {

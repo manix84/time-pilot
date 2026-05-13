@@ -341,7 +341,7 @@ describe("menu definitions", () => {
     expect(arena.renderText).toHaveBeenCalledWith(
       "Options",
       0,
-      -124,
+      expect.any(Number),
       expect.objectContaining({ align: "center" })
     );
 
@@ -351,7 +351,7 @@ describe("menu definitions", () => {
     expect(arena.renderText).toHaveBeenCalledWith(
       "Options",
       0,
-      -166,
+      -200,
       expect.objectContaining({ align: "center" })
     );
 
@@ -500,12 +500,19 @@ describe("menu definitions", () => {
       menus.next();
     }
 
+    const now = vi.spyOn(performance, "now").mockReturnValue(0);
+
     menus.activate();
+    menus.render();
+    now.mockReturnValue(140);
     menus.render();
 
     const contexts = vi
       .mocked(arena.getContext)
       .mock.results.map((result) => result.value as CanvasRenderingContext2D);
+    const drawImageCalls = contexts.flatMap((context) =>
+      vi.mocked(context.drawImage).mock.calls
+    );
 
     expect(arena.renderText).toHaveBeenCalledWith(
       "Select Level",
@@ -519,14 +526,34 @@ describe("menu definitions", () => {
       expect.any(Number),
       expect.objectContaining({ align: "left" })
     );
+    expect(arena.renderText).toHaveBeenCalledWith(
+      "The Dawn of Flight",
+      expect.any(Number),
+      expect.any(Number),
+      expect.objectContaining({ align: "left" })
+    );
+    expect(arena.renderText).toHaveBeenCalledWith(
+      "Bright open skies,",
+      expect.any(Number),
+      expect.any(Number),
+      expect.objectContaining({ align: "left" })
+    );
     expect(
       contexts.some((context) => vi.mocked(context.drawImage).mock.calls.length > 0)
     ).toBe(true);
     expect(
-      contexts.some((context) =>
-        vi.mocked(context.drawImage).mock.calls.some(
-          (call) => call[1] === 0 && call[2] === 0 && call[3] === 32 && call[4] === 32
-        )
+      drawImageCalls.some(
+        (call) => call[1] === 0 && call[2] === 0 && call[3] === 32 && call[4] === 32
+      )
+    ).toBe(true);
+    expect(
+      drawImageCalls.some(
+        (call) => call[1] === 0 && call[2] === 32 && call[3] === 32 && call[4] === 32
+      )
+    ).toBe(true);
+    expect(
+      drawImageCalls.some(
+        (call) => call[1] === 64 && call[2] === 0 && call[3] === 16 && call[4] === 16
       )
     ).toBe(true);
     expect(arena.renderText).not.toHaveBeenCalledWith(

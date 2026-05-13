@@ -21,11 +21,36 @@ const ro: typeof en = {
     up: "Sus",
   },
   levels: {
-    1: { introText: "D.HR. 1910" },
-    2: { introText: "D.HR. 1940" },
-    3: { introText: "D.HR. 1970" },
-    4: { introText: "D.HR. 1982" },
-    5: { introText: "D.HR. 2001" },
+    1: {
+      introText: "D.HR. 1910",
+      title: "Zorii zborului",
+      description:
+        "Ceruri luminoase, nori plutitori si biplane fragile. Plonjarile si formatiile lor fac fiecare duel personal.",
+    },
+    2: {
+      introText: "D.HR. 1940",
+      title: "Razboi in nori",
+      description:
+        "Duelurile devin razboi aerian. Vanatorii iti taie drumul, iar bombardierele grele te obliga sa te misti.",
+    },
+    3: {
+      introText: "D.HR. 1970",
+      title: "Era avioanelor jet",
+      description:
+        "Tehnologia accelereaza. Aparatele rapide, atacurile dure si cerurile aglomerate lasa putin timp de ezitare.",
+    },
+    4: {
+      introText: "D.HR. 1982",
+      title: "Razboiul viitorului",
+      description:
+        "Masini avansate domina ceruri mecanice. Atacurile bruste si miscarile ciudate fac fiecare lupta imprevizibila.",
+    },
+    5: {
+      introText: "D.HR. 2001",
+      title: "Dincolo de maine",
+      description:
+        "Lupta devine extraterestra. OZN-urile aluneca incredibil de repede prin ceruri unde vechile reguli dispar.",
+    },
   },
   menu: {
     alreadyAssignedTo: (binding: string) => `Deja atribuit la ${binding}`,

@@ -21,18 +21,33 @@ const en = {
   levels: {
     1: {
       introText: "A.D 1910",
+      title: "The Dawn of Flight",
+      description:
+        "Bright open skies, drifting clouds, and fragile biplanes. The enemies look simple, but their swoops and tight formations make every dogfight personal.",
     },
     2: {
       introText: "A.D 1940",
+      title: "War in the Clouds",
+      description:
+        "Aerial duels become full-scale warfare. Fighters cross your path with precision while heavy bombers force desperate movement.",
     },
     3: {
       introText: "A.D 1970",
+      title: "The Jet Age",
+      description:
+        "Technology surges forward. Fast aircraft, sharper attacks, and crowded skies leave little room for hesitation.",
     },
     4: {
       introText: "A.D 1982",
+      title: "The Future War",
+      description:
+        "Advanced machines dominate tense mechanical skies. Sudden attacks and strange movement patterns make every encounter unpredictable.",
     },
     5: {
       introText: "A.D 2001",
+      title: "Beyond Tomorrow",
+      description:
+        "The battle turns otherworldly. UFOs move with impossible speed through alien skies where the old rules no longer apply.",
     },
   },
   menu: {

@@ -21,11 +21,36 @@ const de: typeof en = {
     up: "Hoch",
   },
   levels: {
-    1: { introText: "N. CHR. 1910" },
-    2: { introText: "N. CHR. 1940" },
-    3: { introText: "N. CHR. 1970" },
-    4: { introText: "N. CHR. 1982" },
-    5: { introText: "N. CHR. 2001" },
+    1: {
+      introText: "N. CHR. 1910",
+      title: "Die Daemmerung des Flugs",
+      description:
+        "Helle Himmel, treibende Wolken und zerbrechliche Doppeldecker. Ihre Sturzfluege und Formationen machen jedes Duell persoenlich.",
+    },
+    2: {
+      introText: "N. CHR. 1940",
+      title: "Krieg in den Wolken",
+      description:
+        "Aus Luftduellen wird Krieg. Jaeger schneiden deinen Kurs, waehrend schwere Bomber dich staendig in Bewegung zwingen.",
+    },
+    3: {
+      introText: "N. CHR. 1970",
+      title: "Das Jet-Zeitalter",
+      description:
+        "Die Technik rast voran. Schnelle Maschinen, scharfe Angriffe und voller Luftraum lassen kaum Zeit zum Zoegern.",
+    },
+    4: {
+      introText: "N. CHR. 1982",
+      title: "Der Zukunftskrieg",
+      description:
+        "Fortschrittliche Maschinen beherrschen mechanische Himmel. Ploetzliche Angriffe und seltsame Bewegungen machen alles unberechenbar.",
+    },
+    5: {
+      introText: "N. CHR. 2001",
+      title: "Jenseits von Morgen",
+      description:
+        "Der Kampf wird fremdartig. UFOs gleiten mit unmoeglicher Geschwindigkeit durch Himmel, in denen alte Regeln nicht mehr gelten.",
+    },
   },
   menu: {
     alreadyAssignedTo: (binding: string) => `Bereits ${binding} zugewiesen`,
