@@ -103,6 +103,22 @@ describe("menu definitions", () => {
       expect.any(Number),
       expect.objectContaining({ align: "left" })
     );
+    expect(arena.renderText).toHaveBeenCalledWith(
+      "Paused",
+      0,
+      -42,
+      expect.objectContaining({ align: "center" })
+    );
+  });
+
+  it("continues from the paused root menu on escape", () => {
+    const start = vi.fn();
+    const menus = new Menus(createArena(), { start });
+
+    menus.showStart({ startLabel: "Continue" });
+
+    expect(menus.captureKey(27)).toBe(true);
+    expect(start).toHaveBeenCalled();
   });
 
   it("activates normal buttons from pointer press and release", () => {

@@ -291,6 +291,15 @@ class Menus implements MenuSystemInstance {
     this._resetLevelMenuIdleState();
 
     if (!this._awaitingBinding && (keyCode === 8 || keyCode === 27)) {
+      if (this._screen === "start" && keyCode === 27) {
+        if (this._isPausedRootMenu()) {
+          this._commands.start();
+        } else {
+          this.hide();
+        }
+        return true;
+      }
+
       const previousScreen = this._screen;
 
       this.goBack();
@@ -421,6 +430,13 @@ class Menus implements MenuSystemInstance {
 
     if (this._screen !== "start") {
       this._gameArena.renderText(this._getScreenTitle(), 0, layout.titleY, {
+        size: 18,
+        align: "center",
+        valign: "middle",
+        color: palette.menu.mutedText,
+      });
+    } else if (this._isPausedRootMenu()) {
+      this._gameArena.renderText(i18n.hud.paused, 0, -42, {
         size: 18,
         align: "center",
         valign: "middle",
@@ -1890,6 +1906,10 @@ class Menus implements MenuSystemInstance {
     }
 
     return i18n.levels[1].introText;
+  };
+
+  private _isPausedRootMenu = (): boolean => {
+    return this._screen === "start" && this._startLabel === i18n.menu.continue;
   };
 
   private _goToScreen = (screen: MenuScreen): void => {
