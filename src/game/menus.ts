@@ -92,7 +92,7 @@ interface LevelShowcaseEntry {
 const controllerTypes: ControllerType[] = ["keyboard1", "keyboard2"];
 const menuEdgePadding = 24;
 const menuDesignHeight = 500;
-const menuDesignWidth = 520;
+const menuDesignWidth = 660;
 const submenuItemOffsetY = 22;
 const menuTransitionDuration = 500;
 const startLogoScale = 2;
@@ -591,9 +591,9 @@ class Menus implements MenuSystemInstance {
           action: () => this._setSelectedLevel(level),
           levelIcon: level,
           rect: {
-            x: -90,
+            x: -110,
             y: -54 + index * 42,
-            width: 180,
+            width: 220,
             height: 36,
           },
         })
@@ -601,9 +601,9 @@ class Menus implements MenuSystemInstance {
       this._createItem(i18n.menu.back, "action", 30 + enabledLevels.length * 42, {
         action: () => this._goBack(),
         rect: {
-          x: -90,
+          x: -110,
           y: 30 + enabledLevels.length * 42,
-          width: 180,
+          width: 220,
           height: 36,
         },
       }),
@@ -769,7 +769,7 @@ class Menus implements MenuSystemInstance {
       return;
     }
 
-    const x = -190;
+    const x = -260;
     let y = -54 + this._scrollY;
     const title = blurb.title ?? blurb.introText;
     const description = blurb.description ?? "";
@@ -811,7 +811,7 @@ class Menus implements MenuSystemInstance {
 
     const entries = this._getLevelShowcaseEntries(level);
     const context = this._gameArena.getContext() as CanvasRenderingContext2D;
-    const x = 118;
+    const x = 148;
     let y = -58 + this._scrollY;
 
     context.imageSmoothingEnabled = false;
@@ -954,8 +954,13 @@ class Menus implements MenuSystemInstance {
     }
 
     if (enemyConfig.animationRows && enemyConfig.horizontalDirectionFrames) {
+      const frameX = this._getHorizontalDirectionPreviewFrame(
+        enemyConfig.horizontalDirectionFrames,
+        tick
+      );
+
       return {
-        x: Math.floor(enemyConfig.horizontalDirectionFrames / 2),
+        x: frameX,
         y: tick % enemyConfig.animationRows,
       };
     }
@@ -1082,7 +1087,7 @@ class Menus implements MenuSystemInstance {
 
     if (enemyConfig.animationRows && enemyConfig.horizontalDirectionFrames) {
       return {
-        x: Math.floor(enemyConfig.horizontalDirectionFrames / 2),
+        x: 0,
         y: tick % enemyConfig.animationRows,
       };
     }
@@ -1109,6 +1114,23 @@ class Menus implements MenuSystemInstance {
     }
 
     return { x: 0, y: 0 };
+  };
+
+  private _getHorizontalDirectionPreviewFrame = (
+    frameCount: number,
+    tick: number
+  ): number => {
+    const maxFrame = Math.max(0, frameCount - 1);
+
+    if (maxFrame === 0) {
+      return 0;
+    }
+
+    const cyclePosition = tick % (maxFrame * 2);
+
+    return cyclePosition <= maxFrame
+      ? cyclePosition
+      : maxFrame * 2 - cyclePosition;
   };
 
   private _getLevelIconSprite = (level: number): HTMLImageElement => {
