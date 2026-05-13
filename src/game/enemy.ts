@@ -234,6 +234,15 @@ class Enemy implements EnemyInstance {
       return this._getBossDamageFrame(levelData);
     }
 
+    if (levelData.horizontalDirectionFrames) {
+      const leftRightPosition =
+        (1 - Math.sin(this._data.heading * (Math.PI / 180))) / 2;
+
+      return Math.round(
+        leftRightPosition * (levelData.horizontalDirectionFrames - 1)
+      );
+    }
+
     if (levelData.canRotate) {
       return Math.floor(this._data.heading / 22.5);
     }

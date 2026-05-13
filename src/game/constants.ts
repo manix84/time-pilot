@@ -649,6 +649,14 @@ const timePilotConstants: TimePilotConstants = {
       },
       enemies: {
         basic: basicEnemy(3, {
+          animationRows: 2,
+          deathFlashFrameY: 2,
+          deathFlashTicks: 6,
+          horizontalDirectionFrames: 9,
+          width: 16,
+          height: 16,
+          renderWidth: 32,
+          renderHeight: 32,
           velocity: 5,
           turnLimiter: 14,
           firingChance: 0.55,

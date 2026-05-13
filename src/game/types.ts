@@ -486,6 +486,7 @@ export interface EnemyConfig {
   deathFlashFrameY?: number;
   deathFlashTicks?: number;
   deathValue: number;
+  horizontalDirectionFrames?: number;
   sprite: SpriteAsset;
   velocity: number;
   turnLimiter: number;

@@ -485,6 +485,71 @@ describe("context-backed game modules", () => {
     );
   });
 
+  it("renders level 3 helicopters with horizontal direction frames and animation rows", () => {
+    const context = createContext();
+    context._level = 3;
+
+    context._enemies.create(100, 100, 90);
+    const [enemy] = context._enemies.getEntities();
+
+    vi.mocked(context._gameTicker.getTicks).mockReturnValue(9);
+    enemy.render();
+    enemy.setData("heading", 0);
+    vi.mocked(context._gameTicker.getTicks).mockReturnValue(10);
+    enemy.render();
+    enemy.setData("heading", 270);
+    vi.mocked(context._gameTicker.getTicks).mockReturnValue(19);
+    enemy.render();
+
+    expect(context._gameArena.renderSprite).toHaveBeenNthCalledWith(
+      1,
+      expect.any(HTMLImageElement),
+      expect.objectContaining({
+        frameHeight: 16,
+        frameWidth: 16,
+        frameX: 0,
+        frameY: 0,
+        renderHeight: 32,
+        renderWidth: 32,
+      })
+    );
+    expect(context._gameArena.renderSprite).toHaveBeenNthCalledWith(
+      2,
+      expect.any(HTMLImageElement),
+      expect.objectContaining({ frameX: 4, frameY: 1 })
+    );
+    expect(context._gameArena.renderSprite).toHaveBeenNthCalledWith(
+      3,
+      expect.any(HTMLImageElement),
+      expect.objectContaining({ frameX: 8, frameY: 1 })
+    );
+  });
+
+  it("renders the level 3 helicopter flash row before the explosion sheet", () => {
+    const context = createContext();
+    context._level = 3;
+
+    vi.mocked(context._gameTicker.getTicks).mockReturnValue(100);
+    context._enemies.create(100, 100, 270);
+    const [enemy] = context._enemies.getEntities();
+
+    enemy.kill();
+    vi.mocked(context._gameTicker.getTicks).mockReturnValue(103);
+    enemy.render();
+
+    expect(context._gameArena.renderSprite).toHaveBeenCalledWith(
+      expect.any(HTMLImageElement),
+      expect.objectContaining({
+        frameHeight: 16,
+        frameWidth: 16,
+        frameX: 8,
+        frameY: 2,
+        renderHeight: 32,
+        renderWidth: 32,
+      })
+    );
+  });
+
   it("renders level 5 basic enemies as four animation frames without rotation", () => {
     const context = createContext();
     context._level = 5;
