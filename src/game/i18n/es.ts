@@ -84,7 +84,7 @@ const es: typeof en = {
       projectiles: {
         bomb: "Bomba",
         bullet: "Bala",
-        energy: "Energia",
+        plasma: "Plasma",
         rocket: "Cohete",
       },
     },

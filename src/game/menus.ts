@@ -1463,7 +1463,7 @@ class Menus implements MenuSystemInstance {
 
   private _getProjectileType = (
     projectileConfig: ProjectileConfig
-  ): "bomb" | "bullet" | "energy" | "rocket" => {
+  ): "bomb" | "bullet" | "plasma" | "rocket" => {
     const spriteSrc = projectileConfig.sprite?.sprite.src ?? "";
 
     if (spriteSrc.includes("rocket")) {
@@ -1474,8 +1474,12 @@ class Menus implements MenuSystemInstance {
       return "bomb";
     }
 
+    if (spriteSrc.includes("plasma")) {
+      return "plasma";
+    }
+
     if (projectileConfig.velocity >= levels[5].enemies.basic.projectile.velocity) {
-      return "energy";
+      return "plasma";
     }
 
     return "bullet";

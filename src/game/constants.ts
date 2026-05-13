@@ -29,7 +29,7 @@ const projectileSpeeds = {
   bullet1940: playerMovementSpeed * 1.25,
   bullet1970: playerMovementSpeed * 1.35,
   bullet1982: playerMovementSpeed * 1.6,
-  energy2001: playerMovementSpeed * 1.75,
+  plasma2001: playerMovementSpeed * 1.75,
   bomb1940: playerMovementSpeed * 0.9,
   missile1970: playerMovementSpeed * 2,
   missile1982: playerMovementSpeed * 2.2,
@@ -44,6 +44,18 @@ const rocketProjectileSprite = {
   frames: 16,
   renderWidth: 24,
   renderHeight: 18,
+};
+
+const plasmaProjectileSprite = {
+  sprite: {
+    src: assetPath("sprites/enemies/projectiles/plasma.png"),
+  },
+  width: 8,
+  height: 7,
+  frames: 8,
+  frameMode: "animation" as const,
+  renderWidth: 8,
+  renderHeight: 7,
 };
 
 const basicEnemy = (
@@ -77,8 +89,8 @@ const basicEnemy = (
     sound: {
       src: assetPath("sounds/enemy_explode.wav"),
     },
-    width: 32,
-    height: 32,
+    width: 16,
+    height: 16,
     frames: 4,
     frameLimiter: 5,
   },
@@ -121,8 +133,8 @@ const bossEnemy = (
       src: assetPath("sounds/enemy_explode.wav"),
     },
     width: 32,
-    height: 32,
-    frames: 8,
+    height: 16,
+    frames: 4,
     frameLimiter: 5,
   },
   ...overrides,
@@ -166,13 +178,13 @@ const specialBomber = (
   },
   explosion: {
     sprite: {
-      src: assetPath("sprites/enemies/basic/explosion.png"),
+      src: assetPath("sprites/enemies/special-bomber/explosion.png"),
     },
     sound: {
       src: assetPath("sounds/enemy_explode.wav"),
     },
     width: 32,
-    height: 32,
+    height: 16,
     frames: 4,
     frameLimiter: 5,
   },
@@ -184,10 +196,10 @@ const parachuteBonus: BonusConfig = {
     src: assetPath("sprites/bonuses/parachute.png"),
   },
   velocity: 2,
-  animationCycle: [1, 2, 3, 4, 4, 3, 2, 1],
-  hitRadius: 10,
-  width: 32,
-  height: 32,
+  animationCycle: [1, 2, 3, 4, 5, 4, 3, 2],
+  hitRadius: 8,
+  width: 16,
+  height: 16,
 };
 
 const levelOneProps: PropConfig[] = [
@@ -680,6 +692,8 @@ const timePilotConstants: TimePilotConstants = {
             size: 8,
             color: palette.aircraft.enemyBullet,
             sprite: rocketProjectileSprite,
+            tracksPlayer: true,
+            turnRate: 0.5,
             shootable: true,
           },
         }),
@@ -697,6 +711,8 @@ const timePilotConstants: TimePilotConstants = {
             size: 8,
             color: palette.aircraft.enemyBullet,
             sprite: rocketProjectileSprite,
+            tracksPlayer: true,
+            turnRate: 0.5,
             shootable: true,
           },
         }),
@@ -730,7 +746,7 @@ const timePilotConstants: TimePilotConstants = {
             color: palette.aircraft.enemyBullet,
             sprite: rocketProjectileSprite,
             tracksPlayer: true,
-            turnRate: 4,
+            turnRate: 1,
             shootable: true,
           },
         }),
@@ -749,7 +765,7 @@ const timePilotConstants: TimePilotConstants = {
             color: palette.aircraft.enemyBullet,
             sprite: rocketProjectileSprite,
             tracksPlayer: true,
-            turnRate: 4,
+            turnRate: 1,
             shootable: true,
           },
         }),
@@ -780,9 +796,11 @@ const timePilotConstants: TimePilotConstants = {
           firingChance: 0.68,
           spawnLimit: 16,
           projectile: {
-            velocity: projectileSpeeds.energy2001,
+            velocity: projectileSpeeds.plasma2001,
             size: 6,
             color: palette.aircraft.enemyBullet,
+            sprite: plasmaProjectileSprite,
+            initialAim: "player",
           },
         }),
         boss: bossEnemy(5, {
@@ -797,9 +815,11 @@ const timePilotConstants: TimePilotConstants = {
           turnLimiter: 30,
           firingChance: 0.4,
           projectile: {
-            velocity: projectileSpeeds.energy2001,
+            velocity: projectileSpeeds.plasma2001,
             size: 6,
             color: palette.aircraft.enemyBullet,
+            sprite: plasmaProjectileSprite,
+            initialAim: "player",
           },
         }),
         formations: futureLevelFormations[5],

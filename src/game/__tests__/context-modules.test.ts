@@ -224,6 +224,47 @@ describe("context-backed game modules", () => {
     );
   });
 
+  it("renders animated plasma projectile sprites", () => {
+    const context = createContext();
+    const now = vi.spyOn(performance, "now").mockReturnValue(360);
+
+    context._enemyBullets.create(
+      0,
+      0,
+      90,
+      6,
+      8.75,
+      "#FF9",
+      false,
+      "world",
+      "sprite",
+      {
+        sprite: { src: "/sprites/enemies/projectiles/plasma.png" },
+        width: 8,
+        height: 7,
+        frames: 8,
+        frameMode: "animation",
+        renderWidth: 8,
+        renderHeight: 7,
+      }
+    );
+
+    context._enemyBullets.render();
+
+    expect(context._gameArena.renderSprite).toHaveBeenCalledWith(
+      expect.any(HTMLImageElement),
+      expect.objectContaining({
+        frameHeight: 7,
+        frameWidth: 8,
+        frameX: 3,
+        renderHeight: 7,
+        renderWidth: 8,
+      })
+    );
+
+    now.mockRestore();
+  });
+
   it("moves and renders the player", () => {
     const context = createContext();
 
@@ -573,8 +614,8 @@ describe("context-backed game modules", () => {
       2,
       expect.any(HTMLImageElement),
       expect.objectContaining({
-        frameHeight: 32,
-        frameWidth: 32,
+        frameHeight: 16,
+        frameWidth: 16,
         frameX: 0,
         frameY: 0,
       })
@@ -746,7 +787,7 @@ describe("context-backed game modules", () => {
     expect(context._gameArena.drawCircle).toHaveBeenCalledWith(100, 100, 8, {
       borderColor: "#F00",
     });
-    expect(context._gameArena.drawCircle).toHaveBeenCalledWith(80, 80, 10, {
+    expect(context._gameArena.drawCircle).toHaveBeenCalledWith(80, 80, 8, {
       borderColor: "#0FF",
     });
   });

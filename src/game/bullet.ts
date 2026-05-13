@@ -216,6 +216,10 @@ class Bullet implements BulletInstance {
       return 0;
     }
 
+    if (this._data.sprite?.frameMode === "animation") {
+      return Math.floor(performance.now() / 120) % frames;
+    }
+
     const heading = ((this._data.heading % 360) + 360) % 360;
 
     return Math.round(((heading + 270) % 360) / (360 / frames)) % frames;

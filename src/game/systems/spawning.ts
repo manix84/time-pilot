@@ -297,10 +297,13 @@ class SpawningSystem implements SpawningSystemInstance {
       return;
     }
 
-    const heading = helpers.findHeading(enemy, {
-      posX: player.posX,
-      posY: player.posY,
-    });
+    const heading =
+      levelData.projectile.initialAim === "facing"
+        ? enemy.heading
+        : helpers.findHeading(enemy, {
+          posX: player.posX,
+          posY: player.posY,
+        });
 
     this._context._enemyBullets.create(
       enemy.posX,

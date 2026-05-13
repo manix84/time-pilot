@@ -82,7 +82,7 @@ const en = {
       projectiles: {
         bomb: "Bomb",
         bullet: "Bullet",
-        energy: "Energy",
+        plasma: "Plasma",
         rocket: "Rocket",
       },
     },

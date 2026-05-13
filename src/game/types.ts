@@ -451,6 +451,7 @@ export interface ProjectileSpriteConfig {
   width: number;
   height: number;
   frames?: number;
+  frameMode?: "animation" | "heading";
   renderWidth?: number;
   renderHeight?: number;
 }
@@ -483,6 +484,7 @@ export interface ProjectileConfig {
   color: string;
   sprite?: ProjectileSpriteConfig;
   sound?: SoundAsset;
+  initialAim?: "facing" | "player";
   tracksPlayer?: boolean;
   turnRate?: number;
   shootable?: boolean;

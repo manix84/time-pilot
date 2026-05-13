@@ -450,7 +450,7 @@ describe("game systems", () => {
     expect(context._bonuses.create).not.toHaveBeenCalled();
   });
 
-  it("spawns fast straight rockets on level 3", () => {
+  it("spawns fast very-slow-homing rockets on level 3", () => {
     const context = createContext({ level: 3 });
     const system = new SpawningSystem(context);
 
@@ -475,8 +475,8 @@ describe("game systems", () => {
         renderWidth: 24,
         width: 12,
       }),
-      undefined,
-      undefined,
+      true,
+      0.5,
       true
     );
   });
@@ -507,9 +507,35 @@ describe("game systems", () => {
         width: 12,
       }),
       true,
-      4,
+      1,
       true
     );
+  });
+
+  it("aims level 5 plasma shots at the player without homing", () => {
+    const context = createContext({ level: 5 });
+    const system = new SpawningSystem(context);
+
+    vi.spyOn(Math, "random").mockReturnValue(0);
+
+    system.spawnEntities();
+
+    const call = vi.mocked(context._enemyBullets.create).mock.calls.at(-1);
+    expect(call?.[2]).not.toBe(180);
+    expect(call?.[4]).toBe(8.75);
+    expect(call?.[8]).toBe("sprite");
+    expect(call?.[9]).toEqual(
+      expect.objectContaining({
+        frameMode: "animation",
+        frames: 8,
+        height: 7,
+        renderHeight: 7,
+        renderWidth: 8,
+        width: 8,
+      })
+    );
+    expect(call?.[10]).toBeUndefined();
+    expect(call?.[11]).toBeUndefined();
   });
 
   it("spawns the boss after the level kill threshold", () => {
