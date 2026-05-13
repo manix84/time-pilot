@@ -79,6 +79,12 @@ const en = {
         label: "Bonus",
         description: "Collect for a rising score award.",
       },
+      projectiles: {
+        bomb: "Bomb",
+        bullet: "Bullet",
+        energy: "Energy",
+        rocket: "Rocket",
+      },
     },
     invincibilityShield: "Invincibility Shield",
     language: "Language",

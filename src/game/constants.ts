@@ -31,6 +31,19 @@ const projectileSpeeds = {
   bullet1982: playerMovementSpeed * 1.6,
   energy2001: playerMovementSpeed * 1.75,
   bomb1940: playerMovementSpeed * 0.9,
+  missile1970: playerMovementSpeed * 2,
+  missile1982: playerMovementSpeed * 2.2,
+};
+
+const rocketProjectileSprite = {
+  sprite: {
+    src: assetPath("sprites/enemies/projectiles/rocket.png"),
+  },
+  width: 12,
+  height: 9,
+  frames: 16,
+  renderWidth: 24,
+  renderHeight: 18,
 };
 
 const basicEnemy = (
@@ -663,9 +676,11 @@ const timePilotConstants: TimePilotConstants = {
           firingChance: 0.55,
           spawnLimit: 13,
           projectile: {
-            velocity: projectileSpeeds.bullet1970,
-            size: 6,
+            velocity: projectileSpeeds.missile1970,
+            size: 8,
             color: palette.aircraft.enemyBullet,
+            sprite: rocketProjectileSprite,
+            shootable: true,
           },
         }),
         boss: bossEnemy(3, {
@@ -678,9 +693,11 @@ const timePilotConstants: TimePilotConstants = {
           turnLimiter: 38,
           firingChance: 0.3,
           projectile: {
-            velocity: projectileSpeeds.bullet1970,
-            size: 6,
+            velocity: projectileSpeeds.missile1970,
+            size: 8,
             color: palette.aircraft.enemyBullet,
+            sprite: rocketProjectileSprite,
+            shootable: true,
           },
         }),
         formations: futureLevelFormations[3],
@@ -708,9 +725,13 @@ const timePilotConstants: TimePilotConstants = {
           firingChance: 0.65,
           spawnLimit: 15,
           projectile: {
-            velocity: projectileSpeeds.bullet1982,
-            size: 6,
+            velocity: projectileSpeeds.missile1982,
+            size: 8,
             color: palette.aircraft.enemyBullet,
+            sprite: rocketProjectileSprite,
+            tracksPlayer: true,
+            turnRate: 4,
+            shootable: true,
           },
         }),
         boss: bossEnemy(4, {
@@ -723,9 +744,13 @@ const timePilotConstants: TimePilotConstants = {
           turnLimiter: 34,
           firingChance: 0.35,
           projectile: {
-            velocity: projectileSpeeds.bullet1982,
-            size: 6,
+            velocity: projectileSpeeds.missile1982,
+            size: 8,
             color: palette.aircraft.enemyBullet,
+            sprite: rocketProjectileSprite,
+            tracksPlayer: true,
+            turnRate: 4,
+            shootable: true,
           },
         }),
         formations: futureLevelFormations[4],

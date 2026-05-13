@@ -735,6 +735,12 @@ describe("menu definitions", () => {
       expect.objectContaining({ align: "left" })
     );
     expect(arena.renderText).toHaveBeenCalledWith(
+      "Bullet",
+      expect.any(Number),
+      expect.any(Number),
+      expect.objectContaining({ align: "center" })
+    );
+    expect(arena.renderText).toHaveBeenCalledWith(
       "Bright open skies,",
       expect.any(Number),
       expect.any(Number),

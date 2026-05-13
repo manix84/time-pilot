@@ -81,6 +81,12 @@ const ro: typeof en = {
         label: "Bonus",
         description: "Colecteaza pentru scor crescut.",
       },
+      projectiles: {
+        bomb: "Bomba",
+        bullet: "Glont",
+        energy: "Energie",
+        rocket: "Racheta",
+      },
     },
     invincibilityShield: "Scut invincibil",
     language: "Limba",

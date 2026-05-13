@@ -311,7 +311,11 @@ class SpawningSystem implements SpawningSystemInstance {
       levelData.projectile.color,
       false,
       "world",
-      "circle"
+      levelData.projectile.sprite ? "sprite" : "circle",
+      levelData.projectile.sprite,
+      levelData.projectile.tracksPlayer,
+      levelData.projectile.turnRate,
+      levelData.projectile.shootable
     );
     this._enemyShootSound.stop();
     this._enemyShootSound.play();

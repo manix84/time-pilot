@@ -16,6 +16,7 @@ import type {
   MenuPointerData,
   MenuSystemCommands,
   MenuSystemInstance,
+  ProjectileConfig,
   ShowStartMenuOptions,
 } from "./types";
 import {
@@ -107,7 +108,22 @@ interface LevelShowcaseEntry {
   label: string;
   renderHeight?: number;
   renderWidth?: number;
+  projectile?: LevelShowcaseProjectile;
   spriteSrc: string;
+}
+
+interface LevelShowcaseProjectile {
+  color: string;
+  frame: {
+    x: number;
+    y: number;
+  };
+  frameHeight: number;
+  frameWidth: number;
+  label: string;
+  renderHeight?: number;
+  renderWidth?: number;
+  spriteSrc?: string;
 }
 
 const controllerTypes: ControllerType[] = ["keyboard1", "keyboard2"];
@@ -1093,7 +1109,8 @@ class Menus implements MenuSystemInstance {
       );
       const spriteX = x;
       const spriteY = y + 2;
-      const textX = x + 46;
+      const projectileX = x + 46;
+      const textX = x + (entry.projectile ? 84 : 46);
 
       context.drawImage(
         sprite,
@@ -1106,6 +1123,14 @@ class Menus implements MenuSystemInstance {
         renderWidth,
         renderHeight
       );
+
+      if (entry.projectile) {
+        this._renderLevelShowcaseProjectile(
+          entry.projectile,
+          projectileX,
+          y
+        );
+      }
 
       this._gameArena.renderText(entry.label, textX, y, {
         size: 10,
@@ -1264,7 +1289,8 @@ class Menus implements MenuSystemInstance {
         `${level}-basic`,
         labels.basic.label,
         labels.basic.description,
-        levelConfig.enemies.basic
+        levelConfig.enemies.basic,
+        levelConfig.enemies.basic.projectile
       ),
     ];
 
@@ -1274,7 +1300,8 @@ class Menus implements MenuSystemInstance {
           `${level}-special`,
           labels.special.label,
           labels.special.description,
-          levelConfig.enemies.specialBomber
+          levelConfig.enemies.specialBomber,
+          levelConfig.enemies.specialBomber.projectile
         )
       );
     }
@@ -1284,7 +1311,8 @@ class Menus implements MenuSystemInstance {
         `${level}-boss`,
         labels.boss.label,
         labels.boss.description,
-        levelConfig.enemies.boss
+        levelConfig.enemies.boss,
+        levelConfig.enemies.boss.projectile
       ),
       this._getBonusShowcaseEntry(
         `${level}-bonus`,
@@ -1301,7 +1329,8 @@ class Menus implements MenuSystemInstance {
     key: string,
     label: string,
     description: string,
-    enemyConfig: EnemyConfig
+    enemyConfig: EnemyConfig,
+    projectileConfig?: ProjectileConfig
   ): LevelShowcaseEntry => ({
     description,
     frame: this._getLevelShowcaseEnemyFrame(enemyConfig),
@@ -1309,6 +1338,9 @@ class Menus implements MenuSystemInstance {
     frameWidth: enemyConfig.width,
     key,
     label,
+    projectile: projectileConfig
+      ? this._getProjectileShowcaseEntry(projectileConfig)
+      : undefined,
     renderHeight: enemyConfig.renderHeight,
     renderWidth: enemyConfig.renderWidth,
     spriteSrc: enemyConfig.sprite.src,
@@ -1390,6 +1422,112 @@ class Menus implements MenuSystemInstance {
       x: Math.max(0, frame - 1),
       y: 0,
     };
+  };
+
+  private _getProjectileShowcaseEntry = (
+    projectileConfig: ProjectileConfig
+  ): LevelShowcaseProjectile => {
+    const projectileType = this._getProjectileType(projectileConfig);
+    const projectileLabels = i18n.menu.levelShowcase.projectiles;
+    const spriteConfig = projectileConfig.sprite;
+
+    if (spriteConfig) {
+      const tick = Math.floor(performance.now() / levelShowcaseFrameDuration);
+      const frameCount = spriteConfig.frames ?? 1;
+
+      return {
+        color: projectileConfig.color,
+        frame: {
+          x: tick % frameCount,
+          y: 0,
+        },
+        frameHeight: spriteConfig.height,
+        frameWidth: spriteConfig.width,
+        label: projectileLabels[projectileType],
+        renderHeight: spriteConfig.renderHeight,
+        renderWidth: spriteConfig.renderWidth,
+        spriteSrc: spriteConfig.sprite.src,
+      };
+    }
+
+    return {
+      color: projectileConfig.color,
+      frame: { x: 0, y: 0 },
+      frameHeight: projectileConfig.size,
+      frameWidth: projectileConfig.size,
+      label: projectileLabels[projectileType],
+      renderHeight: projectileConfig.size,
+      renderWidth: projectileConfig.size,
+    };
+  };
+
+  private _getProjectileType = (
+    projectileConfig: ProjectileConfig
+  ): "bomb" | "bullet" | "energy" | "rocket" => {
+    const spriteSrc = projectileConfig.sprite?.sprite.src ?? "";
+
+    if (spriteSrc.includes("rocket")) {
+      return "rocket";
+    }
+
+    if (spriteSrc.includes("bomb")) {
+      return "bomb";
+    }
+
+    if (projectileConfig.velocity >= levels[5].enemies.basic.projectile.velocity) {
+      return "energy";
+    }
+
+    return "bullet";
+  };
+
+  private _renderLevelShowcaseProjectile = (
+    projectile: LevelShowcaseProjectile,
+    x: number,
+    y: number
+  ): void => {
+    const context = this._gameArena.getContext() as CanvasRenderingContext2D;
+    const baseRenderWidth = projectile.renderWidth ?? projectile.frameWidth;
+    const baseRenderHeight = projectile.renderHeight ?? projectile.frameHeight;
+    const renderWidth = Math.max(1, Math.round(baseRenderWidth));
+    const renderHeight = Math.max(1, Math.round(baseRenderHeight));
+    const centerX = x + 12;
+    const centerY = y + 13;
+
+    if (projectile.spriteSrc) {
+      const sprite = this._getLevelShowcaseSprite(
+        `${projectile.label}-${projectile.spriteSrc}`,
+        projectile.spriteSrc
+      );
+
+      context.drawImage(
+        sprite,
+        projectile.frame.x * projectile.frameWidth,
+        projectile.frame.y * projectile.frameHeight,
+        projectile.frameWidth,
+        projectile.frameHeight,
+        Math.round(centerX - renderWidth / 2),
+        Math.round(centerY - renderHeight / 2),
+        renderWidth,
+        renderHeight
+      );
+    } else {
+      const radius = Math.max(2, Math.round(renderWidth / 2));
+
+      context.save();
+      context.fillStyle = projectile.color;
+      context.beginPath();
+      context.arc(centerX, centerY, radius, 0, Math.PI * 2);
+      context.fill();
+      context.restore();
+    }
+
+    this._gameArena.renderText(projectile.label, centerX, y + 28, {
+      size: 7,
+      align: "center",
+      valign: "top",
+      color: palette.menu.mutedText,
+    });
   };
 
   private _getLevelShowcaseSprite = (

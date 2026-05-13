@@ -8,6 +8,7 @@ import Player from "../player";
 import PropFactory from "../prop-factory";
 import userOptions from "../user-options";
 import type {
+  BulletData,
   GameArenaInstance,
   GameDataStore,
   MenuSystemInstance,
@@ -175,6 +176,52 @@ describe("context-backed game modules", () => {
 
     const canvasContext = context._gameArena.getContext() as CanvasRenderingContext2D;
     expect(canvasContext.arc).toHaveBeenCalledWith(20, 30, 3, 0, Math.PI * 2);
+  });
+
+  it("renders and steers homing rocket sprites", () => {
+    const context = createContext();
+    context._player.setData("posX", 0);
+    context._player.setData("posY", 100);
+
+    context._enemyBullets.create(
+      0,
+      0,
+      90,
+      8,
+      11,
+      "#FF9",
+      false,
+      "world",
+      "sprite",
+      {
+        sprite: { src: "/sprites/enemies/projectiles/rocket.png" },
+        width: 12,
+        height: 9,
+        frames: 16,
+        renderWidth: 24,
+        renderHeight: 18,
+      },
+      true,
+      4
+    );
+
+    const [rocket] = context._enemyBullets.getEntities();
+
+    context._enemyBullets.reposition();
+    context._enemyBullets.render();
+
+    const rocketData = rocket.getData() as BulletData;
+    expect(rocketData.heading).toBe(94);
+    expect(context._gameArena.renderSprite).toHaveBeenCalledWith(
+      expect.any(HTMLImageElement),
+      expect.objectContaining({
+        frameHeight: 9,
+        frameWidth: 12,
+        frameX: 0,
+        renderHeight: 18,
+        renderWidth: 24,
+      })
+    );
   });
 
   it("moves and renders the player", () => {

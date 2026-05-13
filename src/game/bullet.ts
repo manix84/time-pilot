@@ -32,7 +32,10 @@ class Bullet implements BulletInstance {
     color: string,
     coordinateSpace: BulletData["coordinateSpace"] = "screen",
     shape: BulletData["shape"] = "square",
-    sprite?: BulletData["sprite"]
+    sprite?: BulletData["sprite"],
+    tracksPlayer = false,
+    turnRate = 0,
+    shootable = false
   ) {
     this._gameArena = context._gameArena;
     this._player = context._player;
@@ -46,6 +49,9 @@ class Bullet implements BulletInstance {
       velocity,
       color,
       sprite,
+      tracksPlayer,
+      turnRate,
+      shootable,
     };
 
     if (sprite) {
@@ -110,6 +116,19 @@ class Bullet implements BulletInstance {
   };
 
   reposition = (): void => {
+    if (this._data.tracksPlayer && this._data.turnRate) {
+      const desiredHeading = helpers.findHeading(
+        this._data,
+        this._player.getData()
+      );
+
+      this._data.heading = helpers.rotateTo(
+        desiredHeading,
+        this._data.heading,
+        this._data.turnRate
+      );
+    }
+
     const { heading, velocity } = this._data;
 
     this._data.posX += helpers.float(
@@ -144,11 +163,12 @@ class Bullet implements BulletInstance {
       const renderWidth = this._data.sprite.renderWidth ?? this._data.sprite.width;
       const renderHeight =
         this._data.sprite.renderHeight ?? this._data.sprite.height;
+      const frameX = this._getSpriteFrameX();
 
       this._gameArena.renderSprite(this._projectileSprite, {
         frameWidth: this._data.sprite.width,
         frameHeight: this._data.sprite.height,
-        frameX: 0,
+        frameX,
         frameY: 0,
         posX: posX - renderWidth / 2,
         posY: posY - renderHeight / 2,
@@ -187,6 +207,18 @@ class Bullet implements BulletInstance {
         }
       );
     }
+  };
+
+  private _getSpriteFrameX = (): number => {
+    const frames = this._data.sprite?.frames;
+
+    if (!frames) {
+      return 0;
+    }
+
+    const heading = ((this._data.heading % 360) + 360) % 360;
+
+    return Math.round(((heading + 270) % 360) / (360 / frames)) % frames;
   };
 }
 

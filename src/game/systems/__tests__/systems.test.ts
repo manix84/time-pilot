@@ -93,7 +93,9 @@ const createPlayer = (overrides: Partial<PlayerData> = {}): PlayerInstance => {
   };
 };
 
-const createEnemyBullet = (): BulletInstance => {
+const createEnemyBullet = (
+  overrides: Partial<BulletData> = {}
+): BulletInstance => {
   const enemyBulletData: BulletData = {
     color: "#ff9",
     coordinateSpace: "world",
@@ -103,6 +105,7 @@ const createEnemyBullet = (): BulletInstance => {
     shape: "circle",
     size: 6,
     velocity: 5,
+    ...overrides,
   };
 
   return {
@@ -355,6 +358,28 @@ describe("game systems", () => {
     expect(enemyBullet.removeMe).toBe(true);
   });
 
+  it("lets player bullets shoot down shootable enemy projectiles", () => {
+    const context = createContext({
+      enemyCollides: false,
+      playerOverrides: { posX: 0, posY: 0 },
+    });
+    const enemyBullet = createEnemyBullet({
+      posX: 1,
+      posY: 2,
+      shootable: true,
+    });
+    const playerBullet = createPlayerBullet();
+    vi.mocked(context._enemyBullets.getEntities).mockReturnValue([enemyBullet]);
+    vi.mocked(context._bullets.getEntities).mockReturnValue([playerBullet]);
+    const system = new CollisionSystem(context);
+
+    system.detectCollisions();
+
+    expect(playerBullet.removeMe).toBe(true);
+    expect(enemyBullet.removeMe).toBe(true);
+    expect(context._player.kill).not.toHaveBeenCalled();
+  });
+
   it("keeps the player alive while demo collisions continue resolving bullets", () => {
     const context = createContext({ demoMode: true });
     const system = new CollisionSystem(context);
@@ -416,9 +441,75 @@ describe("game systems", () => {
       "#FF9",
       false,
       "world",
-      "circle"
+      "circle",
+      undefined,
+      undefined,
+      undefined,
+      undefined
     );
     expect(context._bonuses.create).not.toHaveBeenCalled();
+  });
+
+  it("spawns fast straight rockets on level 3", () => {
+    const context = createContext({ level: 3 });
+    const system = new SpawningSystem(context);
+
+    vi.spyOn(Math, "random").mockReturnValue(0);
+
+    system.spawnEntities();
+
+    expect(context._enemyBullets.create).toHaveBeenCalledWith(
+      100,
+      100,
+      expect.any(Number),
+      8,
+      10,
+      "#FF9",
+      false,
+      "world",
+      "sprite",
+      expect.objectContaining({
+        frames: 16,
+        height: 9,
+        renderHeight: 18,
+        renderWidth: 24,
+        width: 12,
+      }),
+      undefined,
+      undefined,
+      true
+    );
+  });
+
+  it("spawns faster homing rockets on level 4", () => {
+    const context = createContext({ level: 4 });
+    const system = new SpawningSystem(context);
+
+    vi.spyOn(Math, "random").mockReturnValue(0);
+
+    system.spawnEntities();
+
+    expect(context._enemyBullets.create).toHaveBeenCalledWith(
+      100,
+      100,
+      expect.any(Number),
+      8,
+      11,
+      "#FF9",
+      false,
+      "world",
+      "sprite",
+      expect.objectContaining({
+        frames: 16,
+        height: 9,
+        renderHeight: 18,
+        renderWidth: 24,
+        width: 12,
+      }),
+      true,
+      4,
+      true
+    );
   });
 
   it("spawns the boss after the level kill threshold", () => {

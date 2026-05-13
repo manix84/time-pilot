@@ -81,6 +81,12 @@ const nl: typeof en = {
         label: "Bonus",
         description: "Verzamel voor oplopende score.",
       },
+      projectiles: {
+        bomb: "Bom",
+        bullet: "Kogel",
+        energy: "Energie",
+        rocket: "Raket",
+      },
     },
     invincibilityShield: "Onkwetsbaar schild",
     language: "Taal",

@@ -254,6 +254,7 @@ export class TimePilot {
       assetPath("sprites/enemies/basic/explosion.png"),
       assetPath("sprites/enemies/boss/explosion.png"),
       assetPath("sprites/enemies/projectiles/bomb.png"),
+      assetPath("sprites/enemies/projectiles/rocket.png"),
       assetPath("sprites/bonuses/parachute.png"),
       assetPath("sprites/props/cloud1.png"),
       assetPath("sprites/props/cloud2.png"),

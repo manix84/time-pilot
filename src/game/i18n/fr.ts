@@ -69,6 +69,12 @@ const fr: typeof en = {
       special: { label: "Special", description: "Menace rare aux attaques etranges." },
       boss: { label: "Boss", description: "Cible lourde avec degats visibles." },
       bonus: { label: "Bonus", description: "A collecter pour plus de points." },
+      projectiles: {
+        bomb: "Bombe",
+        bullet: "Balle",
+        energy: "Energie",
+        rocket: "Roquette",
+      },
     },
     invincibilityShield: "Bouclier d'invincibilite",
     language: "Langue",

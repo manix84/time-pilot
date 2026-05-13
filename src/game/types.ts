@@ -199,7 +199,10 @@ export interface BulletFactoryInstance {
     playSound?: boolean,
     coordinateSpace?: BulletData["coordinateSpace"],
     shape?: BulletData["shape"],
-    sprite?: BulletData["sprite"]
+    sprite?: BulletData["sprite"],
+    tracksPlayer?: boolean,
+    turnRate?: number,
+    shootable?: boolean
   ) => void;
   getCount: () => number;
   getData: () => BulletData[];
@@ -447,6 +450,7 @@ export interface ProjectileSpriteConfig {
   sprite: SpriteAsset;
   width: number;
   height: number;
+  frames?: number;
   renderWidth?: number;
   renderHeight?: number;
 }
@@ -459,6 +463,9 @@ export interface BulletData extends Coordinates {
   velocity: number;
   color: string;
   sprite?: ProjectileSpriteConfig;
+  tracksPlayer?: boolean;
+  turnRate?: number;
+  shootable?: boolean;
 }
 
 export interface ExplosionConfig {
@@ -476,6 +483,9 @@ export interface ProjectileConfig {
   color: string;
   sprite?: ProjectileSpriteConfig;
   sound?: SoundAsset;
+  tracksPlayer?: boolean;
+  turnRate?: number;
+  shootable?: boolean;
 }
 
 export interface PlayerConfig {

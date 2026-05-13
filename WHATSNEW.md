@@ -34,6 +34,7 @@
 
 - Rebalanced enemy speeds by era so biplanes, WWII fighters, helicopters, jets, and UFOs escalate more like Time Pilot.
 - Tuned enemy bullets, bombs, and missiles around simple readable projectiles instead of dense bullet patterns.
+- Added rocket sprites for level 3 and level 4 enemy missiles, with level 4 using faster limited homing and rockets that can be shot down.
 - Updated player and enemy sprite handling for the newer sprite sheets, including level 1 biplane animation, level 3 helicopter turning, level 5 UFO animation, and the 32-frame player rotation sheet.
 
 ## 🧭 Menu, Zoom, and Debug UX
@@ -41,6 +42,7 @@
 - Added localized era blurbs to the debug level select screen.
 - Added Spanish to the supported menu languages.
 - Added animated level select previews for basic enemies, special enemies, bosses, and bonuses.
+- Added projectile previews and labels to the debug level select showcase.
 - Made focused debug levels pin the background demo preview until leaving level select.
 - Added idle fading on the level select menu so the background demo is easier to inspect.
 - Added UI zoom and game POV zoom options, both with automatic viewport scaling.

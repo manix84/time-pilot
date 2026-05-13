@@ -81,6 +81,12 @@ const it: typeof en = {
         label: "Bonus",
         description: "Raccoglilo per piu punti.",
       },
+      projectiles: {
+        bomb: "Bomba",
+        bullet: "Proiettile",
+        energy: "Energia",
+        rocket: "Razzo",
+      },
     },
     invincibilityShield: "Scudo invincibile",
     language: "Lingua",

@@ -81,6 +81,12 @@ const de: typeof en = {
         label: "Bonus",
         description: "Sammeln fuer steigende Punkte.",
       },
+      projectiles: {
+        bomb: "Bombe",
+        bullet: "Kugel",
+        energy: "Energie",
+        rocket: "Rakete",
+      },
     },
     invincibilityShield: "Unverwundbarkeit",
     language: "Sprache",

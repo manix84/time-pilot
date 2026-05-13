@@ -1,7 +1,12 @@
 import { levels, player } from "../constants";
 import SoundEngine from "../engine/Sound";
 import helpers from "../engine/helpers";
-import type { BulletData, CollisionSystemInstance, GameDataStore } from "../types";
+import type {
+  BulletData,
+  BulletInstance,
+  CollisionSystemInstance,
+  GameDataStore,
+} from "../types";
 
 class CollisionSystem implements CollisionSystemInstance {
   private _context: GameDataStore;
@@ -22,8 +27,14 @@ class CollisionSystem implements CollisionSystemInstance {
     const bullets = this._context._bullets.getEntities();
     const playerData = this._context._player.getData();
 
+    this._detectShootableProjectileHits(bullets);
+
     if (!this._context._isDemoMode && playerData.isAlive) {
       this._context._enemyBullets.getEntities().forEach((bullet) => {
+        if (bullet.removeMe) {
+          return;
+        }
+
         const bulletData = bullet.getData() as BulletData;
         const bulletPosition =
           bulletData.coordinateSpace === "world"
@@ -112,6 +123,59 @@ class CollisionSystem implements CollisionSystemInstance {
           if (!enemy.isAlive) {
             this._playExplosion();
           }
+        }
+      });
+    });
+  };
+
+  private _detectShootableProjectileHits = (
+    bullets: BulletInstance[]
+  ): void => {
+    const playerData = this._context._player.getData();
+    const enemyBullets = this._context._enemyBullets.getEntities();
+
+    enemyBullets.forEach((enemyBullet) => {
+      if (enemyBullet.removeMe) {
+        return;
+      }
+
+      const enemyBulletData = enemyBullet.getData() as BulletData;
+
+      if (!enemyBulletData.shootable) {
+        return;
+      }
+
+      const enemyBulletPosition =
+        enemyBulletData.coordinateSpace === "world"
+          ? { posX: enemyBulletData.posX, posY: enemyBulletData.posY }
+          : {
+            posX: enemyBulletData.posX + playerData.posX,
+            posY: enemyBulletData.posY + playerData.posY,
+          };
+
+      bullets.forEach((bullet) => {
+        if (bullet.removeMe || enemyBullet.removeMe) {
+          return;
+        }
+
+        const bulletData = bullet.getData() as BulletData;
+
+        if (
+          helpers.detectCollision(
+            {
+              posX: bulletData.posX + playerData.posX,
+              posY: bulletData.posY + playerData.posY,
+              radius: bulletData.size,
+            },
+            {
+              posX: enemyBulletPosition.posX,
+              posY: enemyBulletPosition.posY,
+              radius: enemyBulletData.size,
+            }
+          )
+        ) {
+          bullet.removeMe = true;
+          enemyBullet.removeMe = true;
         }
       });
     });
