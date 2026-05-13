@@ -209,15 +209,24 @@ class Enemy implements EnemyInstance {
       frameWidth: levelData.width,
       frameHeight: levelData.height,
       frameX,
-      frameY: levelData.canRotate
-        ? Math.floor(this._gameTicker.getTicks() / 10) % 2
-        : 0,
+      frameY: this._getFrameY(levelData),
       posX: this._data.posX - this._player.getData().posX - renderWidth / 2,
       posY:
         this._data.posY - this._player.getData().posY - renderHeight / 2,
       renderHeight,
       renderWidth,
     });
+  };
+
+  private _getFrameY = (levelData: EnemyConfig): number => {
+    if (!levelData.canRotate) {
+      return 0;
+    }
+
+    return (
+      Math.floor(this._gameTicker.getTicks() / 10) %
+      (levelData.animationRows ?? 1)
+    );
   };
 
   private _getFrameX = (levelData: EnemyConfig): number => {
@@ -254,9 +263,30 @@ class Enemy implements EnemyInstance {
     }
 
     const explosionData = this.getLevelData().explosion;
+    const levelData = this.getLevelData();
+    const elapsedTicks = this._gameTicker.getTicks() - this._data.deathTick;
+    const flashTicks = levelData.deathFlashTicks ?? 0;
+
+    if (levelData.deathFlashFrameY !== undefined && elapsedTicks < flashTicks) {
+      const renderWidth = levelData.renderWidth ?? levelData.width;
+      const renderHeight = levelData.renderHeight ?? levelData.height;
+
+      this._gameArena.renderSprite(this._enemySprite, {
+        frameWidth: levelData.width,
+        frameHeight: levelData.height,
+        frameX: this._getFrameX(levelData),
+        frameY: levelData.deathFlashFrameY,
+        posX: this._data.posX - this._player.getData().posX - renderWidth / 2,
+        posY:
+          this._data.posY - this._player.getData().posY - renderHeight / 2,
+        renderHeight,
+        renderWidth,
+      });
+      return;
+    }
+
     const frameX = Math.floor(
-      (this._gameTicker.getTicks() - this._data.deathTick) /
-        explosionData.frameLimiter
+      (elapsedTicks - flashTicks) / explosionData.frameLimiter
     );
 
     this._enemySprite.src = explosionData.sprite.src;

@@ -480,8 +480,11 @@ export interface PlayerConfig {
 
 export interface EnemyConfig {
   animationFrames?: number;
+  animationRows?: number;
   bossDamageFrames?: number;
   countsTowardBoss: boolean;
+  deathFlashFrameY?: number;
+  deathFlashTicks?: number;
   deathValue: number;
   sprite: SpriteAsset;
   velocity: number;

@@ -577,7 +577,11 @@ const timePilotConstants: TimePilotConstants = {
         turnInterval: 5,
       },
       enemies: {
-        basic: basicEnemy(1),
+        basic: basicEnemy(1, {
+          animationRows: 2,
+          deathFlashFrameY: 2,
+          deathFlashTicks: 6,
+        }),
         boss: bossEnemy(1, {
           width: 30,
           height: 16,
@@ -735,6 +739,8 @@ const timePilotConstants: TimePilotConstants = {
       },
       enemies: {
         basic: basicEnemy(5, {
+          animationFrames: 4,
+          canRotate: false,
           velocity: 7.5,
           turnLimiter: 8,
           firingChance: 0.68,

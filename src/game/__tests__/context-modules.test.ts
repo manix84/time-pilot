@@ -427,6 +427,83 @@ describe("context-backed game modules", () => {
     );
   });
 
+  it("renders level 1 biplane rotor animation rows without changing orientation", () => {
+    const context = createContext();
+
+    context._enemies.create(100, 100, 180);
+    const [enemy] = context._enemies.getEntities();
+
+    vi.mocked(context._gameTicker.getTicks).mockReturnValue(9);
+    enemy.render();
+    vi.mocked(context._gameTicker.getTicks).mockReturnValue(10);
+    enemy.render();
+
+    expect(context._gameArena.renderSprite).toHaveBeenNthCalledWith(
+      1,
+      expect.any(HTMLImageElement),
+      expect.objectContaining({ frameX: 8, frameY: 0 })
+    );
+    expect(context._gameArena.renderSprite).toHaveBeenNthCalledWith(
+      2,
+      expect.any(HTMLImageElement),
+      expect.objectContaining({ frameX: 8, frameY: 1 })
+    );
+  });
+
+  it("renders the level 1 biplane flash row before the explosion sheet", () => {
+    const context = createContext();
+
+    vi.mocked(context._gameTicker.getTicks).mockReturnValue(100);
+    context._enemies.create(100, 100, 180);
+    const [enemy] = context._enemies.getEntities();
+
+    enemy.kill();
+    vi.mocked(context._gameTicker.getTicks).mockReturnValue(103);
+    enemy.render();
+    vi.mocked(context._gameTicker.getTicks).mockReturnValue(106);
+    enemy.render();
+
+    expect(context._gameArena.renderSprite).toHaveBeenNthCalledWith(
+      1,
+      expect.any(HTMLImageElement),
+      expect.objectContaining({
+        frameHeight: 32,
+        frameWidth: 32,
+        frameX: 8,
+        frameY: 2,
+      })
+    );
+    expect(context._gameArena.renderSprite).toHaveBeenNthCalledWith(
+      2,
+      expect.any(HTMLImageElement),
+      expect.objectContaining({
+        frameHeight: 32,
+        frameWidth: 32,
+        frameX: 0,
+        frameY: 0,
+      })
+    );
+  });
+
+  it("renders level 5 basic enemies as four animation frames without rotation", () => {
+    const context = createContext();
+    context._level = 5;
+
+    context._enemies.create(100, 100, 180);
+    const [enemy] = context._enemies.getEntities();
+
+    vi.mocked(context._gameTicker.getTicks).mockReturnValue(30);
+    enemy.render();
+
+    expect(context._gameArena.renderSprite).toHaveBeenCalledWith(
+      expect.any(HTMLImageElement),
+      expect.objectContaining({
+        frameX: 3,
+        frameY: 0,
+      })
+    );
+  });
+
   it("awards the 1940 special bomber after three hits without boss progress", () => {
     const context = createContext();
     context._level = 2;
