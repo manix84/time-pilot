@@ -190,6 +190,40 @@ describe("context-backed game modules", () => {
     expect(context._bullets.getCount()).toBe(1);
   });
 
+  it("maps the 16-frame player sprite strip across the lower arc and mirrors the upper arc", () => {
+    const context = createContext();
+
+    context._player.setData("heading", 90);
+    context._player.render();
+    context._player.setData("heading", 180);
+    context._player.render();
+    context._player.setData("heading", 270);
+    context._player.render();
+    context._player.setData("heading", 0);
+    context._player.render();
+
+    expect(context._gameArena.renderSprite).toHaveBeenNthCalledWith(
+      1,
+      expect.any(HTMLImageElement),
+      expect.objectContaining({ frameX: 0, frameY: 0, flipY: false })
+    );
+    expect(context._gameArena.renderSprite).toHaveBeenNthCalledWith(
+      2,
+      expect.any(HTMLImageElement),
+      expect.objectContaining({ frameX: 8, frameY: 0, flipY: false })
+    );
+    expect(context._gameArena.renderSprite).toHaveBeenNthCalledWith(
+      3,
+      expect.any(HTMLImageElement),
+      expect.objectContaining({ frameX: 15, frameY: 0, flipY: false })
+    );
+    expect(context._gameArena.renderSprite).toHaveBeenNthCalledWith(
+      4,
+      expect.any(HTMLImageElement),
+      expect.objectContaining({ frameX: 8, frameY: 0, flipY: true })
+    );
+  });
+
   it("spends a life and respawns the player at level start after death", () => {
     const context = createContext();
     vi.mocked(context._gameTicker.getTicks).mockReturnValue(10);
@@ -254,7 +288,7 @@ describe("context-backed game modules", () => {
       expect.objectContaining({
         frameHeight: 16,
         frameWidth: 16,
-        frameX: 24,
+        frameX: 0,
         renderHeight: 32,
         renderWidth: 32,
       })

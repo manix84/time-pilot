@@ -505,12 +505,13 @@ const timePilotConstants: TimePilotConstants = {
     sprite: {
       src: assetPath("sprites/player/player.png"),
     },
+    spriteFrameAxis: "x",
     frameWidth: 16,
     frameHeight: 16,
     width: 32,
     height: 32,
     hitRadius: 8,
-    rotationFrameCount: 32,
+    rotationFrameCount: 16,
     explosion: {
       sprite: {
         src: assetPath("sprites/player/explosion.png"),

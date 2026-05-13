@@ -11,10 +11,6 @@ import type {
   SpriteImage,
 } from "./types";
 
-const upFacingPlayerFrame =
-  Math.round(((0 + 270) % 360) / (360 / player.rotationFrameCount)) %
-  player.rotationFrameCount;
-
 class Hud implements HudInstance {
   private _context: GameDataStore;
   private _gameArena: GameArenaInstance;
@@ -28,7 +24,7 @@ class Hud implements HudInstance {
     this._playerSprite.src = player.sprite.src;
     this._playerSprite.frameWidth = player.frameWidth;
     this._playerSprite.frameHeight = player.frameHeight;
-    this._playerSprite.frameX = upFacingPlayerFrame;
+    this._playerSprite.frameX = 0;
     this._playerSprite.frameY = 0;
   }
 

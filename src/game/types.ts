@@ -10,6 +10,7 @@ export interface PositionedRadius extends Coordinates {
 }
 
 export interface SpriteFrame extends Coordinates {
+  flipY?: boolean;
   frameWidth: number;
   frameHeight: number;
   frameX: number;
@@ -468,6 +469,7 @@ export interface ProjectileConfig {
 
 export interface PlayerConfig {
   sprite: SpriteAsset;
+  spriteFrameAxis?: "x" | "y";
   frameWidth: number;
   frameHeight: number;
   width: number;

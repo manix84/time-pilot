@@ -16,6 +16,7 @@ import type {
 } from "./types";
 
 const playerConst = player;
+const playerSpriteArcDegrees = 180;
 
 class Player implements PlayerInstance {
   private _bulletFactory: BulletFactoryInstance;
@@ -42,7 +43,7 @@ class Player implements PlayerInstance {
     this._playerDeathSprite.src = playerConst.explosion.sprite.src;
 
     this._explosionSound = new SoundEngine(playerConst.explosion.sound.src);
-    this._rotationStep = 360 / playerConst.rotationFrameCount;
+    this._rotationStep = playerSpriteArcDegrees / (playerConst.rotationFrameCount - 1);
 
     this._data = {
       isAlive: true,
@@ -170,17 +171,38 @@ class Player implements PlayerInstance {
     }
   };
 
+  private _getSpriteFrame = (): { flipY: boolean; frameX: number; frameY: number } => {
+    const heading = ((this._data.heading % 360) + 360) % 360;
+    const usesBottomArc = heading >= 90 && heading <= 270;
+    const spriteHeading = usesBottomArc
+      ? heading
+      : heading < 90
+        ? 180 - heading
+        : 540 - heading;
+    const frame = Math.min(
+      playerConst.rotationFrameCount - 1,
+      Math.max(0, Math.round((spriteHeading - 90) / this._rotationStep))
+    );
+
+    return {
+      flipY: !usesBottomArc,
+      frameX: playerConst.spriteFrameAxis === "y" ? 0 : frame,
+      frameY: playerConst.spriteFrameAxis === "y" ? frame : 0,
+    };
+  };
+
   render = (): void => {
     let color: string = palette.aircraft.playerShield;
 
     if (!this._data.deathTick && this._data.isAlive) {
+      const spriteFrame = this._getSpriteFrame();
+
       this._gameArena.renderSprite(this._playerSprite, {
         frameWidth: playerConst.frameWidth,
         frameHeight: playerConst.frameHeight,
-        frameX:
-          Math.round(((this._data.heading + 270) % 360) / this._rotationStep) %
-          playerConst.rotationFrameCount,
-        frameY: 0,
+        frameX: spriteFrame.frameX,
+        frameY: spriteFrame.frameY,
+        flipY: spriteFrame.flipY,
         renderWidth: playerConst.width,
         renderHeight: playerConst.height,
         posX: -(playerConst.width / 2),
