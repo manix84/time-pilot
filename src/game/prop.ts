@@ -23,7 +23,7 @@ class Prop implements PropInstance {
     this._gameArena = context._gameArena;
     this._player = context._player;
 
-    const level = 1;
+    const level = context._level;
     const type = Math.floor(Math.random() * levels[level].props.length);
     this._data = {
       posX,

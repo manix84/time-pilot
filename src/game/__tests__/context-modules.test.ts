@@ -494,6 +494,44 @@ describe("context-backed game modules", () => {
     expect(context._bonuses.getCount()).toBe(0);
   });
 
+  it("renders refreshed cloud props at pixel-doubled dimensions", () => {
+    const context = createContext();
+    vi.spyOn(Math, "random").mockReturnValue(0);
+
+    context._props.create(50, 50);
+    context._props.render();
+
+    expect(context._gameArena.renderSprite).toHaveBeenCalledWith(
+      expect.any(HTMLImageElement),
+      expect.objectContaining({
+        frameHeight: 18,
+        frameWidth: 32,
+      })
+    );
+  });
+
+  it("renders level 5 props as asteroids", () => {
+    const context = createContext();
+    context._level = 5;
+    vi.spyOn(Math, "random").mockReturnValue(0);
+
+    context._props.create(50, 50);
+    context._props.render();
+
+    const [propData] = context._props.getData();
+
+    expect(propData.level).toBe(5);
+    expect(context._gameArena.renderSprite).toHaveBeenCalledWith(
+      expect.objectContaining({
+        src: expect.stringContaining("asteroid1.png"),
+      }),
+      expect.objectContaining({
+        frameHeight: 24,
+        frameWidth: 28,
+      })
+    );
+  });
+
   it("awards parachute bonuses in 1000 point steps capped at 5000", () => {
     const context = createContext();
 

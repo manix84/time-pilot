@@ -257,6 +257,39 @@ const levelOneProps: PropConfig[] = [
   },
 ];
 
+const levelFiveProps: PropConfig[] = [
+  {
+    sprite: {
+      src: assetPath("sprites/props/asteroid1.png"),
+    },
+    width: 28,
+    height: 24,
+    relativeVelocity: 0.5,
+    layer: 1,
+    reversed: false,
+  },
+  {
+    sprite: {
+      src: assetPath("sprites/props/asteroid2.png"),
+    },
+    width: 28,
+    height: 30,
+    relativeVelocity: 0.25,
+    layer: 1,
+    reversed: false,
+  },
+  {
+    sprite: {
+      src: assetPath("sprites/props/asteroid3.png"),
+    },
+    width: 60,
+    height: 28,
+    relativeVelocity: 0,
+    layer: 2,
+    reversed: false,
+  },
+];
+
 const levelOneFormations: EnemyFormationConfig[] = [
   {
     name: "v",
@@ -851,7 +884,7 @@ const timePilotConstants: TimePilotConstants = {
         formations: futureLevelFormations[5],
       },
       bonus: parachuteBonus,
-      props: levelOneProps,
+      props: levelFiveProps,
     },
   },
 };

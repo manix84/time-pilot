@@ -72,6 +72,11 @@ describe("game module imports", () => {
       "swarm-burst",
       "chasing-wave",
     ]);
+    expect(constants.levels[5].props.map((prop) => prop.sprite.src)).toEqual([
+      expect.stringContaining("asteroid1.png"),
+      expect.stringContaining("asteroid2.png"),
+      expect.stringContaining("asteroid3.png"),
+    ]);
     expect(ControllerInterface).toBeTypeOf("function");
     expect(Gamepad).toBeTypeOf("function");
     expect(Keyboard1).toBeTypeOf("function");
