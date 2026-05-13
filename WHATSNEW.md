@@ -30,6 +30,27 @@
 - Added canvas-rendered start and options menus with volume controls, controller style selection, custom keyboard bindings, and keyboard/gamepad/mouse interaction.
 - Fixed gamepad cleanup so animation frames are cancelled on disconnect.
 
+## 🎮 Gameplay Tuning
+
+- Rebalanced enemy speeds by era so biplanes, WWII fighters, helicopters, jets, and UFOs escalate more like Time Pilot.
+- Tuned enemy bullets, bombs, and missiles around simple readable projectiles instead of dense bullet patterns.
+- Updated player and enemy sprite handling for the newer sprite sheets, including level 1 biplane animation, level 3 helicopter turning, level 5 UFO animation, and the 32-frame player rotation sheet.
+
+## 🧭 Menu, Zoom, and Debug UX
+
+- Added localized era blurbs to the debug level select screen.
+- Added animated level select previews for basic enemies, special enemies, bosses, and bonuses.
+- Made focused debug levels pin the background demo preview until leaving level select.
+- Added idle fading on the level select menu so the background demo is easier to inspect.
+- Added UI zoom and game POV zoom options, both with automatic viewport scaling.
+- Kept pixel art crisp when the game POV zoom changes.
+- Added a live player scale preview beside the Game Zoom option.
+- Added keyboard shortcuts for UI zoom with `+`/`=` and `-`.
+- Added `M` and the gamepad menu button as root-menu shortcuts.
+- Added Escape, Backspace, and gamepad back navigation for submenus.
+- Added a paused subtitle to the root menu during gameplay.
+- Made Escape on the paused root menu resume gameplay, matching the Continue button.
+
 ## ✅ Automation
 
 - Added GitHub Actions for PR tests, lint, and type checks.
@@ -42,6 +63,7 @@
 - Added Vitest with jsdom for fast local and CI test runs.
 - Added browser API shims for canvas, media, animation frames, and gamepads.
 - Covered core engine helpers, arena behavior, ticker timing, sound wrappers, controllers, menus, factories, entities, HUD wiring, the `TimePilot` class, and the React host component.
+- Covered menu back navigation, paused root-menu resume behavior, debug level select previews, zoom controls, and keyboard/gamepad menu shortcuts.
 - Replaced the previous placeholder test script with a real `npm test` suite.
 
 ## 🔜 Next Milestones

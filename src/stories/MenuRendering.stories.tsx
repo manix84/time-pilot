@@ -6,7 +6,7 @@ import { CanvasDemo } from "./canvas-demo";
 import { createCanvasArena } from "./menu-arena";
 import "./storybook.css";
 
-type MenuScreenDemo = "start" | "options" | "debug";
+type MenuScreenDemo = "start" | "options" | "debug" | "paused" | "level" | "zoom";
 type TransitionInspectableMenu = {
   _transition: null;
 };
@@ -25,7 +25,7 @@ const renderMenuFrame = (
 };
 
 const prepareMenu = (menu: Menus, screen: MenuScreenDemo): void => {
-  menu.showStart();
+  menu.showStart(screen === "paused" ? { startLabel: "Continue" } : undefined);
 
   if (screen === "options") {
     menu.next();
@@ -33,13 +33,29 @@ const prepareMenu = (menu: Menus, screen: MenuScreenDemo): void => {
     return;
   }
 
-  if (screen === "debug") {
+  if (screen === "zoom") {
+    menu.next();
+    menu.activate();
+    for (let i = 0; i < 4; i++) {
+      menu.next();
+    }
+    return;
+  }
+
+  if (screen === "debug" || screen === "level") {
     [38, 38, 40, 40, 37, 39, 37, 39, 66, 65].forEach((keyCode) => {
       menu.captureKey(keyCode);
     });
     menu.next();
     menu.next();
     menu.activate();
+
+    if (screen === "level") {
+      for (let i = 0; i < 4; i++) {
+        menu.next();
+      }
+      menu.activate();
+    }
   }
 };
 
@@ -54,6 +70,57 @@ const drawMenu = (context: CanvasRenderingContext2D, canvas: HTMLCanvasElement, 
   settleMenuTransition(menu);
 
   renderMenuFrame(context, canvas, menu);
+};
+
+const MenuLiveDemo = ({
+  height = 520,
+  screen,
+  width = 760,
+}: {
+  height?: number;
+  screen: MenuScreenDemo;
+  width?: number;
+}) => {
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    const context = canvas?.getContext("2d");
+
+    if (!canvas || !context) {
+      return;
+    }
+
+    const arena = createCanvasArena(canvas, context);
+    const menu = new Menus(arena, {
+      clearLevelPreview: () => {},
+      previewLevel: () => {},
+      selectLevel: () => {},
+      start: () => {},
+    });
+    let animationFrame = 0;
+
+    prepareMenu(menu, screen);
+    settleMenuTransition(menu);
+
+    const animate = (): void => {
+      renderMenuFrame(context, canvas, menu);
+      animationFrame = window.requestAnimationFrame(animate);
+    };
+
+    animate();
+
+    return () => window.cancelAnimationFrame(animationFrame);
+  }, [screen]);
+
+  return (
+    <canvas
+      className={"storybook-canvas"}
+      height={height}
+      ref={canvasRef}
+      width={width}
+    />
+  );
 };
 
 const MenuTransitionDemo = () => {
@@ -145,12 +212,24 @@ const MenuRenderingDemo = () => {
             <CanvasDemo draw={drawStart} height={420} width={560} />
           </article>
           <article className={"storybook-card"}>
+            <h2>Paused Root Menu</h2>
+            <MenuLiveDemo height={420} screen={"paused"} width={560} />
+          </article>
+          <article className={"storybook-card"}>
             <h2>Options Menu</h2>
             <CanvasDemo draw={drawOptions} height={520} width={560} />
           </article>
           <article className={"storybook-card"}>
+            <h2>Game Zoom Preview</h2>
+            <MenuLiveDemo height={520} screen={"zoom"} width={760} />
+          </article>
+          <article className={"storybook-card"}>
             <h2>Debug Menu</h2>
             <CanvasDemo draw={drawDebug} height={460} width={560} />
+          </article>
+          <article className={"storybook-card"}>
+            <h2>Level Select Showcase</h2>
+            <MenuLiveDemo height={520} screen={"level"} width={900} />
           </article>
           <article className={"storybook-card"}>
             <h2>Submenu Transition</h2>

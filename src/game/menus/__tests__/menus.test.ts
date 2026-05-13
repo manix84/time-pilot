@@ -166,6 +166,43 @@ describe("menu definitions", () => {
     expect(userOptions.controllerType).toBe("keyboard2");
   });
 
+  it("adjusts UI and game zoom from the options menu", () => {
+    const arena = createArena();
+    const menus = new Menus(arena, { start: vi.fn() });
+    userOptions.setOption("uiZoom", 5);
+    userOptions.setOption("gameZoom", 5);
+
+    menus.showStart();
+    menus.next();
+    menus.activate();
+
+    for (let i = 0; i < 3; i++) {
+      menus.next();
+    }
+
+    menus.adjust(1);
+    expect(userOptions.uiZoom).toBe(6);
+
+    menus.next();
+    menus.adjust(-1);
+    expect(userOptions.gameZoom).toBe(4);
+
+    menus.render();
+
+    expect(arena.renderText).toHaveBeenCalledWith(
+      "105%",
+      expect.any(Number),
+      expect.any(Number),
+      expect.objectContaining({ align: "right" })
+    );
+    expect(arena.renderText).toHaveBeenCalledWith(
+      "95%",
+      expect.any(Number),
+      expect.any(Number),
+      expect.objectContaining({ align: "right" })
+    );
+  });
+
   it("uses escape and backspace to return from submenus", () => {
     const arena = createArena();
     const menus = new Menus(arena, { start: vi.fn() });
