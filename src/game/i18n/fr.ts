@@ -63,6 +63,7 @@ const fr: typeof en = {
     directional: "Directionnel",
     effectsVolume: "Volume des effets",
     fire: "Tir",
+    gameZoom: "Zoom jeu",
     levelShowcase: {
       basic: { label: "Ennemis", description: "Appareil principal de cette ere." },
       special: { label: "Special", description: "Menace rare aux attaques etranges." },

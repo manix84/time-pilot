@@ -63,6 +63,7 @@ const it: typeof en = {
     directional: "Direzionale",
     effectsVolume: "Volume effetti",
     fire: "Fuoco",
+    gameZoom: "Zoom gioco",
     levelShowcase: {
       basic: {
         label: "Nemici",

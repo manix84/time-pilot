@@ -61,6 +61,7 @@ const en = {
     directional: "Directional",
     effectsVolume: "Effects Volume",
     fire: "Fire",
+    gameZoom: "Game Zoom",
     levelShowcase: {
       basic: {
         label: "Enemies",

@@ -21,6 +21,7 @@ describe("TimePilot engine", () => {
     userOptions.setDebugOption("invincible", true);
     localStorage.clear();
     userOptions.setOption("controllerType", "keyboard1");
+    userOptions.setOption("gameZoom", 5);
     userOptions.setOption("gamepadEnabled", true);
     userOptions.setOption("uiZoom", 5);
     vi.restoreAllMocks();

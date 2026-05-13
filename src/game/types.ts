@@ -612,6 +612,7 @@ export interface UserOptions {
   };
   enableDebug: boolean;
   controllerType: ControllerType;
+  gameZoom: number;
   gamepadEnabled: boolean;
   keyboardBindings: KeyboardBindings;
   language: GameLanguage;

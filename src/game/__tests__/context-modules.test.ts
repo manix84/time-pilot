@@ -130,6 +130,7 @@ describe("context-backed game modules", () => {
 
   afterEach(() => {
     userOptions.setOption("enableDebug", false);
+    userOptions.setOption("gameZoom", 5);
     userOptions.setDebugOption("showHitboxes", true);
     userOptions.setOption("uiZoom", 5);
     localStorage.clear();

@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import CollisionSystem from "../collision";
 import RenderingSystem from "../rendering";
 import SpawningSystem from "../spawning";
+import userOptions from "../../user-options";
 import type {
   BonusFactoryInstance,
   BonusInstance,
@@ -309,6 +310,10 @@ const createContext = ({
 };
 
 describe("game systems", () => {
+  beforeEach(() => {
+    userOptions.setOption("gameZoom", 5);
+  });
+
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -628,8 +633,14 @@ describe("game systems", () => {
 
     system.renderFrame();
 
-    const canvasContext = vi.mocked(context._gameArena.getContext).mock.results[0]
-      .value as CanvasRenderingContext2D;
+    const canvasContexts = vi
+      .mocked(context._gameArena.getContext)
+      .mock.results.map((result) => result.value as CanvasRenderingContext2D);
+    const canvasContext = canvasContexts.find((renderingContext) =>
+      vi.mocked(renderingContext.fillRect).mock.calls.some(
+        (call) => call[0] === -400 && call[1] === -300 && call[2] === 800 && call[3] === 600
+      )
+    )!;
 
     expect(canvasContext.fillRect).toHaveBeenCalledWith(-400, -300, 800, 600);
     expect(context._menus.render).toHaveBeenCalled();

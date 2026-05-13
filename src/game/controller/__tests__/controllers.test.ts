@@ -63,6 +63,7 @@ describe("controller modules", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     userOptions.setOption("controllerType", "keyboard1");
+    userOptions.setOption("gameZoom", 5);
     userOptions.setOption("uiZoom", 5);
   });
 

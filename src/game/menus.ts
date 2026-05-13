@@ -1,25 +1,30 @@
 /* Converted from TimePilot.Menu.js (AMD) to ESM TypeScript. */
-import { levels } from "./constants";
-import palette from "./palette";
+import { levels, player } from "./constants";
 import i18n, {
   availableLanguages,
   getCurrentLanguage,
   getLanguageName,
 } from "./i18n";
-import { formatUiZoom, getUiScale } from "./ui-scale";
-import userOptions from "./user-options";
+import palette from "./palette";
 import type {
+  BonusConfig,
   ControllerType,
-  GameLanguage,
+  EnemyConfig,
   GameArenaInstance,
+  GameLanguage,
   KeyboardBindings,
   MenuPointerData,
   MenuSystemCommands,
   MenuSystemInstance,
-  BonusConfig,
-  EnemyConfig,
   ShowStartMenuOptions,
 } from "./types";
+import {
+  formatGameZoom,
+  formatUiZoom,
+  getGameScale,
+  getUiScale,
+} from "./ui-scale";
+import userOptions from "./user-options";
 
 type MenuScreen =
   | "start"
@@ -106,6 +111,8 @@ const levelMenuIdleFadeDuration = 800;
 const levelMenuIdleOpacity = 0.4;
 const levelShowcaseDescriptionLineWidth = 18;
 const levelShowcaseFrameDuration = 260;
+const povPreviewFadeDuration = 250;
+const povPreviewFrameDuration = 180;
 const submenuHeaderTopGap = 34;
 const keyBindingRows: Array<{ binding: BindingAction; label: string }> = [
   { binding: "up", label: i18n.keys.up },
@@ -129,10 +136,13 @@ class Menus implements MenuSystemInstance {
   private _levelMenuLastInteractionAt = 0;
   private _levelPreviewedLevel?: number;
   private _levelShowcaseSprites: Partial<Record<string, HTMLImageElement>> = {};
+  private _povPreviewSprites: Partial<Record<string, HTMLImageElement>> = {};
   private _logoLanguage?: GameLanguage;
   private _logoCanvas?: HTMLCanvasElement;
   private readonly _logoHeight = 96;
   private readonly _logoWidth = 420;
+  private _povPreviewAlpha = 0;
+  private _povPreviewUpdatedAt = performance.now();
   private _screen: MenuScreen = "start";
   private _screenHistory: MenuScreen[] = [];
   private _pressedItemIndex: number | null = null;
@@ -393,7 +403,11 @@ class Menus implements MenuSystemInstance {
     context.restore();
   };
 
-  private _renderLogo = (context: CanvasRenderingContext2D, y: number, scale = 1): void => {
+  private _renderLogo = (
+    context: CanvasRenderingContext2D,
+    y: number,
+    scale = 1
+  ): void => {
     const logoCanvas = this._getLogoCanvas();
 
     context.save();
@@ -408,9 +422,13 @@ class Menus implements MenuSystemInstance {
     context.restore();
   };
 
-  private _renderItems = (context: CanvasRenderingContext2D, transitionProgress: number): void => {
+  private _renderItems = (
+    context: CanvasRenderingContext2D,
+    transitionProgress: number
+  ): void => {
     const viewport = this._getMenuViewport();
-    const transitionOffset = (1 - transitionProgress) * this._getItemTransitionOffset();
+    const transitionOffset =
+      (1 - transitionProgress) * this._getItemTransitionOffset();
     const screenOffset = this._getScreenItemOffset(this._screen);
 
     context.save();
@@ -425,6 +443,10 @@ class Menus implements MenuSystemInstance {
     });
 
     context.restore();
+
+    if (this._screen === "options") {
+      this._renderPovZoomPreview();
+    }
 
     if (this._screen === "level") {
       this._renderLevelBlurb();
@@ -453,7 +475,11 @@ class Menus implements MenuSystemInstance {
     return logoCanvas;
   };
 
-  private _drawLogoText = (context: CanvasRenderingContext2D, width: number, height: number): void => {
+  private _drawLogoText = (
+    context: CanvasRenderingContext2D,
+    width: number,
+    height: number
+  ): void => {
     const text = i18n.title;
     const textX = width / 2;
     const textY = height / 2 + 3;
@@ -482,7 +508,12 @@ class Menus implements MenuSystemInstance {
     context.fillText(text, textX, textY);
   };
 
-  private _drawPerspectiveLogo = (context: CanvasRenderingContext2D, logoCanvas: HTMLCanvasElement, logoWidth: number, logoHeight: number): void => {
+  private _drawPerspectiveLogo = (
+    context: CanvasRenderingContext2D,
+    logoCanvas: HTMLCanvasElement,
+    logoWidth: number,
+    logoHeight: number
+  ): void => {
     const topWidth = 260;
     const bottomWidth = 390;
     const targetHeight = 86;
@@ -492,7 +523,9 @@ class Menus implements MenuSystemInstance {
       const progress = sourceY / (logoHeight - sliceHeight);
       const targetWidth = topWidth + (bottomWidth - topWidth) * progress;
       const targetY = -targetHeight / 2 + (sourceY / logoHeight) * targetHeight;
-      const targetSliceHeight = Math.ceil((sliceHeight / logoHeight) * targetHeight);
+      const targetSliceHeight = Math.ceil(
+        (sliceHeight / logoHeight) * targetHeight
+      );
 
       context.drawImage(
         logoCanvas,
@@ -567,25 +600,30 @@ class Menus implements MenuSystemInstance {
         onAdjust: (direction) => this.adjustUiZoom(direction),
         onSetValue: (value) => this._setUiZoom(value),
       }),
-      this._createItem(i18n.menu.language, "action", 114, {
+      this._createItem(i18n.menu.gameZoom, "slider", 114, {
+        getValue: () => formatGameZoom(),
+        onAdjust: (direction) => this._adjustGameZoom(direction),
+        onSetValue: (value) => this._setGameZoom(value),
+      }),
+      this._createItem(i18n.menu.language, "action", 156, {
         getValue: () => getLanguageName(userOptions.language),
         languageFlag: userOptions.language,
         action: () => this._goToScreen("language"),
       }),
-      this._createItem(i18n.menu.controlType, "enum", 156, {
+      this._createItem(i18n.menu.controlType, "enum", 198, {
         getValue: () =>
           userOptions.controllerType === "keyboard1"
             ? i18n.menu.directional
             : i18n.menu.rotate,
         onAdjust: (direction) => this._adjustControllerType(direction),
       }),
-      this._createItem(i18n.menu.remapControls, "action", 198, {
+      this._createItem(i18n.menu.remapControls, "action", 240, {
         action: () => this._goToScreen("controls"),
       }),
     ];
 
     items.push(
-      this._createItem(i18n.menu.back, "action", 248, {
+      this._createItem(i18n.menu.back, "action", 290, {
         action: () => this._goBack(),
       })
     );
@@ -609,17 +647,27 @@ class Menus implements MenuSystemInstance {
   private _createLanguageItems = (): MenuItem[] => {
     return [
       ...availableLanguages.map((language, index) =>
-        this._createItem(getLanguageName(language), "action", -54 + index * 42, {
-          action: () => this._setLanguage(language),
-          getValue: () =>
-            userOptions.language === language ? i18n.menu.current : "",
-          isCurrent: () => userOptions.language === language,
-          languageFlag: language,
-        })
+        this._createItem(
+          getLanguageName(language),
+          "action",
+          -54 + index * 42,
+          {
+            action: () => this._setLanguage(language),
+            getValue: () =>
+              userOptions.language === language ? i18n.menu.current : "",
+            isCurrent: () => userOptions.language === language,
+            languageFlag: language,
+          }
+        )
       ),
-      this._createItem(i18n.menu.back, "action", 30 + availableLanguages.length * 42, {
-        action: () => this._goBack(),
-      }),
+      this._createItem(
+        i18n.menu.back,
+        "action",
+        30 + availableLanguages.length * 42,
+        {
+          action: () => this._goBack(),
+        }
+      ),
     ];
   };
 
@@ -628,30 +676,46 @@ class Menus implements MenuSystemInstance {
 
     return [
       ...enabledLevels.map((level, index) =>
-        this._createItem(this._getLevelLabel(level), "action", -54 + index * 42, {
-          action: () => this._setSelectedLevel(level),
-          levelIcon: level,
+        this._createItem(
+          this._getLevelLabel(level),
+          "action",
+          -54 + index * 42,
+          {
+            action: () => this._setSelectedLevel(level),
+            levelIcon: level,
+            rect: {
+              x: -110,
+              y: -54 + index * 42,
+              width: 220,
+              height: 36,
+            },
+          }
+        )
+      ),
+      this._createItem(
+        i18n.menu.back,
+        "action",
+        30 + enabledLevels.length * 42,
+        {
+          action: () => this._goBack(),
           rect: {
             x: -110,
-            y: -54 + index * 42,
+            y: 30 + enabledLevels.length * 42,
             width: 220,
             height: 36,
           },
-        })
+        }
       ),
-      this._createItem(i18n.menu.back, "action", 30 + enabledLevels.length * 42, {
-        action: () => this._goBack(),
-        rect: {
-          x: -110,
-          y: 30 + enabledLevels.length * 42,
-          width: 220,
-          height: 36,
-        },
-      }),
     ];
   };
 
-  private _createKeyBindingItem = (binding: BindingAction, x: number, y: number, width: number, height: number): MenuItem => {
+  private _createKeyBindingItem = (
+    binding: BindingAction,
+    x: number,
+    y: number,
+    width: number,
+    height: number
+  ): MenuItem => {
     const row = keyBindingRows.find((item) => item.binding === binding);
 
     return this._createItem(row?.label ?? binding, "key", y, {
@@ -670,8 +734,16 @@ class Menus implements MenuSystemInstance {
     return [
       this._createToggleItem(i18n.menu.invincibilityShield, "invincible", -54),
       this._createToggleItem(i18n.menu.showHitBoxes, "showHitboxes", -12),
-      this._createToggleItem(i18n.menu.showControlsOverlay, "showControlsOverlay", 30),
-      this._createToggleItem(i18n.menu.showCoordinates, "showPlayerCoordinates", 72),
+      this._createToggleItem(
+        i18n.menu.showControlsOverlay,
+        "showControlsOverlay",
+        30
+      ),
+      this._createToggleItem(
+        i18n.menu.showCoordinates,
+        "showPlayerCoordinates",
+        72
+      ),
       this._createItem(i18n.menu.selectLevel, "action", 114, {
         action: () => this._goToScreen("level"),
         getValue: () => this._getSelectedLevelLabel(),
@@ -682,16 +754,26 @@ class Menus implements MenuSystemInstance {
     ];
   };
 
-  private _createToggleItem = (label: string, option: ToggleDebugOption, y: number): MenuItem => {
+  private _createToggleItem = (
+    label: string,
+    option: ToggleDebugOption,
+    y: number
+  ): MenuItem => {
     return this._createItem(label, "toggle", y, {
-      getValue: () => (userOptions.debug[option] ? i18n.menu.on : i18n.menu.off),
+      getValue: () =>
+        userOptions.debug[option] ? i18n.menu.on : i18n.menu.off,
       onAdjust: () => {
         userOptions.setDebugOption(option, !userOptions.debug[option]);
       },
     });
   };
 
-  private _createItem = (label: string, kind: MenuItemKind, y: number, options: Partial<MenuItem> = {}): MenuItem => {
+  private _createItem = (
+    label: string,
+    kind: MenuItemKind,
+    y: number,
+    options: Partial<MenuItem> = {}
+  ): MenuItem => {
     return {
       label,
       kind,
@@ -722,13 +804,23 @@ class Menus implements MenuSystemInstance {
     } else {
       context.fillStyle = palette.menu.itemBackground;
     }
-    context.fillRect(item.rect.x, item.rect.y, item.rect.width, item.rect.height);
+    context.fillRect(
+      item.rect.x,
+      item.rect.y,
+      item.rect.width,
+      item.rect.height
+    );
 
     if (progress !== null) {
       context.fillStyle = isSelected
         ? palette.menu.itemBackground
         : palette.menu.progressFill;
-      context.fillRect(item.rect.x, item.rect.y, progressWidth, item.rect.height);
+      context.fillRect(
+        item.rect.x,
+        item.rect.y,
+        progressWidth,
+        item.rect.height
+      );
     }
 
     if (item.disabled) {
@@ -741,7 +833,12 @@ class Menus implements MenuSystemInstance {
       context.strokeStyle = palette.menu.itemBorder;
     }
     context.lineWidth = 2;
-    context.strokeRect(item.rect.x, item.rect.y, item.rect.width, item.rect.height);
+    context.strokeRect(
+      item.rect.x,
+      item.rect.y,
+      item.rect.width,
+      item.rect.height
+    );
 
     this._renderItemText(
       item,
@@ -789,7 +886,9 @@ class Menus implements MenuSystemInstance {
 
       this._gameArena.renderText(
         item.getValue(),
-        item.rect.x + item.rect.width - (item.languageFlag || item.levelIcon ? 48 : 14),
+        item.rect.x +
+          item.rect.width -
+          (item.languageFlag || item.levelIcon ? 48 : 14),
         item.rect.y + item.rect.height / 2,
         {
           size: item.kind === "key" ? 13 : 16,
@@ -867,8 +966,14 @@ class Menus implements MenuSystemInstance {
         maxSpriteWidth / baseRenderWidth,
         maxSpriteHeight / baseRenderHeight
       );
-      const renderWidth = Math.max(1, Math.round(baseRenderWidth * spriteScale));
-      const renderHeight = Math.max(1, Math.round(baseRenderHeight * spriteScale));
+      const renderWidth = Math.max(
+        1,
+        Math.round(baseRenderWidth * spriteScale)
+      );
+      const renderHeight = Math.max(
+        1,
+        Math.round(baseRenderHeight * spriteScale)
+      );
       const spriteX = x;
       const spriteY = y + 2;
       const textX = x + 46;
@@ -893,20 +998,145 @@ class Menus implements MenuSystemInstance {
       });
 
       let descriptionY = y + 13;
-      this._wrapText(entry.description, levelShowcaseDescriptionLineWidth).forEach(
-        (line) => {
-          this._gameArena.renderText(line, textX, descriptionY, {
-            size: 8,
-            align: "left",
-            valign: "top",
-            color: palette.menu.itemText,
-          });
-          descriptionY += 10;
-        }
-      );
+      this._wrapText(
+        entry.description,
+        levelShowcaseDescriptionLineWidth
+      ).forEach((line) => {
+        this._gameArena.renderText(line, textX, descriptionY, {
+          size: 8,
+          align: "left",
+          valign: "top",
+          color: palette.menu.itemText,
+        });
+        descriptionY += 10;
+      });
 
       y += 52;
     });
+  };
+
+  private _renderPovZoomPreview = (): void => {
+    const alpha = this._updatePovPreviewAlpha();
+
+    if (alpha <= 0) {
+      return;
+    }
+
+    const context = this._gameArena.getContext() as CanvasRenderingContext2D;
+    const gameZoomItem = this._items.find(
+      (item) => item.label === i18n.menu.gameZoom
+    );
+    const tick = Math.floor(performance.now() / povPreviewFrameDuration);
+    const frame = tick % player.rotationFrameCount;
+    const frameX = player.spriteFrameAxis === "y" ? 0 : frame;
+    const frameY = player.spriteFrameAxis === "y" ? frame : 0;
+    const gameScale = getGameScale(
+      this._gameArena.width,
+      this._gameArena.height
+    );
+    const x =
+      (gameZoomItem?.rect.x ?? -150) + (gameZoomItem?.rect.width ?? 300) + 43;
+    const y =
+      (gameZoomItem?.rect.y ?? 114) +
+      (gameZoomItem?.rect.height ?? 36) / 2 +
+      this._scrollY +
+      this._getScreenItemOffset(this._screen);
+
+    context.save();
+    context.globalAlpha *= alpha;
+    context.imageSmoothingEnabled = false;
+    context.translate(x, y);
+    context.scale(gameScale, gameScale);
+
+    this._drawPovPreviewSprite({
+      frameHeight: player.frameHeight,
+      frameWidth: player.frameWidth,
+      frameX,
+      frameY,
+      renderHeight: player.height,
+      renderWidth: player.width,
+      sprite: this._getPovPreviewSprite("player", player.sprite.src),
+      x: -player.width / 2,
+      y: -player.height / 2,
+    });
+
+    context.restore();
+  };
+
+  private _updatePovPreviewAlpha = (): number => {
+    const now = performance.now();
+    const elapsed = Math.max(0, now - this._povPreviewUpdatedAt);
+    const targetAlpha = this._isGameZoomSelected() ? 1 : 0;
+    const direction = targetAlpha > this._povPreviewAlpha ? 1 : -1;
+    const nextAlpha =
+      this._povPreviewAlpha + direction * (elapsed / povPreviewFadeDuration);
+
+    this._povPreviewUpdatedAt = now;
+    this._povPreviewAlpha =
+      direction > 0
+        ? Math.min(targetAlpha, nextAlpha)
+        : Math.max(targetAlpha, nextAlpha);
+
+    return this._povPreviewAlpha;
+  };
+
+  private _isGameZoomSelected = (): boolean => {
+    return (
+      this._screen === "options" &&
+      this._items[this._selectedIndex]?.label === i18n.menu.gameZoom
+    );
+  };
+
+  private _drawPovPreviewSprite = ({
+    frameHeight,
+    frameWidth,
+    frameX,
+    frameY,
+    renderHeight,
+    renderWidth,
+    sprite,
+    x,
+    y,
+  }: {
+    frameHeight: number;
+    frameWidth: number;
+    frameX: number;
+    frameY: number;
+    renderHeight: number;
+    renderWidth: number;
+    sprite: HTMLImageElement;
+    x: number;
+    y: number;
+  }): void => {
+    const context = this._gameArena.getContext() as CanvasRenderingContext2D;
+
+    context.drawImage(
+      sprite,
+      frameX * frameWidth,
+      frameY * frameHeight,
+      frameWidth,
+      frameHeight,
+      x,
+      y,
+      renderWidth,
+      renderHeight
+    );
+  };
+
+  private _getPovPreviewSprite = (
+    key: string,
+    spriteSrc: string
+  ): HTMLImageElement => {
+    const cachedSprite = this._povPreviewSprites[key];
+
+    if (cachedSprite) {
+      return cachedSprite;
+    }
+
+    const sprite = new Image();
+    sprite.src = spriteSrc;
+    this._povPreviewSprites[key] = sprite;
+    return sprite;
   };
 
   private _getLevelShowcaseEntries = (level: number): LevelShowcaseEntry[] => {
@@ -1123,7 +1353,9 @@ class Menus implements MenuSystemInstance {
     );
   };
 
-  private _getLevelIconFrame = (enemyConfig: EnemyConfig): { x: number; y: number } => {
+  private _getLevelIconFrame = (
+    enemyConfig: EnemyConfig
+  ): { x: number; y: number } => {
     const tick = Math.floor(performance.now() / levelIconFrameDuration);
 
     if (enemyConfig.animationRows && enemyConfig.horizontalDirectionFrames) {
@@ -1135,7 +1367,9 @@ class Menus implements MenuSystemInstance {
 
     if (enemyConfig.animationRows) {
       return {
-        x: enemyConfig.canRotate ? 0 : tick % (enemyConfig.animationFrames ?? 1),
+        x: enemyConfig.canRotate
+          ? 0
+          : tick % (enemyConfig.animationFrames ?? 1),
         y: tick % enemyConfig.animationRows,
       };
     }
@@ -1185,14 +1419,28 @@ class Menus implements MenuSystemInstance {
     return sprite;
   };
 
-  private _renderLanguageFlag = (item: MenuItem, language: GameLanguage): void => {
+  private _renderLanguageFlag = (
+    item: MenuItem,
+    language: GameLanguage
+  ): void => {
     const context = this._gameArena.getContext() as CanvasRenderingContext2D;
     const scale = 2;
     const x = item.rect.x + item.rect.width - 38;
     const y = item.rect.y + item.rect.height / 2 - 8;
-    const rect = (gridX: number, gridY: number, width: number, height: number, color: string): void => {
+    const rect = (
+      gridX: number,
+      gridY: number,
+      width: number,
+      height: number,
+      color: string
+    ): void => {
       context.fillStyle = color;
-      context.fillRect(x + gridX * scale, y + gridY * scale, width * scale, height * scale);
+      context.fillRect(
+        x + gridX * scale,
+        y + gridY * scale,
+        width * scale,
+        height * scale
+      );
     };
 
     const verticalTricolor = (colors: [string, string, string]): void => {
@@ -1227,7 +1475,13 @@ class Menus implements MenuSystemInstance {
     };
     const drawUsFlagPixel = (gridX: number, gridY: number): void => {
       if (gridX < 7 && gridY < 4) {
-        rect(gridX, gridY, 1, 1, (gridX + gridY) % 2 === 0 ? "#FFFFFF" : "#3C3B6E");
+        rect(
+          gridX,
+          gridY,
+          1,
+          1,
+          (gridX + gridY) % 2 === 0 ? "#FFFFFF" : "#3C3B6E"
+        );
         return;
       }
 
@@ -1300,7 +1554,9 @@ class Menus implements MenuSystemInstance {
     const value =
       item.label === i18n.menu.uiZoom
         ? userOptions.uiZoom
-        : Number(item.getValue());
+        : item.label === i18n.menu.gameZoom
+          ? userOptions.gameZoom
+          : Number(item.getValue());
     if (!Number.isFinite(value)) {
       return null;
     }
@@ -1308,7 +1564,10 @@ class Menus implements MenuSystemInstance {
     return Math.max(0, Math.min(1, value / 10));
   };
 
-  private _setSliderFromPointer = (item: MenuItem, pointer: MenuPointerData): void => {
+  private _setSliderFromPointer = (
+    item: MenuItem,
+    pointer: MenuPointerData
+  ): void => {
     if (!item.onSetValue) {
       return;
     }
@@ -1337,24 +1596,30 @@ class Menus implements MenuSystemInstance {
 
   private _getMenuScale = (): number => {
     const designWidth = this._getMenuDesignWidth();
-    const availableWidth = Math.max(1, this._gameArena.width - menuEdgePadding * 2);
+    const availableWidth = Math.max(
+      1,
+      this._gameArena.width - menuEdgePadding * 2
+    );
     const availableHeight = Math.max(
       1,
       this._gameArena.height - menuEdgePadding * 2
     );
 
-    return Math.min(
-      1,
-      availableWidth / designWidth,
-      availableHeight / menuDesignHeight
-    ) * getUiScale(this._gameArena.width, this._gameArena.height);
+    return (
+      Math.min(
+        1,
+        availableWidth / designWidth,
+        availableHeight / menuDesignHeight
+      ) * getUiScale(this._gameArena.width, this._gameArena.height)
+    );
   };
 
   private _getMenuDesignWidth = (): number => {
     const from = this._transition?.from ?? this._screen;
     const to = this._transition?.to ?? this._screen;
     const logoWidth =
-      Math.max(this._getLogoScale(from), this._getLogoScale(to)) * logoBottomWidth;
+      Math.max(this._getLogoScale(from), this._getLogoScale(to)) *
+      logoBottomWidth;
 
     return Math.max(menuDesignWidth, logoWidth + menuEdgePadding * 2);
   };
@@ -1433,7 +1698,10 @@ class Menus implements MenuSystemInstance {
     return screen === "start" ? 0 : submenuItemOffsetY;
   };
 
-  private _getTransitionState = (): { easedProgress: number; progress: number } => {
+  private _getTransitionState = (): {
+    easedProgress: number;
+    progress: number;
+  } => {
     if (!this._transition) {
       return {
         easedProgress: 1,
@@ -1633,7 +1901,8 @@ class Menus implements MenuSystemInstance {
   private _adjustControllerType = (direction: -1 | 1): void => {
     const currentIndex = controllerTypes.indexOf(userOptions.controllerType);
     const nextIndex =
-      (currentIndex + direction + controllerTypes.length) % controllerTypes.length;
+      (currentIndex + direction + controllerTypes.length) %
+      controllerTypes.length;
 
     userOptions.setOption("controllerType", controllerTypes[nextIndex]);
   };
@@ -1666,6 +1935,14 @@ class Menus implements MenuSystemInstance {
 
   private _setUiZoom = (value: number): void => {
     userOptions.setOption("uiZoom", Math.max(0, Math.min(10, value)));
+  };
+
+  private _adjustGameZoom = (direction: -1 | 1): void => {
+    this._setGameZoom(userOptions.gameZoom + direction);
+  };
+
+  private _setGameZoom = (value: number): void => {
+    userOptions.setOption("gameZoom", Math.max(0, Math.min(10, value)));
   };
 
   private _getLevelMenuOpacity = (idleProgress: number): number => {
@@ -1716,11 +1993,17 @@ class Menus implements MenuSystemInstance {
     this._goBack();
   };
 
-  private _adjustVolume = (key: "masterVolume" | "musicVolume" | "effectsVolume", direction: -1 | 1): void => {
+  private _adjustVolume = (
+    key: "masterVolume" | "musicVolume" | "effectsVolume",
+    direction: -1 | 1
+  ): void => {
     this._setVolume(key, userOptions[key] + direction);
   };
 
-  private _setVolume = (key: "masterVolume" | "musicVolume" | "effectsVolume", value: number): void => {
+  private _setVolume = (
+    key: "masterVolume" | "musicVolume" | "effectsVolume",
+    value: number
+  ): void => {
     userOptions.setOption(key, Math.max(0, Math.min(10, value)));
   };
 
@@ -1744,7 +2027,9 @@ class Menus implements MenuSystemInstance {
   };
 
   private _formatBindingLabel = (binding: BindingAction): string => {
-    return keyBindingRows.find((row) => row.binding === binding)?.label ?? binding;
+    return (
+      keyBindingRows.find((row) => row.binding === binding)?.label ?? binding
+    );
   };
 
   private _getDuplicateBinding = (keyCode: number): BindingAction | null => {
@@ -1755,7 +2040,10 @@ class Menus implements MenuSystemInstance {
     return (duplicate?.[0] as BindingAction | undefined) ?? null;
   };
 
-  private _isInsideItem = (pointer: MenuPointerData, item: MenuItem): boolean => {
+  private _isInsideItem = (
+    pointer: MenuPointerData,
+    item: MenuItem
+  ): boolean => {
     const viewport = this._getMenuViewport();
     const itemPosY =
       pointer.posY - this._scrollY - this._getScreenItemOffset(this._screen);

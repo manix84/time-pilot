@@ -245,6 +245,8 @@ class GameArena implements GameArenaInstance {
       ? -(spriteData.posY + renderHeight)
       : spriteData.posY;
 
+    context.imageSmoothingEnabled = false;
+
     if (spriteData.flipY) {
       context.save();
       context.scale(1, -1);

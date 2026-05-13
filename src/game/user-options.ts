@@ -15,6 +15,7 @@ type PersistedUserOptions = Pick<
   | "enableDebug"
   | "effectsVolume"
   | "gamepadEnabled"
+  | "gameZoom"
   | "keyboardBindings"
   | "language"
   | "masterVolume"
@@ -48,6 +49,7 @@ const defaultPersistedOptions: PersistedUserOptions = {
   },
   enableDebug: false,
   controllerType: "keyboard1" as ControllerType,
+  gameZoom: 5,
   gamepadEnabled: true,
   keyboardBindings: defaultKeyboardBindings,
   language: "en",
@@ -118,6 +120,7 @@ const writeUserOptions = (): void => {
         enableDebug: userOptions.enableDebug,
         effectsVolume: userOptions.effectsVolume,
         gamepadEnabled: userOptions.gamepadEnabled,
+        gameZoom: userOptions.gameZoom,
         keyboardBindings: userOptions.keyboardBindings,
         language: userOptions.language,
         masterVolume: userOptions.masterVolume,
@@ -194,6 +197,7 @@ var userOptions: UserOptions = {
    */
   controllerType:
     storedOptions.controllerType ?? defaultPersistedOptions.controllerType,
+  gameZoom: storedOptions.gameZoom ?? defaultPersistedOptions.gameZoom,
 
   /**
    * Poll the browser Gamepad API alongside the selected keyboard layout.

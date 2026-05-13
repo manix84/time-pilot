@@ -1,5 +1,6 @@
 import { levels } from "../constants";
 import { getLevelIntroText } from "../i18n";
+import { getGameScale } from "../ui-scale";
 import type { GameDataStore, RenderingSystemInstance } from "../types";
 
 class RenderingSystem implements RenderingSystemInstance {
@@ -15,13 +16,7 @@ class RenderingSystem implements RenderingSystemInstance {
       levels[this._context._level].arena.backgroundColor
     );
 
-    this._context._props.render(1);
-    this._context._bonuses.render();
-    this._context._bullets.render();
-    this._context._enemies.render();
-    this._context._enemyBullets.render();
-    this._context._player.render();
-    this._context._props.render(2);
+    this.renderWorld();
 
     if (!this._context._menus.isActive()) {
       this._context._hud.render();
@@ -30,6 +25,26 @@ class RenderingSystem implements RenderingSystemInstance {
     this.renderLevelIntroText();
     this.renderDemoLevelFade();
     this._context._menus.render();
+  };
+
+  private renderWorld = (): void => {
+    const context = this._context._gameArena.getContext() as CanvasRenderingContext2D;
+
+    context.save();
+    context.imageSmoothingEnabled = false;
+    const gameScale = getGameScale(
+      this._context._gameArena.width,
+      this._context._gameArena.height
+    );
+    context.scale(gameScale, gameScale);
+    this._context._props.render(1);
+    this._context._bonuses.render();
+    this._context._bullets.render();
+    this._context._enemies.render();
+    this._context._enemyBullets.render();
+    this._context._player.render();
+    this._context._props.render(2);
+    context.restore();
   };
 
   private renderLevelIntroText = (): void => {
