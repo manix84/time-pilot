@@ -132,7 +132,8 @@ export interface Controller {
 }
 
 export interface MenuPointerData extends Coordinates {
-  type: "click" | "drag" | "move" | "press" | "release";
+  deltaY?: number;
+  type: "click" | "drag" | "move" | "press" | "release" | "wheel";
 }
 
 export interface GameArenaInstance extends Coordinates {

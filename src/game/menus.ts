@@ -74,6 +74,14 @@ interface MenuViewport {
   y: number;
 }
 
+interface ScrollThumbGeometry {
+  contentHeight: number;
+  thumbHeight: number;
+  thumbY: number;
+  trackHeight: number;
+  x: number;
+}
+
 interface MenuTransition {
   from: MenuScreen;
   startedAt: number;
@@ -152,7 +160,9 @@ class Menus implements MenuSystemInstance {
   private _screen: MenuScreen = "start";
   private _screenHistory: MenuScreen[] = [];
   private _pressedItemIndex: number | null = null;
+  private _scrollBarDrag: { pointerStartY: number; scrollStartY: number } | null = null;
   private _selectedIndex = 0;
+  private _shouldRevealSelected = true;
   private _sliderDragIndex: number | null = null;
   private _startLabel = i18n.menu.start;
   private _scrollY = 0;
@@ -180,7 +190,9 @@ class Menus implements MenuSystemInstance {
     this._screen = "start";
     this._screenHistory = [];
     this._pressedItemIndex = null;
+    this._scrollBarDrag = null;
     this._selectedIndex = 0;
+    this._shouldRevealSelected = true;
     this._levelPreviewedLevel = undefined;
     this._resetLevelMenuIdleState();
     this._scrollY = 0;
@@ -197,6 +209,7 @@ class Menus implements MenuSystemInstance {
     this._awaitingBinding = null;
     this._bindingWarning = "";
     this._pressedItemIndex = null;
+    this._scrollBarDrag = null;
     this._sliderDragIndex = null;
   };
 
@@ -206,6 +219,7 @@ class Menus implements MenuSystemInstance {
     }
 
     this._selectedIndex = (this._selectedIndex + 1) % this._items.length;
+    this._shouldRevealSelected = true;
     this._resetLevelMenuIdleState();
     this._previewFocusedLevel();
   };
@@ -217,6 +231,7 @@ class Menus implements MenuSystemInstance {
 
     this._selectedIndex =
       (this._selectedIndex - 1 + this._items.length) % this._items.length;
+    this._shouldRevealSelected = true;
     this._resetLevelMenuIdleState();
     this._previewFocusedLevel();
   };
@@ -251,9 +266,11 @@ class Menus implements MenuSystemInstance {
     this._screen = "start";
     this._screenHistory = [];
     this._selectedIndex = 0;
+    this._shouldRevealSelected = true;
     this._awaitingBinding = null;
     this._bindingWarning = "";
     this._pressedItemIndex = null;
+    this._scrollBarDrag = null;
     this._sliderDragIndex = null;
     this._scrollY = 0;
     this._buildItems();
@@ -300,8 +317,6 @@ class Menus implements MenuSystemInstance {
       if (this._screen === "start" && keyCode === 27) {
         if (this._isPausedRootMenu()) {
           this._commands.start();
-        } else {
-          this.hide();
         }
         return true;
       }
@@ -341,6 +356,12 @@ class Menus implements MenuSystemInstance {
 
     const menuPointer = this._getScaledPointer(pointer);
 
+    if (pointer.type === "wheel") {
+      this._scrollBy((pointer.deltaY ?? 0) / this._getMenuScale());
+      this._shouldRevealSelected = false;
+      return;
+    }
+
     if (pointer.type === "release") {
       const releasedItemIndex = this._items.findIndex((item) =>
         this._isInsideItem(menuPointer, item)
@@ -348,6 +369,7 @@ class Menus implements MenuSystemInstance {
       const pressedItemIndex = this._pressedItemIndex;
 
       this._sliderDragIndex = null;
+      this._scrollBarDrag = null;
       this._pressedItemIndex = null;
 
       if (
@@ -362,11 +384,26 @@ class Menus implements MenuSystemInstance {
       return;
     }
 
+    if (pointer.type === "drag" && this._scrollBarDrag) {
+      this._setScrollFromThumbDrag(menuPointer.posY);
+      this._shouldRevealSelected = false;
+      return;
+    }
+
     if (pointer.type === "drag" && this._sliderDragIndex !== null) {
       this._setSliderFromPointer(
         this._items[this._sliderDragIndex],
         menuPointer
       );
+      return;
+    }
+
+    if (pointer.type === "press" && this._isInsideScrollThumb(menuPointer)) {
+      this._scrollBarDrag = {
+        pointerStartY: menuPointer.posY,
+        scrollStartY: this._scrollY,
+      };
+      this._pressedItemIndex = null;
       return;
     }
 
@@ -450,7 +487,10 @@ class Menus implements MenuSystemInstance {
       });
     }
 
-    this._scrollY = this._getMenuScrollY();
+    this._scrollY = this._getMenuScrollY(this._shouldRevealSelected);
+    if (transition.progress >= 1) {
+      this._shouldRevealSelected = false;
+    }
     this._renderItems(context, transition.progress);
 
     if (this._awaitingBinding) {
@@ -488,7 +528,7 @@ class Menus implements MenuSystemInstance {
     context: CanvasRenderingContext2D,
     transitionProgress: number
   ): void => {
-    const viewport = this._getMenuViewport();
+    const viewport = this._getItemsViewport();
     const transitionOffset =
       (1 - transitionProgress) * this._getItemTransitionOffset();
     const screenOffset = this._getScreenItemOffset(this._screen);
@@ -505,6 +545,8 @@ class Menus implements MenuSystemInstance {
     });
 
     context.restore();
+
+    this._renderScrollIndicator(context, viewport);
 
     if (this._screen === "options") {
       this._renderPovZoomPreview();
@@ -759,12 +801,12 @@ class Menus implements MenuSystemInstance {
       this._createItem(
         i18n.menu.back,
         "action",
-        30 + enabledLevels.length * 42,
+        -42 + enabledLevels.length * 42,
         {
           action: () => this._goBack(),
           rect: {
             x: -110,
-            y: 30 + enabledLevels.length * 42,
+            y: -42 + enabledLevels.length * 42,
             width: 220,
             height: 36,
           },
@@ -984,7 +1026,7 @@ class Menus implements MenuSystemInstance {
     }
 
     const x = -260;
-    let y = -54 + this._scrollY;
+    let y = -54;
     const title = blurb.title ?? blurb.introText;
     const description = blurb.description ?? "";
 
@@ -1026,7 +1068,7 @@ class Menus implements MenuSystemInstance {
     const entries = this._getLevelShowcaseEntries(level);
     const context = this._gameArena.getContext() as CanvasRenderingContext2D;
     const x = 148;
-    let y = -58 + this._scrollY;
+    let y = -58;
 
     context.imageSmoothingEnabled = false;
 
@@ -1680,6 +1722,35 @@ class Menus implements MenuSystemInstance {
     };
   };
 
+  private _getItemsViewport = (): MenuViewport => {
+    const viewport = this._getMenuViewport();
+    const headerBottom = this._getHeaderBottomY() + 16;
+    const minHeight = 64;
+    const y = Math.min(
+      Math.max(viewport.y, headerBottom),
+      viewport.y + viewport.height - minHeight
+    );
+
+    return {
+      ...viewport,
+      y,
+      height: viewport.y + viewport.height - y,
+    };
+  };
+
+  private _getHeaderBottomY = (): number => {
+    const logoBottom =
+      this._getLogoY(this._screen) + (86 * this._getLogoScale(this._screen)) / 2;
+
+    if (this._screen === "start") {
+      return this._isPausedRootMenu()
+        ? Math.max(logoBottom, -42 + 16)
+        : logoBottom;
+    }
+
+    return Math.max(logoBottom, this._getTitleY(this._screen) + 18);
+  };
+
   private _getMenuScale = (): number => {
     const designWidth = this._getMenuDesignWidth();
     const availableWidth = Math.max(
@@ -1720,26 +1791,30 @@ class Menus implements MenuSystemInstance {
     };
   };
 
-  private _getMenuScrollY = (): number => {
+  private _getMenuScrollY = (revealSelected: boolean): number => {
     const selectedItem = this._items[this._selectedIndex];
 
     if (!selectedItem) {
       return 0;
     }
 
-    const viewport = this._getMenuViewport();
+    const viewport = this._getItemsViewport();
     const viewportTop = viewport.y;
     const viewportBottom = viewport.y + viewport.height;
     const bounds = this._getItemsBounds();
+    const screenOffset = this._getScreenItemOffset(this._screen);
 
     let scrollY = this._scrollY;
-    const selectedTop = selectedItem.rect.y + scrollY;
-    const selectedBottom = selectedTop + selectedItem.rect.height;
 
-    if (selectedTop < viewportTop) {
-      scrollY += viewportTop - selectedTop;
-    } else if (selectedBottom > viewportBottom) {
-      scrollY -= selectedBottom - viewportBottom;
+    if (revealSelected) {
+      const selectedTop = selectedItem.rect.y + screenOffset + scrollY;
+      const selectedBottom = selectedTop + selectedItem.rect.height;
+
+      if (selectedTop < viewportTop) {
+        scrollY += viewportTop - selectedTop;
+      } else if (selectedBottom > viewportBottom) {
+        scrollY -= selectedBottom - viewportBottom;
+      }
     }
 
     const contentHeight = bounds.bottom - bounds.top;
@@ -1782,6 +1857,115 @@ class Menus implements MenuSystemInstance {
 
   private _getScreenItemOffset = (screen: MenuScreen): number => {
     return screen === "start" ? 0 : submenuItemOffsetY;
+  };
+
+  private _renderScrollIndicator = (
+    context: CanvasRenderingContext2D,
+    viewport: MenuViewport
+  ): void => {
+    const geometry = this._getScrollThumbGeometry(viewport);
+
+    if (!geometry) {
+      return;
+    }
+
+    context.save();
+    context.globalAlpha *= 0.7;
+    context.fillStyle = palette.menu.itemBorder;
+    context.fillRect(geometry.x, viewport.y, 2, geometry.trackHeight);
+    context.fillStyle = palette.menu.selectedBackground;
+    context.fillRect(geometry.x - 1, geometry.thumbY, 4, geometry.thumbHeight);
+    context.restore();
+  };
+
+  private _getScrollThumbGeometry = (
+    viewport: MenuViewport
+  ): ScrollThumbGeometry | null => {
+    const bounds = this._getItemsBounds();
+    const contentHeight = bounds.bottom - bounds.top;
+
+    if (contentHeight <= viewport.height) {
+      return null;
+    }
+
+    const scrollRange = contentHeight - viewport.height;
+    const trackHeight = viewport.height;
+    const progress =
+      scrollRange === 0
+        ? 0
+        : (viewport.y - bounds.top - this._scrollY) / scrollRange;
+    const thumbHeight = Math.max(24, (viewport.height / contentHeight) * trackHeight);
+    const thumbY =
+      viewport.y + Math.max(0, Math.min(1, progress)) * (trackHeight - thumbHeight);
+
+    return {
+      contentHeight,
+      thumbHeight,
+      thumbY,
+      trackHeight,
+      x: viewport.x + viewport.width - 6,
+    };
+  };
+
+  private _isInsideScrollThumb = (pointer: MenuPointerData): boolean => {
+    const geometry = this._getScrollThumbGeometry(this._getItemsViewport());
+
+    if (!geometry) {
+      return false;
+    }
+
+    return (
+      pointer.posX >= geometry.x - 10 &&
+      pointer.posX <= geometry.x + 10 &&
+      pointer.posY >= geometry.thumbY &&
+      pointer.posY <= geometry.thumbY + geometry.thumbHeight
+    );
+  };
+
+  private _scrollBy = (deltaY: number): void => {
+    this._scrollY = this._clampScrollY(this._scrollY - deltaY);
+  };
+
+  private _setScrollFromThumbDrag = (pointerY: number): void => {
+    if (!this._scrollBarDrag) {
+      return;
+    }
+
+    const viewport = this._getItemsViewport();
+    const geometry = this._getScrollThumbGeometry(viewport);
+
+    if (!geometry) {
+      return;
+    }
+
+    const bounds = this._getItemsBounds();
+    const scrollRange = geometry.contentHeight - viewport.height;
+    const thumbRange = geometry.trackHeight - geometry.thumbHeight;
+    const pointerDelta = pointerY - this._scrollBarDrag.pointerStartY;
+    const scrollDelta = thumbRange === 0 ? 0 : (pointerDelta / thumbRange) * scrollRange;
+
+    this._scrollY = this._clampScrollY(
+      this._scrollBarDrag.scrollStartY - scrollDelta,
+      bounds,
+      viewport
+    );
+  };
+
+  private _clampScrollY = (
+    scrollY: number,
+    bounds = this._getItemsBounds(),
+    viewport = this._getItemsViewport()
+  ): number => {
+    const contentHeight = bounds.bottom - bounds.top;
+
+    if (contentHeight <= viewport.height) {
+      return this._getMenuScrollY(false);
+    }
+
+    const maxScrollY = viewport.y - bounds.top;
+    const minScrollY = viewport.y + viewport.height - bounds.bottom;
+
+    return Math.min(maxScrollY, Math.max(minScrollY, scrollY));
   };
 
   private _getTransitionState = (): {
@@ -1910,6 +2094,7 @@ class Menus implements MenuSystemInstance {
       this._debugUnlocked = true;
       userOptions.setOption("enableDebug", true);
       this._konamiIndex = 0;
+      this._shouldRevealSelected = true;
       this._buildItems();
     }
   };
@@ -1956,8 +2141,10 @@ class Menus implements MenuSystemInstance {
     this._awaitingBinding = null;
     this._bindingWarning = "";
     this._pressedItemIndex = null;
+    this._scrollBarDrag = null;
     this._sliderDragIndex = null;
     this._scrollY = 0;
+    this._shouldRevealSelected = true;
     this._buildItems();
     this._startTransition(previousScreen, screen);
     this._levelPreviewedLevel = undefined;
@@ -1979,8 +2166,10 @@ class Menus implements MenuSystemInstance {
     this._awaitingBinding = null;
     this._bindingWarning = "";
     this._pressedItemIndex = null;
+    this._scrollBarDrag = null;
     this._sliderDragIndex = null;
     this._scrollY = 0;
+    this._shouldRevealSelected = true;
     this._buildItems();
     this._startTransition(previousScreen, nextScreen);
     this._levelPreviewedLevel = undefined;
@@ -2148,7 +2337,7 @@ class Menus implements MenuSystemInstance {
     pointer: MenuPointerData,
     item: MenuItem
   ): boolean => {
-    const viewport = this._getMenuViewport();
+    const viewport = this._getItemsViewport();
     const itemPosY =
       pointer.posY - this._scrollY - this._getScreenItemOffset(this._screen);
 

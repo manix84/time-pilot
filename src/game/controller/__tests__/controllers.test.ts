@@ -373,6 +373,44 @@ describe("controller modules", () => {
     mouse.disconnect?.();
   });
 
+  it("maps mouse wheel input to menu scroll actions", () => {
+    const controls = createControls();
+    vi.mocked(controls.isMenuActive).mockReturnValue(true);
+    const canvas = document.createElement("canvas");
+    canvas.width = 800;
+    canvas.height = 600;
+    vi.spyOn(canvas, "getBoundingClientRect").mockReturnValue({
+      bottom: 300,
+      height: 300,
+      left: 0,
+      right: 400,
+      top: 0,
+      width: 400,
+      x: 0,
+      y: 0,
+      toJSON: () => ({}),
+    });
+
+    const mouse = new Mouse(canvas, controls);
+    const wheelEvent = new WheelEvent("wheel", {
+      clientX: 200,
+      clientY: 150,
+      deltaY: 120,
+      cancelable: true,
+    });
+    canvas.dispatchEvent(wheelEvent);
+
+    expect(wheelEvent.defaultPrevented).toBe(true);
+    expect(controls.handlePointer).toHaveBeenCalledWith({
+      deltaY: 120,
+      posX: 0,
+      posY: 0,
+      type: "wheel",
+    });
+
+    mouse.disconnect?.();
+  });
+
   it("maps touch drag direction to heading with a dead zone", () => {
     const controls = createControls();
     const inputState = createInputState();

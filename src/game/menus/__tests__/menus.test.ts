@@ -123,6 +123,17 @@ describe("menu definitions", () => {
     expect(start).toHaveBeenCalled();
   });
 
+  it("keeps the non-game root menu open on escape", () => {
+    const start = vi.fn();
+    const menus = new Menus(createArena(), { start });
+
+    menus.showStart();
+
+    expect(menus.captureKey(27)).toBe(true);
+    expect(menus.isActive()).toBe(true);
+    expect(start).not.toHaveBeenCalled();
+  });
+
   it("activates normal buttons from pointer press and release", () => {
     const start = vi.fn();
     const menus = new Menus(createArena(), { start });
@@ -375,11 +386,86 @@ describe("menu definitions", () => {
     expect(context.scale).toHaveBeenCalledWith(0.24767999999999998, 0.24767999999999998);
     expect(context.rect).toHaveBeenCalledWith(
       -1518.0878552971576,
-      -347.22222222222223,
+      -237.22222222222223,
       3036.175710594315,
-      694.4444444444445
+      584.4444444444445
     );
     expect(context.clip).toHaveBeenCalled();
+  });
+
+  it("clips overflowing zoomed menus below the header", () => {
+    const performanceNow = vi.spyOn(performance, "now").mockReturnValue(0);
+    const arena = createArena();
+    const menus = new Menus(arena, { start: vi.fn() });
+    userOptions.setOption("uiZoom", 250);
+
+    menus.showStart();
+    menus.next();
+    menus.activate();
+    performanceNow.mockReturnValue(600);
+    menus.render();
+    vi.mocked(arena.getContext).mockClear();
+    menus.render();
+
+    const context = vi.mocked(arena.getContext).mock.results[0]
+      .value as CanvasRenderingContext2D;
+
+    expect(context.scale).toHaveBeenCalledWith(2.5, 2.5);
+    expect(context.rect).toHaveBeenCalledWith(
+      expect.any(Number),
+      expect.closeTo(-0.4),
+      expect.any(Number),
+      expect.any(Number)
+    );
+    expect(context.fillRect).toHaveBeenCalledWith(
+      expect.any(Number),
+      expect.closeTo(-0.4),
+      2,
+      expect.any(Number)
+    );
+  });
+
+  it("scrolls overflowing zoomed menus with wheel input and scrollbar drag", () => {
+    const performanceNow = vi.spyOn(performance, "now").mockReturnValue(600);
+    const arena = createArena();
+    const menus = new Menus(arena, { start: vi.fn() });
+    userOptions.setOption("uiZoom", 250);
+    const getThumbY = (context: CanvasRenderingContext2D): number => {
+      const thumbCall = vi
+        .mocked(context.fillRect)
+        .mock.calls.find((call) => call[2] === 4);
+
+      return Number(thumbCall?.[1]);
+    };
+
+    menus.showStart();
+    menus.next();
+    menus.activate();
+    menus.render();
+
+    let context = vi.mocked(arena.getContext).mock.results[0]
+      .value as CanvasRenderingContext2D;
+    const initialThumbY = getThumbY(context);
+
+    vi.mocked(arena.getContext).mockClear();
+    menus.handlePointer({ deltaY: 120, posX: 0, posY: 0, type: "wheel" });
+    menus.render();
+
+    context = vi.mocked(arena.getContext).mock.results[0]
+      .value as CanvasRenderingContext2D;
+    const wheelThumbY = getThumbY(context);
+
+    expect(wheelThumbY).toBeGreaterThan(initialThumbY);
+
+    vi.mocked(arena.getContext).mockClear();
+    menus.handlePointer({ posX: 373, posY: wheelThumbY * 2.5, type: "press" });
+    menus.handlePointer({ posX: 373, posY: (wheelThumbY + 20) * 2.5, type: "drag" });
+    menus.render();
+
+    context = vi.mocked(arena.getContext).mock.results[0]
+      .value as CanvasRenderingContext2D;
+
+    expect(getThumbY(context)).toBeGreaterThan(wheelThumbY);
   });
 
   it("keeps pointer slider input aligned with scaled menus", () => {
