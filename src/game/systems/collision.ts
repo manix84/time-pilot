@@ -36,6 +36,11 @@ class CollisionSystem implements CollisionSystemInstance {
         }
 
         const bulletData = bullet.getData() as BulletData;
+
+        if (bulletData.explosionTick !== false) {
+          return;
+        }
+
         const bulletPosition =
           bulletData.coordinateSpace === "world"
             ? { posX: bulletData.posX, posY: bulletData.posY }
@@ -58,7 +63,7 @@ class CollisionSystem implements CollisionSystemInstance {
             }
           )
         ) {
-          bullet.removeMe = true;
+          bullet.explode();
           this._context._player.kill();
         }
       });
@@ -111,6 +116,10 @@ class CollisionSystem implements CollisionSystemInstance {
 
         const bulletData = bullet.getData() as BulletData;
 
+        if (bulletData.explosionTick !== false) {
+          return;
+        }
+
         if (
           enemy.detectCollision(
             bulletData.posX + this._context._player.getData().posX,
@@ -141,6 +150,10 @@ class CollisionSystem implements CollisionSystemInstance {
 
       const enemyBulletData = enemyBullet.getData() as BulletData;
 
+      if (enemyBulletData.explosionTick !== false) {
+        return;
+      }
+
       if (!enemyBulletData.shootable) {
         return;
       }
@@ -160,6 +173,10 @@ class CollisionSystem implements CollisionSystemInstance {
 
         const bulletData = bullet.getData() as BulletData;
 
+        if (bulletData.explosionTick !== false) {
+          return;
+        }
+
         if (
           helpers.detectCollision(
             {
@@ -175,7 +192,7 @@ class CollisionSystem implements CollisionSystemInstance {
           )
         ) {
           bullet.removeMe = true;
-          enemyBullet.removeMe = true;
+          enemyBullet.explode();
         }
       });
     });

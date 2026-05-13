@@ -318,7 +318,8 @@ class SpawningSystem implements SpawningSystemInstance {
       levelData.projectile.sprite,
       levelData.projectile.tracksPlayer,
       levelData.projectile.turnRate,
-      levelData.projectile.shootable
+      levelData.projectile.shootable,
+      levelData.projectile.explosion
     );
     this._enemyShootSound.stop();
     this._enemyShootSound.play();
@@ -366,7 +367,11 @@ class SpawningSystem implements SpawningSystemInstance {
       false,
       "world",
       levelData.projectile.sprite ? "sprite" : "circle",
-      levelData.projectile.sprite
+      levelData.projectile.sprite,
+      levelData.projectile.tracksPlayer,
+      levelData.projectile.turnRate,
+      levelData.projectile.shootable,
+      levelData.projectile.explosion
     );
   };
 

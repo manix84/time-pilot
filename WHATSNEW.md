@@ -36,6 +36,7 @@
 - Tuned enemy bullets, bombs, and missiles around simple readable projectiles instead of dense bullet patterns.
 - Added rocket sprites for level 3 and level 4 enemy missiles, with very slow level 3 homing, limited level 4 homing, and rockets that can be shot down.
 - Added the animated level 5 plasma projectile sprite and kept plasma shots non-homing while making their initial aim independent of UFO facing.
+- Added bomb and plasma projectile explosion sprites for shoot-downs and player impacts.
 - Updated player and enemy sprite handling for the newer sprite sheets, including level 1 biplane animation, level 3 helicopter turning, level 5 UFO animation, and the 32-frame player rotation sheet.
 - Updated bonus and explosion sprite geometry for the refreshed parachute, basic enemy, boss, and special bomber sheets.
 

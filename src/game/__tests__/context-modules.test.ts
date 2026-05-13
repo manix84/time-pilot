@@ -265,6 +265,56 @@ describe("context-backed game modules", () => {
     now.mockRestore();
   });
 
+  it("renders projectile explosion sprites before cleanup", () => {
+    const context = createContext();
+    vi.mocked(context._gameTicker.getTicks)
+      .mockReturnValueOnce(100)
+      .mockReturnValueOnce(104);
+
+    context._enemyBullets.create(
+      20,
+      30,
+      90,
+      6,
+      4.5,
+      "#FF9",
+      false,
+      "world",
+      "sprite",
+      {
+        sprite: { src: "/sprites/enemies/projectiles/bomb.png" },
+        width: 12,
+        height: 3,
+        renderWidth: 24,
+        renderHeight: 6,
+      },
+      false,
+      0,
+      true,
+      {
+        sprite: { src: "/sprites/enemies/projectiles/bomb_explosion.png" },
+        width: 11,
+        height: 11,
+        frames: 4,
+        frameLimiter: 4,
+      }
+    );
+
+    const [bomb] = context._enemyBullets.getEntities();
+    bomb.explode();
+    bomb.render();
+
+    expect(context._gameArena.renderSprite).toHaveBeenCalledWith(
+      expect.any(HTMLImageElement),
+      expect.objectContaining({
+        frameHeight: 11,
+        frameWidth: 11,
+        frameX: 1,
+      })
+    );
+    expect(bomb.removeMe).toBe(false);
+  });
+
   it("moves and renders the player", () => {
     const context = createContext();
 
@@ -459,6 +509,39 @@ describe("context-backed game modules", () => {
 
     expect(context._player.getData("score")).toBe(20000);
     expect(context._nextParachuteScore).toBe(5000);
+  });
+
+  it("renders the refreshed parachute as a four-frame swing", () => {
+    const context = createContext();
+
+    context._bonuses.create(40, 60);
+    const [bonus] = context._bonuses.getEntities();
+
+    vi.mocked(context._gameTicker.getTicks).mockReturnValue(24);
+    bonus.render();
+    vi.mocked(context._gameTicker.getTicks).mockReturnValue(40);
+    bonus.render();
+
+    expect(context._gameArena.renderSprite).toHaveBeenNthCalledWith(
+      1,
+      expect.any(HTMLImageElement),
+      expect.objectContaining({
+        frameHeight: 16,
+        frameWidth: 16,
+        frameX: 3,
+        frameY: 0,
+      })
+    );
+    expect(context._gameArena.renderSprite).toHaveBeenNthCalledWith(
+      2,
+      expect.any(HTMLImageElement),
+      expect.objectContaining({
+        frameHeight: 16,
+        frameWidth: 16,
+        frameX: 2,
+        frameY: 0,
+      })
+    );
   });
 
   it("renders collected parachute score at the pickup position before cleanup", () => {

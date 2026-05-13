@@ -181,6 +181,7 @@ export interface TickerInstance {
 
 export interface BulletInstance {
   removeMe: boolean;
+  explode: () => void;
   getData: (key?: keyof BulletData) => BulletData | BulletData[keyof BulletData] | undefined;
   setData: (key: keyof BulletData, value: BulletData[keyof BulletData]) => boolean;
   setLevel: (level: number) => boolean;
@@ -202,7 +203,8 @@ export interface BulletFactoryInstance {
     sprite?: BulletData["sprite"],
     tracksPlayer?: boolean,
     turnRate?: number,
-    shootable?: boolean
+    shootable?: boolean,
+    explosion?: BulletData["explosion"]
   ) => void;
   getCount: () => number;
   getData: () => BulletData[];
@@ -456,6 +458,16 @@ export interface ProjectileSpriteConfig {
   renderHeight?: number;
 }
 
+export interface ProjectileExplosionConfig {
+  sprite: SpriteAsset;
+  width: number;
+  height: number;
+  frames: number;
+  frameLimiter: number;
+  renderWidth?: number;
+  renderHeight?: number;
+}
+
 export interface BulletData extends Coordinates {
   coordinateSpace: "screen" | "world";
   heading: Heading;
@@ -467,6 +479,8 @@ export interface BulletData extends Coordinates {
   tracksPlayer?: boolean;
   turnRate?: number;
   shootable?: boolean;
+  explosion?: ProjectileExplosionConfig;
+  explosionTick: number | false;
 }
 
 export interface ExplosionConfig {
@@ -488,6 +502,7 @@ export interface ProjectileConfig {
   tracksPlayer?: boolean;
   turnRate?: number;
   shootable?: boolean;
+  explosion?: ProjectileExplosionConfig;
 }
 
 export interface PlayerConfig {

@@ -58,6 +58,26 @@ const plasmaProjectileSprite = {
   renderHeight: 7,
 };
 
+const bombProjectileExplosion = {
+  sprite: {
+    src: assetPath("sprites/enemies/projectiles/bomb_explosion.png"),
+  },
+  width: 11,
+  height: 11,
+  frames: 4,
+  frameLimiter: 4,
+};
+
+const plasmaProjectileExplosion = {
+  sprite: {
+    src: assetPath("sprites/enemies/projectiles/plasma_explosion.png"),
+  },
+  width: 16,
+  height: 13,
+  frames: 4,
+  frameLimiter: 4,
+};
+
 const basicEnemy = (
   level: number,
   overrides: Partial<EnemyConfig> = {}
@@ -175,6 +195,8 @@ const specialBomber = (
       renderWidth: 24,
       renderHeight: 6,
     },
+    shootable: true,
+    explosion: bombProjectileExplosion,
   },
   explosion: {
     sprite: {
@@ -196,7 +218,7 @@ const parachuteBonus: BonusConfig = {
     src: assetPath("sprites/bonuses/parachute.png"),
   },
   velocity: 2,
-  animationCycle: [1, 2, 3, 4, 5, 4, 3, 2],
+  animationCycle: [1, 2, 3, 4, 4, 3, 2, 1],
   hitRadius: 8,
   width: 16,
   height: 16,
@@ -801,6 +823,8 @@ const timePilotConstants: TimePilotConstants = {
             color: palette.aircraft.enemyBullet,
             sprite: plasmaProjectileSprite,
             initialAim: "player",
+            shootable: true,
+            explosion: plasmaProjectileExplosion,
           },
         }),
         boss: bossEnemy(5, {
@@ -820,6 +844,8 @@ const timePilotConstants: TimePilotConstants = {
             color: palette.aircraft.enemyBullet,
             sprite: plasmaProjectileSprite,
             initialAim: "player",
+            shootable: true,
+            explosion: plasmaProjectileExplosion,
           },
         }),
         formations: futureLevelFormations[5],

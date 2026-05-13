@@ -105,11 +105,20 @@ const createEnemyBullet = (
     shape: "circle",
     size: 6,
     velocity: 5,
+    explosionTick: false,
     ...overrides,
   };
 
   return {
     removeMe: false,
+    explode: vi.fn(function (this: BulletInstance) {
+      if (enemyBulletData.explosion) {
+        enemyBulletData.explosionTick = 200;
+        return;
+      }
+
+      this.removeMe = true;
+    }),
     getData: vi.fn((key?: keyof BulletData) =>
       key ? enemyBulletData[key] : enemyBulletData
     ) as BulletInstance["getData"],
@@ -130,6 +139,7 @@ const playerBulletData: BulletData[] = [
     shape: "square",
     size: 4,
     velocity: 7,
+    explosionTick: false,
   },
 ];
 
@@ -138,6 +148,9 @@ const createPlayerBullet = (): BulletInstance => {
 
   return {
     removeMe: false,
+    explode: vi.fn(function (this: BulletInstance) {
+      this.removeMe = true;
+    }),
     getData: vi.fn((key?: keyof BulletData) =>
       key ? bulletData[key] : bulletData
     ) as BulletInstance["getData"],
@@ -445,6 +458,7 @@ describe("game systems", () => {
       undefined,
       undefined,
       undefined,
+      undefined,
       undefined
     );
     expect(context._bonuses.create).not.toHaveBeenCalled();
@@ -477,7 +491,8 @@ describe("game systems", () => {
       }),
       true,
       0.5,
-      true
+      true,
+      undefined
     );
   });
 
@@ -508,7 +523,8 @@ describe("game systems", () => {
       }),
       true,
       1,
-      true
+      true,
+      undefined
     );
   });
 
@@ -536,6 +552,14 @@ describe("game systems", () => {
     );
     expect(call?.[10]).toBeUndefined();
     expect(call?.[11]).toBeUndefined();
+    expect(call?.[12]).toBe(true);
+    expect(call?.[13]).toEqual(
+      expect.objectContaining({
+        frames: 4,
+        height: 13,
+        width: 16,
+      })
+    );
   });
 
   it("spawns the boss after the level kill threshold", () => {
@@ -608,6 +632,14 @@ describe("game systems", () => {
         renderHeight: 6,
         renderWidth: 24,
         width: 12,
+      }),
+      undefined,
+      undefined,
+      true,
+      expect.objectContaining({
+        frames: 4,
+        height: 11,
+        width: 11,
       })
     );
   });
