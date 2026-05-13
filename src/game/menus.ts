@@ -1560,6 +1560,11 @@ class Menus implements MenuSystemInstance {
       return;
     }
 
+    if (language === "es") {
+      horizontalTricolor(["#AA151B", "#F1BF00", "#AA151B"]);
+      return;
+    }
+
     if (language === "de") {
       horizontalTricolor(["#000000", "#DD0000", "#FFCE00"]);
       return;

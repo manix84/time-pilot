@@ -23,6 +23,7 @@ describe("TimePilot engine", () => {
     userOptions.setOption("controllerType", "keyboard1");
     userOptions.setOption("gameZoom", 5);
     userOptions.setOption("gamepadEnabled", true);
+    userOptions.setOption("language", "en");
     userOptions.setOption("uiZoom", 5);
     vi.restoreAllMocks();
   });
@@ -105,6 +106,7 @@ describe("TimePilot engine", () => {
     userOptions.setOption("controllerType", "keyboard1");
     userOptions.setOption("gamepadEnabled", true);
     userOptions.setOption("gameZoom", 6);
+    userOptions.setOption("language", "es");
     userOptions.setOption("uiZoom", 7);
     userOptions.setOption("enableDebug", true);
     userOptions.setDebugOption("showControlsOverlay", true);
@@ -118,6 +120,7 @@ describe("TimePilot engine", () => {
       '"gamepadEnabled":true'
     );
     expect(localStorage.getItem("timePilot.userOptions")).toContain('"gameZoom":6');
+    expect(localStorage.getItem("timePilot.userOptions")).toContain('"language":"es"');
     expect(localStorage.getItem("timePilot.userOptions")).toContain('"uiZoom":7');
     expect(localStorage.getItem("timePilot.userOptions")).toContain(
       '"enableDebug":true'

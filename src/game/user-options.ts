@@ -6,7 +6,15 @@ import type {
   UserOptions,
 } from "./types";
 
-const supportedLanguages: GameLanguage[] = ["en", "fr", "de", "it", "nl", "ro"];
+const supportedLanguages: GameLanguage[] = [
+  "en",
+  "fr",
+  "es",
+  "de",
+  "it",
+  "nl",
+  "ro",
+];
 
 type PersistedUserOptions = Pick<
   UserOptions,

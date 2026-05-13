@@ -96,7 +96,7 @@ export interface ControllerCommands {
 }
 
 export type ControllerType = "keyboard1" | "keyboard2";
-export type GameLanguage = "de" | "en" | "fr" | "it" | "nl" | "ro";
+export type GameLanguage = "de" | "en" | "es" | "fr" | "it" | "nl" | "ro";
 export type ControlInputName =
   | "down"
   | "fire"

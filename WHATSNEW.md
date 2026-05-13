@@ -39,6 +39,7 @@
 ## 🧭 Menu, Zoom, and Debug UX
 
 - Added localized era blurbs to the debug level select screen.
+- Added Spanish to the supported menu languages.
 - Added animated level select previews for basic enemies, special enemies, bosses, and bonuses.
 - Made focused debug levels pin the background demo preview until leaving level select.
 - Added idle fading on the level select menu so the background demo is easier to inspect.
