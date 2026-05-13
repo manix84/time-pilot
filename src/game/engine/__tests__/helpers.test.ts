@@ -9,6 +9,8 @@ describe("engine/helpers", () => {
   it("rotates toward a destination heading by the provided step", () => {
     expect(helpers.rotateTo(90, 0, 22.5)).toBe(22.5);
     expect(helpers.rotateTo(270, 0, 22.5)).toBe(337.5);
+    expect(helpers.rotateTo(180, 174, 12)).toBe(180);
+    expect(helpers.rotateTo(0, 354, 12)).toBe(0);
   });
 
   it("calculates headings from an origin to a target", () => {

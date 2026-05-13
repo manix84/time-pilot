@@ -190,7 +190,7 @@ describe("context-backed game modules", () => {
     expect(context._bullets.getCount()).toBe(1);
   });
 
-  it("maps the 16-frame player sprite strip across the lower arc and mirrors the upper arc", () => {
+  it("maps the 32-frame player sprite strip around the full circle", () => {
     const context = createContext();
 
     context._player.setData("heading", 90);
@@ -200,6 +200,8 @@ describe("context-backed game modules", () => {
     context._player.setData("heading", 270);
     context._player.render();
     context._player.setData("heading", 0);
+    context._player.render();
+    context._player.setData("heading", 315);
     context._player.render();
 
     expect(context._gameArena.renderSprite).toHaveBeenNthCalledWith(
@@ -215,12 +217,17 @@ describe("context-backed game modules", () => {
     expect(context._gameArena.renderSprite).toHaveBeenNthCalledWith(
       3,
       expect.any(HTMLImageElement),
-      expect.objectContaining({ frameX: 15, frameY: 0, flipY: false })
+      expect.objectContaining({ frameX: 16, frameY: 0, flipY: false })
     );
     expect(context._gameArena.renderSprite).toHaveBeenNthCalledWith(
       4,
       expect.any(HTMLImageElement),
-      expect.objectContaining({ frameX: 8, frameY: 0, flipY: true })
+      expect.objectContaining({ frameX: 24, frameY: 0, flipY: false })
+    );
+    expect(context._gameArena.renderSprite).toHaveBeenNthCalledWith(
+      5,
+      expect.any(HTMLImageElement),
+      expect.objectContaining({ frameX: 20, frameY: 0, flipY: false })
     );
   });
 

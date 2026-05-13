@@ -16,7 +16,7 @@ import type {
 } from "./types";
 
 const playerConst = player;
-const playerSpriteArcDegrees = 180;
+const playerSpriteArcDegrees = 360;
 
 class Player implements PlayerInstance {
   private _bulletFactory: BulletFactoryInstance;
@@ -43,7 +43,7 @@ class Player implements PlayerInstance {
     this._playerDeathSprite.src = playerConst.explosion.sprite.src;
 
     this._explosionSound = new SoundEngine(playerConst.explosion.sound.src);
-    this._rotationStep = playerSpriteArcDegrees / (playerConst.rotationFrameCount - 1);
+    this._rotationStep = playerSpriteArcDegrees / playerConst.rotationFrameCount;
 
     this._data = {
       isAlive: true,
@@ -173,19 +173,12 @@ class Player implements PlayerInstance {
 
   private _getSpriteFrame = (): { flipY: boolean; frameX: number; frameY: number } => {
     const heading = ((this._data.heading % 360) + 360) % 360;
-    const usesBottomArc = heading >= 90 && heading <= 270;
-    const spriteHeading = usesBottomArc
-      ? heading
-      : heading < 90
-        ? 180 - heading
-        : 540 - heading;
-    const frame = Math.min(
-      playerConst.rotationFrameCount - 1,
-      Math.max(0, Math.round((spriteHeading - 90) / this._rotationStep))
-    );
+    const frame =
+      Math.round(((heading + 270) % 360) / this._rotationStep) %
+      playerConst.rotationFrameCount;
 
     return {
-      flipY: !usesBottomArc,
+      flipY: false,
       frameX: playerConst.spriteFrameAxis === "y" ? 0 : frame,
       frameY: playerConst.spriteFrameAxis === "y" ? frame : 0,
     };
