@@ -100,6 +100,9 @@ const submenuLogoScale = 0.78;
 const logoBottomWidth = 390;
 const levelIconFrameDuration = 140;
 const levelBlurbLineWidth = 24;
+const levelMenuIdleFadeDelay = 3000;
+const levelMenuIdleFadeDuration = 800;
+const levelMenuIdleOpacity = 0.4;
 const levelShowcaseDescriptionLineWidth = 18;
 const levelShowcaseFrameDuration = 260;
 const submenuHeaderTopGap = 34;
@@ -122,6 +125,8 @@ class Menus implements MenuSystemInstance {
   private _items: MenuItem[] = [];
   private _konamiIndex = 0;
   private _levelIconSprites: Partial<Record<number, HTMLImageElement>> = {};
+  private _levelMenuLastInteractionAt = 0;
+  private _levelPreviewedLevel?: number;
   private _levelShowcaseSprites: Partial<Record<string, HTMLImageElement>> = {};
   private _logoLanguage?: GameLanguage;
   private _logoCanvas?: HTMLCanvasElement;
@@ -155,6 +160,8 @@ class Menus implements MenuSystemInstance {
     this._screenHistory = [];
     this._pressedItemIndex = null;
     this._selectedIndex = 0;
+    this._levelPreviewedLevel = undefined;
+    this._resetLevelMenuIdleState();
     this._scrollY = 0;
     this._transition = null;
     this._buildItems();
@@ -174,6 +181,8 @@ class Menus implements MenuSystemInstance {
     }
 
     this._selectedIndex = (this._selectedIndex + 1) % this._items.length;
+    this._resetLevelMenuIdleState();
+    this._previewFocusedLevel();
   };
 
   previous = (): void => {
@@ -183,6 +192,8 @@ class Menus implements MenuSystemInstance {
 
     this._selectedIndex =
       (this._selectedIndex - 1 + this._items.length) % this._items.length;
+    this._resetLevelMenuIdleState();
+    this._previewFocusedLevel();
   };
 
   adjust = (direction: -1 | 1): void => {
@@ -197,6 +208,8 @@ class Menus implements MenuSystemInstance {
     if (!this._active) {
       return;
     }
+
+    this._resetLevelMenuIdleState();
 
     const item = this._items[this._selectedIndex];
 
@@ -223,6 +236,8 @@ class Menus implements MenuSystemInstance {
       return false;
     }
 
+    this._resetLevelMenuIdleState();
+
     if (!this._awaitingBinding) {
       this._captureKonamiKey(keyCode);
       return false;
@@ -247,6 +262,8 @@ class Menus implements MenuSystemInstance {
     if (!this._active) {
       return;
     }
+
+    this._resetLevelMenuIdleState();
 
     const menuPointer = this._getScaledPointer(pointer);
 
@@ -288,6 +305,7 @@ class Menus implements MenuSystemInstance {
     }
 
     this._selectedIndex = itemIndex;
+    this._previewFocusedLevel();
 
     if (pointer.type === "press") {
       this._pressedItemIndex = itemIndex;
@@ -317,19 +335,28 @@ class Menus implements MenuSystemInstance {
 
     const context = this._gameArena.getContext() as CanvasRenderingContext2D;
     const menuScale = this._getMenuScale();
+    const levelMenuIdleProgress = this._getLevelMenuIdleProgress();
+    const levelMenuOpacity = this._getLevelMenuOpacity(levelMenuIdleProgress);
+    const backplateOpacity = 1 - levelMenuIdleProgress;
 
-    context.fillStyle = palette.menu.backplate;
-    context.fillRect(
-      -(this._gameArena.width / 2),
-      -(this._gameArena.height / 2),
-      this._gameArena.width,
-      this._gameArena.height
-    );
+    if (backplateOpacity > 0) {
+      context.save();
+      context.globalAlpha *= backplateOpacity;
+      context.fillStyle = palette.menu.backplate;
+      context.fillRect(
+        -(this._gameArena.width / 2),
+        -(this._gameArena.height / 2),
+        this._gameArena.width,
+        this._gameArena.height
+      );
+      context.restore();
+    }
 
     const transition = this._getTransitionState();
     const layout = this._getAnimatedLayout(transition);
 
     context.save();
+    context.globalAlpha *= levelMenuOpacity;
     context.scale(menuScale, menuScale);
     this._renderLogo(context, layout.logoY, layout.logoScale);
 
@@ -1546,6 +1573,7 @@ class Menus implements MenuSystemInstance {
     this._screenHistory.push(this._screen);
     this._screen = screen;
     this._selectedIndex = 0;
+    this._levelMenuLastInteractionAt = performance.now();
     this._awaitingBinding = null;
     this._bindingWarning = "";
     this._pressedItemIndex = null;
@@ -1553,6 +1581,9 @@ class Menus implements MenuSystemInstance {
     this._scrollY = 0;
     this._buildItems();
     this._startTransition(previousScreen, screen);
+    this._levelPreviewedLevel = undefined;
+    this._resetLevelMenuIdleState();
+    this._previewFocusedLevel();
   };
 
   private _goBack = (): void => {
@@ -1561,6 +1592,7 @@ class Menus implements MenuSystemInstance {
 
     this._screen = nextScreen;
     this._selectedIndex = 0;
+    this._levelMenuLastInteractionAt = performance.now();
     this._awaitingBinding = null;
     this._bindingWarning = "";
     this._pressedItemIndex = null;
@@ -1568,6 +1600,9 @@ class Menus implements MenuSystemInstance {
     this._scrollY = 0;
     this._buildItems();
     this._startTransition(previousScreen, nextScreen);
+    this._levelPreviewedLevel = undefined;
+    this._resetLevelMenuIdleState();
+    this._previewFocusedLevel();
   };
 
   private _adjustControllerType = (direction: -1 | 1): void => {
@@ -1597,6 +1632,49 @@ class Menus implements MenuSystemInstance {
 
   private _setSelectedLevel = (level: number): void => {
     this._commands.selectLevel?.(level);
+  };
+
+  private _getLevelMenuOpacity = (idleProgress: number): number => {
+    return 1 - idleProgress * (1 - levelMenuIdleOpacity);
+  };
+
+  private _getLevelMenuIdleProgress = (): number => {
+    if (
+      this._screen !== "level" ||
+      !this._items[this._selectedIndex]?.levelIcon
+    ) {
+      return 0;
+    }
+
+    const elapsed = performance.now() - this._levelMenuLastInteractionAt;
+
+    if (elapsed <= levelMenuIdleFadeDelay) {
+      return 0;
+    }
+
+    return Math.min(
+      1,
+      (elapsed - levelMenuIdleFadeDelay) / levelMenuIdleFadeDuration
+    );
+  };
+
+  private _resetLevelMenuIdleState = (): void => {
+    this._levelMenuLastInteractionAt = performance.now();
+  };
+
+  private _previewFocusedLevel = (): void => {
+    if (this._screen !== "level") {
+      return;
+    }
+
+    const level = this._items[this._selectedIndex]?.levelIcon;
+
+    if (!level || this._levelPreviewedLevel === level) {
+      return;
+    }
+
+    this._levelPreviewedLevel = level;
+    this._commands.previewLevel?.(level);
   };
 
   private _setLanguage = (language: GameLanguage): void => {

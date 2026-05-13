@@ -185,6 +185,9 @@ export class TimePilot {
     this.context._hud = new Hud(this.context);
     this.context._menus = new Menus(this.context._gameArena, {
       getLevel: () => this.selectedStartLevel,
+      previewLevel: (level) => {
+        this.previewDebugLevel(level);
+      },
       selectLevel: (level) => {
         this.selectDebugLevel(level);
         this.beginGame();
@@ -527,6 +530,16 @@ export class TimePilot {
     this.context._player.setData("score", score, true);
     this.context._player.setData("lives", lives);
     this.context._player.setData("lives", lives, true);
+    this.spawningSystem.addInitialProps();
+    this.hasSeededInitialProps = true;
+  };
+
+  private previewDebugLevel = (level: number): void => {
+    if (!this.isDemoMode || !levels[level]?.enabled || this.context._level === level) {
+      return;
+    }
+
+    this.resetWorld(level, { skipIntro: true });
     this.spawningSystem.addInitialProps();
     this.hasSeededInitialProps = true;
   };

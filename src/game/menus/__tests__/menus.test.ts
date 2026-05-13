@@ -481,8 +481,10 @@ describe("menu definitions", () => {
     const selectLevel = vi.fn((level: number) => {
       selectedLevel = level;
     });
+    const previewLevel = vi.fn();
     const menus = new Menus(arena, {
       getLevel: () => selectedLevel,
+      previewLevel,
       selectLevel,
       start: vi.fn(),
     });
@@ -503,6 +505,8 @@ describe("menu definitions", () => {
     const now = vi.spyOn(performance, "now").mockReturnValue(0);
 
     menus.activate();
+    expect(previewLevel).toHaveBeenLastCalledWith(1);
+
     menus.render();
     now.mockReturnValue(140);
     menus.render();
@@ -564,9 +568,68 @@ describe("menu definitions", () => {
     );
 
     menus.next();
+    expect(previewLevel).toHaveBeenLastCalledWith(2);
+    expect(selectLevel).not.toHaveBeenCalled();
     menus.activate();
 
     expect(selectLevel).toHaveBeenCalledWith(2);
+  });
+
+  it("fades the level select menu backplate and restores it on escape", () => {
+    const arena = createArena();
+    const menus = new Menus(arena, {
+      getLevel: () => 1,
+      previewLevel: vi.fn(),
+      selectLevel: vi.fn(),
+      start: vi.fn(),
+    });
+    const now = vi.spyOn(performance, "now").mockReturnValue(0);
+
+    menus.showStart();
+    for (const keyCode of [38, 38, 40, 40, 37, 39, 37, 39, 66, 65]) {
+      menus.captureKey(keyCode);
+    }
+
+    menus.next();
+    menus.next();
+    menus.activate();
+    for (let i = 0; i < 4; i++) {
+      menus.next();
+    }
+    menus.activate();
+
+    vi.mocked(arena.getContext).mockClear();
+    now.mockReturnValue(3900);
+    menus.render();
+
+    const fadedContexts = vi
+      .mocked(arena.getContext)
+      .mock.results.map((result) => result.value as CanvasRenderingContext2D);
+
+    expect(
+      fadedContexts.some((context) =>
+        vi.mocked(context.fillRect).mock.calls.some(
+          (call) => call[0] === -400 && call[1] === -300 && call[2] === 800 && call[3] === 600
+        )
+      )
+    ).toBe(false);
+
+    vi.mocked(arena.getContext).mockClear();
+    now.mockReturnValue(3200);
+    menus.captureKey(27);
+    menus.render();
+
+    const restoredContexts = vi
+      .mocked(arena.getContext)
+      .mock.results.map((result) => result.value as CanvasRenderingContext2D);
+
+    expect(
+      restoredContexts.some((context) =>
+        vi.mocked(context.fillRect).mock.calls.some(
+          (call) => call[0] === -400 && call[1] === -300 && call[2] === 800 && call[3] === 600
+        )
+      )
+    ).toBe(true);
   });
 
   it("captures a replacement keyboard binding", () => {
