@@ -97,6 +97,7 @@ const it: typeof en = {
     showHitBoxes: "Mostra hitbox",
     soon: "Presto",
     start: "Inizia",
+    uiZoom: "Zoom UI",
   },
 };
 

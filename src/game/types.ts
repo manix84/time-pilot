@@ -331,6 +331,7 @@ export interface HudInstance {
 }
 
 export interface ControllerInterfaceInstance {
+  adjustUiZoom?: (direction: -1 | 1) => void;
   rotateToHeading: (desiredHeading: Heading) => void;
   rotateClockwise: () => void;
   rotateAntiClockwise: () => void;
@@ -400,6 +401,7 @@ export interface ShowStartMenuOptions {
 }
 
 export interface MenuSystemInstance {
+  adjustUiZoom: (direction: -1 | 1) => void;
   adjust: (direction: -1 | 1) => void;
   captureKey: (keyCode: number) => boolean;
   isActive: () => boolean;
@@ -616,6 +618,7 @@ export interface UserOptions {
   masterVolume: number;
   musicVolume: number;
   effectsVolume: number;
+  uiZoom: number;
   setKeyboardBinding: <K extends keyof KeyboardBindings>(
     key: K,
     value: KeyboardBindings[K]

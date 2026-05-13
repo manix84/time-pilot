@@ -19,6 +19,7 @@ type PersistedUserOptions = Pick<
   | "language"
   | "masterVolume"
   | "musicVolume"
+  | "uiZoom"
 >;
 
 const userOptionsStorageKey = "timePilot.userOptions";
@@ -53,6 +54,7 @@ const defaultPersistedOptions: PersistedUserOptions = {
   masterVolume: 10,
   musicVolume: 8,
   effectsVolume: 8,
+  uiZoom: 5,
 };
 
 const getOptionsStorage = (): Storage | null => {
@@ -120,6 +122,7 @@ const writeUserOptions = (): void => {
         language: userOptions.language,
         masterVolume: userOptions.masterVolume,
         musicVolume: userOptions.musicVolume,
+        uiZoom: userOptions.uiZoom,
       } satisfies PersistedUserOptions)
     );
   } catch {
@@ -207,6 +210,7 @@ var userOptions: UserOptions = {
   masterVolume: storedOptions.masterVolume ?? defaultPersistedOptions.masterVolume,
   musicVolume: storedOptions.musicVolume ?? defaultPersistedOptions.musicVolume,
   effectsVolume: storedOptions.effectsVolume ?? defaultPersistedOptions.effectsVolume,
+  uiZoom: storedOptions.uiZoom ?? defaultPersistedOptions.uiZoom,
 
   /**
    * Set options in this object (userOptions), and store it so that the user doesn't have to set options each time

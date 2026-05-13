@@ -97,6 +97,7 @@ const de: typeof en = {
     showHitBoxes: "Hitboxen anzeigen",
     soon: "Bald",
     start: "Start",
+    uiZoom: "UI-Zoom",
   },
 };
 

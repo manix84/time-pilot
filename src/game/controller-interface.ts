@@ -167,6 +167,10 @@ class ControllerInterface implements ControllerInterfaceInstance {
     return this._menus.isActive();
   };
 
+  adjustUiZoom = (direction: -1 | 1): void => {
+    this._menus.adjustUiZoom(direction);
+  };
+
   private _quantizeHeading = (heading: Heading): Heading => {
     const quantized =
       Math.round(heading / this._rotationStep) * this._rotationStep;

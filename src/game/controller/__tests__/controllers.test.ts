@@ -9,6 +9,7 @@ import userOptions from "../../user-options";
 
 const createControls = (): ControllerInterfaceInstance => {
   return {
+    adjustUiZoom: vi.fn(),
     rotateToHeading: vi.fn(),
     rotateClockwise: vi.fn(),
     rotateAntiClockwise: vi.fn(),
@@ -62,6 +63,7 @@ describe("controller modules", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     userOptions.setOption("controllerType", "keyboard1");
+    userOptions.setOption("uiZoom", 5);
   });
 
   it("maps keyboard set 1 keys to controller actions", () => {
@@ -97,6 +99,23 @@ describe("controller modules", () => {
 
     expect(controls.startShooting).toHaveBeenCalled();
     expect(inputState.fire).toBe(false);
+
+    keyboard.disconnect?.();
+  });
+
+  it("maps plus and minus keys to UI zoom controls", () => {
+    const controls = createControls();
+    const inputState = createInputState();
+    const keyboard = new Keyboard1(controls, inputState);
+
+    document.documentElement.dispatchEvent(new KeyboardEvent("keydown", { keyCode: 187 }));
+    document.documentElement.dispatchEvent(new KeyboardEvent("keydown", { keyCode: 189 }));
+    document.documentElement.dispatchEvent(new KeyboardEvent("keydown", { keyCode: 107 }));
+    document.documentElement.dispatchEvent(new KeyboardEvent("keydown", { keyCode: 109 }));
+
+    expect(controls.adjustUiZoom).toHaveBeenCalledWith(1);
+    expect(controls.adjustUiZoom).toHaveBeenCalledWith(-1);
+    expect(controls.rotateToHeading).not.toHaveBeenCalled();
 
     keyboard.disconnect?.();
   });

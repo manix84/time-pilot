@@ -85,6 +85,7 @@ const fr: typeof en = {
     showHitBoxes: "Afficher collisions",
     soon: "Bientot",
     start: "Demarrer",
+    uiZoom: "Zoom UI",
   },
 };
 

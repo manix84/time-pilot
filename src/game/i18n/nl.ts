@@ -97,6 +97,7 @@ const nl: typeof en = {
     showHitBoxes: "Hitboxen tonen",
     soon: "Binnenkort",
     start: "Start",
+    uiZoom: "UI-zoom",
   },
 };
 

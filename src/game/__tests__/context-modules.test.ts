@@ -108,6 +108,7 @@ const createContext = (): GameDataStore => {
   context._hud = new Hud(context);
   context._menus = {
     adjust: vi.fn(),
+    adjustUiZoom: vi.fn(),
     captureKey: vi.fn(() => false),
     isActive: vi.fn(() => false),
     showStart: vi.fn(),
@@ -130,6 +131,7 @@ describe("context-backed game modules", () => {
   afterEach(() => {
     userOptions.setOption("enableDebug", false);
     userOptions.setDebugOption("showHitboxes", true);
+    userOptions.setOption("uiZoom", 5);
     localStorage.clear();
   });
 

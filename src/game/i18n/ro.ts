@@ -97,6 +97,7 @@ const ro: typeof en = {
     showHitBoxes: "Arata hitbox-uri",
     soon: "In curand",
     start: "Start",
+    uiZoom: "Zoom UI",
   },
 };
 

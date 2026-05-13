@@ -32,7 +32,13 @@ class Keyboard1 implements Controller {
 
         const bindings = userOptions.keyboardBindings;
 
-        if (bindings.left.includes(event.keyCode)) {
+        if (event.keyCode === 187 || event.keyCode === 107) {
+          event.preventDefault();
+          this._controllerInterface.adjustUiZoom?.(1);
+        } else if (event.keyCode === 189 || event.keyCode === 109) {
+          event.preventDefault();
+          this._controllerInterface.adjustUiZoom?.(-1);
+        } else if (bindings.left.includes(event.keyCode)) {
           event.preventDefault();
           this._setInputState("left", true);
           if (this._controllerInterface.isMenuActive?.()) {

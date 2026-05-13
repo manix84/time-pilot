@@ -6,6 +6,7 @@ import i18n, {
   getCurrentLanguage,
   getLanguageName,
 } from "./i18n";
+import { formatUiZoom, getUiScale } from "./ui-scale";
 import userOptions from "./user-options";
 import type {
   ControllerType,
@@ -561,25 +562,30 @@ class Menus implements MenuSystemInstance {
         onAdjust: (direction) => this._adjustVolume("effectsVolume", direction),
         onSetValue: (value) => this._setVolume("effectsVolume", value),
       }),
-      this._createItem(i18n.menu.language, "action", 72, {
+      this._createItem(i18n.menu.uiZoom, "slider", 72, {
+        getValue: () => formatUiZoom(),
+        onAdjust: (direction) => this.adjustUiZoom(direction),
+        onSetValue: (value) => this._setUiZoom(value),
+      }),
+      this._createItem(i18n.menu.language, "action", 114, {
         getValue: () => getLanguageName(userOptions.language),
         languageFlag: userOptions.language,
         action: () => this._goToScreen("language"),
       }),
-      this._createItem(i18n.menu.controlType, "enum", 114, {
+      this._createItem(i18n.menu.controlType, "enum", 156, {
         getValue: () =>
           userOptions.controllerType === "keyboard1"
             ? i18n.menu.directional
             : i18n.menu.rotate,
         onAdjust: (direction) => this._adjustControllerType(direction),
       }),
-      this._createItem(i18n.menu.remapControls, "action", 156, {
+      this._createItem(i18n.menu.remapControls, "action", 198, {
         action: () => this._goToScreen("controls"),
       }),
     ];
 
     items.push(
-      this._createItem(i18n.menu.back, "action", 206, {
+      this._createItem(i18n.menu.back, "action", 248, {
         action: () => this._goBack(),
       })
     );
@@ -1291,7 +1297,10 @@ class Menus implements MenuSystemInstance {
       return null;
     }
 
-    const value = Number(item.getValue());
+    const value =
+      item.label === i18n.menu.uiZoom
+        ? userOptions.uiZoom
+        : Number(item.getValue());
     if (!Number.isFinite(value)) {
       return null;
     }
@@ -1338,7 +1347,7 @@ class Menus implements MenuSystemInstance {
       1,
       availableWidth / designWidth,
       availableHeight / menuDesignHeight
-    );
+    ) * getUiScale(this._gameArena.width, this._gameArena.height);
   };
 
   private _getMenuDesignWidth = (): number => {
@@ -1649,6 +1658,14 @@ class Menus implements MenuSystemInstance {
   private _setSelectedLevel = (level: number): void => {
     this._commands.clearLevelPreview?.();
     this._commands.selectLevel?.(level);
+  };
+
+  adjustUiZoom = (direction: -1 | 1): void => {
+    this._setUiZoom(userOptions.uiZoom + direction);
+  };
+
+  private _setUiZoom = (value: number): void => {
+    userOptions.setOption("uiZoom", Math.max(0, Math.min(10, value)));
   };
 
   private _getLevelMenuOpacity = (idleProgress: number): number => {

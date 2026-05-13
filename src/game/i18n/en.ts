@@ -95,6 +95,7 @@ const en = {
     showHitBoxes: "Show Hit Boxes",
     soon: "Soon",
     start: "Start",
+    uiZoom: "UI Zoom",
   },
 };
 

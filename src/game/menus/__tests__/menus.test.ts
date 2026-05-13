@@ -40,6 +40,7 @@ describe("menu definitions", () => {
     userOptions.setOption("controllerType", "keyboard1");
     userOptions.setOption("language", "en");
     userOptions.setOption("masterVolume", 10);
+    userOptions.setOption("uiZoom", 5);
     userOptions.setKeyboardBinding("up", [38, 87]);
   });
 
@@ -138,6 +139,7 @@ describe("menu definitions", () => {
     menus.adjust(1);
     expect(userOptions.masterVolume).toBe(6);
 
+    menus.next();
     menus.next();
     menus.next();
     menus.next();
@@ -269,7 +271,7 @@ describe("menu definitions", () => {
 
     menus.activate();
 
-    for (let i = 0; i < 6; i++) {
+    for (let i = 0; i < 5; i++) {
       menus.next();
     }
 
@@ -279,12 +281,12 @@ describe("menu definitions", () => {
     const context = vi.mocked(arena.getContext).mock.results[0]
       .value as CanvasRenderingContext2D;
 
-    expect(context.scale).toHaveBeenCalledWith(0.344, 0.344);
+    expect(context.scale).toHaveBeenCalledWith(0.24767999999999998, 0.24767999999999998);
     expect(context.rect).toHaveBeenCalledWith(
-      -1093.0232558139535,
-      -250.00000000000006,
-      2186.046511627907,
-      500.0000000000001
+      -1518.0878552971576,
+      -347.22222222222223,
+      3036.175710594315,
+      694.4444444444445
     );
     expect(context.clip).toHaveBeenCalled();
   });
@@ -305,7 +307,7 @@ describe("menu definitions", () => {
 
     const context = vi.mocked(arena.getContext).mock.results[0]
       .value as CanvasRenderingContext2D;
-    const scale = 272 / 828;
+    const scale = (272 / 828) * 0.72;
 
     expect(context.scale).toHaveBeenCalledWith(scale, scale);
 
@@ -355,7 +357,7 @@ describe("menu definitions", () => {
       expect.objectContaining({ align: "center" })
     );
 
-    for (let i = 0; i < 6; i++) {
+    for (let i = 0; i < 7; i++) {
       menus.next();
     }
 
@@ -642,7 +644,7 @@ describe("menu definitions", () => {
     menus.next();
     menus.activate();
 
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i < 6; i++) {
       menus.next();
     }
 
@@ -662,7 +664,7 @@ describe("menu definitions", () => {
     menus.next();
     menus.activate();
 
-    for (let i = 0; i < 3; i++) {
+    for (let i = 0; i < 4; i++) {
       menus.next();
     }
 
@@ -694,7 +696,7 @@ describe("menu definitions", () => {
     menus.next();
     menus.activate();
 
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i < 6; i++) {
       menus.next();
     }
 
