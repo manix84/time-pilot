@@ -525,6 +525,7 @@ export interface EnemyConfig {
   countsTowardBoss: boolean;
   deathFlashFrameY?: number;
   deathFlashTicks?: number;
+  headingFrameOffset?: number;
   deathValue: number;
   horizontalDirectionFrames?: number;
   sprite: SpriteAsset;

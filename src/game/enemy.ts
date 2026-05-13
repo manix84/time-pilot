@@ -264,7 +264,11 @@ class Enemy implements EnemyInstance {
     }
 
     if (levelData.canRotate) {
-      return Math.floor(this._data.heading / 22.5);
+      const heading =
+        (this._data.heading + (levelData.headingFrameOffset ?? 0) + 360) %
+        360;
+
+      return Math.floor(heading / 22.5);
     }
 
     return (

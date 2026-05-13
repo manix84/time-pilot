@@ -751,12 +751,12 @@ describe("menu definitions", () => {
     ).toBe(true);
     expect(
       drawImageCalls.some(
-        (call) => call[1] === 0 && call[2] === 0 && call[3] === 32 && call[4] === 32
+        (call) => call[1] === 64 && call[2] === 0 && call[3] === 16 && call[4] === 16
       )
     ).toBe(true);
     expect(
       drawImageCalls.some(
-        (call) => call[1] === 0 && call[2] === 32 && call[3] === 32 && call[4] === 32
+        (call) => call[1] === 64 && call[2] === 16 && call[3] === 16 && call[4] === 16
       )
     ).toBe(true);
     expect(

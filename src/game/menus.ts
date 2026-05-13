@@ -1627,7 +1627,7 @@ class Menus implements MenuSystemInstance {
     if (enemyConfig.animationRows) {
       return {
         x: enemyConfig.canRotate
-          ? 0
+          ? this._getDirectionalFrameForHeading(enemyConfig, 90)
           : tick % (enemyConfig.animationFrames ?? 1),
         y: tick % enemyConfig.animationRows,
       };
@@ -1648,6 +1648,15 @@ class Menus implements MenuSystemInstance {
     }
 
     return { x: 0, y: 0 };
+  };
+
+  private _getDirectionalFrameForHeading = (
+    enemyConfig: EnemyConfig,
+    heading: number
+  ): number => {
+    return Math.floor(
+      ((heading + (enemyConfig.headingFrameOffset ?? 0) + 360) % 360) / 22.5
+    );
   };
 
   private _getHorizontalDirectionPreviewFrame = (

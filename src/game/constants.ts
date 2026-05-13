@@ -662,6 +662,10 @@ const timePilotConstants: TimePilotConstants = {
           animationRows: 2,
           deathFlashFrameY: 2,
           deathFlashTicks: 6,
+          width: 16,
+          height: 16,
+          renderWidth: 32,
+          renderHeight: 32,
         }),
         boss: bossEnemy(1, {
           width: 30,
@@ -690,8 +694,16 @@ const timePilotConstants: TimePilotConstants = {
       },
       enemies: {
         basic: basicEnemy(2, {
+          animationRows: 2,
+          deathFlashFrameY: 2,
+          deathFlashTicks: 6,
+          headingFrameOffset: 270,
           velocity: 4.25,
           turnLimiter: 22,
+          width: 16,
+          height: 16,
+          renderWidth: 32,
+          renderHeight: 32,
           firingChance: 0.5,
           spawnLimit: 11,
           projectile: {
@@ -791,8 +803,16 @@ const timePilotConstants: TimePilotConstants = {
       },
       enemies: {
         basic: basicEnemy(4, {
+          animationRows: 2,
+          deathFlashFrameY: 2,
+          deathFlashTicks: 6,
+          headingFrameOffset: 270,
           velocity: 6.25,
           turnLimiter: 10,
+          width: 16,
+          height: 16,
+          renderWidth: 32,
+          renderHeight: 32,
           firingChance: 0.65,
           spawnLimit: 15,
           projectile: {
@@ -845,7 +865,13 @@ const timePilotConstants: TimePilotConstants = {
       enemies: {
         basic: basicEnemy(5, {
           animationFrames: 4,
+          deathFlashFrameY: 1,
+          deathFlashTicks: 6,
           canRotate: false,
+          width: 16,
+          height: 16,
+          renderWidth: 32,
+          renderHeight: 32,
           velocity: 7.5,
           turnLimiter: 8,
           firingChance: 0.68,

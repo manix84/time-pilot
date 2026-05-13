@@ -725,10 +725,88 @@ describe("context-backed game modules", () => {
       1,
       expect.any(HTMLImageElement),
       expect.objectContaining({
-        frameHeight: 32,
-        frameWidth: 32,
+        frameHeight: 16,
+        frameWidth: 16,
         frameX: 8,
         frameY: 2,
+        renderHeight: 32,
+        renderWidth: 32,
+      })
+    );
+    expect(context._gameArena.renderSprite).toHaveBeenNthCalledWith(
+      2,
+      expect.any(HTMLImageElement),
+      expect.objectContaining({
+        frameHeight: 16,
+        frameWidth: 16,
+        frameX: 0,
+        frameY: 0,
+      })
+    );
+  });
+
+  it("renders level 2 fighters with their offset directional animation rows", () => {
+    const context = createContext();
+    context._level = 2;
+
+    context._enemies.create(100, 100, 90);
+    const [enemy] = context._enemies.getEntities();
+
+    vi.mocked(context._gameTicker.getTicks).mockReturnValue(9);
+    enemy.render();
+    vi.mocked(context._gameTicker.getTicks).mockReturnValue(10);
+    enemy.render();
+    enemy.setData("heading", 0);
+    enemy.render();
+
+    expect(context._gameArena.renderSprite).toHaveBeenNthCalledWith(
+      1,
+      expect.any(HTMLImageElement),
+      expect.objectContaining({
+        frameHeight: 16,
+        frameWidth: 16,
+        frameX: 0,
+        frameY: 0,
+        renderHeight: 32,
+        renderWidth: 32,
+      })
+    );
+    expect(context._gameArena.renderSprite).toHaveBeenNthCalledWith(
+      2,
+      expect.any(HTMLImageElement),
+      expect.objectContaining({ frameX: 0, frameY: 1 })
+    );
+    expect(context._gameArena.renderSprite).toHaveBeenNthCalledWith(
+      3,
+      expect.any(HTMLImageElement),
+      expect.objectContaining({ frameX: 12, frameY: 1 })
+    );
+  });
+
+  it("renders the level 2 fighter flash row before the explosion sheet", () => {
+    const context = createContext();
+    context._level = 2;
+
+    vi.mocked(context._gameTicker.getTicks).mockReturnValue(100);
+    context._enemies.create(100, 100, 180);
+    const [enemy] = context._enemies.getEntities();
+
+    enemy.kill();
+    vi.mocked(context._gameTicker.getTicks).mockReturnValue(103);
+    enemy.render();
+    vi.mocked(context._gameTicker.getTicks).mockReturnValue(106);
+    enemy.render();
+
+    expect(context._gameArena.renderSprite).toHaveBeenNthCalledWith(
+      1,
+      expect.any(HTMLImageElement),
+      expect.objectContaining({
+        frameHeight: 16,
+        frameWidth: 16,
+        frameX: 4,
+        frameY: 2,
+        renderHeight: 32,
+        renderWidth: 32,
       })
     );
     expect(context._gameArena.renderSprite).toHaveBeenNthCalledWith(
@@ -808,6 +886,69 @@ describe("context-backed game modules", () => {
     );
   });
 
+  it("renders level 4 basic enemies with offset directional animation rows", () => {
+    const context = createContext();
+    context._level = 4;
+
+    context._enemies.create(100, 100, 90);
+    const [enemy] = context._enemies.getEntities();
+
+    vi.mocked(context._gameTicker.getTicks).mockReturnValue(9);
+    enemy.render();
+    vi.mocked(context._gameTicker.getTicks).mockReturnValue(10);
+    enemy.render();
+    enemy.setData("heading", 0);
+    enemy.render();
+
+    expect(context._gameArena.renderSprite).toHaveBeenNthCalledWith(
+      1,
+      expect.any(HTMLImageElement),
+      expect.objectContaining({
+        frameHeight: 16,
+        frameWidth: 16,
+        frameX: 0,
+        frameY: 0,
+        renderHeight: 32,
+        renderWidth: 32,
+      })
+    );
+    expect(context._gameArena.renderSprite).toHaveBeenNthCalledWith(
+      2,
+      expect.any(HTMLImageElement),
+      expect.objectContaining({ frameX: 0, frameY: 1 })
+    );
+    expect(context._gameArena.renderSprite).toHaveBeenNthCalledWith(
+      3,
+      expect.any(HTMLImageElement),
+      expect.objectContaining({ frameX: 12, frameY: 1 })
+    );
+  });
+
+  it("renders the level 4 basic enemy flash row before the explosion sheet", () => {
+    const context = createContext();
+    context._level = 4;
+
+    vi.mocked(context._gameTicker.getTicks).mockReturnValue(100);
+    context._enemies.create(100, 100, 180);
+    const [enemy] = context._enemies.getEntities();
+
+    enemy.kill();
+    vi.mocked(context._gameTicker.getTicks).mockReturnValue(103);
+    enemy.render();
+
+    expect(context._gameArena.renderSprite).toHaveBeenCalledWith(
+      expect.any(HTMLImageElement),
+      expect.objectContaining({
+        frameHeight: 16,
+        frameWidth: 16,
+        frameX: 4,
+        frameY: 2,
+        renderHeight: 32,
+        renderWidth: 32,
+      })
+    );
+  });
+
   it("renders level 5 basic enemies as four animation frames without rotation", () => {
     const context = createContext();
     context._level = 5;
@@ -821,8 +962,37 @@ describe("context-backed game modules", () => {
     expect(context._gameArena.renderSprite).toHaveBeenCalledWith(
       expect.any(HTMLImageElement),
       expect.objectContaining({
+        frameHeight: 16,
+        frameWidth: 16,
         frameX: 3,
         frameY: 0,
+        renderHeight: 32,
+        renderWidth: 32,
+      })
+    );
+  });
+
+  it("renders the level 5 basic enemy flash row before the explosion sheet", () => {
+    const context = createContext();
+    context._level = 5;
+
+    vi.mocked(context._gameTicker.getTicks).mockReturnValue(100);
+    context._enemies.create(100, 100, 180);
+    const [enemy] = context._enemies.getEntities();
+
+    enemy.kill();
+    vi.mocked(context._gameTicker.getTicks).mockReturnValue(103);
+    enemy.render();
+
+    expect(context._gameArena.renderSprite).toHaveBeenCalledWith(
+      expect.any(HTMLImageElement),
+      expect.objectContaining({
+        frameHeight: 16,
+        frameWidth: 16,
+        frameX: 2,
+        frameY: 1,
+        renderHeight: 32,
+        renderWidth: 32,
       })
     );
   });

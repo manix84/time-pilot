@@ -40,6 +40,10 @@
 - Updated player and enemy sprite handling for the newer sprite sheets, including level 1 biplane animation, level 3 helicopter turning, level 5 UFO animation, and the 32-frame player rotation sheet.
 - Updated bonus and explosion sprite geometry for the refreshed parachute, basic enemy, boss, and special bomber sheets.
 - Replaced level 5 cloud props with refreshed asteroid sprites.
+- Updated level 1 biplane sprite handling for the half-size refreshed sheet.
+- Updated level 2 fighter sprite handling for the refreshed three-row directional animation and death-flash sheet.
+- Updated level 4 basic enemy sprite handling for the refreshed three-row directional animation and death-flash sheet.
+- Updated level 5 basic enemy sprite handling for the refreshed two-row animation and death-flash sheet.
 
 ## 🧭 Menu, Zoom, and Debug UX
 
