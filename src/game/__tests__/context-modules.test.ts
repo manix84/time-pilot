@@ -109,6 +109,7 @@ const createContext = (): GameDataStore => {
   context._menus = {
     adjust: vi.fn(),
     adjustUiZoom: vi.fn(),
+    resetUiZoom: vi.fn(),
     captureKey: vi.fn(() => false),
     isActive: vi.fn(() => false),
     showStart: vi.fn(),

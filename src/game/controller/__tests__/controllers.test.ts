@@ -10,6 +10,7 @@ import userOptions from "../../user-options";
 const createControls = (): ControllerInterfaceInstance => {
   return {
     adjustUiZoom: vi.fn(),
+    resetUiZoom: vi.fn(),
     rotateToHeading: vi.fn(),
     rotateClockwise: vi.fn(),
     rotateAntiClockwise: vi.fn(),
@@ -145,18 +146,21 @@ describe("controller modules", () => {
     expect(inputState.menu).toBe(true);
   });
 
-  it("maps plus and minus keys to UI zoom controls", () => {
+  it("maps plus, minus, and zero keys to UI zoom controls", () => {
     const controls = createControls();
     const inputState = createInputState();
     const keyboard = new Keyboard1(controls, inputState);
 
     document.documentElement.dispatchEvent(new KeyboardEvent("keydown", { keyCode: 187 }));
     document.documentElement.dispatchEvent(new KeyboardEvent("keydown", { keyCode: 189 }));
+    document.documentElement.dispatchEvent(new KeyboardEvent("keydown", { keyCode: 48 }));
     document.documentElement.dispatchEvent(new KeyboardEvent("keydown", { keyCode: 107 }));
     document.documentElement.dispatchEvent(new KeyboardEvent("keydown", { keyCode: 109 }));
+    document.documentElement.dispatchEvent(new KeyboardEvent("keydown", { keyCode: 96 }));
 
     expect(controls.adjustUiZoom).toHaveBeenCalledWith(1);
     expect(controls.adjustUiZoom).toHaveBeenCalledWith(-1);
+    expect(controls.resetUiZoom).toHaveBeenCalledTimes(2);
     expect(controls.rotateToHeading).not.toHaveBeenCalled();
 
     keyboard.disconnect?.();

@@ -42,6 +42,9 @@ class Keyboard1 implements Controller {
         } else if (event.keyCode === 189 || event.keyCode === 109) {
           event.preventDefault();
           this._controllerInterface.adjustUiZoom?.(-1);
+        } else if (event.keyCode === 48 || event.keyCode === 96) {
+          event.preventDefault();
+          this._controllerInterface.resetUiZoom?.();
         } else if (bindings.left.includes(event.keyCode)) {
           event.preventDefault();
           this._setInputState("left", true);

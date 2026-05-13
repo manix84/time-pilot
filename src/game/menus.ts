@@ -24,6 +24,7 @@ import {
   getGameScale,
   getUiScale,
   zoomMaxPercent,
+  zoomDefaultPercent,
   zoomMinPercent,
   zoomStepPercent,
 } from "./ui-scale";
@@ -2210,6 +2211,10 @@ class Menus implements MenuSystemInstance {
 
   adjustUiZoom = (direction: -1 | 1): void => {
     this._setUiZoom(userOptions.uiZoom + direction * zoomStepPercent);
+  };
+
+  resetUiZoom = (): void => {
+    this._setUiZoom(zoomDefaultPercent);
   };
 
   private _setUiZoom = (value: number): void => {

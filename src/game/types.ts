@@ -333,6 +333,7 @@ export interface HudInstance {
 
 export interface ControllerInterfaceInstance {
   adjustUiZoom?: (direction: -1 | 1) => void;
+  resetUiZoom?: () => void;
   rotateToHeading: (desiredHeading: Heading) => void;
   rotateClockwise: () => void;
   rotateAntiClockwise: () => void;
@@ -405,6 +406,7 @@ export interface ShowStartMenuOptions {
 
 export interface MenuSystemInstance {
   adjustUiZoom: (direction: -1 | 1) => void;
+  resetUiZoom: () => void;
   adjust: (direction: -1 | 1) => void;
   captureKey: (keyCode: number) => boolean;
   isActive: () => boolean;
