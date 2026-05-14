@@ -1,7 +1,11 @@
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import helpers from "../helpers";
 
 describe("engine/helpers", () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
   it("rounds long floating point values to five decimal places", () => {
     expect(helpers.float(1.23456789)).toBe(1.23457);
   });

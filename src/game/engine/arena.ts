@@ -8,7 +8,6 @@ import type {
 } from "../types";
 import { assetPath } from "../asset-path";
 import palette from "../palette";
-import helpers from "./helpers";
 
 type CanvasContext = CanvasRenderingContext2D | WebGLRenderingContext;
 type CanvasWithDebugGrid = HTMLCanvasElement & {
@@ -36,6 +35,16 @@ class GameArena implements GameArenaInstance {
   private _oldHeight: number;
   private _oldWidth: number;
   private _styles?: HTMLStyleElement;
+  private readonly _handleFullscreenChange = (): void => {
+    this._isInFullScreen = !this._isInFullScreen;
+    if (this._isInFullScreen) {
+      this.resize(screen.width, screen.height);
+      window.console.log("Entered Full-Screen");
+    } else {
+      this.resize(this._oldWidth, this._oldHeight);
+      window.console.log("Exited Full-Screen");
+    }
+  };
   private readonly _handleResize = (): void => {
     if (this._isInFullScreen) {
       this.resize(
@@ -61,20 +70,11 @@ class GameArena implements GameArenaInstance {
     this._oldWidth = this._containerElement.clientWidth;
     this._oldHeight = this._containerElement.clientHeight;
 
-    helpers.bind(
-      "fullscreenchange webkitfullscreenchange mozfullscreenchange msfullscreenchange",
-      () => {
-        this._isInFullScreen = !this._isInFullScreen;
-        if (this._isInFullScreen) {
-          this.resize(screen.width, screen.height);
-          window.console.log("Entered Full-Screen");
-        } else {
-          this.resize(this._oldWidth, this._oldHeight);
-          window.console.log("Exited Full-Screen");
-        }
-      }
-    );
-    helpers.bind("resize", this._handleResize, window);
+    document.addEventListener("fullscreenchange", this._handleFullscreenChange);
+    document.addEventListener("webkitfullscreenchange", this._handleFullscreenChange);
+    document.addEventListener("mozfullscreenchange", this._handleFullscreenChange);
+    document.addEventListener("msfullscreenchange", this._handleFullscreenChange);
+    window.addEventListener("resize", this._handleResize);
 
     this._init();
   }
@@ -312,6 +312,16 @@ class GameArena implements GameArenaInstance {
 
   getElement = (): HTMLCanvasElement => {
     return this._canvas;
+  };
+
+  destroy = (): void => {
+    document.removeEventListener("fullscreenchange", this._handleFullscreenChange);
+    document.removeEventListener("webkitfullscreenchange", this._handleFullscreenChange);
+    document.removeEventListener("mozfullscreenchange", this._handleFullscreenChange);
+    document.removeEventListener("msfullscreenchange", this._handleFullscreenChange);
+    window.removeEventListener("resize", this._handleResize);
+    this._canvas.remove();
+    this._styles?.remove();
   };
 }
 

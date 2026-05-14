@@ -19,6 +19,8 @@ class Mouse implements Controller {
     this._canvas.addEventListener("mousedown", this.handlePress);
     this._canvas.addEventListener("mousemove", this.handleMove);
     this._canvas.addEventListener("mouseup", this.handleRelease);
+    window.addEventListener("mouseup", this.handleRelease);
+    window.addEventListener("blur", this.clearPressState);
     this._canvas.addEventListener("wheel", this.handleWheel, { passive: false });
   };
 
@@ -26,6 +28,8 @@ class Mouse implements Controller {
     this._canvas.removeEventListener("mousedown", this.handlePress);
     this._canvas.removeEventListener("mousemove", this.handleMove);
     this._canvas.removeEventListener("mouseup", this.handleRelease);
+    window.removeEventListener("mouseup", this.handleRelease);
+    window.removeEventListener("blur", this.clearPressState);
     this._canvas.removeEventListener("wheel", this.handleWheel);
   };
 
@@ -61,6 +65,11 @@ class Mouse implements Controller {
       type: "release",
     });
 
+    this._isPressed = false;
+    this._isDragging = false;
+  };
+
+  private clearPressState = (): void => {
     this._isPressed = false;
     this._isDragging = false;
   };

@@ -55,6 +55,11 @@ class Sound {
     Sound._instances.forEach((sound) => sound.stop());
   };
 
+  static destroyAll = (): void => {
+    [...Sound._instances].forEach((sound) => sound.destroy());
+    Sound._pausedInstances.clear();
+  };
+
   constructor(urls: string | string[], userOptions: SoundOptions = {}) {
     const options = {
       loop: false,

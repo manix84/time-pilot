@@ -88,15 +88,41 @@ const normalizeZoomOption = (value: unknown): number => {
 };
 
 const getOptionsStorage = (): Storage | null => {
-  if (
-    typeof localStorage === "undefined" ||
-    typeof localStorage.getItem !== "function" ||
-    typeof localStorage.setItem !== "function"
-  ) {
+  try {
+    if (
+      typeof localStorage === "undefined" ||
+      typeof localStorage.getItem !== "function" ||
+      typeof localStorage.setItem !== "function"
+    ) {
+      return null;
+    }
+
+    return localStorage;
+  } catch {
     return null;
   }
+};
 
-  return localStorage;
+const isNumberArray = (value: unknown): value is number[] => {
+  return Array.isArray(value) && value.every((item) => typeof item === "number");
+};
+
+const normalizeKeyboardBindings = (bindings: unknown): KeyboardBindings => {
+  const normalized = { ...defaultPersistedOptions.keyboardBindings };
+
+  if (!bindings || typeof bindings !== "object") {
+    return normalized;
+  }
+
+  for (const key of Object.keys(normalized) as Array<keyof KeyboardBindings>) {
+    const value = (bindings as Partial<Record<keyof KeyboardBindings, unknown>>)[key];
+
+    if (isNumberArray(value)) {
+      normalized[key] = value;
+    }
+  }
+
+  return normalized;
 };
 
 const readStoredOptions = (): Partial<PersistedUserOptions> => {
@@ -249,10 +275,7 @@ var userOptions: UserOptions = {
   gamepadEnabled:
     storedOptions.gamepadEnabled ?? defaultPersistedOptions.gamepadEnabled,
 
-  keyboardBindings: {
-    ...defaultPersistedOptions.keyboardBindings,
-    ...storedOptions.keyboardBindings,
-  },
+  keyboardBindings: normalizeKeyboardBindings(storedOptions.keyboardBindings),
 
   language: storedLanguage,
   masterVolume: storedOptions.masterVolume ?? defaultPersistedOptions.masterVolume,
