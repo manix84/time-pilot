@@ -804,14 +804,16 @@ describe("game systems", () => {
     );
   });
 
-  it("renders the mirrored time warp effect over the centered player", () => {
+  it("renders the expanding time warp frame strip over the centered player", () => {
     const context = createContext({
-      ticks: 221,
+      ticks: 320,
       timeWarpTransition: {
-        endsAtTick: 370,
+        effectStartedAtTick: 250,
+        endsAtTick: 520,
         lives: 3,
         nextLevel: 2,
         score: 1000,
+        screenCleared: true,
         startedAtTick: 200,
       },
     });
@@ -829,29 +831,22 @@ describe("game systems", () => {
     expect(context._gameArena.setBackgroundColor).toHaveBeenCalledWith("#000");
     expect(context._props.render).not.toHaveBeenCalled();
     expect(context._hud.render).not.toHaveBeenCalled();
-    expect(context._player.render).toHaveBeenCalled();
     expect(drawImageCalls).toEqual(
       expect.arrayContaining([
         expect.arrayContaining([
           expect.any(HTMLImageElement),
-          8,
           0,
-          8,
+          0,
           16,
-          -16,
-          -16,
           16,
+          -416,
+          -16,
+          32,
           32,
         ]),
       ])
     );
-    expect(
-      canvasContexts.some((renderingContext) =>
-        vi.mocked(renderingContext.scale).mock.calls.some(
-          (call) => call[0] === -1 && call[1] === 1
-        )
-      )
-    ).toBe(true);
+    expect(drawImageCalls.length).toBeGreaterThan(20);
   });
 
   it("hides HUD rendering while menus are active", () => {

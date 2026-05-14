@@ -20,6 +20,7 @@ import PropFactory from "./prop-factory";
 import CollisionSystem from "./systems/collision";
 import RenderingSystem from "./systems/rendering";
 import SpawningSystem from "./systems/spawning";
+import { timeWarpAnimationTicks } from "./time-warp";
 import type {
   AssetProgress,
   CollisionSystemInstance,
@@ -34,7 +35,7 @@ import userOptions from "./user-options";
 export const DEMO_LEVEL_DURATION_MS = 30000;
 export const DEMO_LEVEL_FADE_MS = 1000;
 export const LEVEL_INTRO_DURATION_MS = 5000;
-export const TIME_WARP_DURATION_MS = 3400;
+export const TIME_WARP_DELAY_MS = 3500;
 const gameFps = 50;
 const demoLevelDurationFrames = Math.max(
   1,
@@ -48,9 +49,9 @@ const levelIntroDurationFrames = Math.max(
   1,
   Math.round((LEVEL_INTRO_DURATION_MS / 1000) * gameFps)
 );
-const timeWarpDurationFrames = Math.max(
+const timeWarpDelayFrames = Math.max(
   1,
-  Math.round((TIME_WARP_DURATION_MS / 1000) * gameFps)
+  Math.round((TIME_WARP_DELAY_MS / 1000) * gameFps)
 );
 const playerRotationStep = 360 / player.rotationFrameCount;
 
@@ -328,7 +329,7 @@ export class TimePilot {
         return;
       }
 
-      if (this.isTimeWarpActive()) {
+      if (this.isTimeWarpEffectActive()) {
         this.clearIntroControls();
         return;
       }
@@ -352,7 +353,7 @@ export class TimePilot {
         return;
       }
 
-      if (this.isTimeWarpActive()) {
+      if (this.isTimeWarpEffectActive()) {
         return;
       }
 
@@ -368,7 +369,7 @@ export class TimePilot {
         return;
       }
 
-      if (this.isTimeWarpActive()) {
+      if (this.isTimeWarpEffectActive()) {
         return;
       }
 
@@ -392,7 +393,7 @@ export class TimePilot {
         return;
       }
 
-      if (this.isTimeWarpActive()) {
+      if (this.isTimeWarpEffectActive()) {
         return;
       }
 
@@ -404,8 +405,15 @@ export class TimePilot {
         return;
       }
 
-      if (this.isTimeWarpActive()) {
-        this.completeTimeWarpTransition();
+      if (this.context._timeWarpTransition) {
+        this.updateTimeWarpTransition();
+
+        if (this.isTimeWarpEffectActive()) {
+          return;
+        }
+      }
+
+      if (this.isTimeWarpEffectActive()) {
         return;
       }
 
@@ -546,21 +554,50 @@ export class TimePilot {
     const lives = this.context._player.getData("lives") ?? 3;
     const nextLevel = this.getNextEnabledLevel();
     const startedAtTick = this.context._gameTicker.getTicks();
+    const effectStartedAtTick = startedAtTick + timeWarpDelayFrames;
 
     this.timeWarpSound.stop();
     this.timeWarpSound.play();
 
     this.context._timeWarpTransition = {
-      endsAtTick: startedAtTick + timeWarpDurationFrames,
+      effectStartedAtTick,
+      endsAtTick: effectStartedAtTick + timeWarpAnimationTicks,
       lives,
       nextLevel,
       score,
+      screenCleared: false,
       startedAtTick,
     };
     this.context._levelProgress.bossDefeated = false;
+  };
+
+  private updateTimeWarpTransition = (): void => {
+    const transition = this.context._timeWarpTransition;
+
+    if (!transition) {
+      return;
+    }
+
+    const ticks = this.context._gameTicker.getTicks();
+
+    if (ticks >= transition.effectStartedAtTick && !transition.screenCleared) {
+      this.prepareTimeWarpEffect();
+    }
+
+    this.completeTimeWarpTransition();
+  };
+
+  private prepareTimeWarpEffect = (): void => {
+    const transition = this.context._timeWarpTransition;
+
+    if (!transition) {
+      return;
+    }
+
     this.context._enemies.clearAll();
     this.context._bullets.clearAll();
     this.context._enemyBullets.clearAll();
+    this.context._props.clearAll();
     this.context._bonuses.clearAll();
     this.context._player.setData("posX", 0);
     this.context._player.setData("posY", 0);
@@ -568,6 +605,7 @@ export class TimePilot {
     this.context._player.setData("deathTick", false);
     this.context._player.stopShooting();
     this.context._gameArena.updatePosition(0, 0);
+    transition.screenCleared = true;
   };
 
   private completeTimeWarpTransition = (): void => {
@@ -685,8 +723,13 @@ export class TimePilot {
     );
   };
 
-  private isTimeWarpActive = (): boolean => {
-    return !!this.context._timeWarpTransition;
+  private isTimeWarpEffectActive = (): boolean => {
+    const transition = this.context._timeWarpTransition;
+
+    return (
+      !!transition &&
+      this.context._gameTicker.getTicks() >= transition.effectStartedAtTick
+    );
   };
 
   private clearIntroControls = (): void => {

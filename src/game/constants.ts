@@ -627,7 +627,7 @@ const timePilotConstants: TimePilotConstants = {
       src: assetPath("sounds/next_level.wav"),
     },
     timeWarp: {
-      src: assetPath("sounds/timewarp.wav"),
+      src: assetPath("sounds/player/timewarp.wav"),
     },
     waveStart: {
       src: assetPath("sounds/wave_start.wav"),

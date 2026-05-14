@@ -44,7 +44,10 @@
 - Updated level 2 fighter sprite handling for the refreshed three-row directional animation and death-flash sheet.
 - Updated level 4 basic enemy sprite handling for the refreshed three-row directional animation and death-flash sheet.
 - Updated level 5 basic enemy sprite handling for the refreshed two-row animation and death-flash sheet.
-- Added the mirrored player time-warp transition effect before advancing to the next era.
+- Updated the player sprite handling for the white and black time-warp animation layers.
+- Added the six-second player time-warp sound effect.
+- Added the delayed four-frame player time-warp transition effect before advancing to the next era, timed to six seconds total.
+- Added a Storybook preview for the delayed four-frame player time-warp effect.
 
 ## 🧭 Menu, Zoom, and Debug UX
 

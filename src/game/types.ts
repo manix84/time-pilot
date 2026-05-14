@@ -266,9 +266,11 @@ export interface LevelProgressState {
 
 export interface TimeWarpTransitionState {
   endsAtTick: number;
+  effectStartedAtTick: number;
   lives: number;
   nextLevel: number;
   score: number;
+  screenCleared: boolean;
   startedAtTick: number;
 }
 

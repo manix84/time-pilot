@@ -1,29 +1,35 @@
 import { assetPath } from "../asset-path";
-import { levels } from "../constants";
+import { levels, player } from "../constants";
 import { getLevelIntroText } from "../i18n";
+import {
+  getTimeWarpFrameForDistance,
+  getTimeWarpRenderState,
+  timeWarpAnimationTicks,
+  timeWarpFrameWidth,
+  timeWarpFrameHeight,
+  timeWarpRenderScale,
+  type TimeWarpPlayerMode,
+} from "../time-warp";
 import { getGameScale } from "../ui-scale";
 import type { GameDataStore, RenderingSystemInstance } from "../types";
 
-const timeWarpFrameCount = 8;
-const timeWarpFrameDurationTicks = 18;
-const timeWarpFrameHeight = 16;
-const timeWarpFrameWidth = 8;
-const timeWarpFlashTicks = 3;
-const timeWarpRenderScale = 2;
+const playerRotationStep = 360 / player.rotationFrameCount;
 
 class RenderingSystem implements RenderingSystemInstance {
   private _context: GameDataStore;
+  private _playerSprite = new Image();
   private _timeWarpSprite = new Image();
 
   constructor(context: GameDataStore) {
     this._context = context;
+    this._playerSprite.src = player.sprite.src;
     this._timeWarpSprite.src = assetPath("sprites/player/timewarp.png");
   }
 
   renderFrame = (): void => {
     this._context._gameArena.clear();
 
-    if (this._context._timeWarpTransition) {
+    if (this.isTimeWarpEffectActive()) {
       this.renderTimeWarpTransition();
       this._context._menus.render();
       return;
@@ -75,7 +81,6 @@ class RenderingSystem implements RenderingSystemInstance {
     context.save();
     context.imageSmoothingEnabled = false;
     context.scale(gameScale, gameScale);
-    this._context._player.render();
     this.renderTimeWarpEffect(context);
     context.restore();
   };
@@ -88,29 +93,60 @@ class RenderingSystem implements RenderingSystemInstance {
     }
 
     const elapsedTicks =
-      this._context._gameTicker.getTicks() - transition.startedAtTick;
-
-    if (elapsedTicks < timeWarpFlashTicks) {
-      context.save();
-      context.fillStyle = "#FFF";
-      context.fillRect(
-        -(this._context._gameArena.width / 2),
-        -(this._context._gameArena.height / 2),
-        this._context._gameArena.width,
-        this._context._gameArena.height
-      );
-      context.restore();
-      return;
-    }
-
-    const frame = Math.floor(
-      (elapsedTicks - timeWarpFlashTicks) / timeWarpFrameDurationTicks
+      this._context._gameTicker.getTicks() - transition.effectStartedAtTick;
+    const renderWidth = timeWarpFrameWidth * timeWarpRenderScale;
+    const visibleWidth = this._context._gameArena.width / getGameScale(
+      this._context._gameArena.width,
+      this._context._gameArena.height
     );
+    const halfCellCount = Math.ceil(visibleWidth / 2 / renderWidth);
+    const renderState = getTimeWarpRenderState(elapsedTicks, halfCellCount);
 
-    if (frame < 0 || frame >= timeWarpFrameCount) {
+    if (!renderState) {
       return;
     }
 
+    if (renderState.warpVisible) {
+      this.renderTimeWarpStrip(context, renderState.halfCells, renderState.layers);
+
+      if (renderState.centerFrame !== undefined) {
+        this.renderTimeWarpFrame(context, renderState.centerFrame, -renderWidth / 2);
+      }
+    }
+
+    this.renderTimeWarpPlayer(context, renderState.playerMode);
+  };
+
+  private renderTimeWarpStrip = (
+    context: CanvasRenderingContext2D,
+    halfCells: number,
+    layers: readonly number[]
+  ): void => {
+    if (halfCells <= 0 || layers.length === 0) {
+      return;
+    }
+
+    const renderWidth = timeWarpFrameWidth * timeWarpRenderScale;
+    const renderHeight = timeWarpFrameHeight * timeWarpRenderScale;
+
+    for (let distance = halfCells; distance >= 1; distance -= 1) {
+      const frame = getTimeWarpFrameForDistance(distance, layers);
+      this.renderTimeWarpFrame(context, frame, -distance * renderWidth);
+    }
+
+    for (let distance = 1; distance <= halfCells; distance += 1) {
+      const frame = getTimeWarpFrameForDistance(distance, layers);
+      this.renderTimeWarpFrame(context, frame, (distance - 1) * renderWidth);
+    }
+
+    context.imageSmoothingEnabled = false;
+  };
+
+  private renderTimeWarpFrame = (
+    context: CanvasRenderingContext2D,
+    frame: number,
+    posX: number
+  ): void => {
     const renderWidth = timeWarpFrameWidth * timeWarpRenderScale;
     const renderHeight = timeWarpFrameHeight * timeWarpRenderScale;
     const sourceX = frame * timeWarpFrameWidth;
@@ -121,26 +157,54 @@ class RenderingSystem implements RenderingSystemInstance {
       0,
       timeWarpFrameWidth,
       timeWarpFrameHeight,
-      -renderWidth,
+      posX,
       -renderHeight / 2,
       renderWidth,
       renderHeight
     );
+  };
 
-    context.save();
-    context.scale(-1, 1);
+  private renderTimeWarpPlayer = (
+    context: CanvasRenderingContext2D,
+    mode: TimeWarpPlayerMode
+  ): void => {
+    if (mode === "hidden") {
+      return;
+    }
+
+    const heading = ((this._context._player.getData("heading") ?? 90) + 360) % 360;
+    const frame =
+      Math.round(((heading + 270) % 360) / playerRotationStep) %
+      player.rotationFrameCount;
+    const layer = mode === "white" ? 1 : mode === "black" ? 2 : 0;
+    const sourceX = player.spriteFrameAxis === "y" ? 0 : frame * player.frameWidth;
+    const sourceY =
+      player.spriteFrameAxis === "y"
+        ? frame * player.frameHeight
+        : layer * player.frameHeight;
+
     context.drawImage(
-      this._timeWarpSprite,
+      this._playerSprite,
       sourceX,
-      0,
-      timeWarpFrameWidth,
-      timeWarpFrameHeight,
-      -renderWidth,
-      -renderHeight / 2,
-      renderWidth,
-      renderHeight
+      sourceY,
+      player.frameWidth,
+      player.frameHeight,
+      -player.width / 2,
+      -player.height / 2,
+      player.width,
+      player.height
     );
-    context.restore();
+  };
+
+  private isTimeWarpEffectActive = (): boolean => {
+    const transition = this._context._timeWarpTransition;
+
+    return (
+      !!transition &&
+      this._context._gameTicker.getTicks() >= transition.effectStartedAtTick &&
+      this._context._gameTicker.getTicks() <
+        transition.effectStartedAtTick + timeWarpAnimationTicks
+    );
   };
 
   private renderLevelIntroText = (): void => {
