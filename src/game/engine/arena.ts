@@ -16,7 +16,7 @@ type CanvasWithDebugGrid = HTMLCanvasElement & {
   stroke?: CanvasRenderingContext2D["stroke"];
   strokeStyle?: string;
 };
-type FullscreenCanvas = HTMLCanvasElement & {
+type FullscreenElement = HTMLElement & {
   mozRequestFullScreen?: () => void;
   webkitRequestFullscreen?: (keyboardInput?: number) => void;
 };
@@ -143,7 +143,7 @@ class GameArena implements GameArenaInstance {
   };
 
   enterFullScreen = (): void => {
-    const element = this._canvas as FullscreenCanvas;
+    const element = this._containerElement as FullscreenElement;
     if (element.requestFullscreen) {
       element.requestFullscreen();
     } else if (element.mozRequestFullScreen) {
@@ -190,7 +190,7 @@ class GameArena implements GameArenaInstance {
 
   canToggleFullScreen = (): boolean => {
     const doc = document as FullscreenDocument;
-    const element = this._canvas as FullscreenCanvas;
+    const element = this._containerElement as FullscreenElement;
     const canExitFullScreen = Boolean(
       doc.exitFullscreen ||
         doc.cancelFullScreen ||

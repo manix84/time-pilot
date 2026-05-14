@@ -59,10 +59,12 @@ const fr: typeof en = {
     controlType: "Type de controle",
     current: "Selectionne",
     controls: "Commandes",
+    customCrtOptions: "Custom CRT Options",
     debug: "Debug",
     directional: "Directionnel",
     effectsVolume: "Volume des effets",
     fire: "Tir",
+    filters: "Filters",
     fullScreen: "Plein ecran",
     gameZoom: "Zoom jeu",
     levelShowcase: {
@@ -86,6 +88,7 @@ const fr: typeof en = {
     options: "Options",
     pressAKey: "Appuyez sur une touche",
     remapControls: "Reconfigurer",
+    resetFilters: "Reset Filters",
     rotate: "Rotation",
     selectLevel: "Choisir niveau",
     showControlsOverlay: "Afficher commandes",
@@ -96,6 +99,7 @@ const fr: typeof en = {
     soon: "Bientot",
     start: "Demarrer",
     uiZoom: "Zoom UI",
+    videoFilterMode: "Video Filter Mode",
   },
 };
 

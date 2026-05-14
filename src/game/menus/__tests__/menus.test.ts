@@ -47,6 +47,7 @@ describe("menu definitions", () => {
     userOptions.setOption("gameZoom", 100);
     userOptions.setOption("masterVolume", 10);
     userOptions.setOption("uiZoom", 100);
+    userOptions.setOption("videoFilterMode", "arcade-crt");
     userOptions.setKeyboardBinding("up", [38, 87]);
     window.history.replaceState(null, "", "/");
   });
@@ -210,7 +211,7 @@ describe("menu definitions", () => {
     menus.next();
     menus.activate();
 
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i < 6; i++) {
       menus.next();
     }
 
@@ -249,7 +250,7 @@ describe("menu definitions", () => {
     lockedMenus.showStart();
     lockedMenus.next();
     lockedMenus.activate();
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i < 6; i++) {
       lockedMenus.next();
     }
 
@@ -265,7 +266,7 @@ describe("menu definitions", () => {
     menus.next();
     menus.activate();
 
-    for (let i = 0; i < 6; i++) {
+    for (let i = 0; i < 7; i++) {
       menus.next();
     }
 
@@ -285,6 +286,44 @@ describe("menu definitions", () => {
 
     menus.activate();
     expect(userOptions.debug.showControlsOverlay).toBe(true);
+  });
+
+  it("opens filters, changes presets, edits custom values, and resets", () => {
+    const arena = createArena();
+    const menus = new Menus(arena, { start: vi.fn() });
+
+    menus.showStart();
+    menus.next();
+    menus.activate();
+
+    for (let i = 0; i < 5; i++) {
+      menus.next();
+    }
+
+    menus.activate();
+    menus.render();
+    expect(arena.renderText).toHaveBeenCalledWith(
+      "Video Filter Mode",
+      expect.any(Number),
+      expect.any(Number),
+      expect.objectContaining({ align: "left" })
+    );
+
+    menus.adjust(-1);
+    expect(userOptions.videoFilterMode).toBe("off");
+
+    menus.next();
+    menus.activate();
+    menus.adjust(1);
+    expect(userOptions.videoFilterMode).toBe("custom");
+    expect(userOptions.filterSettings.scanlines).toBe(36);
+
+    menus.captureKey(27);
+    menus.next();
+    menus.next();
+    menus.activate();
+    expect(userOptions.videoFilterMode).toBe("arcade-crt");
+    expect(userOptions.filterSettings.scanlines).toBe(35);
   });
 
   it("adjusts UI and game zoom from the options menu", () => {
@@ -343,7 +382,7 @@ describe("menu definitions", () => {
 
     menus.next();
     menus.activate();
-    for (let i = 0; i < 8; i++) {
+    for (let i = 0; i < 9; i++) {
       menus.next();
     }
     menus.activate();
@@ -642,7 +681,7 @@ describe("menu definitions", () => {
       expect.objectContaining({ align: "center" })
     );
 
-    for (let i = 0; i < 9; i++) {
+    for (let i = 0; i < 10; i++) {
       menus.next();
     }
 
@@ -959,7 +998,7 @@ describe("menu definitions", () => {
     menus.next();
     menus.activate();
 
-    for (let i = 0; i < 8; i++) {
+    for (let i = 0; i < 9; i++) {
       menus.next();
     }
 
@@ -979,7 +1018,7 @@ describe("menu definitions", () => {
     menus.next();
     menus.activate();
 
-    for (let i = 0; i < 7; i++) {
+    for (let i = 0; i < 8; i++) {
       menus.next();
     }
 
@@ -1011,7 +1050,7 @@ describe("menu definitions", () => {
     menus.next();
     menus.activate();
 
-    for (let i = 0; i < 8; i++) {
+    for (let i = 0; i < 9; i++) {
       menus.next();
     }
 

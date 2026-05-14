@@ -94,18 +94,17 @@ describe("engine modules", () => {
     });
 
     const arena = new GameArena(host);
-    const canvas = arena.getElement();
-    Object.defineProperty(canvas, "requestFullscreen", {
+    Object.defineProperty(host, "requestFullscreen", {
       configurable: true,
       value: vi.fn(() => {
-        fullscreenElement = canvas;
+        fullscreenElement = host;
         document.dispatchEvent(new Event("fullscreenchange"));
       }),
     });
 
     arena.toggleFullScreen();
 
-    expect(canvas.requestFullscreen).toHaveBeenCalled();
+    expect(host.requestFullscreen).toHaveBeenCalled();
     expect(arena.isFullScreen()).toBe(true);
 
     fullscreenElement = null;
@@ -114,7 +113,7 @@ describe("engine modules", () => {
     expect(arena.isFullScreen()).toBe(false);
 
     arena.toggleFullScreen();
-    expect(canvas.requestFullscreen).toHaveBeenCalledTimes(2);
+    expect(host.requestFullscreen).toHaveBeenCalledTimes(2);
 
     arena.toggleFullScreen();
     expect(document.exitFullscreen).toHaveBeenCalledTimes(1);
@@ -144,7 +143,7 @@ describe("engine modules", () => {
     );
 
     const arena = new GameArena(host);
-    Object.defineProperty(arena.getElement(), "requestFullscreen", {
+    Object.defineProperty(host, "requestFullscreen", {
       configurable: true,
       value: vi.fn(),
     });

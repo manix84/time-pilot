@@ -97,6 +97,17 @@ export interface ControllerCommands {
 }
 
 export type ControllerType = "keyboard1" | "keyboard2";
+export type {
+  FilterMode,
+  FilterRuntimeBoosts,
+  FilterSettingKey,
+  FilterSettings,
+} from "./filter-settings";
+import type {
+  FilterMode,
+  FilterSettingKey,
+  FilterSettings,
+} from "./filter-settings";
 export type GameLanguage = "de" | "en" | "es" | "fr" | "it" | "nl" | "ro";
 export type ControlInputName =
   | "down"
@@ -686,6 +697,7 @@ export interface UserOptions {
   controllerType: ControllerType;
   gameZoom: number;
   gamepadEnabled: boolean;
+  filterSettings: FilterSettings;
   keyboardBindings: KeyboardBindings;
   language: GameLanguage;
   masterVolume: number;
@@ -700,5 +712,7 @@ export interface UserOptions {
     key: K,
     value: UserOptions["debug"][K]
   ) => void;
+  setFilterSetting: (key: FilterSettingKey, value: number) => void;
+  videoFilterMode: FilterMode;
   setOption: <K extends keyof UserOptions>(key: K, value: UserOptions[K]) => void;
 }

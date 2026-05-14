@@ -1,10 +1,18 @@
 /* Converted from TimePilot.userOptions.js (AMD) to ESM TypeScript. */
 import type {
   ControllerType,
+  FilterMode,
   GameLanguage,
   KeyboardBindings,
   UserOptions,
 } from "./types";
+import {
+  defaultCustomFilterSettings,
+  defaultFilterMode,
+  filterModes,
+  normalizeFilterIntensity,
+  normalizeFilterSettings,
+} from "./filter-settings";
 
 const supportedLanguages: GameLanguage[] = [
   "en",
@@ -29,11 +37,13 @@ type PersistedUserOptions = Pick<
   | "effectsVolume"
   | "gamepadEnabled"
   | "gameZoom"
+  | "filterSettings"
   | "keyboardBindings"
   | "language"
   | "masterVolume"
   | "musicVolume"
   | "uiZoom"
+  | "videoFilterMode"
 >;
 
 const userOptionsStorageKey = "timePilot.userOptions";
@@ -66,12 +76,14 @@ const defaultPersistedOptions: PersistedUserOptions = {
   controllerType: "keyboard1" as ControllerType,
   gameZoom: zoomDefaultPercent,
   gamepadEnabled: true,
+  filterSettings: defaultCustomFilterSettings,
   keyboardBindings: defaultKeyboardBindings,
   language: "en",
   masterVolume: 10,
   musicVolume: 8,
   effectsVolume: 8,
   uiZoom: zoomDefaultPercent,
+  videoFilterMode: defaultFilterMode,
 };
 
 const normalizeZoomOption = (value: unknown): number => {
@@ -157,11 +169,19 @@ const storedOptions = readStoredOptions();
 const storedLanguage = supportedLanguages.includes(storedOptions.language as GameLanguage)
   ? storedOptions.language as GameLanguage
   : defaultPersistedOptions.language;
+const storedFilterMode = filterModes.includes(storedOptions.videoFilterMode as FilterMode)
+  ? storedOptions.videoFilterMode as FilterMode
+  : defaultPersistedOptions.videoFilterMode;
+
+const dispatchUserOptionsChanged = (): void => {
+  window.dispatchEvent(new CustomEvent("timePilot:userOptionsChanged"));
+};
 
 const writeUserOptions = (): void => {
   const storage = getOptionsStorage();
 
   if (!storage) {
+    dispatchUserOptionsChanged();
     return;
   }
 
@@ -175,16 +195,20 @@ const writeUserOptions = (): void => {
         effectsVolume: userOptions.effectsVolume,
         gamepadEnabled: userOptions.gamepadEnabled,
         gameZoom: userOptions.gameZoom,
+        filterSettings: userOptions.filterSettings,
         keyboardBindings: userOptions.keyboardBindings,
         language: userOptions.language,
         masterVolume: userOptions.masterVolume,
         musicVolume: userOptions.musicVolume,
         uiZoom: userOptions.uiZoom,
+        videoFilterMode: userOptions.videoFilterMode,
       } satisfies PersistedUserOptions)
     );
   } catch {
     // Persistence is best-effort; gameplay should not depend on storage.
   }
+
+  dispatchUserOptionsChanged();
 };
 
 var userOptions: UserOptions = {
@@ -275,6 +299,8 @@ var userOptions: UserOptions = {
   gamepadEnabled:
     storedOptions.gamepadEnabled ?? defaultPersistedOptions.gamepadEnabled,
 
+  filterSettings: normalizeFilterSettings(storedOptions.filterSettings),
+
   keyboardBindings: normalizeKeyboardBindings(storedOptions.keyboardBindings),
 
   language: storedLanguage,
@@ -282,6 +308,7 @@ var userOptions: UserOptions = {
   musicVolume: storedOptions.musicVolume ?? defaultPersistedOptions.musicVolume,
   effectsVolume: storedOptions.effectsVolume ?? defaultPersistedOptions.effectsVolume,
   uiZoom: normalizeZoomOption(storedOptions.uiZoom),
+  videoFilterMode: storedFilterMode,
 
   /**
    * Set options in this object (userOptions), and store it so that the user doesn't have to set options each time
@@ -299,6 +326,12 @@ var userOptions: UserOptions = {
 
   setDebugOption: (key, value) => {
     userOptions.debug[key] = value;
+    writeUserOptions();
+  },
+
+  setFilterSetting: (key, value) => {
+    userOptions.filterSettings[key] = normalizeFilterIntensity(value);
+    userOptions.videoFilterMode = "custom";
     writeUserOptions();
   },
 };

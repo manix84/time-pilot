@@ -1,5 +1,14 @@
 /* Converted from TimePilot.Menu.js (AMD) to ESM TypeScript. */
 import { levels, player } from "./constants";
+import {
+  defaultFilterMode,
+  filterModeLabels,
+  filterModes,
+  filterSettingKeys,
+  filterSettingLabels,
+  filterPresets,
+  normalizeFilterIntensity,
+} from "./filter-settings";
 import i18n, {
   availableLanguages,
   getCurrentLanguage,
@@ -35,6 +44,8 @@ type MenuScreen =
   | "start"
   | "options"
   | "controls"
+  | "filters"
+  | "filter-custom"
   | "debug"
   | "language"
   | "level";
@@ -669,6 +680,10 @@ class Menus implements MenuSystemInstance {
       this._items = this._createStartItems();
     } else if (this._screen === "options") {
       this._items = this._createOptionsItems();
+    } else if (this._screen === "filters") {
+      this._items = this._createFilterItems();
+    } else if (this._screen === "filter-custom") {
+      this._items = this._createCustomFilterItems();
     } else if (this._screen === "controls") {
       this._items = this._createControlsItems();
     } else if (this._screen === "language") {
@@ -703,8 +718,8 @@ class Menus implements MenuSystemInstance {
 
   private _createOptionsItems = (): MenuItem[] => {
     const showControlType = this._shouldShowControlTypeOption();
-    const remapControlsY = showControlType ? 324 : 282;
-    const backY = showControlType ? 374 : 332;
+    const remapControlsY = showControlType ? 366 : 324;
+    const backY = showControlType ? 416 : 374;
     const items = [
       this._createItem(i18n.menu.masterVolume, "slider", -54, {
         getValue: () => `${userOptions.masterVolume}`,
@@ -733,7 +748,11 @@ class Menus implements MenuSystemInstance {
         onSetValue: (value) => this._setGameZoom(this._getZoomValueFromStep(value)),
         sliderSteps: this._getZoomSliderSteps(),
       }),
-      this._createItem(i18n.menu.fullScreen, "toggle", 156, {
+      this._createItem(i18n.menu.filters, "action", 156, {
+        getValue: () => filterModeLabels[userOptions.videoFilterMode],
+        action: () => this._goToScreen("filters"),
+      }),
+      this._createItem(i18n.menu.fullScreen, "toggle", 198, {
         disabled:
           this._gameArena.isFullScreenLocked() ||
           !this._gameArena.canToggleFullScreen(),
@@ -744,9 +763,9 @@ class Menus implements MenuSystemInstance {
       this._createToggleItem(
         i18n.menu.showControlsOverlay,
         "showControlsOverlay",
-        198
+        240
       ),
-      this._createItem(i18n.menu.language, "action", 240, {
+      this._createItem(i18n.menu.language, "action", 282, {
         getValue: () => getLanguageName(userOptions.language),
         languageFlag: userOptions.language,
         action: () => this._goToScreen("language"),
@@ -755,7 +774,7 @@ class Menus implements MenuSystemInstance {
 
     if (showControlType) {
       items.push(
-        this._createItem(i18n.menu.controlType, "enum", 282, {
+        this._createItem(i18n.menu.controlType, "enum", 324, {
           getValue: () =>
             userOptions.controllerType === "keyboard1"
               ? i18n.menu.directional
@@ -781,6 +800,51 @@ class Menus implements MenuSystemInstance {
     const url = new URL(window.location.href);
 
     return url.searchParams.get("showControlType") === "true";
+  };
+
+  private _createFilterItems = (): MenuItem[] => {
+    return [
+      this._createItem(i18n.menu.videoFilterMode, "enum", -54, {
+        getValue: () => filterModeLabels[userOptions.videoFilterMode],
+        onAdjust: (direction) => this._adjustFilterMode(direction),
+      }),
+      this._createItem(i18n.menu.customCrtOptions, "action", -12, {
+        getValue: () =>
+          userOptions.videoFilterMode === "custom" ? i18n.menu.on : i18n.menu.off,
+        action: () => this._goToScreen("filter-custom"),
+      }),
+      this._createItem(i18n.menu.resetFilters, "action", 30, {
+        action: () => this._resetFilters(),
+      }),
+      this._createItem(i18n.menu.back, "action", 80, {
+        action: () => this._goBack(),
+      }),
+    ];
+  };
+
+  private _createCustomFilterItems = (): MenuItem[] => {
+    const items = filterSettingKeys.map((key, index) =>
+      this._createItem(filterSettingLabels[key], "slider", -54 + index * 42, {
+        getValue: () => `${userOptions.filterSettings[key]}`,
+        onAdjust: (direction) =>
+          this._setFilterSetting(key, userOptions.filterSettings[key] + direction),
+        onSetValue: (value) => this._setFilterSetting(key, value),
+        sliderSteps: 100,
+      })
+    );
+
+    items.push(
+      this._createItem(
+        i18n.menu.back,
+        "action",
+        -4 + filterSettingKeys.length * 42,
+        {
+          action: () => this._goBack(),
+        }
+      )
+    );
+
+    return items;
   };
 
   private _createControlsItems = (): MenuItem[] => {
@@ -2358,6 +2422,14 @@ class Menus implements MenuSystemInstance {
       return i18n.menu.controls;
     }
 
+    if (this._screen === "filters") {
+      return i18n.menu.filters;
+    }
+
+    if (this._screen === "filter-custom") {
+      return i18n.menu.customCrtOptions;
+    }
+
     if (this._screen === "debug") {
       return i18n.menu.debug;
     }
@@ -2434,6 +2506,26 @@ class Menus implements MenuSystemInstance {
       controllerTypes.length;
 
     userOptions.setOption("controllerType", controllerTypes[nextIndex]);
+  };
+
+  private _adjustFilterMode = (direction: -1 | 1): void => {
+    const currentIndex = filterModes.indexOf(userOptions.videoFilterMode);
+    const nextIndex =
+      (currentIndex + direction + filterModes.length) % filterModes.length;
+
+    userOptions.setOption("videoFilterMode", filterModes[nextIndex]);
+  };
+
+  private _setFilterSetting = (
+    key: keyof typeof userOptions.filterSettings,
+    value: number
+  ): void => {
+    userOptions.setFilterSetting(key, normalizeFilterIntensity(value));
+  };
+
+  private _resetFilters = (): void => {
+    userOptions.setOption("filterSettings", { ...filterPresets["arcade-crt"] });
+    userOptions.setOption("videoFilterMode", defaultFilterMode);
   };
 
   private _getSelectedLevelLabel = (): string => {
