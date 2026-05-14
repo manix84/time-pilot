@@ -13,6 +13,7 @@ class TouchController implements Controller {
   private readonly _deadZone = 18;
   private readonly _inputState?: ControlInputState;
   private _activeTouchId: number | null = null;
+  private _touchOrigin: Coordinates | null = null;
 
   constructor(
     canvas: HTMLCanvasElement,
@@ -57,6 +58,7 @@ class TouchController implements Controller {
 
     this._activeTouchId = touch.identifier;
     const point = this.getCanvasPoint(touch);
+    this._touchOrigin = point;
 
     if (this._controllerInterface.isMenuActive?.()) {
       this._controllerInterface.handlePointer?.({
@@ -70,7 +72,7 @@ class TouchController implements Controller {
     if (this._inputState) {
       this._inputState.fire = true;
     }
-    this.updateHeadingFromPoint(point);
+    this.updateHeadingFromPoint(this.getRelativePoint(point));
   };
 
   private handleTouchMove = (event: TouchEvent): void => {
@@ -91,7 +93,7 @@ class TouchController implements Controller {
       return;
     }
 
-    this.updateHeadingFromPoint(point);
+    this.updateHeadingFromPoint(this.getRelativePoint(point));
   };
 
   private handleTouchEnd = (event: TouchEvent): void => {
@@ -116,6 +118,7 @@ class TouchController implements Controller {
       this._inputState.fire = false;
     }
     this._activeTouchId = null;
+    this._touchOrigin = null;
     this.clearDirectionState();
   };
 
@@ -137,6 +140,17 @@ class TouchController implements Controller {
     return {
       posX: (touch.clientX - bounds.left) * scaleX - this._canvas.width / 2,
       posY: (touch.clientY - bounds.top) * scaleY - this._canvas.height / 2,
+    };
+  };
+
+  private getRelativePoint = (point: Coordinates): Coordinates => {
+    if (!this._touchOrigin) {
+      return { posX: 0, posY: 0 };
+    }
+
+    return {
+      posX: point.posX - this._touchOrigin.posX,
+      posY: point.posY - this._touchOrigin.posY,
     };
   };
 

@@ -476,21 +476,21 @@ describe("controller modules", () => {
     });
 
     const touch = new TouchController(canvas, controls, inputState);
-    dispatchTouch(canvas, "touchstart", { clientX: 202, clientY: 151 });
+    dispatchTouch(canvas, "touchstart", { clientX: 300, clientY: 200 });
     expect(controls.rotateToHeading).not.toHaveBeenCalled();
-
-    dispatchTouch(canvas, "touchmove", { clientX: 200, clientY: 50 });
-    expect(controls.rotateToHeading).toHaveBeenCalledWith(0);
     expect(controls.startShooting).toHaveBeenCalled();
     expect(inputState.fire).toBe(true);
+
+    dispatchTouch(canvas, "touchmove", { clientX: 300, clientY: 120 });
+    expect(controls.rotateToHeading).toHaveBeenCalledWith(0);
     expect(inputState.up).toBe(true);
     expect(inputState.activeController).toBe("touch");
 
-    dispatchTouch(canvas, "touchmove", { clientX: 300, clientY: 150 });
+    dispatchTouch(canvas, "touchmove", { clientX: 380, clientY: 200 });
     expect(controls.rotateToHeading).toHaveBeenCalledWith(90);
     expect(inputState.right).toBe(true);
 
-    dispatchTouch(canvas, "touchend", { clientX: 300, clientY: 150 });
+    dispatchTouch(canvas, "touchend", { clientX: 380, clientY: 200 });
     expect(controls.stopShooting).toHaveBeenCalled();
     expect(inputState.fire).toBe(false);
     expect(inputState.right).toBe(false);
