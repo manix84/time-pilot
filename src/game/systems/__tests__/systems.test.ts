@@ -213,6 +213,7 @@ const createContext = ({
     kill: vi.fn(() => {
       enemy.isAlive = false;
     }),
+    destroy: vi.fn(),
   };
   const bonus: BonusInstance = {
     removeMe: false,

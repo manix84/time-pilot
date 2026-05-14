@@ -246,6 +246,7 @@ export interface EnemyInstance {
   reposition: () => void;
   render: () => void;
   kill: () => void;
+  destroy: () => void;
 }
 
 export interface EnemySpawnOptions {
@@ -532,6 +533,7 @@ export interface PlayerConfig {
 export interface EnemyConfig {
   animationFrames?: number;
   animationRows?: number;
+  ambientSound?: SoundAsset;
   bossDamageFrames?: number;
   countsTowardBoss: boolean;
   deathFlashFrameY?: number;

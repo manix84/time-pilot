@@ -47,6 +47,7 @@
 - Updated the player sprite handling for the white and black time-warp animation layers.
 - Added the six-second player time-warp sound effect.
 - Added optional time-warp sound playback to the Storybook preview.
+- Added looping boss sound effects for levels 1-4, with positional audio support where the browser allows it.
 - Added the delayed four-frame player time-warp transition effect before advancing to the next era, timed to six seconds total.
 - Added a Storybook preview for the delayed four-frame player time-warp effect.
 

@@ -125,6 +125,12 @@ const bossEnemy = (
   bossDamageFrames: 4,
   countsTowardBoss: false,
   deathValue: scoring.boss,
+  ambientSound:
+    level <= 4
+      ? {
+        src: assetPath(`sounds/enemies/boss/boss${level}.wav`),
+      }
+      : undefined,
   sprite: {
     src: assetPath(`sprites/enemies/boss/level${level}.png`),
   },
