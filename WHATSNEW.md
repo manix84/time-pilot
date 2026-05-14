@@ -46,6 +46,7 @@
 - Updated level 5 basic enemy sprite handling for the refreshed two-row animation and death-flash sheet.
 - Updated the player sprite handling for the white and black time-warp animation layers.
 - Added the six-second player time-warp sound effect.
+- Added optional time-warp sound playback to the Storybook preview.
 - Added the delayed four-frame player time-warp transition effect before advancing to the next era, timed to six seconds total.
 - Added a Storybook preview for the delayed four-frame player time-warp effect.
 

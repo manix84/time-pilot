@@ -7,6 +7,7 @@ import {
   getTimeWarpFrameForDistance,
   getTimeWarpRenderState,
   timeWarpAnimationTicks,
+  timeWarpDelayMs,
   timeWarpFrameHeight,
   timeWarpFrameWidth,
   timeWarpRenderScale,
@@ -16,13 +17,14 @@ import "./storybook.css";
 
 type TimeWarpSceneProps = {
   frameDurationMs?: number;
+  playSound?: boolean;
   showPlayer?: boolean;
   warpScale?: number;
 };
 
 const flashDurationMs = 0;
 const endBlinkDurationMs = 90;
-const holdDurationMs = 1600;
+const holdDurationMs = 900;
 
 const loadImage = (src: string): HTMLImageElement => {
   const image = new Image();
@@ -146,6 +148,7 @@ const drawWarpStrip = (
 
 const TimeWarpScene = ({
   frameDurationMs = 20,
+  playSound = false,
   showPlayer = true,
   warpScale = 2,
 }: TimeWarpSceneProps) => {
@@ -161,32 +164,48 @@ const TimeWarpScene = ({
 
     const playerSprite = loadImage(constants.player.sprite.src);
     const warpSprite = loadImage(assetPath("sprites/player/timewarp.png"));
+    const timeWarpSound = new Audio(assetPath("sounds/player/timewarp.wav"));
     const sequenceDurationMs =
+      timeWarpDelayMs +
       flashDurationMs +
       timeWarpAnimationTicks * frameDurationMs +
       endBlinkDurationMs +
       holdDurationMs;
     let animationFrame = 0;
+    let lastSoundCycle = -1;
     const startedAt = performance.now();
 
     const render = (): void => {
       const elapsedMs = performance.now() - startedAt;
+      const cycle = Math.floor(elapsedMs / sequenceDurationMs);
       const sequenceMs = elapsedMs % sequenceDurationMs;
       const centerX = canvas.width / 2;
       const centerY = canvas.height / 2;
+
+      if (playSound && cycle !== lastSoundCycle) {
+        lastSoundCycle = cycle;
+        timeWarpSound.currentTime = 0;
+        void timeWarpSound.play().catch(() => {});
+      }
 
       context.imageSmoothingEnabled = false;
       context.clearRect(0, 0, canvas.width, canvas.height);
       drawStarfield(context, canvas.width, canvas.height, elapsedMs / 24);
 
-      if (sequenceMs < flashDurationMs) {
+      if (sequenceMs < timeWarpDelayMs) {
+        if (showPlayer && playerSprite.complete) {
+          drawPlayer(context, playerSprite, centerX, centerY, elapsedMs);
+        }
+      } else if (sequenceMs < timeWarpDelayMs + flashDurationMs) {
         context.fillStyle = "#fff";
         context.fillRect(0, 0, canvas.width, canvas.height);
       } else if (
         sequenceMs <
-        flashDurationMs + timeWarpAnimationTicks * frameDurationMs
+        timeWarpDelayMs + flashDurationMs + timeWarpAnimationTicks * frameDurationMs
       ) {
-        const ticks = Math.floor((sequenceMs - flashDurationMs) / frameDurationMs);
+        const ticks = Math.floor(
+          (sequenceMs - timeWarpDelayMs - flashDurationMs) / frameDurationMs
+        );
         const halfCells = Math.ceil(
           canvas.width / 2 / (timeWarpFrameWidth * warpScale)
         );
@@ -218,7 +237,7 @@ const TimeWarpScene = ({
         if (
           showPlayer &&
           playerSprite.complete &&
-          renderState?.playerMode !== "hidden"
+          renderState
         ) {
           drawPlayer(
             context,
@@ -231,6 +250,7 @@ const TimeWarpScene = ({
         }
       } else if (
         sequenceMs <
+        timeWarpDelayMs +
         flashDurationMs +
           timeWarpAnimationTicks * frameDurationMs +
           endBlinkDurationMs
@@ -244,8 +264,12 @@ const TimeWarpScene = ({
 
     render();
 
-    return () => window.cancelAnimationFrame(animationFrame);
-  }, [frameDurationMs, showPlayer, warpScale]);
+    return () => {
+      window.cancelAnimationFrame(animationFrame);
+      timeWarpSound.pause();
+      timeWarpSound.currentTime = 0;
+    };
+  }, [frameDurationMs, playSound, showPlayer, warpScale]);
 
   return (
     <canvas
@@ -262,6 +286,7 @@ const meta = {
   component: TimeWarpScene,
   args: {
     frameDurationMs: 20,
+    playSound: false,
     showPlayer: true,
     warpScale: 2,
   },
@@ -278,7 +303,12 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const AnimatedSequence: Story = {};
+export const AnimatedSequence: Story = {
+  args: {
+    showPlayer: false,
+    warpScale: 1
+  }
+};
 
 export const WarpOnly: Story = {
   args: {

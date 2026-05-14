@@ -20,7 +20,7 @@ import PropFactory from "./prop-factory";
 import CollisionSystem from "./systems/collision";
 import RenderingSystem from "./systems/rendering";
 import SpawningSystem from "./systems/spawning";
-import { timeWarpAnimationTicks } from "./time-warp";
+import { timeWarpAnimationTicks, timeWarpDelayMs } from "./time-warp";
 import type {
   AssetProgress,
   CollisionSystemInstance,
@@ -35,7 +35,7 @@ import userOptions from "./user-options";
 export const DEMO_LEVEL_DURATION_MS = 30000;
 export const DEMO_LEVEL_FADE_MS = 1000;
 export const LEVEL_INTRO_DURATION_MS = 5000;
-export const TIME_WARP_DELAY_MS = 3500;
+export const TIME_WARP_DELAY_MS = timeWarpDelayMs;
 const gameFps = 50;
 const demoLevelDurationFrames = Math.max(
   1,

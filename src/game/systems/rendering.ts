@@ -168,10 +168,6 @@ class RenderingSystem implements RenderingSystemInstance {
     context: CanvasRenderingContext2D,
     mode: TimeWarpPlayerMode
   ): void => {
-    if (mode === "hidden") {
-      return;
-    }
-
     const heading = ((this._context._player.getData("heading") ?? 90) + 360) % 360;
     const frame =
       Math.round(((heading + 270) % 360) / playerRotationStep) %

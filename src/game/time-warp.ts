@@ -2,6 +2,7 @@ export const timeWarpFrameCount = 4;
 export const timeWarpFrameHeight = 16;
 export const timeWarpFrameWidth = 16;
 export const timeWarpRenderScale = 2;
+export const timeWarpDelayMs = 3500;
 
 const introFlashTicks = 18;
 const expandFrameTicks = 16;
@@ -9,7 +10,7 @@ const centerHoldTicks = 10;
 const vanishHoldTicks = 0;
 const contractTicks = 38;
 
-export type TimeWarpPlayerMode = "normal" | "white" | "black" | "hidden";
+export type TimeWarpPlayerMode = "normal" | "white" | "black";
 
 export type TimeWarpRenderState = {
   centerFrame?: number;
@@ -79,7 +80,7 @@ export const getTimeWarpRenderState = (
     return {
       halfCells,
       layers: [halfCells],
-      playerMode: "normal",
+      playerMode: warpVisible ? "normal" : "white",
       warpVisible,
     };
   }
@@ -94,7 +95,7 @@ export const getTimeWarpRenderState = (
     return {
       halfCells: halfCellCount,
       layers: [halfCellCount, Math.max(1, innerCells)],
-      playerMode: "normal",
+      playerMode: warpVisible ? "normal" : "white",
       warpVisible,
     };
   }
@@ -110,7 +111,7 @@ export const getTimeWarpRenderState = (
     return {
       halfCells: halfCellCount,
       layers: [halfCellCount, frameTwoCells, Math.max(1, frameThreeCells)],
-      playerMode: "normal",
+      playerMode: warpVisible ? "normal" : "white",
       warpVisible,
     };
   }
@@ -134,7 +135,7 @@ export const getTimeWarpRenderState = (
       centerFrame: 3,
       halfCells: halfCellCount,
       layers: createThreeLayerStrip(halfCellCount),
-      playerMode: "hidden",
+      playerMode: "black",
       warpVisible,
     };
   }
@@ -152,7 +153,7 @@ export const getTimeWarpRenderState = (
   return {
     halfCells,
     layers: createThreeLayerStrip(halfCells),
-    playerMode: "hidden",
+    playerMode: "black",
     warpVisible,
   };
 };
