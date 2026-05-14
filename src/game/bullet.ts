@@ -1,6 +1,7 @@
 /* Converted from TimePilot.Bullet.js (AMD) to ESM TypeScript. */
 import userOptions from "./user-options";
 import { drawDebugVectors } from "./debug-vectors";
+import SoundEngine from "./engine/Sound";
 import helpers from "./engine/helpers";
 import palette from "./palette";
 import { getDespawnRadius } from "./viewport";
@@ -16,6 +17,8 @@ import type {
 class Bullet implements BulletInstance {
   private _data: BulletData;
   private _explosionSprite?: HTMLImageElement;
+  private _flightSound?: SoundEngine;
+  private _launchSound?: SoundEngine;
   private _projectileSprite?: HTMLImageElement;
   private _gameArena: GameArenaInstance;
   private _gameTicker: GameDataStore["_gameTicker"];
@@ -38,7 +41,10 @@ class Bullet implements BulletInstance {
     tracksPlayer = false,
     turnRate = 0,
     shootable = false,
-    explosion?: BulletData["explosion"]
+    explosion?: BulletData["explosion"],
+    sound?: BulletData["sound"],
+    flightSound?: BulletData["flightSound"],
+    explosionSound?: BulletData["explosionSound"]
   ) {
     this._gameArena = context._gameArena;
     this._gameTicker = context._gameTicker;
@@ -57,6 +63,9 @@ class Bullet implements BulletInstance {
       turnRate,
       shootable,
       explosion,
+      sound,
+      flightSound,
+      explosionSound,
       explosionTick: false,
     };
 
@@ -68,6 +77,18 @@ class Bullet implements BulletInstance {
     if (explosion) {
       this._explosionSprite = new Image();
       this._explosionSprite.src = explosion.sprite.src;
+    }
+
+    if (sound) {
+      this._launchSound = new SoundEngine(sound.src);
+      this.updateSpatialSoundPosition(this._launchSound);
+      this._launchSound.play();
+    }
+
+    if (flightSound) {
+      this._flightSound = new SoundEngine(flightSound.src);
+      this.updateSpatialSoundPosition(this._flightSound);
+      this._flightSound.loop();
     }
   }
 
@@ -100,14 +121,19 @@ class Bullet implements BulletInstance {
   };
 
   explode = (): void => {
+    if (this._data.explosionTick !== false || this.removeMe) {
+      return;
+    }
+
+    this.stopFlightSound();
+    this.playExplosionSound();
+
     if (!this._data.explosion) {
       this.removeMe = true;
       return;
     }
 
-    if (this._data.explosionTick === false) {
-      this._data.explosionTick = this._gameTicker.getTicks();
-    }
+    this._data.explosionTick = this._gameTicker.getTicks();
   };
 
   private _checkInArena = (): void => {
@@ -165,6 +191,45 @@ class Bullet implements BulletInstance {
     );
 
     this._checkInArena();
+    this.updateSpatialSoundPosition(this._flightSound);
+  };
+
+  private updateSpatialSoundPosition = (sound?: SoundEngine): void => {
+    if (!sound) {
+      return;
+    }
+
+    const player = this._player.getData();
+    const relativeX =
+      this._data.coordinateSpace === "world"
+        ? this._data.posX - player.posX
+        : this._data.posX;
+    const relativeY =
+      this._data.coordinateSpace === "world"
+        ? this._data.posY - player.posY
+        : this._data.posY;
+
+    sound.setSpatialPosition(
+      relativeX,
+      relativeY,
+      this._gameArena.width / 2,
+      this._gameArena.height / 2
+    );
+  };
+
+  private playExplosionSound = (): void => {
+    const sound = this._data.explosionSound;
+
+    if (!sound) {
+      return;
+    }
+
+    const explosionSound = new SoundEngine(sound.src, {
+      instantDestroy: true,
+    });
+
+    this.updateSpatialSoundPosition(explosionSound);
+    explosionSound.play();
   };
 
   render = (): void => {
@@ -195,12 +260,13 @@ class Bullet implements BulletInstance {
       const renderHeight =
         this._data.sprite.renderHeight ?? this._data.sprite.height;
       const frameX = this._getSpriteFrameX();
+      const frameAxis = this._data.sprite.frameAxis ?? "x";
 
       this._gameArena.renderSprite(this._projectileSprite, {
         frameWidth: this._data.sprite.width,
         frameHeight: this._data.sprite.height,
-        frameX,
-        frameY: 0,
+        frameX: frameAxis === "x" ? frameX : 0,
+        frameY: frameAxis === "y" ? frameX : 0,
         posX: posX - renderWidth / 2,
         posY: posY - renderHeight / 2,
         renderHeight,
@@ -258,6 +324,7 @@ class Bullet implements BulletInstance {
 
     if (frameX >= this._data.explosion.frames) {
       this.removeMe = true;
+      this.destroy();
       return;
     }
 
@@ -292,6 +359,17 @@ class Bullet implements BulletInstance {
     const heading = ((this._data.heading % 360) + 360) % 360;
 
     return Math.round(((heading + 270) % 360) / (360 / frames)) % frames;
+  };
+
+  destroy = (): void => {
+    this._launchSound?.destroy();
+    this._launchSound = undefined;
+    this.stopFlightSound();
+  };
+
+  private stopFlightSound = (): void => {
+    this._flightSound?.destroy();
+    this._flightSound = undefined;
   };
 }
 

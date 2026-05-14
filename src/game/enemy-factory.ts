@@ -70,6 +70,10 @@ class EnemyFactory implements EnemyFactoryInstance {
       ) {
         this._context._formations[formationId].escaped = true;
       }
+
+      if (enemy.removeMe) {
+        enemy.destroy();
+      }
     });
 
     this._enemies = this._enemies.filter((enemy) => !enemy.removeMe);
@@ -84,6 +88,7 @@ class EnemyFactory implements EnemyFactoryInstance {
   };
 
   private _despawn = (entityId: number): void => {
+    this._enemies[entityId]?.destroy();
     this._enemies.splice(entityId, 1);
   };
 

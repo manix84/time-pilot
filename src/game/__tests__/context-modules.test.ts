@@ -284,10 +284,13 @@ describe("context-backed game modules", () => {
       "sprite",
       {
         sprite: { src: "/sprites/enemies/projectiles/bomb.png" },
-        width: 12,
-        height: 3,
-        renderWidth: 24,
-        renderHeight: 6,
+        width: 16,
+        height: 16,
+        frames: 2,
+        frameAxis: "y",
+        frameMode: "animation",
+        renderWidth: 16,
+        renderHeight: 16,
       },
       false,
       0,
@@ -415,6 +418,65 @@ describe("context-backed game modules", () => {
       "Game Over",
       0,
       0,
+      expect.any(Object)
+    );
+  });
+
+  it("awards extra lives at 10000 and every 50000 points after", () => {
+    Object.defineProperty(HTMLMediaElement.prototype, "canPlay", {
+      configurable: true,
+      value: true,
+    });
+    const play = vi.mocked(HTMLMediaElement.prototype.play);
+    const context = createContext();
+
+    play.mockClear();
+    context._player.setData("score", 9999);
+
+    expect(context._player.getData("lives")).toBe(3);
+    expect(context._player.getData("nextExtraLifeScore")).toBe(10000);
+    expect(play).not.toHaveBeenCalled();
+
+    context._player.setData("score", 10000);
+
+    expect(context._player.getData("lives")).toBe(4);
+    expect(context._player.getData("nextExtraLifeScore")).toBe(60000);
+    expect(play).toHaveBeenCalledTimes(1);
+
+    play.mockClear();
+    context._player.setData("score", 110000);
+
+    expect(context._player.getData("lives")).toBe(6);
+    expect(context._player.getData("nextExtraLifeScore")).toBe(160000);
+    expect(play).toHaveBeenCalledTimes(1);
+  });
+
+  it("compacts the HUD life icons at nine lives", () => {
+    const context = createContext();
+
+    context._player.setData("lives", 9);
+    context._hud.render();
+
+    expect(context._gameArena.renderSprite).toHaveBeenCalledTimes(1);
+    expect(context._gameArena.renderText).toHaveBeenCalledWith(
+      "9 x",
+      expect.any(Number),
+      expect.any(Number),
+      expect.objectContaining({ align: "right" })
+    );
+  });
+
+  it("renders individual HUD life icons below nine lives", () => {
+    const context = createContext();
+
+    context._player.setData("lives", 8);
+    context._hud.render();
+
+    expect(context._gameArena.renderSprite).toHaveBeenCalledTimes(8);
+    expect(context._gameArena.renderText).not.toHaveBeenCalledWith(
+      "8 x",
+      expect.any(Number),
+      expect.any(Number),
       expect.any(Object)
     );
   });
@@ -1018,6 +1080,101 @@ describe("context-backed game modules", () => {
     expect(context._player.getData("score")).toBe(1500);
     expect(context._levelProgress.standardEnemyKills).toBe(0);
     expect(context._levelProgress.bossDefeated).toBe(false);
+  });
+
+  it("renders the 1940 special bomber damage and death-flash rows", () => {
+    const context = createContext();
+    context._level = 2;
+    vi.mocked(context._gameTicker.getTicks).mockReturnValue(100);
+
+    context._enemies.create(100, 100, 90, { type: "specialBomber" });
+    const [bomber] = context._enemies.getEntities();
+
+    bomber.kill();
+    bomber.render();
+
+    expect(context._gameArena.renderSprite).toHaveBeenLastCalledWith(
+      expect.any(HTMLImageElement),
+      expect.objectContaining({
+        frameHeight: 16,
+        frameWidth: 32,
+        frameX: 1,
+        frameY: 0,
+        renderHeight: 32,
+        renderWidth: 64,
+      })
+    );
+
+    vi.mocked(context._gameTicker.getTicks).mockReturnValue(110);
+    bomber.render();
+
+    expect(context._gameArena.renderSprite).toHaveBeenLastCalledWith(
+      expect.any(HTMLImageElement),
+      expect.objectContaining({
+        frameHeight: 16,
+        frameWidth: 32,
+        frameX: 1,
+        frameY: 1,
+        renderHeight: 32,
+        renderWidth: 64,
+      })
+    );
+
+    bomber.kill();
+    bomber.kill();
+    bomber.render();
+
+    expect(context._gameArena.renderSprite).toHaveBeenLastCalledWith(
+      expect.any(HTMLImageElement),
+      expect.objectContaining({
+        frameHeight: 16,
+        frameWidth: 32,
+        frameX: 3,
+        frameY: 2,
+        renderHeight: 32,
+        renderWidth: 64,
+      })
+    );
+  });
+
+  it("uses the left-facing special bomber damage frames for leftward travel", () => {
+    const context = createContext();
+    context._level = 2;
+    vi.mocked(context._gameTicker.getTicks).mockReturnValue(100);
+
+    context._enemies.create(100, 100, 270, { type: "specialBomber" });
+    const [bomber] = context._enemies.getEntities();
+
+    bomber.kill();
+    bomber.render();
+
+    expect(context._gameArena.renderSprite).toHaveBeenLastCalledWith(
+      expect.any(HTMLImageElement),
+      expect.objectContaining({
+        frameHeight: 16,
+        frameWidth: 32,
+        frameX: 5,
+        frameY: 0,
+        renderHeight: 32,
+        renderWidth: 64,
+      })
+    );
+
+    bomber.kill();
+    bomber.kill();
+    bomber.render();
+
+    expect(context._gameArena.renderSprite).toHaveBeenLastCalledWith(
+      expect.any(HTMLImageElement),
+      expect.objectContaining({
+        frameHeight: 16,
+        frameWidth: 32,
+        frameX: 7,
+        frameY: 2,
+        renderHeight: 32,
+        renderWidth: 64,
+      })
+    );
   });
 
   it("awards the formation bonus when every formation enemy is killed", () => {

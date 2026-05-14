@@ -1,5 +1,5 @@
 /* Converted from TimePilot.Player.js (AMD) to ESM TypeScript. */
-import { levels, player } from "./constants";
+import { levels, player, scoring, sounds } from "./constants";
 import userOptions from "./user-options";
 import { drawDebugVectors } from "./debug-vectors";
 import SoundEngine from "./engine/Sound";
@@ -24,6 +24,7 @@ class Player implements PlayerInstance {
   private _data: PlayerData;
   private _dataDefaults: PlayerData;
   private _enemyBulletFactory: BulletFactoryInstance;
+  private _extraLifeSound: SoundEngine;
   private _explosionSound: SoundEngine;
   private _gameArena: GameArenaInstance;
   private _gameTicker: TickerInstance;
@@ -44,6 +45,7 @@ class Player implements PlayerInstance {
     this._playerDeathSprite.src = playerConst.explosion.sprite.src;
 
     this._explosionSound = new SoundEngine(playerConst.explosion.sound.src);
+    this._extraLifeSound = new SoundEngine(sounds.extraLife.src);
     this._rotationStep = playerSpriteArcDegrees / playerConst.rotationFrameCount;
 
     this._data = {
@@ -57,6 +59,7 @@ class Player implements PlayerInstance {
       exploading: 0,
       continues: 0,
       lives: 3,
+      nextExtraLifeScore: scoring.extraLife.first,
       score: 0,
       level: 1,
     };
@@ -81,8 +84,18 @@ class Player implements PlayerInstance {
   setData = <K extends keyof PlayerData>(key: K, value: PlayerData[K], isLastKnownGood?: boolean): boolean => {
     if (this._data[key] !== undefined) {
       this._data[key] = value;
+
+      if (key === "score") {
+        this.awardExtraLives();
+      }
+
       if (isLastKnownGood) {
         this._dataDefaults[key] = value;
+
+        if (key === "score") {
+          this._dataDefaults.lives = this._data.lives;
+          this._dataDefaults.nextExtraLifeScore = this._data.nextExtraLifeScore;
+        }
       }
       return this._data[key] === value;
     }
@@ -96,6 +109,21 @@ class Player implements PlayerInstance {
 
   private getLevelData = (): LevelConfig["player"] => {
     return levels[this._data.level].player;
+  };
+
+  private awardExtraLives = (): void => {
+    let awardedLives = 0;
+
+    while (this._data.score >= this._data.nextExtraLifeScore) {
+      awardedLives += 1;
+      this._data.lives += 1;
+      this._data.nextExtraLifeScore += scoring.extraLife.interval;
+    }
+
+    if (awardedLives > 0) {
+      this._extraLifeSound.stop();
+      this._extraLifeSound.play();
+    }
   };
 
   reposition = (): void => {

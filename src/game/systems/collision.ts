@@ -1,5 +1,4 @@
-import { levels, player } from "../constants";
-import SoundEngine from "../engine/Sound";
+import { player } from "../constants";
 import helpers from "../engine/helpers";
 import type {
   BulletData,
@@ -10,13 +9,9 @@ import type {
 
 class CollisionSystem implements CollisionSystemInstance {
   private _context: GameDataStore;
-  private _explosionSound: SoundEngine;
 
   constructor(context: GameDataStore) {
     this._context = context;
-    this._explosionSound = new SoundEngine(
-      levels[context._level].enemies.basic.explosion.sound.src
-    );
   }
 
   detectCollisions = (): void => {
@@ -103,9 +98,6 @@ class CollisionSystem implements CollisionSystemInstance {
         )
       ) {
         enemy.kill();
-        if (!enemy.isAlive) {
-          this._playExplosion();
-        }
         this._context._player.kill();
       }
 
@@ -129,9 +121,6 @@ class CollisionSystem implements CollisionSystemInstance {
         ) {
           bullet.removeMe = true;
           enemy.kill();
-          if (!enemy.isAlive) {
-            this._playExplosion();
-          }
         }
       });
     });
@@ -196,11 +185,6 @@ class CollisionSystem implements CollisionSystemInstance {
         }
       });
     });
-  };
-
-  private _playExplosion = (): void => {
-    this._explosionSound.stop();
-    this._explosionSound.play();
   };
 
   private isLevelIntroActive = (): boolean => {

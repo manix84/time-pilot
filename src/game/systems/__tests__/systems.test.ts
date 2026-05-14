@@ -67,6 +67,7 @@ const createPlayer = (overrides: Partial<PlayerData> = {}): PlayerInstance => {
     exploading: 0,
     continues: 0,
     lives: 3,
+    nextExtraLifeScore: 10000,
     score: 0,
     level: 1,
     ...overrides,
@@ -119,6 +120,7 @@ const createEnemyBullet = (
 
       this.removeMe = true;
     }),
+    destroy: vi.fn(),
     getData: vi.fn((key?: keyof BulletData) =>
       key ? enemyBulletData[key] : enemyBulletData
     ) as BulletInstance["getData"],
@@ -151,6 +153,7 @@ const createPlayerBullet = (): BulletInstance => {
     explode: vi.fn(function (this: BulletInstance) {
       this.removeMe = true;
     }),
+    destroy: vi.fn(),
     getData: vi.fn((key?: keyof BulletData) =>
       key ? bulletData[key] : bulletData
     ) as BulletInstance["getData"],
@@ -213,6 +216,7 @@ const createContext = ({
     kill: vi.fn(() => {
       enemy.isAlive = false;
     }),
+    destroy: vi.fn(),
   };
   const bonus: BonusInstance = {
     removeMe: false,
@@ -466,6 +470,11 @@ describe("game systems", () => {
       undefined,
       undefined,
       undefined,
+      undefined,
+      expect.objectContaining({
+        src: "/sounds/enemies/basic/bullet.wav",
+      }),
+      undefined,
       undefined
     );
     expect(context._bonuses.create).not.toHaveBeenCalled();
@@ -499,7 +508,16 @@ describe("game systems", () => {
       true,
       0.5,
       true,
-      undefined
+      undefined,
+      expect.objectContaining({
+        src: "/sounds/enemies/basic/rocket_launch.wav",
+      }),
+      expect.objectContaining({
+        src: "/sounds/enemies/basic/rocket_fly.wav",
+      }),
+      expect.objectContaining({
+        src: "/sounds/enemies/basic/rocket_explode.wav",
+      })
     );
   });
 
@@ -531,7 +549,16 @@ describe("game systems", () => {
       true,
       1,
       true,
-      undefined
+      undefined,
+      expect.objectContaining({
+        src: "/sounds/enemies/basic/rocket_launch.wav",
+      }),
+      expect.objectContaining({
+        src: "/sounds/enemies/basic/rocket_fly.wav",
+      }),
+      expect.objectContaining({
+        src: "/sounds/enemies/basic/rocket_explode.wav",
+      })
     );
   });
 
@@ -626,7 +653,7 @@ describe("game systems", () => {
 
     expect(context._enemyBullets.create).toHaveBeenCalledWith(
       100,
-      109,
+      116,
       180,
       6,
       4.5,
@@ -635,10 +662,13 @@ describe("game systems", () => {
       "world",
       "sprite",
       expect.objectContaining({
-        height: 3,
-        renderHeight: 6,
-        renderWidth: 24,
-        width: 12,
+        frameAxis: "y",
+        frameMode: "animation",
+        frames: 2,
+        height: 16,
+        renderHeight: 16,
+        renderWidth: 16,
+        width: 16,
       }),
       undefined,
       undefined,
@@ -647,7 +677,12 @@ describe("game systems", () => {
         frames: 4,
         height: 11,
         width: 11,
-      })
+      }),
+      expect.objectContaining({
+        src: "/sounds/enemies/special/bomb.wav",
+      }),
+      undefined,
+      undefined
     );
   });
 

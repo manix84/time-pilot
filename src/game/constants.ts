@@ -21,6 +21,10 @@ const scoring = {
     max: 5000,
     step: 1000,
   },
+  extraLife: {
+    first: 10000,
+    interval: 50000,
+  },
 };
 
 const playerMovementSpeed = 5;
@@ -44,6 +48,38 @@ const rocketProjectileSprite = {
   frames: 16,
   renderWidth: 24,
   renderHeight: 18,
+};
+
+const enemyBulletSound = {
+  src: assetPath("sounds/enemies/basic/bullet.wav"),
+};
+
+const enemyExplosionSound = {
+  src: assetPath("sounds/enemies/basic/explosion.wav"),
+};
+
+const bossExplosionSound = {
+  src: assetPath("sounds/enemies/boss/explosion.wav"),
+};
+
+const rocketLaunchSound = {
+  src: assetPath("sounds/enemies/basic/rocket_launch.wav"),
+};
+
+const rocketFlightSound = {
+  src: assetPath("sounds/enemies/basic/rocket_fly.wav"),
+};
+
+const rocketExplosionSound = {
+  src: assetPath("sounds/enemies/basic/rocket_explode.wav"),
+};
+
+const specialBombDropSound = {
+  src: assetPath("sounds/enemies/special/bomb.wav"),
+};
+
+const specialEnemyExplosionSound = {
+  src: assetPath("sounds/enemies/special/explosion.wav"),
 };
 
 const plasmaProjectileSprite = {
@@ -101,13 +137,14 @@ const basicEnemy = (
     velocity: projectileSpeeds.bullet1910,
     size: 6,
     color: palette.aircraft.enemyBullet,
+    sound: enemyBulletSound,
   },
   explosion: {
     sprite: {
       src: assetPath("sprites/enemies/basic/explosion.png"),
     },
     sound: {
-      src: assetPath("sounds/enemy_explode.wav"),
+      src: enemyExplosionSound.src,
     },
     width: 16,
     height: 16,
@@ -125,6 +162,12 @@ const bossEnemy = (
   bossDamageFrames: 4,
   countsTowardBoss: false,
   deathValue: scoring.boss,
+  ambientSound:
+    level <= 4
+      ? {
+        src: assetPath(`sounds/enemies/boss/boss${level}.wav`),
+      }
+      : undefined,
   sprite: {
     src: assetPath(`sprites/enemies/boss/level${level}.png`),
   },
@@ -144,13 +187,14 @@ const bossEnemy = (
     velocity: projectileSpeeds.bullet1940,
     size: 6,
     color: palette.aircraft.enemyBullet,
+    sound: enemyBulletSound,
   },
   explosion: {
     sprite: {
       src: assetPath("sprites/enemies/boss/explosion.png"),
     },
     sound: {
-      src: assetPath("sounds/enemy_explode.wav"),
+      src: bossExplosionSound.src,
     },
     width: 32,
     height: 16,
@@ -164,46 +208,55 @@ const specialBomber = (
   level: number,
   overrides: Partial<EnemyConfig> = {}
 ): EnemyConfig => ({
-  animationFrames: 7,
+  animationFrames: 8,
+  animationRows: 2,
+  damageFrames: 4,
+  deathFlashFrameY: 2,
+  deathFlashTicks: 6,
   countsTowardBoss: false,
   deathValue: scoring.bomber1940,
+  leftFacingFrameOffset: 4,
   sprite: {
-    src: assetPath(`sprites/enemies/special-bomber/level${level}.png`),
+    src: assetPath(`sprites/enemies/special/level${level}.png`),
   },
   velocity: 2.75,
   turnLimiter: 9999,
   width: 32,
-  height: 9,
+  height: 16,
   firingChance: 0,
   hitPoints: 3,
   hitRadius: 18,
   canRotate: false,
   tracksPlayer: false,
-  renderHeight: 18,
+  renderHeight: 32,
   renderWidth: 64,
   spawnLimit: 1,
   projectile: {
     velocity: projectileSpeeds.bomb1940,
     size: 6,
     color: palette.aircraft.enemyBullet,
+    sound: specialBombDropSound,
     sprite: {
       sprite: {
         src: assetPath("sprites/enemies/projectiles/bomb.png"),
       },
-      width: 12,
-      height: 3,
-      renderWidth: 24,
-      renderHeight: 6,
+      width: 16,
+      height: 16,
+      frames: 2,
+      frameAxis: "y",
+      frameMode: "animation",
+      renderWidth: 16,
+      renderHeight: 16,
     },
     shootable: true,
     explosion: bombProjectileExplosion,
   },
   explosion: {
     sprite: {
-      src: assetPath("sprites/enemies/special-bomber/explosion.png"),
+      src: assetPath("sprites/enemies/special/explosion.png"),
     },
     sound: {
-      src: assetPath("sounds/enemy_explode.wav"),
+      src: specialEnemyExplosionSound.src,
     },
     width: 32,
     height: 16,
@@ -615,22 +668,23 @@ const timePilotConstants: TimePilotConstants = {
   },
   sounds: {
     coinDrop: {
-      src: assetPath("sounds/coindrop.wav"),
+      src: assetPath("sounds/ui/coindrop.wav"),
     },
-    enemyShoot: {
-      src: assetPath("sounds/enemy_shoot.wav"),
+    enemyShoot: enemyBulletSound,
+    extraLife: {
+      src: assetPath("sounds/player/extra_life.wav"),
     },
     gameStart: {
-      src: assetPath("sounds/game_start.wav"),
+      src: assetPath("sounds/ui/game_start.wav"),
     },
     nextLevel: {
-      src: assetPath("sounds/next_level.wav"),
+      src: assetPath("sounds/ui/next_level.wav"),
     },
     timeWarp: {
       src: assetPath("sounds/player/timewarp.wav"),
     },
     waveStart: {
-      src: assetPath("sounds/wave_start.wav"),
+      src: assetPath("sounds/enemies/basic/wave_start.wav"),
     },
   },
   scoring,
@@ -710,6 +764,7 @@ const timePilotConstants: TimePilotConstants = {
             velocity: projectileSpeeds.bullet1940,
             size: 6,
             color: palette.aircraft.enemyBullet,
+            sound: enemyBulletSound,
           },
         }),
         boss: bossEnemy(2, {
@@ -759,6 +814,9 @@ const timePilotConstants: TimePilotConstants = {
             size: 8,
             color: palette.aircraft.enemyBullet,
             sprite: rocketProjectileSprite,
+            sound: rocketLaunchSound,
+            flightSound: rocketFlightSound,
+            explosionSound: rocketExplosionSound,
             tracksPlayer: true,
             turnRate: 0.5,
             shootable: true,
@@ -778,6 +836,9 @@ const timePilotConstants: TimePilotConstants = {
             size: 8,
             color: palette.aircraft.enemyBullet,
             sprite: rocketProjectileSprite,
+            sound: rocketLaunchSound,
+            flightSound: rocketFlightSound,
+            explosionSound: rocketExplosionSound,
             tracksPlayer: true,
             turnRate: 0.5,
             shootable: true,
@@ -820,6 +881,9 @@ const timePilotConstants: TimePilotConstants = {
             size: 8,
             color: palette.aircraft.enemyBullet,
             sprite: rocketProjectileSprite,
+            sound: rocketLaunchSound,
+            flightSound: rocketFlightSound,
+            explosionSound: rocketExplosionSound,
             tracksPlayer: true,
             turnRate: 1,
             shootable: true,
@@ -839,6 +903,9 @@ const timePilotConstants: TimePilotConstants = {
             size: 8,
             color: palette.aircraft.enemyBullet,
             sprite: rocketProjectileSprite,
+            sound: rocketLaunchSound,
+            flightSound: rocketFlightSound,
+            explosionSound: rocketExplosionSound,
             tracksPlayer: true,
             turnRate: 1,
             shootable: true,

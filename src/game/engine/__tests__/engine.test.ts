@@ -139,7 +139,7 @@ describe("engine modules", () => {
       value: true,
     });
     const play = vi.mocked(HTMLMediaElement.prototype.play);
-    const sound = new Sound("/sounds/game_start.wav", { autoplay: false });
+    const sound = new Sound("/sounds/ui/game_start.wav", { autoplay: false });
 
     sound.play();
     play.mockClear();
@@ -164,7 +164,7 @@ describe("engine modules", () => {
 
     play.mockRejectedValueOnce(new DOMException("Blocked", "NotAllowedError"));
 
-    const sound = new Sound("/sounds/game_start.wav", { autoplay: false });
+    const sound = new Sound("/sounds/ui/game_start.wav", { autoplay: false });
 
     sound.play();
     await Promise.resolve();
@@ -173,5 +173,59 @@ describe("engine modules", () => {
     sound.destroy();
 
     expect(play).toHaveBeenCalledTimes(1);
+  });
+
+  it("disconnects and closes spatial audio resources on destroy", () => {
+    Object.defineProperty(HTMLMediaElement.prototype, "canPlay", {
+      configurable: true,
+      value: true,
+    });
+    const sourceDisconnect = vi.fn();
+    const pannerDisconnect = vi.fn();
+    const contextClose = vi.fn(() => Promise.resolve());
+    const source = {
+      connect: vi.fn(),
+      disconnect: sourceDisconnect,
+    };
+    const panner = {
+      connect: vi.fn(() => ({})),
+      disconnect: pannerDisconnect,
+      positionX: { value: 0 },
+      positionY: { value: 0 },
+      positionZ: { value: 0 },
+    };
+    const createMediaElementSource = vi.fn(
+      (_mediaElement: HTMLMediaElement) =>
+        source as unknown as MediaElementAudioSourceNode
+    );
+
+    source.connect.mockReturnValue(panner);
+
+    class MockAudioContext {
+      destination = {} as AudioDestinationNode;
+      close = contextClose;
+      createMediaElementSource = createMediaElementSource;
+    }
+
+    class MockPannerNode {
+      connect = panner.connect;
+      disconnect = panner.disconnect;
+      positionX = panner.positionX;
+      positionY = panner.positionY;
+      positionZ = panner.positionZ;
+    }
+
+    vi.stubGlobal("AudioContext", MockAudioContext);
+    vi.stubGlobal("PannerNode", MockPannerNode);
+
+    const sound = new Sound("/sounds/player/bullet.mp3", { autoplay: false });
+
+    sound.setSpatialPosition(10, 0, 100, 100);
+    sound.play();
+    sound.destroy();
+
+    expect(sourceDisconnect).toHaveBeenCalled();
+    expect(pannerDisconnect).toHaveBeenCalled();
+    expect(contextClose).toHaveBeenCalled();
   });
 });

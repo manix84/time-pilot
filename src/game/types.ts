@@ -50,6 +50,7 @@ export interface PlayerData extends Coordinates {
   exploading: number;
   continues: number;
   lives: number;
+  nextExtraLifeScore: number;
   score: number;
   level: number;
   removeMe?: boolean;
@@ -183,6 +184,7 @@ export interface TickerInstance {
 export interface BulletInstance {
   removeMe: boolean;
   explode: () => void;
+  destroy: () => void;
   getData: (key?: keyof BulletData) => BulletData | BulletData[keyof BulletData] | undefined;
   setData: (key: keyof BulletData, value: BulletData[keyof BulletData]) => boolean;
   setLevel: (level: number) => boolean;
@@ -205,7 +207,10 @@ export interface BulletFactoryInstance {
     tracksPlayer?: boolean,
     turnRate?: number,
     shootable?: boolean,
-    explosion?: BulletData["explosion"]
+    explosion?: BulletData["explosion"],
+    sound?: BulletData["sound"],
+    flightSound?: BulletData["flightSound"],
+    explosionSound?: BulletData["explosionSound"]
   ) => void;
   getCount: () => number;
   getData: () => BulletData[];
@@ -247,6 +252,7 @@ export interface EnemyInstance {
   reposition: () => void;
   render: () => void;
   kill: () => void;
+  destroy: () => void;
 }
 
 export interface EnemySpawnOptions {
@@ -465,6 +471,7 @@ export interface ProjectileSpriteConfig {
   width: number;
   height: number;
   frames?: number;
+  frameAxis?: "x" | "y";
   frameMode?: "animation" | "heading";
   renderWidth?: number;
   renderHeight?: number;
@@ -492,6 +499,9 @@ export interface BulletData extends Coordinates {
   turnRate?: number;
   shootable?: boolean;
   explosion?: ProjectileExplosionConfig;
+  sound?: SoundAsset;
+  flightSound?: SoundAsset;
+  explosionSound?: SoundAsset;
   explosionTick: number | false;
 }
 
@@ -510,11 +520,13 @@ export interface ProjectileConfig {
   color: string;
   sprite?: ProjectileSpriteConfig;
   sound?: SoundAsset;
+  flightSound?: SoundAsset;
   initialAim?: "facing" | "player";
   tracksPlayer?: boolean;
   turnRate?: number;
   shootable?: boolean;
   explosion?: ProjectileExplosionConfig;
+  explosionSound?: SoundAsset;
 }
 
 export interface PlayerConfig {
@@ -533,13 +545,16 @@ export interface PlayerConfig {
 export interface EnemyConfig {
   animationFrames?: number;
   animationRows?: number;
+  ambientSound?: SoundAsset;
   bossDamageFrames?: number;
   countsTowardBoss: boolean;
+  damageFrames?: number;
   deathFlashFrameY?: number;
   deathFlashTicks?: number;
   headingFrameOffset?: number;
   deathValue: number;
   horizontalDirectionFrames?: number;
+  leftFacingFrameOffset?: number;
   sprite: SpriteAsset;
   velocity: number;
   turnLimiter: number;
@@ -619,6 +634,7 @@ export interface TimePilotConstants {
   sounds: {
     coinDrop: SoundAsset;
     enemyShoot: SoundAsset;
+    extraLife: SoundAsset;
     gameStart: SoundAsset;
     nextLevel: SoundAsset;
     timeWarp: SoundAsset;
@@ -633,6 +649,10 @@ export interface TimePilotConstants {
       max: number;
       min: number;
       step: number;
+    };
+    extraLife: {
+      first: number;
+      interval: number;
     };
     regularEnemy: number;
   };

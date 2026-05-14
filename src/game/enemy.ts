@@ -2,6 +2,7 @@
 import { levels, scoring } from "./constants";
 import userOptions from "./user-options";
 import { drawDebugVectors } from "./debug-vectors";
+import SoundEngine from "./engine/Sound";
 import helpers from "./engine/helpers";
 import palette from "./palette";
 import { getDespawnRadius } from "./viewport";
@@ -20,6 +21,7 @@ import type {
 class Enemy implements EnemyInstance {
   private _context: GameDataStore;
   private _data: EnemyData;
+  private _ambientSound?: SoundEngine;
   private _enemySprite: HTMLImageElement;
   private _gameArena: GameArenaInstance;
   private _gameTicker: TickerInstance;
@@ -57,6 +59,14 @@ class Enemy implements EnemyInstance {
 
     this._enemySprite = new Image();
     this._enemySprite.src = this.getLevelData().sprite.src;
+
+    const ambientSound = this.getLevelData("ambientSound");
+
+    if (this._data.type === "boss" && ambientSound) {
+      this._ambientSound = new SoundEngine(ambientSound.src);
+      this._ambientSound.loop();
+      this.updateAmbientSoundPosition();
+    }
   }
 
   getData(): EnemyData;
@@ -178,6 +188,24 @@ class Enemy implements EnemyInstance {
         22.5
       );
     }
+
+    this.updateAmbientSoundPosition();
+  };
+
+  private updateAmbientSoundPosition = (): void => {
+    if (!this._ambientSound) {
+      return;
+    }
+
+    const relativeX = this._data.posX - this._player.getData().posX;
+    const relativeY = this._data.posY - this._player.getData().posY;
+
+    this._ambientSound.setSpatialPosition(
+      relativeX,
+      relativeY,
+      this._gameArena.width / 2,
+      this._gameArena.height / 2
+    );
   };
 
   private _getSteeringHeading = (
@@ -239,18 +267,26 @@ class Enemy implements EnemyInstance {
   };
 
   private _getFrameY = (levelData: EnemyConfig): number => {
+    if (levelData.animationRows) {
+      return (
+        Math.floor(this._gameTicker.getTicks() / 10) %
+        levelData.animationRows
+      );
+    }
+
     if (!levelData.canRotate) {
       return 0;
     }
 
-    return (
-      Math.floor(this._gameTicker.getTicks() / 10) %
-      (levelData.animationRows ?? 1)
-    );
+    return 0;
   };
 
   private _getFrameX = (levelData: EnemyConfig): number => {
-    if (this._data.type === "boss" && levelData.bossDamageFrames) {
+    if (levelData.damageFrames) {
+      return this._getHorizontalDamageFrame(levelData);
+    }
+
+    if (levelData.bossDamageFrames) {
       return this._getBossDamageFrame(levelData);
     }
 
@@ -288,6 +324,19 @@ class Enemy implements EnemyInstance {
     const isFacingLeft = this._data.heading > 180;
 
     return damageFrame + (isFacingLeft ? damageFrames : 0);
+  };
+
+  private _getHorizontalDamageFrame = (levelData: EnemyConfig): number => {
+    const damageFrames = levelData.damageFrames ?? 4;
+    const maxHitPoints = levelData.hitPoints;
+    const hitsTaken = maxHitPoints - this._data.hitPoints;
+    const damageFrame = Math.min(
+      damageFrames - 1,
+      Math.floor((hitsTaken / maxHitPoints) * damageFrames)
+    );
+    const isFacingLeft = this._data.heading > 180;
+
+    return damageFrame + (isFacingLeft ? levelData.leftFacingFrameOffset ?? damageFrames : 0);
   };
 
   private _renderDeath = (): void => {
@@ -394,6 +443,8 @@ class Enemy implements EnemyInstance {
     }
 
     this.isAlive = false;
+    this.stopAmbientSound();
+    this.playExplosionSound();
     this._data.deathTick = this._gameTicker.getTicks();
     this._player.setData(
       "score",
@@ -402,6 +453,35 @@ class Enemy implements EnemyInstance {
     this._trackBossKillProgress();
     this._trackBossDefeat();
     this._trackFormationKill();
+  };
+
+  destroy = (): void => {
+    this.stopAmbientSound();
+  };
+
+  private stopAmbientSound = (): void => {
+    this._ambientSound?.destroy();
+    this._ambientSound = undefined;
+  };
+
+  private playExplosionSound = (): void => {
+    const sound = this.getLevelData("explosion")?.sound;
+
+    if (!sound) {
+      return;
+    }
+
+    const explosionSound = new SoundEngine(sound.src, {
+      instantDestroy: true,
+    });
+
+    explosionSound.setSpatialPosition(
+      this._data.posX - this._player.getData().posX,
+      this._data.posY - this._player.getData().posY,
+      this._gameArena.width / 2,
+      this._gameArena.height / 2
+    );
+    explosionSound.play();
   };
 
   private _trackBossKillProgress = (): void => {
