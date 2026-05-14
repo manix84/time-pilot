@@ -49,6 +49,8 @@
 - Added optional time-warp sound playback to the Storybook preview.
 - Added looping boss sound effects for levels 1-4, with positional audio support where the browser allows it.
 - Added spatial enemy bullet, enemy explosion, rocket launch, and rocket flight sound effects.
+- Added score-based extra lives at 10,000 points and every 50,000 points after, with an extra-life sound effect.
+- Compacted the HUD life display to a multiplier once the player reaches nine lives.
 - Added the delayed four-frame player time-warp transition effect before advancing to the next era, timed to six seconds total.
 - Added a Storybook preview for the delayed four-frame player time-warp effect.
 

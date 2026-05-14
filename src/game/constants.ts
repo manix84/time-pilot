@@ -21,6 +21,10 @@ const scoring = {
     max: 5000,
     step: 1000,
   },
+  extraLife: {
+    first: 10000,
+    interval: 50000,
+  },
 };
 
 const playerMovementSpeed = 5;
@@ -659,6 +663,9 @@ const timePilotConstants: TimePilotConstants = {
       src: assetPath("sounds/ui/coindrop.wav"),
     },
     enemyShoot: enemyBulletSound,
+    extraLife: {
+      src: assetPath("sounds/player/extra_life.wav"),
+    },
     gameStart: {
       src: assetPath("sounds/ui/game_start.wav"),
     },

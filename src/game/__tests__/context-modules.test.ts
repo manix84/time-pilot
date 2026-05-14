@@ -418,6 +418,65 @@ describe("context-backed game modules", () => {
     );
   });
 
+  it("awards extra lives at 10000 and every 50000 points after", () => {
+    Object.defineProperty(HTMLMediaElement.prototype, "canPlay", {
+      configurable: true,
+      value: true,
+    });
+    const play = vi.mocked(HTMLMediaElement.prototype.play);
+    const context = createContext();
+
+    play.mockClear();
+    context._player.setData("score", 9999);
+
+    expect(context._player.getData("lives")).toBe(3);
+    expect(context._player.getData("nextExtraLifeScore")).toBe(10000);
+    expect(play).not.toHaveBeenCalled();
+
+    context._player.setData("score", 10000);
+
+    expect(context._player.getData("lives")).toBe(4);
+    expect(context._player.getData("nextExtraLifeScore")).toBe(60000);
+    expect(play).toHaveBeenCalledTimes(1);
+
+    play.mockClear();
+    context._player.setData("score", 110000);
+
+    expect(context._player.getData("lives")).toBe(6);
+    expect(context._player.getData("nextExtraLifeScore")).toBe(160000);
+    expect(play).toHaveBeenCalledTimes(1);
+  });
+
+  it("compacts the HUD life icons at nine lives", () => {
+    const context = createContext();
+
+    context._player.setData("lives", 9);
+    context._hud.render();
+
+    expect(context._gameArena.renderSprite).toHaveBeenCalledTimes(1);
+    expect(context._gameArena.renderText).toHaveBeenCalledWith(
+      "9 x",
+      expect.any(Number),
+      expect.any(Number),
+      expect.objectContaining({ align: "right" })
+    );
+  });
+
+  it("renders individual HUD life icons below nine lives", () => {
+    const context = createContext();
+
+    context._player.setData("lives", 8);
+    context._hud.render();
+
+    expect(context._gameArena.renderSprite).toHaveBeenCalledTimes(8);
+    expect(context._gameArena.renderText).not.toHaveBeenCalledWith(
+      "8 x",
+      expect.any(Number),
+      expect.any(Number),
+      expect.any(Object)
+    );
+  });
+
   it("renders HUD with current player data after reset", () => {
     const context = createContext();
     userOptions.setOption("enableDebug", true);

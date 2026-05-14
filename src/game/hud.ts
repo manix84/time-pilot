@@ -95,24 +95,45 @@ class Hud implements HudInstance {
       });
     }
 
-    for (let i = 0; i < playerData.lives; ++i) {
-      this._gameArena.renderSprite(this._playerSprite, {
-        frameWidth: this._playerSprite.frameWidth ?? player.frameWidth,
-        frameHeight: this._playerSprite.frameHeight ?? player.frameHeight,
-        frameX: this._playerSprite.frameX ?? 0,
-        frameY: this._playerSprite.frameY ?? 0,
-        renderWidth: player.width,
-        renderHeight: player.height,
-        posX:
-          uiWidth / 2 -
-          player.width -
-          (player.width + 10) * i -
-          10,
-        posY: -(uiHeight / 2 - 10),
-      });
-    }
+    this.renderLives(playerData.lives, uiWidth, uiHeight);
 
     context.restore();
+  };
+
+  private renderLives = (lives: number, uiWidth: number, uiHeight: number): void => {
+    if (lives >= 9) {
+      const iconX = uiWidth / 2 - player.width - 10;
+      const iconY = -(uiHeight / 2 - 10);
+
+      this.renderLifeIcon(iconX, iconY);
+      this._gameArena.renderText(`${lives} x`, iconX - 12, iconY + player.height / 2, {
+        size: 20,
+        align: "right",
+        valign: "middle",
+        color: palette.text.white,
+      });
+      return;
+    }
+
+    for (let i = 0; i < lives; ++i) {
+      this.renderLifeIcon(
+        uiWidth / 2 - player.width - (player.width + 10) * i - 10,
+        -(uiHeight / 2 - 10)
+      );
+    }
+  };
+
+  private renderLifeIcon = (posX: number, posY: number): void => {
+    this._gameArena.renderSprite(this._playerSprite, {
+      frameWidth: this._playerSprite.frameWidth ?? player.frameWidth,
+      frameHeight: this._playerSprite.frameHeight ?? player.frameHeight,
+      frameX: this._playerSprite.frameX ?? 0,
+      frameY: this._playerSprite.frameY ?? 0,
+      renderWidth: player.width,
+      renderHeight: player.height,
+      posX,
+      posY,
+    });
   };
 
   restart = (): void => {

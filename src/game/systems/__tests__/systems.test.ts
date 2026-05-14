@@ -67,6 +67,7 @@ const createPlayer = (overrides: Partial<PlayerData> = {}): PlayerInstance => {
     exploading: 0,
     continues: 0,
     lives: 3,
+    nextExtraLifeScore: 10000,
     score: 0,
     level: 1,
     ...overrides,

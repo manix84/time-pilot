@@ -50,6 +50,7 @@ export interface PlayerData extends Coordinates {
   exploading: number;
   continues: number;
   lives: number;
+  nextExtraLifeScore: number;
   score: number;
   level: number;
   removeMe?: boolean;
@@ -629,6 +630,7 @@ export interface TimePilotConstants {
   sounds: {
     coinDrop: SoundAsset;
     enemyShoot: SoundAsset;
+    extraLife: SoundAsset;
     gameStart: SoundAsset;
     nextLevel: SoundAsset;
     timeWarp: SoundAsset;
@@ -643,6 +645,10 @@ export interface TimePilotConstants {
       max: number;
       min: number;
       step: number;
+    };
+    extraLife: {
+      first: number;
+      interval: number;
     };
     regularEnemy: number;
   };
