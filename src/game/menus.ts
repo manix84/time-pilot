@@ -1,5 +1,15 @@
 /* Converted from TimePilot.Menu.js (AMD) to ESM TypeScript. */
 import { levels, player } from "./constants";
+import {
+  defaultFilterMode,
+  filterModeLabels,
+  filterModes,
+  filterSettingKeys,
+  filterSettingLabels,
+  filterSettingDescriptions,
+  filterPresets,
+  normalizeFilterIntensity,
+} from "./filter-settings";
 import i18n, {
   availableLanguages,
   getCurrentLanguage,
@@ -35,6 +45,8 @@ type MenuScreen =
   | "start"
   | "options"
   | "controls"
+  | "filters"
+  | "filter-custom"
   | "debug"
   | "language"
   | "level";
@@ -51,6 +63,7 @@ type BindingAction = keyof KeyboardBindings;
 interface MenuItem {
   action?: () => void;
   binding?: BindingAction;
+  description?: string;
   disabled?: boolean;
   getValue?: () => string;
   kind: MenuItemKind;
@@ -140,6 +153,8 @@ const levelBlurbLineWidth = 24;
 const levelMenuIdleFadeDelay = 3000;
 const levelMenuIdleFadeDuration = 800;
 const levelMenuIdleOpacity = 0.4;
+const alternatingFlagHoldDuration = 3000;
+const alternatingFlagFadeDuration = 500;
 const levelShowcaseDescriptionLineWidth = 18;
 const levelShowcaseFrameDuration = 260;
 const povPreviewFadeDuration = 250;
@@ -258,7 +273,13 @@ class Menus implements MenuSystemInstance {
       return;
     }
 
-    this._items[this._selectedIndex]?.onAdjust?.(direction);
+    const item = this._items[this._selectedIndex];
+
+    if (item?.disabled) {
+      return;
+    }
+
+    item?.onAdjust?.(direction);
   };
 
   goBack = (): void => {
@@ -408,10 +429,11 @@ class Menus implements MenuSystemInstance {
     }
 
     if (pointer.type === "drag" && this._sliderDragIndex !== null) {
-      this._setSliderFromPointer(
-        this._items[this._sliderDragIndex],
-        menuPointer
-      );
+      const item = this._items[this._sliderDragIndex];
+
+      if (!item.disabled) {
+        this._setSliderFromPointer(item, menuPointer);
+      }
       return;
     }
 
@@ -438,7 +460,10 @@ class Menus implements MenuSystemInstance {
     if (pointer.type === "press") {
       this._pressedItemIndex = itemIndex;
 
-      if (this._items[itemIndex].kind === "slider") {
+      if (
+        this._items[itemIndex].kind === "slider" &&
+        !this._items[itemIndex].disabled
+      ) {
         this._sliderDragIndex = itemIndex;
         this._setSliderFromPointer(this._items[itemIndex], menuPointer);
       }
@@ -448,6 +473,10 @@ class Menus implements MenuSystemInstance {
 
     if (pointer.type === "click") {
       if (this._items[itemIndex].kind === "slider") {
+        if (this._items[itemIndex].disabled) {
+          return;
+        }
+
         this._setSliderFromPointer(this._items[itemIndex], menuPointer);
         return;
       }
@@ -573,6 +602,10 @@ class Menus implements MenuSystemInstance {
       this._renderLevelBlurb();
       this._renderLevelShowcase();
     }
+
+    if (this._screen === "filter-custom") {
+      this._renderCustomFilterDescription();
+    }
   };
 
   private _getLogoCanvas = (): HTMLCanvasElement => {
@@ -667,6 +700,10 @@ class Menus implements MenuSystemInstance {
       this._items = this._createStartItems();
     } else if (this._screen === "options") {
       this._items = this._createOptionsItems();
+    } else if (this._screen === "filters") {
+      this._items = this._createFilterItems();
+    } else if (this._screen === "filter-custom") {
+      this._items = this._createCustomFilterItems();
     } else if (this._screen === "controls") {
       this._items = this._createControlsItems();
     } else if (this._screen === "language") {
@@ -700,6 +737,9 @@ class Menus implements MenuSystemInstance {
   };
 
   private _createOptionsItems = (): MenuItem[] => {
+    const showControlType = this._shouldShowControlTypeOption();
+    const remapControlsY = showControlType ? 366 : 324;
+    const backY = showControlType ? 416 : 374;
     const items = [
       this._createItem(i18n.menu.masterVolume, "slider", -54, {
         getValue: () => `${userOptions.masterVolume}`,
@@ -728,27 +768,101 @@ class Menus implements MenuSystemInstance {
         onSetValue: (value) => this._setGameZoom(this._getZoomValueFromStep(value)),
         sliderSteps: this._getZoomSliderSteps(),
       }),
-      this._createItem(i18n.menu.language, "action", 156, {
+      this._createItem(i18n.menu.filters, "action", 156, {
+        getValue: () => filterModeLabels[userOptions.videoFilterMode],
+        action: () => this._goToScreen("filters"),
+      }),
+      this._createItem(i18n.menu.fullScreen, "toggle", 198, {
+        disabled:
+          this._gameArena.isFullScreenLocked() ||
+          !this._gameArena.canToggleFullScreen(),
+        getValue: () =>
+          this._gameArena.isFullScreen() ? i18n.menu.on : i18n.menu.off,
+        onAdjust: () => this._gameArena.toggleFullScreen(),
+      }),
+      this._createToggleItem(
+        i18n.menu.showControlsOverlay,
+        "showControlsOverlay",
+        240
+      ),
+      this._createItem(i18n.menu.language, "action", 282, {
         getValue: () => getLanguageName(userOptions.language),
         languageFlag: userOptions.language,
         action: () => this._goToScreen("language"),
       }),
-      this._createItem(i18n.menu.controlType, "enum", 198, {
-        getValue: () =>
-          userOptions.controllerType === "keyboard1"
-            ? i18n.menu.directional
-            : i18n.menu.rotate,
-        onAdjust: (direction) => this._adjustControllerType(direction),
-      }),
-      this._createItem(i18n.menu.remapControls, "action", 240, {
-        action: () => this._goToScreen("controls"),
-      }),
     ];
 
+    if (showControlType) {
+      items.push(
+        this._createItem(i18n.menu.controlType, "enum", 324, {
+          getValue: () =>
+            userOptions.controllerType === "keyboard1"
+              ? i18n.menu.directional
+              : i18n.menu.rotate,
+          onAdjust: (direction) => this._adjustControllerType(direction),
+        })
+      );
+    }
+
     items.push(
-      this._createItem(i18n.menu.back, "action", 290, {
+      this._createItem(i18n.menu.remapControls, "action", remapControlsY, {
+        action: () => this._goToScreen("controls"),
+      }),
+      this._createItem(i18n.menu.back, "action", backY, {
         action: () => this._goBack(),
       })
+    );
+
+    return items;
+  };
+
+  private _shouldShowControlTypeOption = (): boolean => {
+    const url = new URL(window.location.href);
+
+    return url.searchParams.get("showControlType") === "true";
+  };
+
+  private _createFilterItems = (): MenuItem[] => {
+    return [
+      this._createItem(i18n.menu.videoFilterMode, "enum", -54, {
+        getValue: () => filterModeLabels[userOptions.videoFilterMode],
+        onAdjust: (direction) => this._adjustFilterMode(direction),
+      }),
+      this._createItem(i18n.menu.customCrtOptions, "action", -12, {
+        getValue: () =>
+          userOptions.videoFilterMode === "custom" ? i18n.menu.on : i18n.menu.off,
+        action: () => this._goToScreen("filter-custom"),
+      }),
+      this._createItem(i18n.menu.resetFilters, "action", 30, {
+        action: () => this._resetFilters(),
+      }),
+      this._createItem(i18n.menu.back, "action", 80, {
+        action: () => this._goBack(),
+      }),
+    ];
+  };
+
+  private _createCustomFilterItems = (): MenuItem[] => {
+    const items = filterSettingKeys.map((key, index) =>
+      this._createItem(filterSettingLabels[key], "slider", -54 + index * 42, {
+        description: filterSettingDescriptions[key],
+        getValue: () => `${userOptions.filterSettings[key]}`,
+        onAdjust: (direction) =>
+          this._setFilterSetting(key, userOptions.filterSettings[key] + direction),
+        onSetValue: (value) => this._setFilterSetting(key, value),
+        sliderSteps: 100,
+      })
+    );
+
+    items.push(
+      this._createItem(
+        i18n.menu.back,
+        "action",
+        -4 + filterSettingKeys.length * 42,
+        {
+          action: () => this._goBack(),
+        }
+      )
     );
 
     return items;
@@ -858,30 +972,25 @@ class Menus implements MenuSystemInstance {
       this._createToggleItem(i18n.menu.invincibilityShield, "invincible", -54),
       this._createToggleItem(i18n.menu.showHitBoxes, "showHitboxes", -12),
       this._createToggleItem(
-        i18n.menu.showControlsOverlay,
-        "showControlsOverlay",
-        30
-      ),
-      this._createToggleItem(
         i18n.menu.showCoordinates,
         "showPlayerCoordinates",
-        72
+        30
       ),
       this._createToggleItem(
         i18n.menu.showHeadingVectors,
         "showHeadingVectors",
-        114
+        72
       ),
       this._createToggleItem(
         i18n.menu.showSteeringArc,
         "showSteeringArc",
-        156
+        114
       ),
-      this._createItem(i18n.menu.selectLevel, "action", 198, {
+      this._createItem(i18n.menu.selectLevel, "action", 156, {
         action: () => this._goToScreen("level"),
         getValue: () => this._getSelectedLevelLabel(),
       }),
-      this._createItem(i18n.menu.back, "action", 248, {
+      this._createItem(i18n.menu.back, "action", 206, {
         action: () => this._goBack(),
       }),
     ];
@@ -1220,6 +1329,34 @@ class Menus implements MenuSystemInstance {
         : Math.max(targetAlpha, nextAlpha);
 
     return this._povPreviewAlpha;
+  };
+
+  private _renderCustomFilterDescription = (): void => {
+    const item = this._items[this._selectedIndex];
+
+    if (!item?.description) {
+      return;
+    }
+
+    const x = -390;
+    const y = -54;
+    const lines = this._wrapText(item.description, 28);
+
+    this._gameArena.renderText(item.label, x, y, {
+      size: 14,
+      align: "left",
+      valign: "middle",
+      color: palette.menu.selectedBackground,
+    });
+
+    lines.forEach((line, index) => {
+      this._gameArena.renderText(line, x, y + 24 + index * 18, {
+        size: 12,
+        align: "left",
+        valign: "middle",
+        color: palette.menu.itemText,
+      });
+    });
   };
 
   private _isGameZoomSelected = (): boolean => {
@@ -1767,16 +1904,78 @@ class Menus implements MenuSystemInstance {
 
       rect(gridX, gridY, 1, 1, gridY % 2 === 0 ? "#B22234" : "#FFFFFF");
     };
-    const drawEnglishFlag = (): void => {
+    const drawUnionFlag = (): void => {
       for (let gridY = 0; gridY < 8; gridY++) {
         for (let gridX = 0; gridX < 16; gridX++) {
-          if (gridX < 8) {
-            drawUsFlagPixel(gridX, gridY);
-          } else {
-            drawUnionFlagPixel(gridX, gridY);
-          }
+          drawUnionFlagPixel(gridX, gridY);
         }
       }
+    };
+    const drawUsFlag = (): void => {
+      for (let gridY = 0; gridY < 8; gridY++) {
+        for (let gridX = 0; gridX < 16; gridX++) {
+          drawUsFlagPixel(gridX, gridY);
+        }
+      }
+    };
+    const drawWithAlpha = (alpha: number, draw: () => void): void => {
+      context.save();
+      context.globalAlpha *= alpha;
+      draw();
+      context.restore();
+    };
+    const drawAlternatingFlag = (
+      primary: () => void,
+      secondary: () => void
+    ): void => {
+      const cycleDuration =
+        alternatingFlagHoldDuration * 2 + alternatingFlagFadeDuration * 2;
+      const elapsed = performance.now() % cycleDuration;
+
+      if (elapsed < alternatingFlagHoldDuration) {
+        primary();
+        return;
+      }
+
+      if (elapsed < alternatingFlagHoldDuration + alternatingFlagFadeDuration) {
+        const progress =
+          (elapsed - alternatingFlagHoldDuration) /
+          alternatingFlagFadeDuration;
+        primary();
+        drawWithAlpha(progress, secondary);
+        return;
+      }
+
+      if (
+        elapsed <
+        alternatingFlagHoldDuration * 2 + alternatingFlagFadeDuration
+      ) {
+        secondary();
+        return;
+      }
+
+      const progress =
+        (elapsed -
+          alternatingFlagHoldDuration * 2 -
+          alternatingFlagFadeDuration) /
+        alternatingFlagFadeDuration;
+      secondary();
+      drawWithAlpha(progress, primary);
+    };
+    const drawSpanishFlag = (): void => {
+      horizontalTricolor(["#AA151B", "#F1BF00", "#AA151B"]);
+    };
+    const drawMexicanFlag = (): void => {
+      verticalTricolor(["#006847", "#FFFFFF", "#CE1126"]);
+      rect(7, 3, 2, 2, "#8C5A2B");
+      rect(8, 2, 1, 1, "#006847");
+      rect(7, 5, 2, 1, "#CE1126");
+    };
+    const drawEnglishFlag = (): void => {
+      drawAlternatingFlag(drawUnionFlag, drawUsFlag);
+    };
+    const drawSpanishLanguageFlag = (): void => {
+      drawAlternatingFlag(drawSpanishFlag, drawMexicanFlag);
     };
 
     if (language === "fr") {
@@ -1785,7 +1984,7 @@ class Menus implements MenuSystemInstance {
     }
 
     if (language === "es") {
-      horizontalTricolor(["#AA151B", "#F1BF00", "#AA151B"]);
+      drawSpanishLanguageFlag();
       return;
     }
 
@@ -1853,14 +2052,14 @@ class Menus implements MenuSystemInstance {
       );
     }
 
-    return Math.max(0, Math.min(1, value / 10));
+    return Math.max(0, Math.min(1, value / (item.sliderSteps ?? 10)));
   };
 
   private _setSliderFromPointer = (
     item: MenuItem,
     pointer: MenuPointerData
   ): void => {
-    if (!item.onSetValue) {
+    if (item.disabled || !item.onSetValue) {
       return;
     }
 
@@ -2272,6 +2471,14 @@ class Menus implements MenuSystemInstance {
       return i18n.menu.controls;
     }
 
+    if (this._screen === "filters") {
+      return i18n.menu.filters;
+    }
+
+    if (this._screen === "filter-custom") {
+      return i18n.menu.customCrtOptions;
+    }
+
     if (this._screen === "debug") {
       return i18n.menu.debug;
     }
@@ -2348,6 +2555,26 @@ class Menus implements MenuSystemInstance {
       controllerTypes.length;
 
     userOptions.setOption("controllerType", controllerTypes[nextIndex]);
+  };
+
+  private _adjustFilterMode = (direction: -1 | 1): void => {
+    const currentIndex = filterModes.indexOf(userOptions.videoFilterMode);
+    const nextIndex =
+      (currentIndex + direction + filterModes.length) % filterModes.length;
+
+    userOptions.setOption("videoFilterMode", filterModes[nextIndex]);
+  };
+
+  private _setFilterSetting = (
+    key: keyof typeof userOptions.filterSettings,
+    value: number
+  ): void => {
+    userOptions.setFilterSetting(key, normalizeFilterIntensity(value));
+  };
+
+  private _resetFilters = (): void => {
+    userOptions.setOption("filterSettings", { ...filterPresets.off });
+    userOptions.setOption("videoFilterMode", defaultFilterMode);
   };
 
   private _getSelectedLevelLabel = (): string => {

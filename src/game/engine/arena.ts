@@ -16,14 +16,21 @@ type CanvasWithDebugGrid = HTMLCanvasElement & {
   stroke?: CanvasRenderingContext2D["stroke"];
   strokeStyle?: string;
 };
-type FullscreenCanvas = HTMLCanvasElement & {
+type FullscreenElement = HTMLElement & {
   mozRequestFullScreen?: () => void;
   webkitRequestFullscreen?: (keyboardInput?: number) => void;
 };
 type FullscreenDocument = Document & {
   cancelFullScreen?: () => void;
+  exitFullscreen?: () => void;
+  fullscreenEnabled?: boolean;
+  fullscreenElement?: Element | null;
   mozCancelFullScreen?: () => void;
+  mozFullScreenElement?: Element | null;
+  mozFullScreenEnabled?: boolean;
   webkitCancelFullScreen?: () => void;
+  webkitFullscreenElement?: Element | null;
+  webkitFullscreenEnabled?: boolean;
 };
 
 class GameArena implements GameArenaInstance {
@@ -36,7 +43,7 @@ class GameArena implements GameArenaInstance {
   private _oldWidth: number;
   private _styles?: HTMLStyleElement;
   private readonly _handleFullscreenChange = (): void => {
-    this._isInFullScreen = !this._isInFullScreen;
+    this._isInFullScreen = this.isFullScreen();
     if (this._isInFullScreen) {
       this.resize(screen.width, screen.height);
       window.console.log("Entered Full-Screen");
@@ -136,7 +143,7 @@ class GameArena implements GameArenaInstance {
   };
 
   enterFullScreen = (): void => {
-    const element = this._canvas as FullscreenCanvas;
+    const element = this._containerElement as FullscreenElement;
     if (element.requestFullscreen) {
       element.requestFullscreen();
     } else if (element.mozRequestFullScreen) {
@@ -151,7 +158,9 @@ class GameArena implements GameArenaInstance {
 
   exitFullScreen = (): void => {
     const doc = document as FullscreenDocument;
-    if (doc.cancelFullScreen) {
+    if (doc.exitFullscreen) {
+      doc.exitFullscreen();
+    } else if (doc.cancelFullScreen) {
       doc.cancelFullScreen();
     } else if (doc.mozCancelFullScreen) {
       doc.mozCancelFullScreen();
@@ -160,9 +169,61 @@ class GameArena implements GameArenaInstance {
     }
   };
 
+  isFullScreen = (): boolean => {
+    const doc = document as FullscreenDocument;
+
+    return Boolean(
+      doc.fullscreenElement ||
+        doc.webkitFullscreenElement ||
+        doc.mozFullScreenElement
+    );
+  };
+
+  isFullScreenLocked = (): boolean => {
+    const standaloneNavigator = navigator as Navigator & { standalone?: boolean };
+
+    return (
+      standaloneNavigator.standalone === true ||
+      window.matchMedia?.("(display-mode: fullscreen)").matches === true
+    );
+  };
+
+  canToggleFullScreen = (): boolean => {
+    const doc = document as FullscreenDocument;
+    const element = this._containerElement as FullscreenElement;
+    const canExitFullScreen = Boolean(
+      doc.exitFullscreen ||
+        doc.cancelFullScreen ||
+        doc.mozCancelFullScreen ||
+        doc.webkitCancelFullScreen
+    );
+    const fullscreenEnabled =
+      doc.fullscreenEnabled ??
+      doc.webkitFullscreenEnabled ??
+      doc.mozFullScreenEnabled ??
+      true;
+
+    if (this.isFullScreen()) {
+      return !this.isFullScreenLocked() && canExitFullScreen;
+    }
+
+    return (
+      !this.isFullScreenLocked() &&
+      fullscreenEnabled !== false &&
+      Boolean(
+        element.requestFullscreen ||
+          element.mozRequestFullScreen ||
+          element.webkitRequestFullscreen
+      )
+    );
+  };
+
   toggleFullScreen = (): void => {
-    window.console.log("this._isInFullScreen", this._isInFullScreen);
-    if (this._isInFullScreen) {
+    if (!this.canToggleFullScreen()) {
+      return;
+    }
+
+    if (this.isFullScreen()) {
       this.exitFullScreen();
     } else {
       this.enterFullScreen();

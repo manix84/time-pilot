@@ -59,10 +59,13 @@ const nl: typeof en = {
     controlType: "Besturingstype",
     current: "Geselecteerd",
     controls: "Besturing",
+    customCrtOptions: "Custom CRT Options",
     debug: "Debug",
     directional: "Richting",
     effectsVolume: "Effectvolume",
     fire: "Vuur",
+    filters: "Filters",
+    fullScreen: "Volledig scherm",
     gameZoom: "Gamezoom",
     levelShowcase: {
       basic: {
@@ -97,6 +100,7 @@ const nl: typeof en = {
     options: "Opties",
     pressAKey: "Druk op een toets",
     remapControls: "Toetsen instellen",
+    resetFilters: "Reset Filters",
     rotate: "Draaien",
     selectLevel: "Level kiezen",
     showControlsOverlay: "Besturing tonen",
@@ -107,6 +111,7 @@ const nl: typeof en = {
     soon: "Binnenkort",
     start: "Start",
     uiZoom: "UI-zoom",
+    videoFilterMode: "Video Filter Mode",
   },
 };
 

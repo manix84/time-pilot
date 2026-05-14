@@ -61,7 +61,7 @@ class Hud implements HudInstance {
       );
     }
 
-    if (userOptions.enableDebug && userOptions.debug.showControlsOverlay) {
+    if (userOptions.debug.showControlsOverlay) {
       this.renderControlsOverlay();
     }
 
@@ -164,6 +164,13 @@ class Hud implements HudInstance {
         this._getUiHeight() / 2 - 114,
         inputState
       );
+    } else if (inputState.activeController === "touch") {
+      this.renderTouchOverlay(
+        context,
+        this._getUiWidth() / 2 - 120,
+        this._getUiHeight() / 2 - 124,
+        inputState
+      );
     } else {
       this.renderKeyboardOverlay(
         context,
@@ -183,6 +190,15 @@ class Hud implements HudInstance {
     this.renderKey(context, "D", x + 88, y + 32, 34, 28, inputState.right);
     this.renderKey(context, "Space", x, y + 68, 122, 28, inputState.fire);
     this.renderMouseOverlay(context, x + 138, y + 10, inputState.fire);
+  };
+
+  private renderTouchOverlay = (
+    context: CanvasRenderingContext2D,
+    x: number,
+    y: number,
+    inputState: ControlInputState
+  ): void => {
+    this.renderTouchStick(context, x + 60, y + 60, inputState);
   };
 
   private renderMouseOverlay = (context: CanvasRenderingContext2D, x: number, y: number, isPressed: boolean): void => {
@@ -284,6 +300,67 @@ class Hud implements HudInstance {
     context.arc(x + offsetX, y + offsetY, 9, 0, 2 * Math.PI);
     context.fill();
     context.stroke();
+  };
+
+  private renderTouchStick = (
+    context: CanvasRenderingContext2D,
+    x: number,
+    y: number,
+    inputState: ControlInputState
+  ): void => {
+    const isDirectional =
+      inputState.up || inputState.right || inputState.down || inputState.left;
+    const isPressed = inputState.fire || isDirectional;
+    const offsetX = inputState.left ? -18 : inputState.right ? 18 : 0;
+    const offsetY = inputState.up ? -18 : inputState.down ? 18 : 0;
+
+    context.globalAlpha = isPressed ? 0.24 : 0.12;
+    context.fillStyle = isPressed ? palette.overlay.activeWashStrong : palette.overlay.line;
+    context.beginPath();
+    context.arc(x, y, 54, 0, 2 * Math.PI);
+    context.fill();
+
+    context.globalAlpha = 0.55;
+    context.strokeStyle = palette.overlay.line;
+    context.lineWidth = 2;
+    context.beginPath();
+    context.arc(x, y, 42, 0, 2 * Math.PI);
+    context.stroke();
+
+    context.globalAlpha = 0.32;
+    context.beginPath();
+    context.moveTo(x - 42, y);
+    context.lineTo(x + 42, y);
+    context.moveTo(x, y - 42);
+    context.lineTo(x, y + 42);
+    context.stroke();
+
+    if (isDirectional) {
+      context.globalAlpha = 0.9;
+      context.strokeStyle = palette.overlay.activeFill;
+      context.beginPath();
+      context.moveTo(x, y);
+      context.lineTo(x + offsetX, y + offsetY);
+      context.stroke();
+    }
+
+    context.globalAlpha = isPressed ? 0.96 : 0.55;
+    context.fillStyle = isPressed ? palette.overlay.activeFill : "transparent";
+    context.strokeStyle = isPressed ? palette.overlay.activeFill : palette.overlay.line;
+    context.beginPath();
+    context.arc(x + offsetX, y + offsetY, 18, 0, 2 * Math.PI);
+    context.fill();
+    context.stroke();
+
+    if (isPressed) {
+      context.globalAlpha = 1;
+      this._gameArena.renderText("FIRE", x + offsetX, y + offsetY, {
+        size: 7,
+        align: "center",
+        valign: "middle",
+        color: palette.menu.selectedText,
+      });
+    }
   };
 
   private renderButton = (

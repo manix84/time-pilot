@@ -18,11 +18,13 @@ body,
 #root {
   margin: 0;
   width: 100%;
+  height: 100%;
   min-height: 100%;
 }
 
 body {
   min-height: 100vh;
+  overscroll-behavior: none;
 }
 
 button,
@@ -38,6 +40,27 @@ input {
     radial-gradient(circle at 84% 8%, rgba(255, 174, 42, 0.22), transparent 28%),
     radial-gradient(circle at 8% 28%, rgba(89, 214, 196, 0.18), transparent 28%),
     #070b12;
+}
+
+.app-shell--pwa {
+  position: fixed;
+  inset: 0;
+  display: block;
+  min-height: 100%;
+  overflow: hidden;
+  background: #070b12;
+}
+
+.app-shell--pwa .time-pilot-game,
+.app-shell--pwa .time-pilot-stage {
+  width: 100%;
+  height: 100%;
+}
+
+.app-shell--pwa .time-pilot-stage {
+  max-height: none;
+  min-height: 0;
+  aspect-ratio: auto;
 }
 
 .showcase-hero {
@@ -137,21 +160,269 @@ input {
 }
 
 .time-pilot-game {
+  --filter-scanlines: 0;
+  --filter-crt-mask: 0;
+  --filter-curvature: 0;
+  --filter-bloom: 0;
+  --filter-horizontal-blur: 0;
+  --filter-colour-bleed: 0;
+  --filter-dither-blending: 0;
+  --filter-flicker: 0;
+  --filter-interference: 0;
+  --filter-vhs-tracking: 0;
+  --filter-burn-in: 0;
+  --filter-glass-reflection: 0;
+  --filter-black-crush: 0;
+  --filter-explosion-bloom-boost: 0;
+  --filter-time-warp-distortion: 0;
+  --filter-rgb-split-url: none;
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
   width: 100%;
 }
 
 .time-pilot-stage {
+  position: relative;
+  z-index: 0;
   width: 100%;
   aspect-ratio: 3 / 2;
   max-height: 74vh;
   min-height: 280px;
   touch-action: none;
+  overflow: hidden;
+  border-radius: calc(var(--filter-curvature) * 0.3px);
+  clip-path: inset(0 round calc(var(--filter-curvature) * 0.3px));
+  box-shadow:
+    0 0 calc(var(--filter-bloom) * 0.65px) rgba(123, 245, 255, 0.5),
+    0 0 calc(var(--filter-explosion-bloom-boost) * 1px) rgba(255, 198, 82, 0.52),
+    inset 0 0 calc(var(--filter-black-crush) * 0.8px) rgba(0, 0, 0, 0.75);
+  filter:
+    blur(calc(var(--filter-horizontal-blur) * 0.025px))
+    contrast(calc(1 + var(--filter-black-crush) * 0.003))
+    saturate(calc(1 + var(--filter-colour-bleed) * 0.006))
+    brightness(calc(1 - var(--filter-black-crush) * 0.0015));
+}
+
+.time-pilot-game[data-rgb-split="on"] .time-pilot-stage {
+  filter:
+    var(--filter-rgb-split-url)
+    blur(calc(var(--filter-horizontal-blur) * 0.025px))
+    contrast(calc(1 + var(--filter-black-crush) * 0.003))
+    saturate(calc(1 + var(--filter-colour-bleed) * 0.006))
+    brightness(calc(1 - var(--filter-black-crush) * 0.0015));
+  transform: translateZ(0);
+}
+
+.time-pilot-svg-filters {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
 }
 
 .time-pilot-stage canvas {
+  position: relative;
+  z-index: 0;
   display: block;
   width: 100%;
   height: 100%;
+  image-rendering: pixelated;
+  filter:
+    drop-shadow(0 0 calc(var(--filter-bloom) * 0.08px) rgba(132, 245, 255, 0.5))
+    drop-shadow(0 0 calc(var(--filter-explosion-bloom-boost) * 0.16px) rgba(255, 216, 96, 0.65));
+}
+
+.time-pilot-filter-bloom,
+.time-pilot-filter-dither,
+.time-pilot-filter-burn-in,
+.time-pilot-filter-interference,
+.time-pilot-filter-tracking,
+.time-pilot-filter-reflection,
+.time-pilot-filter-distortion,
+.time-pilot-filter-flicker {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.time-pilot-filter-bloom {
+  opacity: calc((var(--filter-bloom) + var(--filter-explosion-bloom-boost)) / 120);
+  background:
+    radial-gradient(circle at 50% 50%, rgba(132, 245, 255, 0.22), transparent 36%),
+    radial-gradient(circle at 50% 50%, rgba(255, 198, 82, 0.18), transparent 54%);
+  mix-blend-mode: screen;
+}
+
+.time-pilot-filter-dither {
+  opacity: calc(var(--filter-dither-blending) / 95);
+  background:
+    linear-gradient(45deg, rgba(255, 255, 255, 0.2) 25%, transparent 25% 75%, rgba(0, 0, 0, 0.24) 75%),
+    linear-gradient(45deg, rgba(0, 0, 0, 0.22) 25%, transparent 25% 75%, rgba(255, 255, 255, 0.16) 75%);
+  background-position:
+    0 0,
+    2px 2px;
+  background-size: 4px 4px;
+  mix-blend-mode: soft-light;
+}
+
+.time-pilot-filter-burn-in {
+  opacity: calc(var(--filter-burn-in) / 95);
+  background:
+    radial-gradient(ellipse at 50% 45%, rgba(255, 196, 64, 0.28), transparent 30%),
+    radial-gradient(ellipse at 50% 55%, transparent 32%, rgba(6, 12, 16, 0.62) 76%),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.08), transparent 16% 84%, rgba(0, 0, 0, 0.22));
+  mix-blend-mode: soft-light;
+}
+
+.time-pilot-filter-interference {
+  opacity: calc(var(--filter-interference) / 105);
+  background:
+    repeating-linear-gradient(
+      0deg,
+      transparent 0 18px,
+      rgba(255, 255, 255, 0.22) 19px,
+      rgba(0, 0, 0, 0.2) 21px,
+      transparent 24px
+    );
+  animation: filter-interference 0.28s steps(2) infinite;
+  mix-blend-mode: screen;
+}
+
+.time-pilot-filter-tracking {
+  opacity: calc(var(--filter-vhs-tracking) / 105);
+  background:
+    linear-gradient(
+      180deg,
+      transparent 0 42%,
+      rgba(255, 255, 255, 0.36) 45%,
+      rgba(0, 0, 0, 0.34) 49%,
+      transparent 55% 100%
+    );
+  animation: filter-tracking 1.1s linear infinite;
+  mix-blend-mode: screen;
+}
+
+.time-pilot-filter-reflection {
+  opacity: calc(var(--filter-glass-reflection) / 120);
+  background:
+    linear-gradient(
+      125deg,
+      transparent 0 17%,
+      rgba(255, 255, 255, 0.58) 23%,
+      rgba(255, 255, 255, 0.18) 28%,
+      transparent 36% 100%
+    );
+  mix-blend-mode: screen;
+}
+
+.time-pilot-filter-distortion {
+  opacity: calc(var(--filter-time-warp-distortion) / 115);
+  background:
+    radial-gradient(circle at 50% 50%, transparent 0 30%, rgba(112, 226, 255, 0.14) 42%, transparent 56%),
+    repeating-radial-gradient(circle at 50% 50%, transparent 0 10px, rgba(255, 255, 255, 0.13) 11px, transparent 13px);
+  animation: filter-distortion 0.9s ease-in-out infinite alternate;
+  mix-blend-mode: screen;
+}
+
+.time-pilot-filter-flicker {
+  opacity: calc(var(--filter-flicker) / 280);
+  background: rgba(255, 255, 255, 0.72);
+  animation: filter-flicker 0.16s steps(2) infinite;
+}
+
+.time-pilot-game[data-filter-mode="off"] .time-pilot-stage {
+  border-radius: 0;
+  clip-path: none;
+  box-shadow: none;
+  filter: none;
+  transform: none;
+}
+
+.time-pilot-game[data-filter-mode="off"] .time-pilot-stage canvas {
+  filter: none;
+}
+
+.time-pilot-stage::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  opacity: calc((var(--filter-scanlines) + var(--filter-crt-mask)) / 220);
+  background:
+    repeating-linear-gradient(
+      0deg,
+      rgba(0, 0, 0, 0.58) 0,
+      rgba(0, 0, 0, 0.58) 1px,
+      transparent 1px,
+      transparent 4px
+    ),
+    repeating-linear-gradient(
+      90deg,
+      rgba(255, 40, 40, 0.16) 0,
+      rgba(255, 40, 40, 0.16) 1px,
+      rgba(40, 255, 120, 0.12) 1px,
+      rgba(40, 255, 120, 0.12) 2px,
+      rgba(60, 120, 255, 0.14) 2px,
+      rgba(60, 120, 255, 0.14) 3px,
+      transparent 3px,
+      transparent 5px
+    );
+  mix-blend-mode: multiply;
+}
+
+.time-pilot-game[data-filter-mode="off"] .time-pilot-stage::before,
+.time-pilot-game[data-filter-mode="off"] .time-pilot-filter-bloom,
+.time-pilot-game[data-filter-mode="off"] .time-pilot-filter-dither,
+.time-pilot-game[data-filter-mode="off"] .time-pilot-filter-burn-in,
+.time-pilot-game[data-filter-mode="off"] .time-pilot-filter-interference,
+.time-pilot-game[data-filter-mode="off"] .time-pilot-filter-tracking,
+.time-pilot-game[data-filter-mode="off"] .time-pilot-filter-reflection,
+.time-pilot-game[data-filter-mode="off"] .time-pilot-filter-distortion,
+.time-pilot-game[data-filter-mode="off"] .time-pilot-filter-flicker {
+  content: none;
+  display: none;
+}
+
+@keyframes filter-interference {
+  0% {
+    transform: translateY(-2px);
+  }
+  100% {
+    transform: translateY(2px);
+  }
+}
+
+@keyframes filter-tracking {
+  0% {
+    transform: translateY(-42%);
+  }
+  50% {
+    transform: translateY(calc(var(--filter-vhs-tracking) * 0.12px));
+  }
+  100% {
+    transform: translateY(42%);
+  }
+}
+
+@keyframes filter-distortion {
+  0% {
+    transform: scale(1);
+  }
+  100% {
+    transform: scale(calc(1 + var(--filter-time-warp-distortion) * 0.0015));
+  }
+}
+
+@keyframes filter-flicker {
+  0% {
+    opacity: calc(var(--filter-flicker) / 700);
+  }
+  100% {
+    opacity: calc(var(--filter-flicker) / 360);
+  }
 }
 
 .showcase-band {

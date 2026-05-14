@@ -27,6 +27,7 @@ const createControls = (): ControllerInterfaceInstance => {
     rotateRight: vi.fn(),
     rotateLeft: vi.fn(),
     handlePointer: vi.fn(),
+    captureKey: vi.fn(() => false),
     goBack: vi.fn(),
     isMenuActive: vi.fn(() => false),
   };
@@ -162,6 +163,33 @@ describe("controller modules", () => {
     expect(controls.adjustUiZoom).toHaveBeenCalledWith(-1);
     expect(controls.resetUiZoom).toHaveBeenCalledTimes(2);
     expect(controls.rotateToHeading).not.toHaveBeenCalled();
+
+    keyboard.disconnect?.();
+  });
+
+  it("uses F to toggle fullscreen before gameplay or menu actions", () => {
+    const controls = createControls();
+    const inputState = createInputState();
+    const keyboard = new Keyboard1(controls, inputState);
+
+    document.documentElement.dispatchEvent(new KeyboardEvent("keydown", { keyCode: 70 }));
+
+    expect(controls.toggleFullScreen).toHaveBeenCalledTimes(1);
+    expect(controls.startShooting).not.toHaveBeenCalled();
+    expect(controls.openMenu).not.toHaveBeenCalled();
+
+    keyboard.disconnect?.();
+  });
+
+  it("keeps F fullscreen behavior in the alternate keyboard controller", () => {
+    const controls = createControls();
+    const inputState = createInputState();
+    const keyboard = new Keyboard2(controls, inputState);
+
+    document.documentElement.dispatchEvent(new KeyboardEvent("keydown", { keyCode: 70 }));
+
+    expect(controls.toggleFullScreen).toHaveBeenCalledTimes(1);
+    expect(controls.startShooting).not.toHaveBeenCalled();
 
     keyboard.disconnect?.();
   });
@@ -476,25 +504,43 @@ describe("controller modules", () => {
     });
 
     const touch = new TouchController(canvas, controls, inputState);
-    dispatchTouch(canvas, "touchstart", { clientX: 202, clientY: 151 });
+    dispatchTouch(canvas, "touchstart", { clientX: 300, clientY: 200 });
     expect(controls.rotateToHeading).not.toHaveBeenCalled();
-
-    dispatchTouch(canvas, "touchmove", { clientX: 200, clientY: 50 });
-    expect(controls.rotateToHeading).toHaveBeenCalledWith(0);
     expect(controls.startShooting).toHaveBeenCalled();
     expect(inputState.fire).toBe(true);
+
+    dispatchTouch(canvas, "touchmove", { clientX: 300, clientY: 120 });
+    expect(controls.rotateToHeading).toHaveBeenCalledWith(0);
     expect(inputState.up).toBe(true);
     expect(inputState.activeController).toBe("touch");
 
-    dispatchTouch(canvas, "touchmove", { clientX: 300, clientY: 150 });
+    dispatchTouch(canvas, "touchmove", { clientX: 380, clientY: 200 });
     expect(controls.rotateToHeading).toHaveBeenCalledWith(90);
     expect(inputState.right).toBe(true);
 
-    dispatchTouch(canvas, "touchend", { clientX: 300, clientY: 150 });
+    dispatchTouch(canvas, "touchend", { clientX: 380, clientY: 200 });
     expect(controls.stopShooting).toHaveBeenCalled();
     expect(inputState.fire).toBe(false);
     expect(inputState.right).toBe(false);
     expect(controls.stop).not.toHaveBeenCalled();
+
+    touch.disconnect?.();
+  });
+
+  it("fails loudly if touch movement is resolved without an origin", () => {
+    const controls = createControls();
+    const canvas = document.createElement("canvas");
+    const touch = new TouchController(canvas, controls);
+    const touchWithPrivateAccess = touch as unknown as {
+      getRelativePoint: (point: { posX: number; posY: number }) => {
+        posX: number;
+        posY: number;
+      };
+    };
+
+    expect(() =>
+      touchWithPrivateAccess.getRelativePoint({ posX: 10, posY: 10 })
+    ).toThrow("Touch movement cannot be resolved without a touch origin.");
 
     touch.disconnect?.();
   });

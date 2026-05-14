@@ -57,10 +57,13 @@ const en = {
     controlType: "Control Type",
     current: "Selected",
     controls: "Controls",
+    customCrtOptions: "Custom CRT Options",
     debug: "Debug",
     directional: "Directional",
     effectsVolume: "Effects Volume",
     fire: "Fire",
+    filters: "Filters",
+    fullScreen: "Full Screen",
     gameZoom: "Game Zoom",
     levelShowcase: {
       basic: {
@@ -95,6 +98,7 @@ const en = {
     options: "Options",
     pressAKey: "Press a key",
     remapControls: "Remap Controls",
+    resetFilters: "Reset Filters",
     rotate: "Rotate",
     selectLevel: "Select Level",
     showControlsOverlay: "Show Controls Overlay",
@@ -105,6 +109,7 @@ const en = {
     soon: "Soon",
     start: "Start",
     uiZoom: "UI Zoom",
+    videoFilterMode: "Video Filter Mode",
   },
 };
 

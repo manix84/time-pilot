@@ -36,6 +36,9 @@ const createArena = (): GameArenaInstance => {
     getContext: vi.fn(() => context),
     enterFullScreen: vi.fn(),
     exitFullScreen: vi.fn(),
+    isFullScreen: vi.fn(() => false),
+    isFullScreenLocked: vi.fn(() => false),
+    canToggleFullScreen: vi.fn(() => true),
     toggleFullScreen: vi.fn(),
     setBackgroundColor: vi.fn(),
     clear: vi.fn(),
@@ -567,8 +570,10 @@ describe("context-backed game modules", () => {
     expect(context._gameArena.renderSprite).toHaveBeenCalledWith(
       expect.any(HTMLImageElement),
       expect.objectContaining({
-        frameHeight: 18,
-        frameWidth: 32,
+        frameHeight: 9,
+        frameWidth: 16,
+        renderHeight: 18,
+        renderWidth: 32,
       })
     );
   });
@@ -589,8 +594,10 @@ describe("context-backed game modules", () => {
         src: expect.stringContaining("asteroid1.png"),
       }),
       expect.objectContaining({
-        frameHeight: 24,
-        frameWidth: 28,
+        frameHeight: 12,
+        frameWidth: 14,
+        renderHeight: 24,
+        renderWidth: 28,
       })
     );
   });
@@ -631,6 +638,8 @@ describe("context-backed game modules", () => {
         frameWidth: 16,
         frameX: 3,
         frameY: 0,
+        renderHeight: 32,
+        renderWidth: 32,
       })
     );
     expect(context._gameArena.renderSprite).toHaveBeenNthCalledWith(
@@ -641,6 +650,8 @@ describe("context-backed game modules", () => {
         frameWidth: 16,
         frameX: 2,
         frameY: 0,
+        renderHeight: 32,
+        renderWidth: 32,
       })
     );
   });
@@ -1300,7 +1311,6 @@ describe("context-backed game modules", () => {
 
   it("renders only the active controller overlay", () => {
     const context = createContext();
-    userOptions.setOption("enableDebug", true);
     userOptions.setDebugOption("showControlsOverlay", true);
 
     context._controlInputState.activeController = "keyboard";
@@ -1331,6 +1341,30 @@ describe("context-backed game modules", () => {
     );
     expect(context._gameArena.renderText).not.toHaveBeenCalledWith(
       "Space",
+      expect.any(Number),
+      expect.any(Number),
+      expect.any(Object)
+    );
+
+    vi.mocked(context._gameArena.renderText).mockClear();
+    context._controlInputState.activeController = "touch";
+    context._controlInputState.fire = true;
+    context._hud.render();
+
+    expect(context._gameArena.renderText).toHaveBeenCalledWith(
+      "FIRE",
+      expect.any(Number),
+      expect.any(Number),
+      expect.objectContaining({ align: "center" })
+    );
+    expect(context._gameArena.renderText).not.toHaveBeenCalledWith(
+      "Space",
+      expect.any(Number),
+      expect.any(Number),
+      expect.any(Object)
+    );
+    expect(context._gameArena.renderText).not.toHaveBeenCalledWith(
+      "Menu",
       expect.any(Number),
       expect.any(Number),
       expect.any(Object)

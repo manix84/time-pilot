@@ -14,6 +14,14 @@ const dirname =
 export default defineConfig({
   base: process.env.VITE_BASE_PATH ?? "/",
   plugins: [react()],
+  build: {
+    rollupOptions: {
+      input: {
+        main: path.resolve(dirname, "index.html"),
+        pwa: path.resolve(dirname, "pwa/index.html"),
+      },
+    },
+  },
   server: {
     host: "0.0.0.0",
     open: true,

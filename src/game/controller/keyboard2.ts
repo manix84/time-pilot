@@ -45,6 +45,9 @@ class Keyboard2 implements Controller {
         } else if (event.keyCode === 48 || event.keyCode === 96) {
           event.preventDefault();
           this._controllerInterface.resetUiZoom?.();
+        } else if (bindings.fullscreen.includes(event.keyCode)) {
+          event.preventDefault();
+          this._controllerInterface.toggleFullScreen();
         } else if (bindings.left.includes(event.keyCode)) {
           event.preventDefault();
           this._setInputState("left", true);
@@ -93,9 +96,6 @@ class Keyboard2 implements Controller {
           event.preventDefault();
           this._setInputState("fire", true);
           this._controllerInterface.startShooting();
-        } else if (bindings.fullscreen.includes(event.keyCode)) {
-          event.preventDefault();
-          this._controllerInterface.toggleFullScreen();
         } else if (bindings.menu.includes(event.keyCode)) {
           event.preventDefault();
           this._setInputState("menu", true);

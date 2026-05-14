@@ -12,6 +12,7 @@
 - 🎛️ In-app keyboard layout and gamepad configuration.
 - 🧭 Canvas-rendered start/options/debug menus with keyboard, gamepad, and mouse interaction.
 - 🔎 UI zoom and game POV zoom with automatic viewport scaling.
+- 📱 Installable PWA mode that launches straight into the game canvas in fullscreen display mode.
 - 🌍 Localized menus, level blurbs, and level showcase labels.
 - ✅ PR checks for tests, lint, and type checking.
 - 🚀 Automatic GitHub Pages deployment from `main`.
@@ -43,6 +44,15 @@ Preview the production build:
 ```bash
 npm run preview
 ```
+
+## 📱 Installable PWA
+
+The production build includes a web app manifest and service worker. Installed
+launches use the dedicated `/pwa/` endpoint, which renders only the game canvas. The manifest
+requests fullscreen display mode and landscape orientation so the app behaves
+like a dedicated game rather than a web page.
+
+The showcase/landing page remains the default browser view.
 
 ## 🧪 Quality Checks
 

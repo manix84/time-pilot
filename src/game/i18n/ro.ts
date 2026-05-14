@@ -59,10 +59,13 @@ const ro: typeof en = {
     controlType: "Tip control",
     current: "Selectat",
     controls: "Controale",
+    customCrtOptions: "Custom CRT Options",
     debug: "Debug",
     directional: "Directional",
     effectsVolume: "Volum efecte",
     fire: "Foc",
+    filters: "Filters",
+    fullScreen: "Ecran complet",
     gameZoom: "Zoom joc",
     levelShowcase: {
       basic: {
@@ -97,6 +100,7 @@ const ro: typeof en = {
     options: "Optiuni",
     pressAKey: "Apasa o tasta",
     remapControls: "Reconfigureaza",
+    resetFilters: "Reset Filters",
     rotate: "Rotire",
     selectLevel: "Alege nivelul",
     showControlsOverlay: "Arata controale",
@@ -107,6 +111,7 @@ const ro: typeof en = {
     soon: "In curand",
     start: "Start",
     uiZoom: "Zoom UI",
+    videoFilterMode: "Video Filter Mode",
   },
 };
 

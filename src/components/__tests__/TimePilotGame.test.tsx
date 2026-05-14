@@ -23,6 +23,7 @@ describe("TimePilotGame", () => {
     });
     container.remove();
     userOptions.setOption("enableDebug", false);
+    userOptions.setOption("videoFilterMode", "off");
     localStorage.clear();
     vi.restoreAllMocks();
   });
@@ -46,5 +47,25 @@ describe("TimePilotGame", () => {
     expect(container.querySelector(".time-pilot-controls")).toBeNull();
     expect(container.querySelector("input")).toBeNull();
     expect(container.querySelector("canvas")).toBeInstanceOf(HTMLCanvasElement);
+  });
+
+  it("updates the viewport filter mode when user options change", async () => {
+    await act(async () => {
+      root.render(<TimePilotGame debug />);
+      await new Promise((resolve) => window.setTimeout(resolve, 5));
+    });
+
+    expect(
+      container.querySelector(".time-pilot-game")?.getAttribute("data-filter-mode")
+    ).toBe("off");
+
+    await act(async () => {
+      userOptions.setOption("videoFilterMode", "arcade-crt");
+      await Promise.resolve();
+    });
+
+    expect(
+      container.querySelector(".time-pilot-game")?.getAttribute("data-filter-mode")
+    ).toBe("arcade-crt");
   });
 });

@@ -26,6 +26,15 @@ export const createCanvasArena = (canvas: HTMLCanvasElement, context: CanvasRend
     },
     enterFullScreen() {},
     exitFullScreen() {},
+    isFullScreen() {
+      return false;
+    },
+    isFullScreenLocked() {
+      return false;
+    },
+    canToggleFullScreen() {
+      return true;
+    },
     toggleFullScreen() {},
     setBackgroundColor(color: string) {
       canvas.style.backgroundColor = color;

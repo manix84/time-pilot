@@ -97,6 +97,17 @@ export interface ControllerCommands {
 }
 
 export type ControllerType = "keyboard1" | "keyboard2";
+export type {
+  FilterMode,
+  FilterRuntimeBoosts,
+  FilterSettingKey,
+  FilterSettings,
+} from "./filter-settings";
+import type {
+  FilterMode,
+  FilterSettingKey,
+  FilterSettings,
+} from "./filter-settings";
 export type GameLanguage = "de" | "en" | "es" | "fr" | "it" | "nl" | "ro";
 export type ControlInputName =
   | "down"
@@ -147,6 +158,9 @@ export interface GameArenaInstance extends Coordinates {
   ) => CanvasRenderingContext2D | WebGLRenderingContext;
   enterFullScreen: () => void;
   exitFullScreen: () => void;
+  isFullScreen: () => boolean;
+  isFullScreenLocked: () => boolean;
+  canToggleFullScreen: () => boolean;
   toggleFullScreen: () => void;
   setBackgroundColor: (color: string) => void;
   clear: () => void;
@@ -592,6 +606,8 @@ export interface PropConfig {
   sprite: SpriteAsset;
   width: number;
   height: number;
+  renderWidth?: number;
+  renderHeight?: number;
   relativeVelocity: number;
   layer: number;
   reversed: boolean;
@@ -604,6 +620,8 @@ export interface BonusConfig {
   hitRadius: number;
   width: number;
   height: number;
+  renderWidth?: number;
+  renderHeight?: number;
 }
 
 export interface LevelConfig {
@@ -683,6 +701,7 @@ export interface UserOptions {
   controllerType: ControllerType;
   gameZoom: number;
   gamepadEnabled: boolean;
+  filterSettings: FilterSettings;
   keyboardBindings: KeyboardBindings;
   language: GameLanguage;
   masterVolume: number;
@@ -697,5 +716,7 @@ export interface UserOptions {
     key: K,
     value: UserOptions["debug"][K]
   ) => void;
+  setFilterSetting: (key: FilterSettingKey, value: number) => void;
+  videoFilterMode: FilterMode;
   setOption: <K extends keyof UserOptions>(key: K, value: UserOptions[K]) => void;
 }
