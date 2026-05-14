@@ -16,12 +16,25 @@ if (typeof document !== "undefined") {
 const preview: Preview = {
   parameters: {
     controls: {
+      disable: true,
       matchers: {
         color: /(background|color)$/i,
         date: /Date$/i,
       },
     },
+    actions: {
+      disable: true,
+    },
+    interactions: {
+      disable: true,
+    },
+    a11y: {
+      disable: true,
+    },
     layout: "fullscreen",
+    options: {
+      showPanel: false,
+    },
   },
 };
 

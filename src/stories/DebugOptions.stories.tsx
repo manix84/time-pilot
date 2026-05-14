@@ -163,11 +163,18 @@ const meta = {
   title: "Game/Debug Options",
   component: DebugVectorScene,
   parameters: {
+    controls: {
+      disable: false,
+    },
     docs: {
       description: {
         component:
           "Animated debug overlay examples using the same heading, steering, and turn-arc renderer as gameplay entities.",
       },
+    },
+    options: {
+      selectedPanel: "storybook/controls/panel",
+      showPanel: true,
     },
   },
 } satisfies Meta<typeof DebugVectorScene>;

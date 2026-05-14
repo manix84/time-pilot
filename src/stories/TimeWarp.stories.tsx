@@ -298,6 +298,15 @@ const meta = {
       control: { min: 1, max: 5, step: 1, type: "range" },
     },
   },
+  parameters: {
+    controls: {
+      disable: false,
+    },
+    options: {
+      selectedPanel: "storybook/controls/panel",
+      showPanel: true,
+    },
+  },
 } satisfies Meta<typeof TimeWarpScene>;
 
 export default meta;
