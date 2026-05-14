@@ -54,12 +54,28 @@ const enemyExplosionSound = {
   src: assetPath("sounds/enemies/basic/explosion.wav"),
 };
 
+const bossExplosionSound = {
+  src: assetPath("sounds/enemies/boss/explosion.wav"),
+};
+
 const rocketLaunchSound = {
   src: assetPath("sounds/enemies/basic/rocket_launch.wav"),
 };
 
 const rocketFlightSound = {
   src: assetPath("sounds/enemies/basic/rocket_fly.wav"),
+};
+
+const rocketExplosionSound = {
+  src: assetPath("sounds/enemies/basic/rocket_explode.wav"),
+};
+
+const specialBombDropSound = {
+  src: assetPath("sounds/enemies/special/bomb.wav"),
+};
+
+const specialEnemyExplosionSound = {
+  src: assetPath("sounds/enemies/special/explosion.wav"),
 };
 
 const plasmaProjectileSprite = {
@@ -174,7 +190,7 @@ const bossEnemy = (
       src: assetPath("sprites/enemies/boss/explosion.png"),
     },
     sound: {
-      src: enemyExplosionSound.src,
+      src: bossExplosionSound.src,
     },
     width: 32,
     height: 16,
@@ -210,6 +226,7 @@ const specialBomber = (
     velocity: projectileSpeeds.bomb1940,
     size: 6,
     color: palette.aircraft.enemyBullet,
+    sound: specialBombDropSound,
     sprite: {
       sprite: {
         src: assetPath("sprites/enemies/projectiles/bomb.png"),
@@ -227,7 +244,7 @@ const specialBomber = (
       src: assetPath("sprites/enemies/special-bomber/explosion.png"),
     },
     sound: {
-      src: enemyExplosionSound.src,
+      src: specialEnemyExplosionSound.src,
     },
     width: 32,
     height: 16,
@@ -784,6 +801,7 @@ const timePilotConstants: TimePilotConstants = {
             sprite: rocketProjectileSprite,
             sound: rocketLaunchSound,
             flightSound: rocketFlightSound,
+            explosionSound: rocketExplosionSound,
             tracksPlayer: true,
             turnRate: 0.5,
             shootable: true,
@@ -805,6 +823,7 @@ const timePilotConstants: TimePilotConstants = {
             sprite: rocketProjectileSprite,
             sound: rocketLaunchSound,
             flightSound: rocketFlightSound,
+            explosionSound: rocketExplosionSound,
             tracksPlayer: true,
             turnRate: 0.5,
             shootable: true,
@@ -849,6 +868,7 @@ const timePilotConstants: TimePilotConstants = {
             sprite: rocketProjectileSprite,
             sound: rocketLaunchSound,
             flightSound: rocketFlightSound,
+            explosionSound: rocketExplosionSound,
             tracksPlayer: true,
             turnRate: 1,
             shootable: true,
@@ -870,6 +890,7 @@ const timePilotConstants: TimePilotConstants = {
             sprite: rocketProjectileSprite,
             sound: rocketLaunchSound,
             flightSound: rocketFlightSound,
+            explosionSound: rocketExplosionSound,
             tracksPlayer: true,
             turnRate: 1,
             shootable: true,

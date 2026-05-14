@@ -469,6 +469,7 @@ describe("game systems", () => {
       expect.objectContaining({
         src: "/sounds/enemies/basic/bullet.wav",
       }),
+      undefined,
       undefined
     );
     expect(context._bonuses.create).not.toHaveBeenCalled();
@@ -508,6 +509,9 @@ describe("game systems", () => {
       }),
       expect.objectContaining({
         src: "/sounds/enemies/basic/rocket_fly.wav",
+      }),
+      expect.objectContaining({
+        src: "/sounds/enemies/basic/rocket_explode.wav",
       })
     );
   });
@@ -546,6 +550,9 @@ describe("game systems", () => {
       }),
       expect.objectContaining({
         src: "/sounds/enemies/basic/rocket_fly.wav",
+      }),
+      expect.objectContaining({
+        src: "/sounds/enemies/basic/rocket_explode.wav",
       })
     );
   });
@@ -662,6 +669,9 @@ describe("game systems", () => {
         frames: 4,
         height: 11,
         width: 11,
+      }),
+      expect.objectContaining({
+        src: "/sounds/enemies/special/bomb.wav",
       }),
       undefined,
       undefined

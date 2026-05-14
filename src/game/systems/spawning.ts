@@ -320,7 +320,8 @@ class SpawningSystem implements SpawningSystemInstance {
       levelData.projectile.shootable,
       levelData.projectile.explosion,
       levelData.projectile.sound,
-      levelData.projectile.flightSound
+      levelData.projectile.flightSound,
+      levelData.projectile.explosionSound
     );
   };
 
@@ -372,7 +373,8 @@ class SpawningSystem implements SpawningSystemInstance {
       levelData.projectile.shootable,
       levelData.projectile.explosion,
       levelData.projectile.sound,
-      levelData.projectile.flightSound
+      levelData.projectile.flightSound,
+      levelData.projectile.explosionSound
     );
   };
 

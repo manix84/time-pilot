@@ -207,7 +207,8 @@ export interface BulletFactoryInstance {
     shootable?: boolean,
     explosion?: BulletData["explosion"],
     sound?: BulletData["sound"],
-    flightSound?: BulletData["flightSound"]
+    flightSound?: BulletData["flightSound"],
+    explosionSound?: BulletData["explosionSound"]
   ) => void;
   getCount: () => number;
   getData: () => BulletData[];
@@ -497,6 +498,7 @@ export interface BulletData extends Coordinates {
   explosion?: ProjectileExplosionConfig;
   sound?: SoundAsset;
   flightSound?: SoundAsset;
+  explosionSound?: SoundAsset;
   explosionTick: number | false;
 }
 
@@ -521,6 +523,7 @@ export interface ProjectileConfig {
   turnRate?: number;
   shootable?: boolean;
   explosion?: ProjectileExplosionConfig;
+  explosionSound?: SoundAsset;
 }
 
 export interface PlayerConfig {

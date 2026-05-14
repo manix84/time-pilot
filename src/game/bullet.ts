@@ -43,7 +43,8 @@ class Bullet implements BulletInstance {
     shootable = false,
     explosion?: BulletData["explosion"],
     sound?: BulletData["sound"],
-    flightSound?: BulletData["flightSound"]
+    flightSound?: BulletData["flightSound"],
+    explosionSound?: BulletData["explosionSound"]
   ) {
     this._gameArena = context._gameArena;
     this._gameTicker = context._gameTicker;
@@ -64,6 +65,7 @@ class Bullet implements BulletInstance {
       explosion,
       sound,
       flightSound,
+      explosionSound,
       explosionTick: false,
     };
 
@@ -119,16 +121,19 @@ class Bullet implements BulletInstance {
   };
 
   explode = (): void => {
+    if (this._data.explosionTick !== false || this.removeMe) {
+      return;
+    }
+
     this.stopFlightSound();
+    this.playExplosionSound();
 
     if (!this._data.explosion) {
       this.removeMe = true;
       return;
     }
 
-    if (this._data.explosionTick === false) {
-      this._data.explosionTick = this._gameTicker.getTicks();
-    }
+    this._data.explosionTick = this._gameTicker.getTicks();
   };
 
   private _checkInArena = (): void => {
@@ -210,6 +215,21 @@ class Bullet implements BulletInstance {
       this._gameArena.width / 2,
       this._gameArena.height / 2
     );
+  };
+
+  private playExplosionSound = (): void => {
+    const sound = this._data.explosionSound;
+
+    if (!sound) {
+      return;
+    }
+
+    const explosionSound = new SoundEngine(sound.src, {
+      instantDestroy: true,
+    });
+
+    this.updateSpatialSoundPosition(explosionSound);
+    explosionSound.play();
   };
 
   render = (): void => {
