@@ -102,6 +102,79 @@ describe("TimePilot engine", () => {
     game.destroyGame();
   });
 
+  it("freezes gameplay during the time-warp delay before the visible effect", () => {
+    const game = new TimePilot(host, { debug: true, gamepadEnabled: false });
+    const pilot = game as unknown as {
+      configureGameLoop: () => void;
+      context: {
+        _bullets: { cleanup: () => void; reposition: () => void };
+        _enemyBullets: { cleanup: () => void; reposition: () => void };
+        _enemies: { cleanup: () => void; reposition: () => void };
+        _gameTicker: {
+          _schedule: Record<string, { callback: () => void; nthFrame: number }>;
+          clearSchedule: () => void;
+          getTicks: () => number;
+        };
+        _levelProgress: { bossDefeated: boolean };
+        _player: {
+          reposition: () => void;
+          rotate: () => void;
+          shoot: () => void;
+          stopShooting: () => void;
+        };
+        _props: { cleanup: () => void; reposition: () => void };
+      };
+    };
+    const spies = [
+      vi.spyOn(pilot.context._player, "reposition"),
+      vi.spyOn(pilot.context._player, "rotate"),
+      vi.spyOn(pilot.context._player, "shoot"),
+      vi.spyOn(pilot.context._player, "stopShooting"),
+      vi.spyOn(pilot.context._enemies, "reposition"),
+      vi.spyOn(pilot.context._bullets, "reposition"),
+      vi.spyOn(pilot.context._enemyBullets, "reposition"),
+      vi.spyOn(pilot.context._props, "reposition"),
+      vi.spyOn(pilot.context._enemies, "cleanup"),
+      vi.spyOn(pilot.context._bullets, "cleanup"),
+      vi.spyOn(pilot.context._enemyBullets, "cleanup"),
+      vi.spyOn(pilot.context._props, "cleanup"),
+    ];
+
+    pilot.context._gameTicker.clearSchedule();
+    pilot.configureGameLoop();
+    pilot.context._levelProgress.bossDefeated = true;
+
+    const schedules = Object.values(pilot.context._gameTicker._schedule);
+    const movement = schedules[3];
+    const rotation = schedules[4];
+    const shooting = schedules[5];
+    const cleanup = schedules[7];
+
+    cleanup.callback();
+    expect(pilot.context._levelProgress.bossDefeated).toBe(false);
+    spies.forEach((spy) => spy.mockClear());
+
+    movement.callback();
+    rotation.callback();
+    shooting.callback();
+    cleanup.callback();
+
+    expect(pilot.context._player.stopShooting).toHaveBeenCalled();
+    expect(pilot.context._player.reposition).not.toHaveBeenCalled();
+    expect(pilot.context._player.rotate).not.toHaveBeenCalled();
+    expect(pilot.context._player.shoot).not.toHaveBeenCalled();
+    expect(pilot.context._enemies.reposition).not.toHaveBeenCalled();
+    expect(pilot.context._bullets.reposition).not.toHaveBeenCalled();
+    expect(pilot.context._enemyBullets.reposition).not.toHaveBeenCalled();
+    expect(pilot.context._props.reposition).not.toHaveBeenCalled();
+    expect(pilot.context._enemies.cleanup).not.toHaveBeenCalled();
+    expect(pilot.context._bullets.cleanup).not.toHaveBeenCalled();
+    expect(pilot.context._enemyBullets.cleanup).not.toHaveBeenCalled();
+    expect(pilot.context._props.cleanup).not.toHaveBeenCalled();
+
+    game.destroyGame();
+  });
+
   it("persists user option updates", () => {
     userOptions.setOption("controllerType", "keyboard1");
     userOptions.setOption("gamepadEnabled", true);

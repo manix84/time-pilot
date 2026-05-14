@@ -329,7 +329,7 @@ export class TimePilot {
         return;
       }
 
-      if (this.isTimeWarpEffectActive()) {
+      if (this.isTimeWarpTransitionActive()) {
         this.clearIntroControls();
         return;
       }
@@ -353,7 +353,7 @@ export class TimePilot {
         return;
       }
 
-      if (this.isTimeWarpEffectActive()) {
+      if (this.isTimeWarpTransitionActive()) {
         return;
       }
 
@@ -369,7 +369,7 @@ export class TimePilot {
         return;
       }
 
-      if (this.isTimeWarpEffectActive()) {
+      if (this.isTimeWarpTransitionActive()) {
         return;
       }
 
@@ -393,7 +393,7 @@ export class TimePilot {
         return;
       }
 
-      if (this.isTimeWarpEffectActive()) {
+      if (this.isTimeWarpTransitionActive()) {
         return;
       }
 
@@ -408,13 +408,9 @@ export class TimePilot {
       if (this.context._timeWarpTransition) {
         this.updateTimeWarpTransition();
 
-        if (this.isTimeWarpEffectActive()) {
+        if (this.context._timeWarpTransition) {
           return;
         }
-      }
-
-      if (this.isTimeWarpEffectActive()) {
-        return;
       }
 
       this.context._enemies.cleanup();
@@ -730,6 +726,10 @@ export class TimePilot {
       !!transition &&
       this.context._gameTicker.getTicks() >= transition.effectStartedAtTick
     );
+  };
+
+  private isTimeWarpTransitionActive = (): boolean => {
+    return !!this.context._timeWarpTransition;
   };
 
   private clearIntroControls = (): void => {
