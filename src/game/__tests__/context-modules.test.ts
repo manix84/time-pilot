@@ -133,6 +133,7 @@ describe("context-backed game modules", () => {
   });
 
   afterEach(() => {
+    vi.restoreAllMocks();
     userOptions.setOption("enableDebug", false);
     userOptions.setOption("gameZoom", 100);
     userOptions.setDebugOption("showHeadingVectors", false);

@@ -167,6 +167,7 @@ export interface GameArenaInstance extends Coordinates {
   ) => void;
   drawDebugGrid: (widthSpace?: number, heightSpace?: number) => void;
   getElement: () => HTMLCanvasElement;
+  destroy?: () => void;
 }
 
 export interface TickerInstance {

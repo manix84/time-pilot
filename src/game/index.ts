@@ -93,7 +93,7 @@ export class TimePilot {
 
   restartGame = (): void => {
     window.console.info("Restarting");
-    SoundEngine.stopAll();
+    SoundEngine.destroyAll();
     this.context._gameTicker.stop(() => {
       this.context._hud.restart();
 
@@ -135,6 +135,7 @@ export class TimePilot {
       }
     });
     this.context._currentController = [];
+    this.context._gameArena.destroy?.();
   };
 
   pauseGame = (forcePause?: boolean): void => {

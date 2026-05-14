@@ -377,6 +377,48 @@ describe("controller modules", () => {
     mouse.disconnect?.();
   });
 
+  it("clears mouse drag state when releasing outside the canvas", () => {
+    const controls = createControls();
+    const canvas = document.createElement("canvas");
+    canvas.width = 800;
+    canvas.height = 600;
+    vi.spyOn(canvas, "getBoundingClientRect").mockReturnValue({
+      bottom: 300,
+      height: 300,
+      left: 0,
+      right: 400,
+      top: 0,
+      width: 400,
+      x: 0,
+      y: 0,
+      toJSON: () => ({}),
+    });
+
+    const mouse = new Mouse(canvas, controls);
+    canvas.dispatchEvent(
+      new MouseEvent("mousedown", { clientX: 100, clientY: 150 })
+    );
+    window.dispatchEvent(
+      new MouseEvent("mouseup", { clientX: 450, clientY: 350 })
+    );
+    canvas.dispatchEvent(
+      new MouseEvent("mousemove", { clientX: 200, clientY: 150 })
+    );
+
+    expect(controls.handlePointer).toHaveBeenCalledWith({
+      posX: 500,
+      posY: 400,
+      type: "release",
+    });
+    expect(controls.handlePointer).toHaveBeenLastCalledWith({
+      posX: 0,
+      posY: 0,
+      type: "move",
+    });
+
+    mouse.disconnect?.();
+  });
+
   it("maps mouse wheel input to menu scroll actions", () => {
     const controls = createControls();
     vi.mocked(controls.isMenuActive).mockReturnValue(true);
@@ -439,6 +481,8 @@ describe("controller modules", () => {
 
     dispatchTouch(canvas, "touchmove", { clientX: 200, clientY: 50 });
     expect(controls.rotateToHeading).toHaveBeenCalledWith(0);
+    expect(controls.startShooting).toHaveBeenCalled();
+    expect(inputState.fire).toBe(true);
     expect(inputState.up).toBe(true);
     expect(inputState.activeController).toBe("touch");
 
@@ -447,6 +491,8 @@ describe("controller modules", () => {
     expect(inputState.right).toBe(true);
 
     dispatchTouch(canvas, "touchend", { clientX: 300, clientY: 150 });
+    expect(controls.stopShooting).toHaveBeenCalled();
+    expect(inputState.fire).toBe(false);
     expect(inputState.right).toBe(false);
     expect(controls.stop).not.toHaveBeenCalled();
 
