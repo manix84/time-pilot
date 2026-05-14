@@ -140,6 +140,8 @@ const levelBlurbLineWidth = 24;
 const levelMenuIdleFadeDelay = 3000;
 const levelMenuIdleFadeDuration = 800;
 const levelMenuIdleOpacity = 0.4;
+const alternatingFlagHoldDuration = 3000;
+const alternatingFlagFadeDuration = 500;
 const levelShowcaseDescriptionLineWidth = 18;
 const levelShowcaseFrameDuration = 260;
 const povPreviewFadeDuration = 250;
@@ -1783,16 +1785,78 @@ class Menus implements MenuSystemInstance {
 
       rect(gridX, gridY, 1, 1, gridY % 2 === 0 ? "#B22234" : "#FFFFFF");
     };
-    const drawEnglishFlag = (): void => {
+    const drawUnionFlag = (): void => {
       for (let gridY = 0; gridY < 8; gridY++) {
         for (let gridX = 0; gridX < 16; gridX++) {
-          if (gridX < 8) {
-            drawUsFlagPixel(gridX, gridY);
-          } else {
-            drawUnionFlagPixel(gridX, gridY);
-          }
+          drawUnionFlagPixel(gridX, gridY);
         }
       }
+    };
+    const drawUsFlag = (): void => {
+      for (let gridY = 0; gridY < 8; gridY++) {
+        for (let gridX = 0; gridX < 16; gridX++) {
+          drawUsFlagPixel(gridX, gridY);
+        }
+      }
+    };
+    const drawWithAlpha = (alpha: number, draw: () => void): void => {
+      context.save();
+      context.globalAlpha *= alpha;
+      draw();
+      context.restore();
+    };
+    const drawAlternatingFlag = (
+      primary: () => void,
+      secondary: () => void
+    ): void => {
+      const cycleDuration =
+        alternatingFlagHoldDuration * 2 + alternatingFlagFadeDuration * 2;
+      const elapsed = performance.now() % cycleDuration;
+
+      if (elapsed < alternatingFlagHoldDuration) {
+        primary();
+        return;
+      }
+
+      if (elapsed < alternatingFlagHoldDuration + alternatingFlagFadeDuration) {
+        const progress =
+          (elapsed - alternatingFlagHoldDuration) /
+          alternatingFlagFadeDuration;
+        primary();
+        drawWithAlpha(progress, secondary);
+        return;
+      }
+
+      if (
+        elapsed <
+        alternatingFlagHoldDuration * 2 + alternatingFlagFadeDuration
+      ) {
+        secondary();
+        return;
+      }
+
+      const progress =
+        (elapsed -
+          alternatingFlagHoldDuration * 2 -
+          alternatingFlagFadeDuration) /
+        alternatingFlagFadeDuration;
+      secondary();
+      drawWithAlpha(progress, primary);
+    };
+    const drawSpanishFlag = (): void => {
+      horizontalTricolor(["#AA151B", "#F1BF00", "#AA151B"]);
+    };
+    const drawMexicanFlag = (): void => {
+      verticalTricolor(["#006847", "#FFFFFF", "#CE1126"]);
+      rect(7, 3, 2, 2, "#8C5A2B");
+      rect(8, 2, 1, 1, "#006847");
+      rect(7, 5, 2, 1, "#CE1126");
+    };
+    const drawEnglishFlag = (): void => {
+      drawAlternatingFlag(drawUnionFlag, drawUsFlag);
+    };
+    const drawSpanishLanguageFlag = (): void => {
+      drawAlternatingFlag(drawSpanishFlag, drawMexicanFlag);
     };
 
     if (language === "fr") {
@@ -1801,7 +1865,7 @@ class Menus implements MenuSystemInstance {
     }
 
     if (language === "es") {
-      horizontalTricolor(["#AA151B", "#F1BF00", "#AA151B"]);
+      drawSpanishLanguageFlag();
       return;
     }
 
