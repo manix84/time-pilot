@@ -1,14 +1,12 @@
-const CACHE_NAME = "time-pilot-v2";
+const CACHE_NAME = "time-pilot-v3";
 const APP_SHELL = [
   "./",
-  "./?mode=showcase",
-  "./?mode=pwa",
-  "./?mode=pwa#pwa",
+  "./pwa/",
   "./manifest.webmanifest",
   "./pwa-icon-512.png",
   "./pwa-icon.svg",
   "./pwa-maskable-512.png",
-  "./pwa-maskable.svg"
+  "./pwa-maskable.svg",
 ];
 
 self.addEventListener("install", (event) => {
@@ -47,7 +45,11 @@ self.addEventListener("fetch", (event) => {
       }
 
       return fetch(event.request).then((response) => {
-        if (!response || response.status !== 200 || response.type === "opaque") {
+        if (
+          !response ||
+          response.status !== 200 ||
+          response.type === "opaque"
+        ) {
           return response;
         }
 

@@ -1,9 +1,9 @@
 {
-  "id": "./?mode=pwa#pwa",
+  "id": "./pwa/",
   "name": "Time Pilot",
   "short_name": "Time Pilot",
   "description": "A full-screen pixel-art arcade game rebuilt for the web.",
-  "start_url": "./?mode=pwa#pwa",
+  "start_url": "./pwa/",
   "scope": "./",
   "display": "fullscreen",
   "display_override": ["fullscreen", "standalone"],

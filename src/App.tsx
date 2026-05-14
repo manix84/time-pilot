@@ -3,43 +3,16 @@ import coverArt from "../art/cover.png";
 import titleBanner from "../art/titleBanner.png";
 import TimePilotGame from "./components/TimePilotGame";
 
-const pwaModeStorageKey = "timePilot.pwaMode";
-
 const isShowcaseMode = (): boolean => {
   const url = new URL(window.location.href);
 
   return url.searchParams.get("mode") === "showcase" || url.hash === "#showcase";
 };
 
-const isInstalledDisplayMode = (): boolean => {
-  const displayModes = ["fullscreen", "standalone", "minimal-ui"];
-  const standaloneNavigator = navigator as Navigator & { standalone?: boolean };
+const isPwaRoute = (): boolean => {
   const url = new URL(window.location.href);
-  const explicitPwaMode =
-    url.searchParams.get("mode") === "pwa" ||
-    url.hash === "#pwa" ||
-    url.pathname.endsWith("/play");
-  const installedDisplayMode =
-    standaloneNavigator.standalone === true ||
-    displayModes.some((mode) =>
-      window.matchMedia?.(`(display-mode: ${mode})`).matches
-    );
 
-  if (explicitPwaMode || installedDisplayMode) {
-    try {
-      window.localStorage.setItem(pwaModeStorageKey, "true");
-    } catch {
-      // PWA mode still works without storage persistence.
-    }
-
-    return true;
-  }
-
-  try {
-    return window.localStorage.getItem(pwaModeStorageKey) === "true";
-  } catch {
-    return false;
-  }
+  return /\/pwa\/?$/.test(url.pathname);
 };
 
 const controlGroups = [
@@ -75,7 +48,7 @@ const progress = [
 ];
 
 function App() {
-  if (!isShowcaseMode() && isInstalledDisplayMode()) {
+  if (!isShowcaseMode() && isPwaRoute()) {
     return (
       <main className={"app-shell app-shell--pwa"} aria-label={"Time Pilot"}>
         <TimePilotGame />

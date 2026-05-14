@@ -48,7 +48,7 @@ npm run preview
 ## 📱 Installable PWA
 
 The production build includes a web app manifest and service worker. Installed
-launches use `?mode=pwa#pwa`, which renders only the game canvas. The manifest
+launches use the dedicated `/pwa/` endpoint, which renders only the game canvas. The manifest
 requests fullscreen display mode and landscape orientation so the app behaves
 like a dedicated game rather than a web page.
 
