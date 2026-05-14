@@ -423,6 +423,7 @@ class Enemy implements EnemyInstance {
 
     this.isAlive = false;
     this.stopAmbientSound();
+    this.playExplosionSound();
     this._data.deathTick = this._gameTicker.getTicks();
     this._player.setData(
       "score",
@@ -440,6 +441,26 @@ class Enemy implements EnemyInstance {
   private stopAmbientSound = (): void => {
     this._ambientSound?.destroy();
     this._ambientSound = undefined;
+  };
+
+  private playExplosionSound = (): void => {
+    const sound = this.getLevelData("explosion")?.sound;
+
+    if (!sound) {
+      return;
+    }
+
+    const explosionSound = new SoundEngine(sound.src, {
+      instantDestroy: true,
+    });
+
+    explosionSound.setSpatialPosition(
+      this._data.posX - this._player.getData().posX,
+      this._data.posY - this._player.getData().posY,
+      this._gameArena.width / 2,
+      this._gameArena.height / 2
+    );
+    explosionSound.play();
   };
 
   private _trackBossKillProgress = (): void => {

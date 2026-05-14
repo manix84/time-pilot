@@ -23,7 +23,6 @@ let nextFormationId = 1;
 
 class SpawningSystem implements SpawningSystemInstance {
   private _context: GameDataStore;
-  private _enemyShootSound = new SoundEngine(sounds.enemyShoot.src);
   private _waveStartSound = new SoundEngine(sounds.waveStart.src);
 
   constructor(context: GameDataStore) {
@@ -319,10 +318,10 @@ class SpawningSystem implements SpawningSystemInstance {
       levelData.projectile.tracksPlayer,
       levelData.projectile.turnRate,
       levelData.projectile.shootable,
-      levelData.projectile.explosion
+      levelData.projectile.explosion,
+      levelData.projectile.sound,
+      levelData.projectile.flightSound
     );
-    this._enemyShootSound.stop();
-    this._enemyShootSound.play();
   };
 
   private _spawnSpecialBomberBomb = (): void => {
@@ -371,7 +370,9 @@ class SpawningSystem implements SpawningSystemInstance {
       levelData.projectile.tracksPlayer,
       levelData.projectile.turnRate,
       levelData.projectile.shootable,
-      levelData.projectile.explosion
+      levelData.projectile.explosion,
+      levelData.projectile.sound,
+      levelData.projectile.flightSound
     );
   };
 

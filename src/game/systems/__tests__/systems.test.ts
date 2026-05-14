@@ -119,6 +119,7 @@ const createEnemyBullet = (
 
       this.removeMe = true;
     }),
+    destroy: vi.fn(),
     getData: vi.fn((key?: keyof BulletData) =>
       key ? enemyBulletData[key] : enemyBulletData
     ) as BulletInstance["getData"],
@@ -151,6 +152,7 @@ const createPlayerBullet = (): BulletInstance => {
     explode: vi.fn(function (this: BulletInstance) {
       this.removeMe = true;
     }),
+    destroy: vi.fn(),
     getData: vi.fn((key?: keyof BulletData) =>
       key ? bulletData[key] : bulletData
     ) as BulletInstance["getData"],
@@ -463,6 +465,10 @@ describe("game systems", () => {
       undefined,
       undefined,
       undefined,
+      undefined,
+      expect.objectContaining({
+        src: "/sounds/enemies/basic/bullet.wav",
+      }),
       undefined
     );
     expect(context._bonuses.create).not.toHaveBeenCalled();
@@ -496,7 +502,13 @@ describe("game systems", () => {
       true,
       0.5,
       true,
-      undefined
+      undefined,
+      expect.objectContaining({
+        src: "/sounds/enemies/basic/rocket_launch.wav",
+      }),
+      expect.objectContaining({
+        src: "/sounds/enemies/basic/rocket_fly.wav",
+      })
     );
   });
 
@@ -528,7 +540,13 @@ describe("game systems", () => {
       true,
       1,
       true,
-      undefined
+      undefined,
+      expect.objectContaining({
+        src: "/sounds/enemies/basic/rocket_launch.wav",
+      }),
+      expect.objectContaining({
+        src: "/sounds/enemies/basic/rocket_fly.wav",
+      })
     );
   });
 
@@ -644,7 +662,9 @@ describe("game systems", () => {
         frames: 4,
         height: 11,
         width: 11,
-      })
+      }),
+      undefined,
+      undefined
     );
   });
 

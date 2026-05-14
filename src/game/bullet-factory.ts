@@ -20,7 +20,7 @@ class BulletFactory implements BulletFactoryInstance {
     this._bulletSound = new SoundEngine(player.projectile.sound.src);
   }
 
-  create = (originX: number, originY: number, heading: Heading, size: number, velocity: number, color: string, playSound = true, coordinateSpace: BulletData["coordinateSpace"] = "screen", shape: BulletData["shape"] = "square", sprite?: BulletData["sprite"], tracksPlayer = false, turnRate = 0, shootable = false, explosion?: BulletData["explosion"]): void => {
+  create = (originX: number, originY: number, heading: Heading, size: number, velocity: number, color: string, playSound = true, coordinateSpace: BulletData["coordinateSpace"] = "screen", shape: BulletData["shape"] = "square", sprite?: BulletData["sprite"], tracksPlayer = false, turnRate = 0, shootable = false, explosion?: BulletData["explosion"], sound?: BulletData["sound"], flightSound?: BulletData["flightSound"]): void => {
     this._bullets.push(
       new Bullet(
         this._context,
@@ -36,7 +36,9 @@ class BulletFactory implements BulletFactoryInstance {
         tracksPlayer,
         turnRate,
         shootable,
-        explosion
+        explosion,
+        sound,
+        flightSound
       )
     );
 
@@ -59,6 +61,11 @@ class BulletFactory implements BulletFactoryInstance {
   };
 
   cleanup = (): void => {
+    this._bullets.forEach((bullet) => {
+      if (bullet.removeMe) {
+        bullet.destroy();
+      }
+    });
     this._bullets = this._bullets.filter((bullet) => !bullet.removeMe);
   };
 
@@ -71,6 +78,7 @@ class BulletFactory implements BulletFactoryInstance {
   };
 
   private _despawn = (entityId: number): void => {
+    this._bullets[entityId]?.destroy();
     this._bullets.splice(entityId, 1);
   };
 

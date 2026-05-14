@@ -24,6 +24,7 @@ class Sound {
   private static _instances = new Set<Sound>();
   private static _isMuted = false;
   private static _pausedInstances = new Set<Sound>();
+  private readonly _instantDestroy: boolean;
   private _isPlaying = false;
   private _playMode?: "loop" | "play";
   private _pan = 0;
@@ -42,6 +43,10 @@ class Sound {
     this._isPlaying = false;
     this._playMode = undefined;
     Sound._pausedInstances.delete(this);
+
+    if (this._instantDestroy) {
+      this.destroy();
+    }
   };
 
   static setMuted = (isMuted: boolean): void => {
@@ -87,6 +92,7 @@ class Sound {
     }
 
     this._theSound = new Audio() as TimePilotAudioElement;
+    this._instantDestroy = options.instantDestroy;
 
     for (const url of soundUrls) {
       window.console.log("Adding source:", url);

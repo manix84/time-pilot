@@ -139,7 +139,7 @@ describe("engine modules", () => {
       value: true,
     });
     const play = vi.mocked(HTMLMediaElement.prototype.play);
-    const sound = new Sound("/sounds/game_start.wav", { autoplay: false });
+    const sound = new Sound("/sounds/ui/game_start.wav", { autoplay: false });
 
     sound.play();
     play.mockClear();
@@ -164,7 +164,7 @@ describe("engine modules", () => {
 
     play.mockRejectedValueOnce(new DOMException("Blocked", "NotAllowedError"));
 
-    const sound = new Sound("/sounds/game_start.wav", { autoplay: false });
+    const sound = new Sound("/sounds/ui/game_start.wav", { autoplay: false });
 
     sound.play();
     await Promise.resolve();

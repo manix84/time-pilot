@@ -46,6 +46,22 @@ const rocketProjectileSprite = {
   renderHeight: 18,
 };
 
+const enemyBulletSound = {
+  src: assetPath("sounds/enemies/basic/bullet.wav"),
+};
+
+const enemyExplosionSound = {
+  src: assetPath("sounds/enemies/basic/explosion.wav"),
+};
+
+const rocketLaunchSound = {
+  src: assetPath("sounds/enemies/basic/rocket_launch.wav"),
+};
+
+const rocketFlightSound = {
+  src: assetPath("sounds/enemies/basic/rocket_fly.wav"),
+};
+
 const plasmaProjectileSprite = {
   sprite: {
     src: assetPath("sprites/enemies/projectiles/plasma.png"),
@@ -101,13 +117,14 @@ const basicEnemy = (
     velocity: projectileSpeeds.bullet1910,
     size: 6,
     color: palette.aircraft.enemyBullet,
+    sound: enemyBulletSound,
   },
   explosion: {
     sprite: {
       src: assetPath("sprites/enemies/basic/explosion.png"),
     },
     sound: {
-      src: assetPath("sounds/enemy_explode.wav"),
+      src: enemyExplosionSound.src,
     },
     width: 16,
     height: 16,
@@ -150,13 +167,14 @@ const bossEnemy = (
     velocity: projectileSpeeds.bullet1940,
     size: 6,
     color: palette.aircraft.enemyBullet,
+    sound: enemyBulletSound,
   },
   explosion: {
     sprite: {
       src: assetPath("sprites/enemies/boss/explosion.png"),
     },
     sound: {
-      src: assetPath("sounds/enemy_explode.wav"),
+      src: enemyExplosionSound.src,
     },
     width: 32,
     height: 16,
@@ -209,7 +227,7 @@ const specialBomber = (
       src: assetPath("sprites/enemies/special-bomber/explosion.png"),
     },
     sound: {
-      src: assetPath("sounds/enemy_explode.wav"),
+      src: enemyExplosionSound.src,
     },
     width: 32,
     height: 16,
@@ -621,22 +639,20 @@ const timePilotConstants: TimePilotConstants = {
   },
   sounds: {
     coinDrop: {
-      src: assetPath("sounds/coindrop.wav"),
+      src: assetPath("sounds/ui/coindrop.wav"),
     },
-    enemyShoot: {
-      src: assetPath("sounds/enemy_shoot.wav"),
-    },
+    enemyShoot: enemyBulletSound,
     gameStart: {
-      src: assetPath("sounds/game_start.wav"),
+      src: assetPath("sounds/ui/game_start.wav"),
     },
     nextLevel: {
-      src: assetPath("sounds/next_level.wav"),
+      src: assetPath("sounds/ui/next_level.wav"),
     },
     timeWarp: {
       src: assetPath("sounds/player/timewarp.wav"),
     },
     waveStart: {
-      src: assetPath("sounds/wave_start.wav"),
+      src: assetPath("sounds/enemies/basic/wave_start.wav"),
     },
   },
   scoring,
@@ -716,6 +732,7 @@ const timePilotConstants: TimePilotConstants = {
             velocity: projectileSpeeds.bullet1940,
             size: 6,
             color: palette.aircraft.enemyBullet,
+            sound: enemyBulletSound,
           },
         }),
         boss: bossEnemy(2, {
@@ -765,6 +782,8 @@ const timePilotConstants: TimePilotConstants = {
             size: 8,
             color: palette.aircraft.enemyBullet,
             sprite: rocketProjectileSprite,
+            sound: rocketLaunchSound,
+            flightSound: rocketFlightSound,
             tracksPlayer: true,
             turnRate: 0.5,
             shootable: true,
@@ -784,6 +803,8 @@ const timePilotConstants: TimePilotConstants = {
             size: 8,
             color: palette.aircraft.enemyBullet,
             sprite: rocketProjectileSprite,
+            sound: rocketLaunchSound,
+            flightSound: rocketFlightSound,
             tracksPlayer: true,
             turnRate: 0.5,
             shootable: true,
@@ -826,6 +847,8 @@ const timePilotConstants: TimePilotConstants = {
             size: 8,
             color: palette.aircraft.enemyBullet,
             sprite: rocketProjectileSprite,
+            sound: rocketLaunchSound,
+            flightSound: rocketFlightSound,
             tracksPlayer: true,
             turnRate: 1,
             shootable: true,
@@ -845,6 +868,8 @@ const timePilotConstants: TimePilotConstants = {
             size: 8,
             color: palette.aircraft.enemyBullet,
             sprite: rocketProjectileSprite,
+            sound: rocketLaunchSound,
+            flightSound: rocketFlightSound,
             tracksPlayer: true,
             turnRate: 1,
             shootable: true,

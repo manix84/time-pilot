@@ -182,6 +182,7 @@ export interface TickerInstance {
 export interface BulletInstance {
   removeMe: boolean;
   explode: () => void;
+  destroy: () => void;
   getData: (key?: keyof BulletData) => BulletData | BulletData[keyof BulletData] | undefined;
   setData: (key: keyof BulletData, value: BulletData[keyof BulletData]) => boolean;
   setLevel: (level: number) => boolean;
@@ -204,7 +205,9 @@ export interface BulletFactoryInstance {
     tracksPlayer?: boolean,
     turnRate?: number,
     shootable?: boolean,
-    explosion?: BulletData["explosion"]
+    explosion?: BulletData["explosion"],
+    sound?: BulletData["sound"],
+    flightSound?: BulletData["flightSound"]
   ) => void;
   getCount: () => number;
   getData: () => BulletData[];
@@ -492,6 +495,8 @@ export interface BulletData extends Coordinates {
   turnRate?: number;
   shootable?: boolean;
   explosion?: ProjectileExplosionConfig;
+  sound?: SoundAsset;
+  flightSound?: SoundAsset;
   explosionTick: number | false;
 }
 
@@ -510,6 +515,7 @@ export interface ProjectileConfig {
   color: string;
   sprite?: ProjectileSpriteConfig;
   sound?: SoundAsset;
+  flightSound?: SoundAsset;
   initialAim?: "facing" | "player";
   tracksPlayer?: boolean;
   turnRate?: number;
