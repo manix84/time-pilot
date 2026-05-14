@@ -191,6 +191,7 @@ class Sound {
 
   destroy = (): void => {
     this.stop();
+    this.destroySpatialAudio();
     this._theSound.removeEventListener("canplay", this._markCanPlay, false);
     this._theSound.removeEventListener("ended", this._markEnded, false);
     Sound._instances.delete(this);
@@ -265,6 +266,24 @@ class Sound {
     } catch {
       this._spatialAudio = undefined;
     }
+  };
+
+  private destroySpatialAudio = (): void => {
+    if (!this._spatialAudio) {
+      return;
+    }
+
+    const { context, panner, source } = this._spatialAudio;
+
+    try {
+      source.disconnect();
+      panner.disconnect();
+    } catch {
+      // Spatial audio cleanup is best-effort; destroy should always unregister.
+    }
+
+    void context.close().catch(() => {});
+    this._spatialAudio = undefined;
   };
 }
 
