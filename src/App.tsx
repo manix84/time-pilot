@@ -1,19 +1,8 @@
 import type { CSSProperties } from "react";
 import coverArt from "../art/cover.png";
+import { isPwaRoute, isShowcaseMode } from "./app-routing";
 import titleBanner from "../art/titleBanner.png";
 import TimePilotGame from "./components/TimePilotGame";
-
-const isShowcaseMode = (): boolean => {
-  const url = new URL(window.location.href);
-
-  return url.searchParams.get("mode") === "showcase" || url.hash === "#showcase";
-};
-
-const isPwaRoute = (): boolean => {
-  const url = new URL(window.location.href);
-
-  return /\/pwa\/?$/.test(url.pathname);
-};
 
 const controlGroups = [
   {

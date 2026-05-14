@@ -145,7 +145,7 @@ class TouchController implements Controller {
 
   private getRelativePoint = (point: Coordinates): Coordinates => {
     if (!this._touchOrigin) {
-      return { posX: 0, posY: 0 };
+      throw new Error("Touch movement cannot be resolved without a touch origin.");
     }
 
     return {

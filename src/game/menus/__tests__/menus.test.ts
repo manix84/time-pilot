@@ -48,6 +48,7 @@ describe("menu definitions", () => {
     userOptions.setOption("masterVolume", 10);
     userOptions.setOption("uiZoom", 100);
     userOptions.setKeyboardBinding("up", [38, 87]);
+    window.history.replaceState(null, "", "/");
   });
 
   it("defines the main menu controls", () => {
@@ -181,6 +182,24 @@ describe("menu definitions", () => {
       expect.anything()
     );
     expect(userOptions.controllerType).toBe("keyboard1");
+  });
+
+  it("can reveal the hidden control type option with an explicit URL flag", () => {
+    window.history.replaceState(null, "", "/?showControlType=true");
+    const arena = createArena();
+    const menus = new Menus(arena, { start: vi.fn() });
+
+    menus.showStart();
+    menus.next();
+    menus.activate();
+    menus.render();
+
+    expect(arena.renderText).toHaveBeenCalledWith(
+      "Control Type",
+      expect.any(Number),
+      expect.any(Number),
+      expect.anything()
+    );
   });
 
   it("toggles fullscreen from the options menu and disables it when locked", () => {

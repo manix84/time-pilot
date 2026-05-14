@@ -702,7 +702,7 @@ class Menus implements MenuSystemInstance {
   };
 
   private _createOptionsItems = (): MenuItem[] => {
-    const showControlType = false;
+    const showControlType = this._shouldShowControlTypeOption();
     const remapControlsY = showControlType ? 324 : 282;
     const backY = showControlType ? 374 : 332;
     const items = [
@@ -775,6 +775,12 @@ class Menus implements MenuSystemInstance {
     );
 
     return items;
+  };
+
+  private _shouldShowControlTypeOption = (): boolean => {
+    const url = new URL(window.location.href);
+
+    return url.searchParams.get("showControlType") === "true";
   };
 
   private _createControlsItems = (): MenuItem[] => {

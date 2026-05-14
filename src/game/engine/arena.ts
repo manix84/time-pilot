@@ -180,14 +180,11 @@ class GameArena implements GameArenaInstance {
   };
 
   isFullScreenLocked = (): boolean => {
-    const displayModes = ["fullscreen", "standalone", "minimal-ui"];
     const standaloneNavigator = navigator as Navigator & { standalone?: boolean };
 
     return (
       standaloneNavigator.standalone === true ||
-      displayModes.some((mode) =>
-        window.matchMedia?.(`(display-mode: ${mode})`).matches
-      )
+      window.matchMedia?.("(display-mode: fullscreen)").matches === true
     );
   };
 

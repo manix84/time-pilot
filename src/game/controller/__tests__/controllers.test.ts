@@ -527,6 +527,24 @@ describe("controller modules", () => {
     touch.disconnect?.();
   });
 
+  it("fails loudly if touch movement is resolved without an origin", () => {
+    const controls = createControls();
+    const canvas = document.createElement("canvas");
+    const touch = new TouchController(canvas, controls);
+    const touchWithPrivateAccess = touch as unknown as {
+      getRelativePoint: (point: { posX: number; posY: number }) => {
+        posX: number;
+        posY: number;
+      };
+    };
+
+    expect(() =>
+      touchWithPrivateAccess.getRelativePoint({ posX: 10, posY: 10 })
+    ).toThrow("Touch movement cannot be resolved without a touch origin.");
+
+    touch.disconnect?.();
+  });
+
   it("routes touch taps and movement to active menus", () => {
     const controls = createControls();
     vi.mocked(controls.isMenuActive).mockReturnValue(true);

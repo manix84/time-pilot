@@ -121,6 +121,38 @@ describe("engine modules", () => {
     expect(arena.isFullScreen()).toBe(false);
   });
 
+  it("allows fullscreen toggling when installed display falls back to standalone", () => {
+    const host = document.createElement("div");
+    Object.defineProperty(host, "clientWidth", { value: 640 });
+    Object.defineProperty(host, "clientHeight", { value: 480 });
+    Object.defineProperty(document, "fullscreenEnabled", {
+      configurable: true,
+      value: true,
+    });
+    vi.stubGlobal(
+      "matchMedia",
+      vi.fn((query: string) => ({
+        addEventListener: vi.fn(),
+        addListener: vi.fn(),
+        dispatchEvent: vi.fn(),
+        matches: query === "(display-mode: standalone)",
+        media: query,
+        onchange: null,
+        removeEventListener: vi.fn(),
+        removeListener: vi.fn(),
+      }))
+    );
+
+    const arena = new GameArena(host);
+    Object.defineProperty(arena.getElement(), "requestFullscreen", {
+      configurable: true,
+      value: vi.fn(),
+    });
+
+    expect(arena.isFullScreenLocked()).toBe(false);
+    expect(arena.canToggleFullScreen()).toBe(true);
+  });
+
   it("runs scheduled ticker callbacks and stop callbacks", async () => {
     const ticker = new Ticker();
     const scheduled = vi.fn();
