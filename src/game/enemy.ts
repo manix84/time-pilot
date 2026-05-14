@@ -267,18 +267,26 @@ class Enemy implements EnemyInstance {
   };
 
   private _getFrameY = (levelData: EnemyConfig): number => {
+    if (levelData.animationRows) {
+      return (
+        Math.floor(this._gameTicker.getTicks() / 10) %
+        levelData.animationRows
+      );
+    }
+
     if (!levelData.canRotate) {
       return 0;
     }
 
-    return (
-      Math.floor(this._gameTicker.getTicks() / 10) %
-      (levelData.animationRows ?? 1)
-    );
+    return 0;
   };
 
   private _getFrameX = (levelData: EnemyConfig): number => {
-    if (this._data.type === "boss" && levelData.bossDamageFrames) {
+    if (levelData.damageFrames) {
+      return this._getHorizontalDamageFrame(levelData);
+    }
+
+    if (levelData.bossDamageFrames) {
       return this._getBossDamageFrame(levelData);
     }
 
@@ -316,6 +324,19 @@ class Enemy implements EnemyInstance {
     const isFacingLeft = this._data.heading > 180;
 
     return damageFrame + (isFacingLeft ? damageFrames : 0);
+  };
+
+  private _getHorizontalDamageFrame = (levelData: EnemyConfig): number => {
+    const damageFrames = levelData.damageFrames ?? 4;
+    const maxHitPoints = levelData.hitPoints;
+    const hitsTaken = maxHitPoints - this._data.hitPoints;
+    const damageFrame = Math.min(
+      damageFrames - 1,
+      Math.floor((hitsTaken / maxHitPoints) * damageFrames)
+    );
+    const isFacingLeft = this._data.heading > 180;
+
+    return damageFrame + (isFacingLeft ? levelData.leftFacingFrameOffset ?? damageFrames : 0);
   };
 
   private _renderDeath = (): void => {

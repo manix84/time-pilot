@@ -1366,10 +1366,21 @@ class Menus implements MenuSystemInstance {
   ): { x: number; y: number } => {
     const tick = Math.floor(performance.now() / levelShowcaseFrameDuration);
 
+    if (enemyConfig.damageFrames) {
+      return {
+        x: tick % enemyConfig.damageFrames,
+        y: enemyConfig.animationRows
+          ? Math.floor(tick / 2) % enemyConfig.animationRows
+          : 0,
+      };
+    }
+
     if (enemyConfig.bossDamageFrames) {
       return {
         x: tick % enemyConfig.bossDamageFrames,
-        y: 0,
+        y: enemyConfig.animationRows
+          ? Math.floor(tick / 2) % enemyConfig.animationRows
+          : 0,
       };
     }
 
@@ -1438,8 +1449,8 @@ class Menus implements MenuSystemInstance {
       return {
         color: projectileConfig.color,
         frame: {
-          x: tick % frameCount,
-          y: 0,
+          x: spriteConfig.frameAxis === "y" ? 0 : tick % frameCount,
+          y: spriteConfig.frameAxis === "y" ? tick % frameCount : 0,
         },
         frameHeight: spriteConfig.height,
         frameWidth: spriteConfig.width,
@@ -1616,6 +1627,13 @@ class Menus implements MenuSystemInstance {
     enemyConfig: EnemyConfig
   ): { x: number; y: number } => {
     const tick = Math.floor(performance.now() / levelIconFrameDuration);
+
+    if (enemyConfig.damageFrames) {
+      return {
+        x: 0,
+        y: tick % (enemyConfig.animationRows ?? 1),
+      };
+    }
 
     if (enemyConfig.animationRows && enemyConfig.horizontalDirectionFrames) {
       return {

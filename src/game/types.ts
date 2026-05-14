@@ -470,6 +470,7 @@ export interface ProjectileSpriteConfig {
   width: number;
   height: number;
   frames?: number;
+  frameAxis?: "x" | "y";
   frameMode?: "animation" | "heading";
   renderWidth?: number;
   renderHeight?: number;
@@ -546,11 +547,13 @@ export interface EnemyConfig {
   ambientSound?: SoundAsset;
   bossDamageFrames?: number;
   countsTowardBoss: boolean;
+  damageFrames?: number;
   deathFlashFrameY?: number;
   deathFlashTicks?: number;
   headingFrameOffset?: number;
   deathValue: number;
   horizontalDirectionFrames?: number;
+  leftFacingFrameOffset?: number;
   sprite: SpriteAsset;
   velocity: number;
   turnLimiter: number;

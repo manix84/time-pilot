@@ -260,12 +260,13 @@ class Bullet implements BulletInstance {
       const renderHeight =
         this._data.sprite.renderHeight ?? this._data.sprite.height;
       const frameX = this._getSpriteFrameX();
+      const frameAxis = this._data.sprite.frameAxis ?? "x";
 
       this._gameArena.renderSprite(this._projectileSprite, {
         frameWidth: this._data.sprite.width,
         frameHeight: this._data.sprite.height,
-        frameX,
-        frameY: 0,
+        frameX: frameAxis === "x" ? frameX : 0,
+        frameY: frameAxis === "y" ? frameX : 0,
         posX: posX - renderWidth / 2,
         posY: posY - renderHeight / 2,
         renderHeight,

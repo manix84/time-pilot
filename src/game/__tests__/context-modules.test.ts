@@ -283,10 +283,13 @@ describe("context-backed game modules", () => {
       "sprite",
       {
         sprite: { src: "/sprites/enemies/projectiles/bomb.png" },
-        width: 12,
-        height: 3,
-        renderWidth: 24,
-        renderHeight: 6,
+        width: 16,
+        height: 16,
+        frames: 2,
+        frameAxis: "y",
+        frameMode: "animation",
+        renderWidth: 16,
+        renderHeight: 16,
       },
       false,
       0,
@@ -1076,6 +1079,101 @@ describe("context-backed game modules", () => {
     expect(context._player.getData("score")).toBe(1500);
     expect(context._levelProgress.standardEnemyKills).toBe(0);
     expect(context._levelProgress.bossDefeated).toBe(false);
+  });
+
+  it("renders the 1940 special bomber damage and death-flash rows", () => {
+    const context = createContext();
+    context._level = 2;
+    vi.mocked(context._gameTicker.getTicks).mockReturnValue(100);
+
+    context._enemies.create(100, 100, 90, { type: "specialBomber" });
+    const [bomber] = context._enemies.getEntities();
+
+    bomber.kill();
+    bomber.render();
+
+    expect(context._gameArena.renderSprite).toHaveBeenLastCalledWith(
+      expect.any(HTMLImageElement),
+      expect.objectContaining({
+        frameHeight: 16,
+        frameWidth: 32,
+        frameX: 1,
+        frameY: 0,
+        renderHeight: 32,
+        renderWidth: 64,
+      })
+    );
+
+    vi.mocked(context._gameTicker.getTicks).mockReturnValue(110);
+    bomber.render();
+
+    expect(context._gameArena.renderSprite).toHaveBeenLastCalledWith(
+      expect.any(HTMLImageElement),
+      expect.objectContaining({
+        frameHeight: 16,
+        frameWidth: 32,
+        frameX: 1,
+        frameY: 1,
+        renderHeight: 32,
+        renderWidth: 64,
+      })
+    );
+
+    bomber.kill();
+    bomber.kill();
+    bomber.render();
+
+    expect(context._gameArena.renderSprite).toHaveBeenLastCalledWith(
+      expect.any(HTMLImageElement),
+      expect.objectContaining({
+        frameHeight: 16,
+        frameWidth: 32,
+        frameX: 3,
+        frameY: 2,
+        renderHeight: 32,
+        renderWidth: 64,
+      })
+    );
+  });
+
+  it("uses the left-facing special bomber damage frames for leftward travel", () => {
+    const context = createContext();
+    context._level = 2;
+    vi.mocked(context._gameTicker.getTicks).mockReturnValue(100);
+
+    context._enemies.create(100, 100, 270, { type: "specialBomber" });
+    const [bomber] = context._enemies.getEntities();
+
+    bomber.kill();
+    bomber.render();
+
+    expect(context._gameArena.renderSprite).toHaveBeenLastCalledWith(
+      expect.any(HTMLImageElement),
+      expect.objectContaining({
+        frameHeight: 16,
+        frameWidth: 32,
+        frameX: 5,
+        frameY: 0,
+        renderHeight: 32,
+        renderWidth: 64,
+      })
+    );
+
+    bomber.kill();
+    bomber.kill();
+    bomber.render();
+
+    expect(context._gameArena.renderSprite).toHaveBeenLastCalledWith(
+      expect.any(HTMLImageElement),
+      expect.objectContaining({
+        frameHeight: 16,
+        frameWidth: 32,
+        frameX: 7,
+        frameY: 2,
+        renderHeight: 32,
+        renderWidth: 64,
+      })
+    );
   });
 
   it("awards the formation bonus when every formation enemy is killed", () => {

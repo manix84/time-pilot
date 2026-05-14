@@ -649,7 +649,7 @@ describe("game systems", () => {
 
     expect(context._enemyBullets.create).toHaveBeenCalledWith(
       100,
-      109,
+      116,
       180,
       6,
       4.5,
@@ -658,10 +658,13 @@ describe("game systems", () => {
       "world",
       "sprite",
       expect.objectContaining({
-        height: 3,
-        renderHeight: 6,
-        renderWidth: 24,
-        width: 12,
+        frameAxis: "y",
+        frameMode: "animation",
+        frames: 2,
+        height: 16,
+        renderHeight: 16,
+        renderWidth: 16,
+        width: 16,
       }),
       undefined,
       undefined,
