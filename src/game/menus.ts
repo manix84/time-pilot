@@ -1562,12 +1562,6 @@ class Menus implements MenuSystemInstance {
   };
 
   private _getBlurbLevel = (): number => {
-    const selectedLevel = this._items[this._selectedIndex]?.levelIcon;
-
-    if (selectedLevel) {
-      return selectedLevel;
-    }
-
     return this._commands.getLevel?.() ?? 1;
   };
 
@@ -2445,7 +2439,7 @@ class Menus implements MenuSystemInstance {
       return;
     }
 
-    const level = this._items[this._selectedIndex]?.levelIcon;
+    const level = this._commands.getLevel?.() ?? 1;
 
     if (!level || this._levelPreviewedLevel === level) {
       return;

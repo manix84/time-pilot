@@ -772,7 +772,14 @@ describe("menu definitions", () => {
     );
 
     menus.next();
-    expect(previewLevel).toHaveBeenLastCalledWith(2);
+    expect(previewLevel).toHaveBeenLastCalledWith(1);
+    menus.render();
+    expect(arena.renderText).not.toHaveBeenCalledWith(
+      "A.D 1940",
+      -260,
+      -54,
+      expect.anything()
+    );
     expect(selectLevel).not.toHaveBeenCalled();
     menus.activate();
 
