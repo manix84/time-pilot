@@ -3,6 +3,39 @@ import coverArt from "../art/cover.png";
 import titleBanner from "../art/titleBanner.png";
 import TimePilotGame from "./components/TimePilotGame";
 
+const pwaModeStorageKey = "timePilot.pwaMode";
+
+const isInstalledDisplayMode = (): boolean => {
+  const displayModes = ["fullscreen", "standalone", "minimal-ui"];
+  const standaloneNavigator = navigator as Navigator & { standalone?: boolean };
+  const url = new URL(window.location.href);
+  const explicitPwaMode =
+    url.searchParams.get("mode") === "pwa" ||
+    url.hash === "#pwa" ||
+    url.pathname.endsWith("/play");
+  const installedDisplayMode =
+    standaloneNavigator.standalone === true ||
+    displayModes.some((mode) =>
+      window.matchMedia?.(`(display-mode: ${mode})`).matches
+    );
+
+  if (explicitPwaMode || installedDisplayMode) {
+    try {
+      window.localStorage.setItem(pwaModeStorageKey, "true");
+    } catch {
+      // PWA mode still works without storage persistence.
+    }
+
+    return true;
+  }
+
+  try {
+    return window.localStorage.getItem(pwaModeStorageKey) === "true";
+  } catch {
+    return false;
+  }
+};
+
 const controlGroups = [
   {
     title: "Directional",
@@ -36,6 +69,14 @@ const progress = [
 ];
 
 function App() {
+  if (isInstalledDisplayMode()) {
+    return (
+      <main className={"app-shell app-shell--pwa"} aria-label={"Time Pilot"}>
+        <TimePilotGame />
+      </main>
+    );
+  }
+
   return (
     <main className={"app-shell"}>
       <section

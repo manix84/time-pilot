@@ -18,11 +18,13 @@ body,
 #root {
   margin: 0;
   width: 100%;
+  height: 100%;
   min-height: 100%;
 }
 
 body {
   min-height: 100vh;
+  overscroll-behavior: none;
 }
 
 button,
@@ -38,6 +40,27 @@ input {
     radial-gradient(circle at 84% 8%, rgba(255, 174, 42, 0.22), transparent 28%),
     radial-gradient(circle at 8% 28%, rgba(89, 214, 196, 0.18), transparent 28%),
     #070b12;
+}
+
+.app-shell--pwa {
+  position: fixed;
+  inset: 0;
+  display: block;
+  min-height: 100%;
+  overflow: hidden;
+  background: #070b12;
+}
+
+.app-shell--pwa .time-pilot-game,
+.app-shell--pwa .time-pilot-stage {
+  width: 100%;
+  height: 100%;
+}
+
+.app-shell--pwa .time-pilot-stage {
+  max-height: none;
+  min-height: 0;
+  aspect-ratio: auto;
 }
 
 .showcase-hero {
