@@ -28,6 +28,18 @@ var debug: MenuDefinition = {
       setValue: () => {},
       getValue: () => {},
     },
+    showHeadingVectors: {
+      name: "Show Heading Vectors",
+      type: "toggle",
+      setValue: () => {},
+      getValue: () => {},
+    },
+    showSteeringArc: {
+      name: "Show Steering Arc",
+      type: "toggle",
+      setValue: () => {},
+      getValue: () => {},
+    },
     invincible: {
       name: "Invincibility",
       type: "toggle",

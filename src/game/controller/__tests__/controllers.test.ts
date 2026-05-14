@@ -9,11 +9,14 @@ import userOptions from "../../user-options";
 
 const createControls = (): ControllerInterfaceInstance => {
   return {
+    adjustUiZoom: vi.fn(),
+    resetUiZoom: vi.fn(),
     rotateToHeading: vi.fn(),
     rotateClockwise: vi.fn(),
     rotateAntiClockwise: vi.fn(),
     stop: vi.fn(),
     toggleMenu: vi.fn(),
+    openMainMenu: vi.fn(),
     openMenu: vi.fn(),
     startShooting: vi.fn(),
     stopShooting: vi.fn(),
@@ -24,6 +27,7 @@ const createControls = (): ControllerInterfaceInstance => {
     rotateRight: vi.fn(),
     rotateLeft: vi.fn(),
     handlePointer: vi.fn(),
+    goBack: vi.fn(),
     isMenuActive: vi.fn(() => false),
   };
 };
@@ -62,6 +66,8 @@ describe("controller modules", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     userOptions.setOption("controllerType", "keyboard1");
+    userOptions.setOption("gameZoom", 100);
+    userOptions.setOption("uiZoom", 100);
   });
 
   it("maps keyboard set 1 keys to controller actions", () => {
@@ -77,12 +83,27 @@ describe("controller modules", () => {
     expect(controls.rotateToHeading).toHaveBeenCalledWith(270);
     expect(controls.startShooting).toHaveBeenCalled();
     expect(controls.stopShooting).toHaveBeenCalled();
+    expect(controls.goBack).toHaveBeenCalled();
     expect(controls.openMenu).toHaveBeenCalled();
     expect(controls.togglePause).not.toHaveBeenCalled();
     expect(inputState.left).toBe(true);
     expect(inputState.fire).toBe(false);
     expect(inputState.menu).toBe(true);
     expect(inputState.activeController).toBe("keyboard");
+
+    keyboard.disconnect?.();
+  });
+
+  it("uses M to open the main menu", () => {
+    const controls = createControls();
+    const inputState = createInputState();
+    const keyboard = new Keyboard1(controls, inputState);
+
+    document.documentElement.dispatchEvent(new KeyboardEvent("keydown", { keyCode: 77 }));
+
+    expect(controls.openMainMenu).toHaveBeenCalled();
+    expect(controls.openMenu).not.toHaveBeenCalled();
+    expect(inputState.menu).toBe(true);
 
     keyboard.disconnect?.();
   });
@@ -97,6 +118,50 @@ describe("controller modules", () => {
 
     expect(controls.startShooting).toHaveBeenCalled();
     expect(inputState.fire).toBe(false);
+
+    keyboard.disconnect?.();
+  });
+
+  it("maps gamepad menu and back buttons to menu actions", async () => {
+    const controls = createControls();
+    const inputState = createInputState();
+    vi.mocked(controls.isMenuActive).mockReturnValue(true);
+    const gamepad = {
+      axes: [0, 0],
+      buttons: Array.from({ length: 16 }, () => ({ pressed: false })),
+    };
+    gamepad.buttons[8].pressed = true;
+    gamepad.buttons[9].pressed = true;
+    vi.spyOn(navigator, "getGamepads").mockReturnValue([
+      gamepad as unknown as globalThis.Gamepad,
+    ]);
+
+    const controller = new Gamepad(controls, inputState);
+    await new Promise((resolve) => window.setTimeout(resolve, 5));
+    controller.disconnect?.();
+
+    expect(controls.goBack).toHaveBeenCalled();
+    expect(controls.openMainMenu).toHaveBeenCalled();
+    expect(controls.restart).not.toHaveBeenCalled();
+    expect(inputState.menu).toBe(true);
+  });
+
+  it("maps plus, minus, and zero keys to UI zoom controls", () => {
+    const controls = createControls();
+    const inputState = createInputState();
+    const keyboard = new Keyboard1(controls, inputState);
+
+    document.documentElement.dispatchEvent(new KeyboardEvent("keydown", { keyCode: 187 }));
+    document.documentElement.dispatchEvent(new KeyboardEvent("keydown", { keyCode: 189 }));
+    document.documentElement.dispatchEvent(new KeyboardEvent("keydown", { keyCode: 48 }));
+    document.documentElement.dispatchEvent(new KeyboardEvent("keydown", { keyCode: 107 }));
+    document.documentElement.dispatchEvent(new KeyboardEvent("keydown", { keyCode: 109 }));
+    document.documentElement.dispatchEvent(new KeyboardEvent("keydown", { keyCode: 96 }));
+
+    expect(controls.adjustUiZoom).toHaveBeenCalledWith(1);
+    expect(controls.adjustUiZoom).toHaveBeenCalledWith(-1);
+    expect(controls.resetUiZoom).toHaveBeenCalledTimes(2);
+    expect(controls.rotateToHeading).not.toHaveBeenCalled();
 
     keyboard.disconnect?.();
   });
@@ -307,6 +372,44 @@ describe("controller modules", () => {
       posX: 100,
       posY: 0,
       type: "release",
+    });
+
+    mouse.disconnect?.();
+  });
+
+  it("maps mouse wheel input to menu scroll actions", () => {
+    const controls = createControls();
+    vi.mocked(controls.isMenuActive).mockReturnValue(true);
+    const canvas = document.createElement("canvas");
+    canvas.width = 800;
+    canvas.height = 600;
+    vi.spyOn(canvas, "getBoundingClientRect").mockReturnValue({
+      bottom: 300,
+      height: 300,
+      left: 0,
+      right: 400,
+      top: 0,
+      width: 400,
+      x: 0,
+      y: 0,
+      toJSON: () => ({}),
+    });
+
+    const mouse = new Mouse(canvas, controls);
+    const wheelEvent = new WheelEvent("wheel", {
+      clientX: 200,
+      clientY: 150,
+      deltaY: 120,
+      cancelable: true,
+    });
+    canvas.dispatchEvent(wheelEvent);
+
+    expect(wheelEvent.defaultPrevented).toBe(true);
+    expect(controls.handlePointer).toHaveBeenCalledWith({
+      deltaY: 120,
+      posX: 0,
+      posY: 0,
+      type: "wheel",
     });
 
     mouse.disconnect?.();

@@ -19,12 +19,14 @@ class Mouse implements Controller {
     this._canvas.addEventListener("mousedown", this.handlePress);
     this._canvas.addEventListener("mousemove", this.handleMove);
     this._canvas.addEventListener("mouseup", this.handleRelease);
+    this._canvas.addEventListener("wheel", this.handleWheel, { passive: false });
   };
 
   disconnect = (): void => {
     this._canvas.removeEventListener("mousedown", this.handlePress);
     this._canvas.removeEventListener("mousemove", this.handleMove);
     this._canvas.removeEventListener("mouseup", this.handleRelease);
+    this._canvas.removeEventListener("wheel", this.handleWheel);
   };
 
   private handlePress = (event: MouseEvent): void => {
@@ -61,6 +63,19 @@ class Mouse implements Controller {
 
     this._isPressed = false;
     this._isDragging = false;
+  };
+
+  private handleWheel = (event: WheelEvent): void => {
+    if (!this._controllerInterface.isMenuActive?.()) {
+      return;
+    }
+
+    event.preventDefault();
+    this._controllerInterface.handlePointer?.({
+      ...this.getCanvasPoint(event),
+      deltaY: event.deltaY,
+      type: "wheel",
+    });
   };
 
   private getCanvasPoint = (event: MouseEvent) => {

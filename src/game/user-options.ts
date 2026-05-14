@@ -6,7 +6,20 @@ import type {
   UserOptions,
 } from "./types";
 
-const supportedLanguages: GameLanguage[] = ["en", "fr", "de", "it", "nl", "ro"];
+const supportedLanguages: GameLanguage[] = [
+  "en",
+  "fr",
+  "es",
+  "de",
+  "it",
+  "nl",
+  "ro",
+];
+const zoomDefaultPercent = 100;
+const zoomMaxPercent = 250;
+const zoomMinPercent = 25;
+const oldZoomBasePercent = 75;
+const oldZoomStepPercent = 5;
 
 type PersistedUserOptions = Pick<
   UserOptions,
@@ -15,10 +28,12 @@ type PersistedUserOptions = Pick<
   | "enableDebug"
   | "effectsVolume"
   | "gamepadEnabled"
+  | "gameZoom"
   | "keyboardBindings"
   | "language"
   | "masterVolume"
   | "musicVolume"
+  | "uiZoom"
 >;
 
 const userOptionsStorageKey = "timePilot.userOptions";
@@ -42,17 +57,34 @@ const defaultPersistedOptions: PersistedUserOptions = {
     showSpriteCorners: true,
     showSpriteCenters: true,
     showControlsOverlay: false,
+    showHeadingVectors: false,
     showPlayerCoordinates: true,
+    showSteeringArc: false,
     invincible: true,
   },
   enableDebug: false,
   controllerType: "keyboard1" as ControllerType,
+  gameZoom: zoomDefaultPercent,
   gamepadEnabled: true,
   keyboardBindings: defaultKeyboardBindings,
   language: "en",
   masterVolume: 10,
   musicVolume: 8,
   effectsVolume: 8,
+  uiZoom: zoomDefaultPercent,
+};
+
+const normalizeZoomOption = (value: unknown): number => {
+  if (typeof value !== "number" || !Number.isFinite(value)) {
+    return zoomDefaultPercent;
+  }
+
+  const percent =
+    value >= 0 && value <= 10
+      ? oldZoomBasePercent + value * oldZoomStepPercent
+      : value;
+
+  return Math.max(zoomMinPercent, Math.min(zoomMaxPercent, percent));
 };
 
 const getOptionsStorage = (): Storage | null => {
@@ -116,10 +148,12 @@ const writeUserOptions = (): void => {
         enableDebug: userOptions.enableDebug,
         effectsVolume: userOptions.effectsVolume,
         gamepadEnabled: userOptions.gamepadEnabled,
+        gameZoom: userOptions.gameZoom,
         keyboardBindings: userOptions.keyboardBindings,
         language: userOptions.language,
         masterVolume: userOptions.masterVolume,
         musicVolume: userOptions.musicVolume,
+        uiZoom: userOptions.uiZoom,
       } satisfies PersistedUserOptions)
     );
   } catch {
@@ -162,12 +196,28 @@ var userOptions: UserOptions = {
       defaultPersistedOptions.debug.showControlsOverlay,
 
     /**
+     * Draw facing and steering vectors for intentional moving entities.
+     * @type {Boolean}
+     */
+    showHeadingVectors:
+      storedOptions.debug?.showHeadingVectors ??
+      defaultPersistedOptions.debug.showHeadingVectors,
+
+    /**
      * Write the current player coordinates on screen.
      * @type {Boolean}
      */
     showPlayerCoordinates:
       storedOptions.debug?.showPlayerCoordinates ??
       defaultPersistedOptions.debug.showPlayerCoordinates,
+
+    /**
+     * Fill the shortest turning arc between heading and steering vectors.
+     * @type {Boolean}
+     */
+    showSteeringArc:
+      storedOptions.debug?.showSteeringArc ??
+      defaultPersistedOptions.debug.showSteeringArc,
 
     /**
      * Make the player immortal.
@@ -191,6 +241,7 @@ var userOptions: UserOptions = {
    */
   controllerType:
     storedOptions.controllerType ?? defaultPersistedOptions.controllerType,
+  gameZoom: normalizeZoomOption(storedOptions.gameZoom),
 
   /**
    * Poll the browser Gamepad API alongside the selected keyboard layout.
@@ -207,6 +258,7 @@ var userOptions: UserOptions = {
   masterVolume: storedOptions.masterVolume ?? defaultPersistedOptions.masterVolume,
   musicVolume: storedOptions.musicVolume ?? defaultPersistedOptions.musicVolume,
   effectsVolume: storedOptions.effectsVolume ?? defaultPersistedOptions.effectsVolume,
+  uiZoom: normalizeZoomOption(storedOptions.uiZoom),
 
   /**
    * Set options in this object (userOptions), and store it so that the user doesn't have to set options each time

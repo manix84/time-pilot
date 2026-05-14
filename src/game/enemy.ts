@@ -1,6 +1,7 @@
 /* Converted from TimePilot.Enemy.js (AMD) to ESM TypeScript. */
 import { levels, scoring } from "./constants";
 import userOptions from "./user-options";
+import { drawDebugVectors } from "./debug-vectors";
 import helpers from "./engine/helpers";
 import palette from "./palette";
 import { getDespawnRadius } from "./viewport";
@@ -23,6 +24,7 @@ class Enemy implements EnemyInstance {
   private _gameArena: GameArenaInstance;
   private _gameTicker: TickerInstance;
   private _player: PlayerInstance;
+  private _steeringHeading: Heading;
 
   isAlive = true;
   removeMe = false;
@@ -51,6 +53,7 @@ class Enemy implements EnemyInstance {
       ...options,
     };
     this._data.hitPoints = this.getLevelData().hitPoints;
+    this._steeringHeading = this._data.heading;
 
     this._enemySprite = new Image();
     this._enemySprite.src = this.getLevelData().sprite.src;
@@ -166,15 +169,32 @@ class Enemy implements EnemyInstance {
 
     this._checkInArena();
 
-    if (canTurn) {
-      let turnTo = helpers.findHeading(this._data, {
-        posX: player.posX + levelData.width / 2,
-        posY: player.posY + levelData.height / 2,
-      });
-      turnTo = Math.floor(turnTo / 22.5) * 22.5;
+    this._steeringHeading = this._getSteeringHeading(levelData, formationActive);
 
-      enemy.heading = helpers.rotateTo(turnTo, enemy.heading, 22.5);
+    if (canTurn) {
+      enemy.heading = helpers.rotateTo(
+        this._steeringHeading,
+        enemy.heading,
+        22.5
+      );
     }
+  };
+
+  private _getSteeringHeading = (
+    levelData: EnemyConfig,
+    formationActive: boolean
+  ): Heading => {
+    if (!levelData.tracksPlayer || formationActive || this.removeMe) {
+      return this._data.heading;
+    }
+
+    const player = this._player.getData();
+    const turnTo = helpers.findHeading(this._data, {
+      posX: player.posX + levelData.width / 2,
+      posY: player.posY + levelData.height / 2,
+    });
+
+    return Math.floor(turnTo / 22.5) * 22.5;
   };
 
   private _applyFormationWave = (tick: number): void => {
@@ -209,9 +229,7 @@ class Enemy implements EnemyInstance {
       frameWidth: levelData.width,
       frameHeight: levelData.height,
       frameX,
-      frameY: levelData.canRotate
-        ? Math.floor(this._gameTicker.getTicks() / 10) % 2
-        : 0,
+      frameY: this._getFrameY(levelData),
       posX: this._data.posX - this._player.getData().posX - renderWidth / 2,
       posY:
         this._data.posY - this._player.getData().posY - renderHeight / 2,
@@ -220,13 +238,37 @@ class Enemy implements EnemyInstance {
     });
   };
 
+  private _getFrameY = (levelData: EnemyConfig): number => {
+    if (!levelData.canRotate) {
+      return 0;
+    }
+
+    return (
+      Math.floor(this._gameTicker.getTicks() / 10) %
+      (levelData.animationRows ?? 1)
+    );
+  };
+
   private _getFrameX = (levelData: EnemyConfig): number => {
     if (this._data.type === "boss" && levelData.bossDamageFrames) {
       return this._getBossDamageFrame(levelData);
     }
 
+    if (levelData.horizontalDirectionFrames) {
+      const leftRightPosition =
+        (1 - Math.sin(this._data.heading * (Math.PI / 180))) / 2;
+
+      return Math.round(
+        leftRightPosition * (levelData.horizontalDirectionFrames - 1)
+      );
+    }
+
     if (levelData.canRotate) {
-      return Math.floor(this._data.heading / 22.5);
+      const heading =
+        (this._data.heading + (levelData.headingFrameOffset ?? 0) + 360) %
+        360;
+
+      return Math.floor(heading / 22.5);
     }
 
     return (
@@ -254,9 +296,30 @@ class Enemy implements EnemyInstance {
     }
 
     const explosionData = this.getLevelData().explosion;
+    const levelData = this.getLevelData();
+    const elapsedTicks = this._gameTicker.getTicks() - this._data.deathTick;
+    const flashTicks = levelData.deathFlashTicks ?? 0;
+
+    if (levelData.deathFlashFrameY !== undefined && elapsedTicks < flashTicks) {
+      const renderWidth = levelData.renderWidth ?? levelData.width;
+      const renderHeight = levelData.renderHeight ?? levelData.height;
+
+      this._gameArena.renderSprite(this._enemySprite, {
+        frameWidth: levelData.width,
+        frameHeight: levelData.height,
+        frameX: this._getFrameX(levelData),
+        frameY: levelData.deathFlashFrameY,
+        posX: this._data.posX - this._player.getData().posX - renderWidth / 2,
+        posY:
+          this._data.posY - this._player.getData().posY - renderHeight / 2,
+        renderHeight,
+        renderWidth,
+      });
+      return;
+    }
+
     const frameX = Math.floor(
-      (this._gameTicker.getTicks() - this._data.deathTick) /
-        explosionData.frameLimiter
+      (elapsedTicks - flashTicks) / explosionData.frameLimiter
     );
 
     this._enemySprite.src = explosionData.sprite.src;
@@ -295,6 +358,25 @@ class Enemy implements EnemyInstance {
         levelData.hitRadius,
         {
           borderColor: palette.debug.enemyHitbox,
+        }
+      );
+    }
+
+    if (
+      userOptions.enableDebug &&
+      userOptions.debug.showHeadingVectors &&
+      !this._data.deathTick
+    ) {
+      const context = this._gameArena.getContext() as CanvasRenderingContext2D;
+
+      drawDebugVectors(
+        context,
+        this._data.posX - this._player.getData().posX,
+        this._data.posY - this._player.getData().posY,
+        this._data.heading,
+        this._steeringHeading,
+        {
+          fillTurnArc: userOptions.debug.showSteeringArc,
         }
       );
     }

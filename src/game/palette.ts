@@ -7,7 +7,10 @@ const palette = {
   debug: {
     bonusHitbox: "#0FF",
     enemyHitbox: "#F00",
+    headingVector: "#35D6FF",
     playerHitbox: "#0F0",
+    steeringArcFill: "rgba(255, 211, 64, 0.22)",
+    steeringVector: "#FFD340",
   },
   level: {
     sky1910: "#4FC3F7",

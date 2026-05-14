@@ -8,6 +8,7 @@ import Player from "../player";
 import PropFactory from "../prop-factory";
 import userOptions from "../user-options";
 import type {
+  BulletData,
   GameArenaInstance,
   GameDataStore,
   MenuSystemInstance,
@@ -108,6 +109,8 @@ const createContext = (): GameDataStore => {
   context._hud = new Hud(context);
   context._menus = {
     adjust: vi.fn(),
+    adjustUiZoom: vi.fn(),
+    resetUiZoom: vi.fn(),
     captureKey: vi.fn(() => false),
     isActive: vi.fn(() => false),
     showStart: vi.fn(),
@@ -115,6 +118,8 @@ const createContext = (): GameDataStore => {
     render: vi.fn(),
     next: vi.fn(),
     previous: vi.fn(),
+    goBack: vi.fn(),
+    goToRoot: vi.fn(),
     activate: vi.fn(),
     handlePointer: vi.fn(),
   } satisfies MenuSystemInstance;
@@ -129,7 +134,11 @@ describe("context-backed game modules", () => {
 
   afterEach(() => {
     userOptions.setOption("enableDebug", false);
+    userOptions.setOption("gameZoom", 100);
+    userOptions.setDebugOption("showHeadingVectors", false);
     userOptions.setDebugOption("showHitboxes", true);
+    userOptions.setDebugOption("showSteeringArc", false);
+    userOptions.setOption("uiZoom", 100);
     localStorage.clear();
   });
 
@@ -169,6 +178,143 @@ describe("context-backed game modules", () => {
     expect(canvasContext.arc).toHaveBeenCalledWith(20, 30, 3, 0, Math.PI * 2);
   });
 
+  it("renders and steers homing rocket sprites", () => {
+    const context = createContext();
+    context._player.setData("posX", 0);
+    context._player.setData("posY", 100);
+
+    context._enemyBullets.create(
+      0,
+      0,
+      90,
+      8,
+      11,
+      "#FF9",
+      false,
+      "world",
+      "sprite",
+      {
+        sprite: { src: "/sprites/enemies/projectiles/rocket.png" },
+        width: 12,
+        height: 9,
+        frames: 16,
+        renderWidth: 24,
+        renderHeight: 18,
+      },
+      true,
+      4
+    );
+
+    const [rocket] = context._enemyBullets.getEntities();
+
+    context._enemyBullets.reposition();
+    context._enemyBullets.render();
+
+    const rocketData = rocket.getData() as BulletData;
+    expect(rocketData.heading).toBe(94);
+    expect(context._gameArena.renderSprite).toHaveBeenCalledWith(
+      expect.any(HTMLImageElement),
+      expect.objectContaining({
+        frameHeight: 9,
+        frameWidth: 12,
+        frameX: 0,
+        renderHeight: 18,
+        renderWidth: 24,
+      })
+    );
+  });
+
+  it("renders animated plasma projectile sprites", () => {
+    const context = createContext();
+    const now = vi.spyOn(performance, "now").mockReturnValue(360);
+
+    context._enemyBullets.create(
+      0,
+      0,
+      90,
+      6,
+      8.75,
+      "#FF9",
+      false,
+      "world",
+      "sprite",
+      {
+        sprite: { src: "/sprites/enemies/projectiles/plasma.png" },
+        width: 8,
+        height: 7,
+        frames: 8,
+        frameMode: "animation",
+        renderWidth: 8,
+        renderHeight: 7,
+      }
+    );
+
+    context._enemyBullets.render();
+
+    expect(context._gameArena.renderSprite).toHaveBeenCalledWith(
+      expect.any(HTMLImageElement),
+      expect.objectContaining({
+        frameHeight: 7,
+        frameWidth: 8,
+        frameX: 3,
+        renderHeight: 7,
+        renderWidth: 8,
+      })
+    );
+
+    now.mockRestore();
+  });
+
+  it("renders projectile explosion sprites before cleanup", () => {
+    const context = createContext();
+    vi.mocked(context._gameTicker.getTicks)
+      .mockReturnValueOnce(100)
+      .mockReturnValueOnce(104);
+
+    context._enemyBullets.create(
+      20,
+      30,
+      90,
+      6,
+      4.5,
+      "#FF9",
+      false,
+      "world",
+      "sprite",
+      {
+        sprite: { src: "/sprites/enemies/projectiles/bomb.png" },
+        width: 12,
+        height: 3,
+        renderWidth: 24,
+        renderHeight: 6,
+      },
+      false,
+      0,
+      true,
+      {
+        sprite: { src: "/sprites/enemies/projectiles/bomb_explosion.png" },
+        width: 11,
+        height: 11,
+        frames: 4,
+        frameLimiter: 4,
+      }
+    );
+
+    const [bomb] = context._enemyBullets.getEntities();
+    bomb.explode();
+    bomb.render();
+
+    expect(context._gameArena.renderSprite).toHaveBeenCalledWith(
+      expect.any(HTMLImageElement),
+      expect.objectContaining({
+        frameHeight: 11,
+        frameWidth: 11,
+        frameX: 1,
+      })
+    );
+    expect(bomb.removeMe).toBe(false);
+  });
+
   it("moves and renders the player", () => {
     const context = createContext();
 
@@ -188,6 +334,47 @@ describe("context-backed game modules", () => {
       })
     );
     expect(context._bullets.getCount()).toBe(1);
+  });
+
+  it("maps the 32-frame player sprite strip around the full circle", () => {
+    const context = createContext();
+
+    context._player.setData("heading", 90);
+    context._player.render();
+    context._player.setData("heading", 180);
+    context._player.render();
+    context._player.setData("heading", 270);
+    context._player.render();
+    context._player.setData("heading", 0);
+    context._player.render();
+    context._player.setData("heading", 315);
+    context._player.render();
+
+    expect(context._gameArena.renderSprite).toHaveBeenNthCalledWith(
+      1,
+      expect.any(HTMLImageElement),
+      expect.objectContaining({ frameX: 0, frameY: 0, flipY: false })
+    );
+    expect(context._gameArena.renderSprite).toHaveBeenNthCalledWith(
+      2,
+      expect.any(HTMLImageElement),
+      expect.objectContaining({ frameX: 8, frameY: 0, flipY: false })
+    );
+    expect(context._gameArena.renderSprite).toHaveBeenNthCalledWith(
+      3,
+      expect.any(HTMLImageElement),
+      expect.objectContaining({ frameX: 16, frameY: 0, flipY: false })
+    );
+    expect(context._gameArena.renderSprite).toHaveBeenNthCalledWith(
+      4,
+      expect.any(HTMLImageElement),
+      expect.objectContaining({ frameX: 24, frameY: 0, flipY: false })
+    );
+    expect(context._gameArena.renderSprite).toHaveBeenNthCalledWith(
+      5,
+      expect.any(HTMLImageElement),
+      expect.objectContaining({ frameX: 20, frameY: 0, flipY: false })
+    );
   });
 
   it("spends a life and respawns the player at level start after death", () => {
@@ -254,7 +441,7 @@ describe("context-backed game modules", () => {
       expect.objectContaining({
         frameHeight: 16,
         frameWidth: 16,
-        frameX: 24,
+        frameX: 0,
         renderHeight: 32,
         renderWidth: 32,
       })
@@ -307,6 +494,44 @@ describe("context-backed game modules", () => {
     expect(context._bonuses.getCount()).toBe(0);
   });
 
+  it("renders refreshed cloud props at pixel-doubled dimensions", () => {
+    const context = createContext();
+    vi.spyOn(Math, "random").mockReturnValue(0);
+
+    context._props.create(50, 50);
+    context._props.render();
+
+    expect(context._gameArena.renderSprite).toHaveBeenCalledWith(
+      expect.any(HTMLImageElement),
+      expect.objectContaining({
+        frameHeight: 18,
+        frameWidth: 32,
+      })
+    );
+  });
+
+  it("renders level 5 props as asteroids", () => {
+    const context = createContext();
+    context._level = 5;
+    vi.spyOn(Math, "random").mockReturnValue(0);
+
+    context._props.create(50, 50);
+    context._props.render();
+
+    const [propData] = context._props.getData();
+
+    expect(propData.level).toBe(5);
+    expect(context._gameArena.renderSprite).toHaveBeenCalledWith(
+      expect.objectContaining({
+        src: expect.stringContaining("asteroid1.png"),
+      }),
+      expect.objectContaining({
+        frameHeight: 24,
+        frameWidth: 28,
+      })
+    );
+  });
+
   it("awards parachute bonuses in 1000 point steps capped at 5000", () => {
     const context = createContext();
 
@@ -322,6 +547,39 @@ describe("context-backed game modules", () => {
 
     expect(context._player.getData("score")).toBe(20000);
     expect(context._nextParachuteScore).toBe(5000);
+  });
+
+  it("renders the refreshed parachute as a four-frame swing", () => {
+    const context = createContext();
+
+    context._bonuses.create(40, 60);
+    const [bonus] = context._bonuses.getEntities();
+
+    vi.mocked(context._gameTicker.getTicks).mockReturnValue(24);
+    bonus.render();
+    vi.mocked(context._gameTicker.getTicks).mockReturnValue(40);
+    bonus.render();
+
+    expect(context._gameArena.renderSprite).toHaveBeenNthCalledWith(
+      1,
+      expect.any(HTMLImageElement),
+      expect.objectContaining({
+        frameHeight: 16,
+        frameWidth: 16,
+        frameX: 3,
+        frameY: 0,
+      })
+    );
+    expect(context._gameArena.renderSprite).toHaveBeenNthCalledWith(
+      2,
+      expect.any(HTMLImageElement),
+      expect.objectContaining({
+        frameHeight: 16,
+        frameWidth: 16,
+        frameX: 2,
+        frameY: 0,
+      })
+    );
   });
 
   it("renders collected parachute score at the pickup position before cleanup", () => {
@@ -427,6 +685,318 @@ describe("context-backed game modules", () => {
     );
   });
 
+  it("renders level 1 biplane rotor animation rows without changing orientation", () => {
+    const context = createContext();
+
+    context._enemies.create(100, 100, 180);
+    const [enemy] = context._enemies.getEntities();
+
+    vi.mocked(context._gameTicker.getTicks).mockReturnValue(9);
+    enemy.render();
+    vi.mocked(context._gameTicker.getTicks).mockReturnValue(10);
+    enemy.render();
+
+    expect(context._gameArena.renderSprite).toHaveBeenNthCalledWith(
+      1,
+      expect.any(HTMLImageElement),
+      expect.objectContaining({ frameX: 8, frameY: 0 })
+    );
+    expect(context._gameArena.renderSprite).toHaveBeenNthCalledWith(
+      2,
+      expect.any(HTMLImageElement),
+      expect.objectContaining({ frameX: 8, frameY: 1 })
+    );
+  });
+
+  it("renders the level 1 biplane flash row before the explosion sheet", () => {
+    const context = createContext();
+
+    vi.mocked(context._gameTicker.getTicks).mockReturnValue(100);
+    context._enemies.create(100, 100, 180);
+    const [enemy] = context._enemies.getEntities();
+
+    enemy.kill();
+    vi.mocked(context._gameTicker.getTicks).mockReturnValue(103);
+    enemy.render();
+    vi.mocked(context._gameTicker.getTicks).mockReturnValue(106);
+    enemy.render();
+
+    expect(context._gameArena.renderSprite).toHaveBeenNthCalledWith(
+      1,
+      expect.any(HTMLImageElement),
+      expect.objectContaining({
+        frameHeight: 16,
+        frameWidth: 16,
+        frameX: 8,
+        frameY: 2,
+        renderHeight: 32,
+        renderWidth: 32,
+      })
+    );
+    expect(context._gameArena.renderSprite).toHaveBeenNthCalledWith(
+      2,
+      expect.any(HTMLImageElement),
+      expect.objectContaining({
+        frameHeight: 16,
+        frameWidth: 16,
+        frameX: 0,
+        frameY: 0,
+      })
+    );
+  });
+
+  it("renders level 2 fighters with their offset directional animation rows", () => {
+    const context = createContext();
+    context._level = 2;
+
+    context._enemies.create(100, 100, 90);
+    const [enemy] = context._enemies.getEntities();
+
+    vi.mocked(context._gameTicker.getTicks).mockReturnValue(9);
+    enemy.render();
+    vi.mocked(context._gameTicker.getTicks).mockReturnValue(10);
+    enemy.render();
+    enemy.setData("heading", 0);
+    enemy.render();
+
+    expect(context._gameArena.renderSprite).toHaveBeenNthCalledWith(
+      1,
+      expect.any(HTMLImageElement),
+      expect.objectContaining({
+        frameHeight: 16,
+        frameWidth: 16,
+        frameX: 0,
+        frameY: 0,
+        renderHeight: 32,
+        renderWidth: 32,
+      })
+    );
+    expect(context._gameArena.renderSprite).toHaveBeenNthCalledWith(
+      2,
+      expect.any(HTMLImageElement),
+      expect.objectContaining({ frameX: 0, frameY: 1 })
+    );
+    expect(context._gameArena.renderSprite).toHaveBeenNthCalledWith(
+      3,
+      expect.any(HTMLImageElement),
+      expect.objectContaining({ frameX: 12, frameY: 1 })
+    );
+  });
+
+  it("renders the level 2 fighter flash row before the explosion sheet", () => {
+    const context = createContext();
+    context._level = 2;
+
+    vi.mocked(context._gameTicker.getTicks).mockReturnValue(100);
+    context._enemies.create(100, 100, 180);
+    const [enemy] = context._enemies.getEntities();
+
+    enemy.kill();
+    vi.mocked(context._gameTicker.getTicks).mockReturnValue(103);
+    enemy.render();
+    vi.mocked(context._gameTicker.getTicks).mockReturnValue(106);
+    enemy.render();
+
+    expect(context._gameArena.renderSprite).toHaveBeenNthCalledWith(
+      1,
+      expect.any(HTMLImageElement),
+      expect.objectContaining({
+        frameHeight: 16,
+        frameWidth: 16,
+        frameX: 4,
+        frameY: 2,
+        renderHeight: 32,
+        renderWidth: 32,
+      })
+    );
+    expect(context._gameArena.renderSprite).toHaveBeenNthCalledWith(
+      2,
+      expect.any(HTMLImageElement),
+      expect.objectContaining({
+        frameHeight: 16,
+        frameWidth: 16,
+        frameX: 0,
+        frameY: 0,
+      })
+    );
+  });
+
+  it("renders level 3 helicopters with horizontal direction frames and animation rows", () => {
+    const context = createContext();
+    context._level = 3;
+
+    context._enemies.create(100, 100, 90);
+    const [enemy] = context._enemies.getEntities();
+
+    vi.mocked(context._gameTicker.getTicks).mockReturnValue(9);
+    enemy.render();
+    enemy.setData("heading", 0);
+    vi.mocked(context._gameTicker.getTicks).mockReturnValue(10);
+    enemy.render();
+    enemy.setData("heading", 270);
+    vi.mocked(context._gameTicker.getTicks).mockReturnValue(19);
+    enemy.render();
+
+    expect(context._gameArena.renderSprite).toHaveBeenNthCalledWith(
+      1,
+      expect.any(HTMLImageElement),
+      expect.objectContaining({
+        frameHeight: 16,
+        frameWidth: 16,
+        frameX: 0,
+        frameY: 0,
+        renderHeight: 32,
+        renderWidth: 32,
+      })
+    );
+    expect(context._gameArena.renderSprite).toHaveBeenNthCalledWith(
+      2,
+      expect.any(HTMLImageElement),
+      expect.objectContaining({ frameX: 4, frameY: 1 })
+    );
+    expect(context._gameArena.renderSprite).toHaveBeenNthCalledWith(
+      3,
+      expect.any(HTMLImageElement),
+      expect.objectContaining({ frameX: 8, frameY: 1 })
+    );
+  });
+
+  it("renders the level 3 helicopter flash row before the explosion sheet", () => {
+    const context = createContext();
+    context._level = 3;
+
+    vi.mocked(context._gameTicker.getTicks).mockReturnValue(100);
+    context._enemies.create(100, 100, 270);
+    const [enemy] = context._enemies.getEntities();
+
+    enemy.kill();
+    vi.mocked(context._gameTicker.getTicks).mockReturnValue(103);
+    enemy.render();
+
+    expect(context._gameArena.renderSprite).toHaveBeenCalledWith(
+      expect.any(HTMLImageElement),
+      expect.objectContaining({
+        frameHeight: 16,
+        frameWidth: 16,
+        frameX: 8,
+        frameY: 2,
+        renderHeight: 32,
+        renderWidth: 32,
+      })
+    );
+  });
+
+  it("renders level 4 basic enemies with offset directional animation rows", () => {
+    const context = createContext();
+    context._level = 4;
+
+    context._enemies.create(100, 100, 90);
+    const [enemy] = context._enemies.getEntities();
+
+    vi.mocked(context._gameTicker.getTicks).mockReturnValue(9);
+    enemy.render();
+    vi.mocked(context._gameTicker.getTicks).mockReturnValue(10);
+    enemy.render();
+    enemy.setData("heading", 0);
+    enemy.render();
+
+    expect(context._gameArena.renderSprite).toHaveBeenNthCalledWith(
+      1,
+      expect.any(HTMLImageElement),
+      expect.objectContaining({
+        frameHeight: 16,
+        frameWidth: 16,
+        frameX: 0,
+        frameY: 0,
+        renderHeight: 32,
+        renderWidth: 32,
+      })
+    );
+    expect(context._gameArena.renderSprite).toHaveBeenNthCalledWith(
+      2,
+      expect.any(HTMLImageElement),
+      expect.objectContaining({ frameX: 0, frameY: 1 })
+    );
+    expect(context._gameArena.renderSprite).toHaveBeenNthCalledWith(
+      3,
+      expect.any(HTMLImageElement),
+      expect.objectContaining({ frameX: 12, frameY: 1 })
+    );
+  });
+
+  it("renders the level 4 basic enemy flash row before the explosion sheet", () => {
+    const context = createContext();
+    context._level = 4;
+
+    vi.mocked(context._gameTicker.getTicks).mockReturnValue(100);
+    context._enemies.create(100, 100, 180);
+    const [enemy] = context._enemies.getEntities();
+
+    enemy.kill();
+    vi.mocked(context._gameTicker.getTicks).mockReturnValue(103);
+    enemy.render();
+
+    expect(context._gameArena.renderSprite).toHaveBeenCalledWith(
+      expect.any(HTMLImageElement),
+      expect.objectContaining({
+        frameHeight: 16,
+        frameWidth: 16,
+        frameX: 4,
+        frameY: 2,
+        renderHeight: 32,
+        renderWidth: 32,
+      })
+    );
+  });
+
+  it("renders level 5 basic enemies as four animation frames without rotation", () => {
+    const context = createContext();
+    context._level = 5;
+
+    context._enemies.create(100, 100, 180);
+    const [enemy] = context._enemies.getEntities();
+
+    vi.mocked(context._gameTicker.getTicks).mockReturnValue(30);
+    enemy.render();
+
+    expect(context._gameArena.renderSprite).toHaveBeenCalledWith(
+      expect.any(HTMLImageElement),
+      expect.objectContaining({
+        frameHeight: 16,
+        frameWidth: 16,
+        frameX: 3,
+        frameY: 0,
+        renderHeight: 32,
+        renderWidth: 32,
+      })
+    );
+  });
+
+  it("renders the level 5 basic enemy flash row before the explosion sheet", () => {
+    const context = createContext();
+    context._level = 5;
+
+    vi.mocked(context._gameTicker.getTicks).mockReturnValue(100);
+    context._enemies.create(100, 100, 180);
+    const [enemy] = context._enemies.getEntities();
+
+    enemy.kill();
+    vi.mocked(context._gameTicker.getTicks).mockReturnValue(103);
+    enemy.render();
+
+    expect(context._gameArena.renderSprite).toHaveBeenCalledWith(
+      expect.any(HTMLImageElement),
+      expect.objectContaining({
+        frameHeight: 16,
+        frameWidth: 16,
+        frameX: 2,
+        frameY: 1,
+        renderHeight: 32,
+        renderWidth: 32,
+      })
+    );
+  });
+
   it("awards the 1940 special bomber after three hits without boss progress", () => {
     const context = createContext();
     context._level = 2;
@@ -508,9 +1078,42 @@ describe("context-backed game modules", () => {
     expect(context._gameArena.drawCircle).toHaveBeenCalledWith(100, 100, 8, {
       borderColor: "#F00",
     });
-    expect(context._gameArena.drawCircle).toHaveBeenCalledWith(80, 80, 10, {
+    expect(context._gameArena.drawCircle).toHaveBeenCalledWith(80, 80, 8, {
       borderColor: "#0FF",
     });
+  });
+
+  it("renders heading and steering vectors for intentional moving entities only", () => {
+    const context = createContext();
+    const canvasContext = context._gameArena.getContext() as CanvasRenderingContext2D;
+    userOptions.setOption("enableDebug", true);
+    userOptions.setDebugOption("showHeadingVectors", true);
+    userOptions.setDebugOption("showSteeringArc", true);
+    context._player.setData("heading", 90);
+    context._player.setData("newHeading", 0);
+
+    context._bullets.create(0, 0, 90, 4, 7, "#fff");
+    context._enemies.create(100, 100, 180);
+    context._bonuses.create(80, 80);
+    context._enemies.reposition();
+
+    context._player.render();
+    context._bullets.render();
+    context._enemies.render();
+    const lineCountBeforeBonus = vi.mocked(canvasContext.lineTo).mock.calls.length;
+    context._bonuses.render();
+
+    expect(vi.mocked(canvasContext.lineTo).mock.calls).toEqual(
+      expect.arrayContaining([
+        [expect.closeTo(38), expect.closeTo(0)],
+        [expect.closeTo(0), expect.closeTo(-38)],
+      ])
+    );
+    expect(canvasContext.fill).toHaveBeenCalled();
+    expect(canvasContext.stroke).toHaveBeenCalled();
+    expect(vi.mocked(canvasContext.lineTo).mock.calls.length).toBe(
+      lineCountBeforeBonus
+    );
   });
 
   it("renders HUD and delegates controller commands", () => {

@@ -20,6 +20,7 @@ import PropFactory from "./prop-factory";
 import CollisionSystem from "./systems/collision";
 import RenderingSystem from "./systems/rendering";
 import SpawningSystem from "./systems/spawning";
+import { timeWarpAnimationTicks, timeWarpDelayMs } from "./time-warp";
 import type {
   AssetProgress,
   CollisionSystemInstance,
@@ -34,6 +35,7 @@ import userOptions from "./user-options";
 export const DEMO_LEVEL_DURATION_MS = 30000;
 export const DEMO_LEVEL_FADE_MS = 1000;
 export const LEVEL_INTRO_DURATION_MS = 5000;
+export const TIME_WARP_DELAY_MS = timeWarpDelayMs;
 const gameFps = 50;
 const demoLevelDurationFrames = Math.max(
   1,
@@ -46,6 +48,10 @@ const demoLevelFadeFrames = Math.max(
 const levelIntroDurationFrames = Math.max(
   1,
   Math.round((LEVEL_INTRO_DURATION_MS / 1000) * gameFps)
+);
+const timeWarpDelayFrames = Math.max(
+  1,
+  Math.round((TIME_WARP_DELAY_MS / 1000) * gameFps)
 );
 const playerRotationStep = 360 / player.rotationFrameCount;
 
@@ -64,6 +70,7 @@ export class TimePilot {
   private hasStartedGame = false;
   private isDestroyed = false;
   private isDemoMode = false;
+  private isDebugLevelPreviewLocked = false;
   private selectedStartLevel = 1;
   private readonly coinDropSound = new SoundEngine(sounds.coinDrop.src);
   private readonly gameStartSound = new SoundEngine(sounds.gameStart.src);
@@ -172,6 +179,7 @@ export class TimePilot {
     this.context._demoFadeUntilTick = 0;
     this.context._isDemoMode = false;
     this.context._levelIntroUntilTick = 0;
+    this.context._timeWarpTransition = undefined;
     this.context._nextParachuteScore = scoring.parachute.min;
     this.context._gameArena = new GameArena(this.container);
     this.context._renderTicker = new Ticker();
@@ -184,7 +192,13 @@ export class TimePilot {
     this.context._bonuses = new BonusFactory(this.context);
     this.context._hud = new Hud(this.context);
     this.context._menus = new Menus(this.context._gameArena, {
+      clearLevelPreview: () => {
+        this.clearDebugLevelPreview();
+      },
       getLevel: () => this.selectedStartLevel,
+      previewLevel: (level) => {
+        this.previewDebugLevel(level);
+      },
       selectLevel: (level) => {
         this.selectDebugLevel(level);
         this.beginGame();
@@ -231,6 +245,7 @@ export class TimePilot {
     this.context._gameArena.registerAssets([
       assetPath("fonts/font.ttf"),
       assetPath("sprites/player/player.png"),
+      assetPath("sprites/player/timewarp.png"),
       assetPath("sounds/player/bullet.mp3"),
       assetPath("sprites/player/explosion.png"),
       assetPath("sprites/enemies/basic/level1.png"),
@@ -246,8 +261,16 @@ export class TimePilot {
       assetPath("sprites/enemies/boss/level5.png"),
       assetPath("sprites/enemies/basic/explosion.png"),
       assetPath("sprites/enemies/boss/explosion.png"),
+      assetPath("sprites/enemies/special-bomber/explosion.png"),
       assetPath("sprites/enemies/projectiles/bomb.png"),
+      assetPath("sprites/enemies/projectiles/bomb_explosion.png"),
+      assetPath("sprites/enemies/projectiles/plasma.png"),
+      assetPath("sprites/enemies/projectiles/plasma_explosion.png"),
+      assetPath("sprites/enemies/projectiles/rocket.png"),
       assetPath("sprites/bonuses/parachute.png"),
+      assetPath("sprites/props/asteroid1.png"),
+      assetPath("sprites/props/asteroid2.png"),
+      assetPath("sprites/props/asteroid3.png"),
       assetPath("sprites/props/cloud1.png"),
       assetPath("sprites/props/cloud2.png"),
       assetPath("sprites/props/cloud3.png"),
@@ -306,6 +329,11 @@ export class TimePilot {
         return;
       }
 
+      if (this.isTimeWarpTransitionActive()) {
+        this.clearIntroControls();
+        return;
+      }
+
       this.context._player.reposition();
       this.context._enemies.reposition();
       this.context._bullets.reposition();
@@ -325,6 +353,10 @@ export class TimePilot {
         return;
       }
 
+      if (this.isTimeWarpTransitionActive()) {
+        return;
+      }
+
       this.context._player.rotate();
     }, 3);
 
@@ -334,6 +366,10 @@ export class TimePilot {
       }
 
       if (this.isLevelIntroActive()) {
+        return;
+      }
+
+      if (this.isTimeWarpTransitionActive()) {
         return;
       }
 
@@ -357,12 +393,24 @@ export class TimePilot {
         return;
       }
 
+      if (this.isTimeWarpTransitionActive()) {
+        return;
+      }
+
       this.collisionSystem.detectCollisions();
     }, 1);
 
     this.context._gameTicker.addSchedule(() => {
       if (this.isDestroyed) {
         return;
+      }
+
+      if (this.context._timeWarpTransition) {
+        this.updateTimeWarpTransition();
+
+        if (this.context._timeWarpTransition) {
+          return;
+        }
       }
 
       this.context._enemies.cleanup();
@@ -372,7 +420,7 @@ export class TimePilot {
       this.context._bonuses.cleanup();
 
       if (this.context._levelProgress.bossDefeated) {
-        this.advanceAfterBossDefeat();
+        this.beginTimeWarpTransition();
       }
     }, 1);
   };
@@ -418,6 +466,7 @@ export class TimePilot {
     SoundEngine.stopAll();
     this.isDemoMode = true;
     this.context._isDemoMode = true;
+    this.isDebugLevelPreviewLocked = false;
     SoundEngine.setMuted(true);
     this.resetWorld(this.getRandomDemoLevel(), { skipIntro: true });
     this.spawningSystem.addInitialProps();
@@ -457,7 +506,7 @@ export class TimePilot {
   };
 
   private advanceDemoLevel = (): void => {
-    if (!this.isDemoMode) {
+    if (!this.isDemoMode || this.isDebugLevelPreviewLocked) {
       return;
     }
 
@@ -488,26 +537,90 @@ export class TimePilot {
     this.context._levelIntroUntilTick = options.skipIntro
       ? 0
       : this.context._gameTicker.getTicks() + levelIntroDurationFrames;
+    this.context._timeWarpTransition = undefined;
     this.hasSeededInitialProps = false;
   };
 
-  private advanceAfterBossDefeat = (): void => {
+  private beginTimeWarpTransition = (): void => {
+    if (this.context._timeWarpTransition) {
+      return;
+    }
+
     const score = this.context._player.getData("score") ?? 0;
     const lives = this.context._player.getData("lives") ?? 3;
     const nextLevel = this.getNextEnabledLevel();
+    const startedAtTick = this.context._gameTicker.getTicks();
+    const effectStartedAtTick = startedAtTick + timeWarpDelayFrames;
 
     this.timeWarpSound.stop();
     this.timeWarpSound.play();
-    if (nextLevel > 1) {
+
+    this.context._timeWarpTransition = {
+      effectStartedAtTick,
+      endsAtTick: effectStartedAtTick + timeWarpAnimationTicks,
+      lives,
+      nextLevel,
+      score,
+      screenCleared: false,
+      startedAtTick,
+    };
+    this.context._levelProgress.bossDefeated = false;
+  };
+
+  private updateTimeWarpTransition = (): void => {
+    const transition = this.context._timeWarpTransition;
+
+    if (!transition) {
+      return;
+    }
+
+    const ticks = this.context._gameTicker.getTicks();
+
+    if (ticks >= transition.effectStartedAtTick && !transition.screenCleared) {
+      this.prepareTimeWarpEffect();
+    }
+
+    this.completeTimeWarpTransition();
+  };
+
+  private prepareTimeWarpEffect = (): void => {
+    const transition = this.context._timeWarpTransition;
+
+    if (!transition) {
+      return;
+    }
+
+    this.context._enemies.clearAll();
+    this.context._bullets.clearAll();
+    this.context._enemyBullets.clearAll();
+    this.context._props.clearAll();
+    this.context._bonuses.clearAll();
+    this.context._player.setData("posX", 0);
+    this.context._player.setData("posY", 0);
+    this.context._player.setData("isAlive", true);
+    this.context._player.setData("deathTick", false);
+    this.context._player.stopShooting();
+    this.context._gameArena.updatePosition(0, 0);
+    transition.screenCleared = true;
+  };
+
+  private completeTimeWarpTransition = (): void => {
+    const transition = this.context._timeWarpTransition;
+
+    if (!transition || this.context._gameTicker.getTicks() < transition.endsAtTick) {
+      return;
+    }
+
+    if (transition.nextLevel > 1) {
       this.nextLevelSound.stop();
       this.nextLevelSound.play();
     }
 
-    this.resetWorld(nextLevel, { skipIntro: false });
-    this.context._player.setData("score", score);
-    this.context._player.setData("score", score, true);
-    this.context._player.setData("lives", lives);
-    this.context._player.setData("lives", lives, true);
+    this.resetWorld(transition.nextLevel, { skipIntro: false });
+    this.context._player.setData("score", transition.score);
+    this.context._player.setData("score", transition.score, true);
+    this.context._player.setData("lives", transition.lives);
+    this.context._player.setData("lives", transition.lives, true);
     this.spawningSystem.addInitialProps();
     this.hasSeededInitialProps = true;
   };
@@ -529,6 +642,24 @@ export class TimePilot {
     this.context._player.setData("lives", lives, true);
     this.spawningSystem.addInitialProps();
     this.hasSeededInitialProps = true;
+  };
+
+  private previewDebugLevel = (level: number): void => {
+    if (!this.isDemoMode || !levels[level]?.enabled || this.context._level === level) {
+      if (this.isDemoMode && levels[level]?.enabled) {
+        this.isDebugLevelPreviewLocked = true;
+      }
+      return;
+    }
+
+    this.isDebugLevelPreviewLocked = true;
+    this.resetWorld(level, { skipIntro: true });
+    this.spawningSystem.addInitialProps();
+    this.hasSeededInitialProps = true;
+  };
+
+  private clearDebugLevelPreview = (): void => {
+    this.isDebugLevelPreviewLocked = false;
   };
 
   private createLevelProgress = (level: number) => {
@@ -586,6 +717,19 @@ export class TimePilot {
       !!this.context._levelIntroUntilTick &&
       this.context._gameTicker.getTicks() < this.context._levelIntroUntilTick
     );
+  };
+
+  private isTimeWarpEffectActive = (): boolean => {
+    const transition = this.context._timeWarpTransition;
+
+    return (
+      !!transition &&
+      this.context._gameTicker.getTicks() >= transition.effectStartedAtTick
+    );
+  };
+
+  private isTimeWarpTransitionActive = (): boolean => {
+    return !!this.context._timeWarpTransition;
   };
 
   private clearIntroControls = (): void => {

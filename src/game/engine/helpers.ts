@@ -63,6 +63,13 @@ var helpers: Helpers = {
    * @returns {Number}
    */
   rotateTo: (destinationAngle: Heading, currentAngle: Heading, stepSize: number): Heading => {
+    const angleDelta =
+      ((destinationAngle - currentAngle + 540) % 360) - 180;
+
+    if (Math.abs(angleDelta) <= stepSize) {
+      return (destinationAngle + 360) % 360;
+    }
+
     var direction = Math.atan2(
       parseFloat(
         Math.sin((destinationAngle - currentAngle) * (Math.PI / 180)).toFixed(

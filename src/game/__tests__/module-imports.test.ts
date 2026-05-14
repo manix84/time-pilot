@@ -13,6 +13,7 @@ import Mouse from "../controller/mouse";
 import Enemy from "../enemy";
 import EnemyFactory from "../enemy-factory";
 import Hud from "../hud";
+import { availableLanguages, getLanguageName } from "../i18n";
 import TimePilot from "../index";
 import Menus from "../menus";
 import debugMenu from "../menus/debug";
@@ -71,6 +72,11 @@ describe("game module imports", () => {
       "swarm-burst",
       "chasing-wave",
     ]);
+    expect(constants.levels[5].props.map((prop) => prop.sprite.src)).toEqual([
+      expect.stringContaining("asteroid1.png"),
+      expect.stringContaining("asteroid2.png"),
+      expect.stringContaining("asteroid3.png"),
+    ]);
     expect(ControllerInterface).toBeTypeOf("function");
     expect(Gamepad).toBeTypeOf("function");
     expect(Keyboard1).toBeTypeOf("function");
@@ -89,5 +95,10 @@ describe("game module imports", () => {
     expect(PropFactory).toBeTypeOf("function");
     expect(userOptions.controllerType).toBe("keyboard1");
     expect(userOptions.gamepadEnabled).toBe(true);
+  });
+
+  it("lists Spanish between French and German", () => {
+    expect(availableLanguages).toEqual(["en", "fr", "es", "de", "it", "nl", "ro"]);
+    expect(getLanguageName("es")).toBe("Espanol");
   });
 });

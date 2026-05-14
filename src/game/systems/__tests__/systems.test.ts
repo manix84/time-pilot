@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import CollisionSystem from "../collision";
 import RenderingSystem from "../rendering";
 import SpawningSystem from "../spawning";
+import userOptions from "../../user-options";
 import type {
   BonusFactoryInstance,
   BonusInstance,
@@ -92,7 +93,9 @@ const createPlayer = (overrides: Partial<PlayerData> = {}): PlayerInstance => {
   };
 };
 
-const createEnemyBullet = (): BulletInstance => {
+const createEnemyBullet = (
+  overrides: Partial<BulletData> = {}
+): BulletInstance => {
   const enemyBulletData: BulletData = {
     color: "#ff9",
     coordinateSpace: "world",
@@ -102,10 +105,20 @@ const createEnemyBullet = (): BulletInstance => {
     shape: "circle",
     size: 6,
     velocity: 5,
+    explosionTick: false,
+    ...overrides,
   };
 
   return {
     removeMe: false,
+    explode: vi.fn(function (this: BulletInstance) {
+      if (enemyBulletData.explosion) {
+        enemyBulletData.explosionTick = 200;
+        return;
+      }
+
+      this.removeMe = true;
+    }),
     getData: vi.fn((key?: keyof BulletData) =>
       key ? enemyBulletData[key] : enemyBulletData
     ) as BulletInstance["getData"],
@@ -126,6 +139,7 @@ const playerBulletData: BulletData[] = [
     shape: "square",
     size: 4,
     velocity: 7,
+    explosionTick: false,
   },
 ];
 
@@ -134,6 +148,9 @@ const createPlayerBullet = (): BulletInstance => {
 
   return {
     removeMe: false,
+    explode: vi.fn(function (this: BulletInstance) {
+      this.removeMe = true;
+    }),
     getData: vi.fn((key?: keyof BulletData) =>
       key ? bulletData[key] : bulletData
     ) as BulletInstance["getData"],
@@ -155,6 +172,7 @@ const createContext = ({
   levelIntroUntilTick = 0,
   playerOverrides = {},
   propCount = 0,
+  timeWarpTransition,
   ticks = 200,
   level = 1,
 }: {
@@ -168,6 +186,7 @@ const createContext = ({
   levelIntroUntilTick?: number;
   playerOverrides?: Partial<PlayerData>;
   propCount?: number;
+  timeWarpTransition?: GameDataStore["_timeWarpTransition"];
   ticks?: number;
   level?: number;
 } = {}): GameDataStore => {
@@ -216,6 +235,7 @@ const createContext = ({
     _demoFadeUntilTick: demoFadeUntilTick,
     _isDemoMode: demoMode,
     _levelIntroUntilTick: levelIntroUntilTick,
+    _timeWarpTransition: timeWarpTransition,
     _controlInputState: {
       down: false,
       fire: false,
@@ -293,6 +313,8 @@ const createContext = ({
     } satisfies HudInstance,
     _menus: {
       adjust: vi.fn(),
+      adjustUiZoom: vi.fn(),
+      resetUiZoom: vi.fn(),
       captureKey: vi.fn(() => false),
       isActive: vi.fn(() => false),
       showStart: vi.fn(),
@@ -300,6 +322,8 @@ const createContext = ({
       render: vi.fn(),
       next: vi.fn(),
       previous: vi.fn(),
+      goBack: vi.fn(),
+      goToRoot: vi.fn(),
       activate: vi.fn(),
       handlePointer: vi.fn(),
     } satisfies MenuSystemInstance,
@@ -308,6 +332,10 @@ const createContext = ({
 };
 
 describe("game systems", () => {
+  beforeEach(() => {
+    userOptions.setOption("gameZoom", 100);
+  });
+
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -344,6 +372,28 @@ describe("game systems", () => {
 
     expect(context._player.kill).toHaveBeenCalled();
     expect(enemyBullet.removeMe).toBe(true);
+  });
+
+  it("lets player bullets shoot down shootable enemy projectiles", () => {
+    const context = createContext({
+      enemyCollides: false,
+      playerOverrides: { posX: 0, posY: 0 },
+    });
+    const enemyBullet = createEnemyBullet({
+      posX: 1,
+      posY: 2,
+      shootable: true,
+    });
+    const playerBullet = createPlayerBullet();
+    vi.mocked(context._enemyBullets.getEntities).mockReturnValue([enemyBullet]);
+    vi.mocked(context._bullets.getEntities).mockReturnValue([playerBullet]);
+    const system = new CollisionSystem(context);
+
+    system.detectCollisions();
+
+    expect(playerBullet.removeMe).toBe(true);
+    expect(enemyBullet.removeMe).toBe(true);
+    expect(context._player.kill).not.toHaveBeenCalled();
   });
 
   it("keeps the player alive while demo collisions continue resolving bullets", () => {
@@ -403,13 +453,116 @@ describe("game systems", () => {
       100,
       expect.any(Number),
       6,
-      5,
+      5.5,
       "#FF9",
       false,
       "world",
-      "circle"
+      "circle",
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined
     );
     expect(context._bonuses.create).not.toHaveBeenCalled();
+  });
+
+  it("spawns fast very-slow-homing rockets on level 3", () => {
+    const context = createContext({ level: 3 });
+    const system = new SpawningSystem(context);
+
+    vi.spyOn(Math, "random").mockReturnValue(0);
+
+    system.spawnEntities();
+
+    expect(context._enemyBullets.create).toHaveBeenCalledWith(
+      100,
+      100,
+      expect.any(Number),
+      8,
+      10,
+      "#FF9",
+      false,
+      "world",
+      "sprite",
+      expect.objectContaining({
+        frames: 16,
+        height: 9,
+        renderHeight: 18,
+        renderWidth: 24,
+        width: 12,
+      }),
+      true,
+      0.5,
+      true,
+      undefined
+    );
+  });
+
+  it("spawns faster homing rockets on level 4", () => {
+    const context = createContext({ level: 4 });
+    const system = new SpawningSystem(context);
+
+    vi.spyOn(Math, "random").mockReturnValue(0);
+
+    system.spawnEntities();
+
+    expect(context._enemyBullets.create).toHaveBeenCalledWith(
+      100,
+      100,
+      expect.any(Number),
+      8,
+      11,
+      "#FF9",
+      false,
+      "world",
+      "sprite",
+      expect.objectContaining({
+        frames: 16,
+        height: 9,
+        renderHeight: 18,
+        renderWidth: 24,
+        width: 12,
+      }),
+      true,
+      1,
+      true,
+      undefined
+    );
+  });
+
+  it("aims level 5 plasma shots at the player without homing", () => {
+    const context = createContext({ level: 5 });
+    const system = new SpawningSystem(context);
+
+    vi.spyOn(Math, "random").mockReturnValue(0);
+
+    system.spawnEntities();
+
+    const call = vi.mocked(context._enemyBullets.create).mock.calls.at(-1);
+    expect(call?.[2]).not.toBe(180);
+    expect(call?.[4]).toBe(8.75);
+    expect(call?.[8]).toBe("sprite");
+    expect(call?.[9]).toEqual(
+      expect.objectContaining({
+        frameMode: "animation",
+        frames: 8,
+        height: 7,
+        renderHeight: 7,
+        renderWidth: 8,
+        width: 8,
+      })
+    );
+    expect(call?.[10]).toBeUndefined();
+    expect(call?.[11]).toBeUndefined();
+    expect(call?.[12]).toBe(true);
+    expect(call?.[13]).toEqual(
+      expect.objectContaining({
+        frames: 4,
+        height: 13,
+        width: 16,
+      })
+    );
   });
 
   it("spawns the boss after the level kill threshold", () => {
@@ -445,7 +598,7 @@ describe("game systems", () => {
   });
 
   it("drops bombs from the 1940 special bomber", () => {
-    const context = createContext({ level: 2, ticks: 225 });
+    const context = createContext({ level: 2, ticks: 180 });
     const [bomber] = context._enemies.getEntities();
     vi.mocked(bomber.getData).mockImplementation((key?: keyof EnemyData) => {
       const data: EnemyData = {
@@ -472,7 +625,7 @@ describe("game systems", () => {
       109,
       180,
       6,
-      4,
+      4.5,
       "#FF9",
       false,
       "world",
@@ -482,6 +635,14 @@ describe("game systems", () => {
         renderHeight: 6,
         renderWidth: 24,
         width: 12,
+      }),
+      undefined,
+      undefined,
+      true,
+      expect.objectContaining({
+        frames: 4,
+        height: 11,
+        width: 11,
       })
     );
   });
@@ -627,14 +788,65 @@ describe("game systems", () => {
 
     system.renderFrame();
 
-    const canvasContext = vi.mocked(context._gameArena.getContext).mock.results[0]
-      .value as CanvasRenderingContext2D;
+    const canvasContexts = vi
+      .mocked(context._gameArena.getContext)
+      .mock.results.map((result) => result.value as CanvasRenderingContext2D);
+    const canvasContext = canvasContexts.find((renderingContext) =>
+      vi.mocked(renderingContext.fillRect).mock.calls.some(
+        (call) => call[0] === -400 && call[1] === -300 && call[2] === 800 && call[3] === 600
+      )
+    )!;
 
     expect(canvasContext.fillRect).toHaveBeenCalledWith(-400, -300, 800, 600);
     expect(context._menus.render).toHaveBeenCalled();
     expect(vi.mocked(canvasContext.fillRect).mock.invocationCallOrder[0]).toBeLessThan(
       vi.mocked(context._menus.render).mock.invocationCallOrder[0]
     );
+  });
+
+  it("renders the expanding time warp frame strip over the centered player", () => {
+    const context = createContext({
+      ticks: 320,
+      timeWarpTransition: {
+        effectStartedAtTick: 250,
+        endsAtTick: 520,
+        lives: 3,
+        nextLevel: 2,
+        score: 1000,
+        screenCleared: true,
+        startedAtTick: 200,
+      },
+    });
+    const system = new RenderingSystem(context);
+
+    system.renderFrame();
+
+    const canvasContexts = vi
+      .mocked(context._gameArena.getContext)
+      .mock.results.map((result) => result.value as CanvasRenderingContext2D);
+    const drawImageCalls = canvasContexts.flatMap((renderingContext) =>
+      vi.mocked(renderingContext.drawImage).mock.calls
+    );
+
+    expect(context._gameArena.setBackgroundColor).toHaveBeenCalledWith("#000");
+    expect(context._props.render).not.toHaveBeenCalled();
+    expect(context._hud.render).not.toHaveBeenCalled();
+    expect(drawImageCalls).toEqual(
+      expect.arrayContaining([
+        expect.arrayContaining([
+          expect.any(HTMLImageElement),
+          0,
+          0,
+          16,
+          16,
+          -416,
+          -16,
+          32,
+          32,
+        ]),
+      ])
+    );
+    expect(drawImageCalls.length).toBeGreaterThan(20);
   });
 
   it("hides HUD rendering while menus are active", () => {

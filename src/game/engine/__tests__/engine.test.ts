@@ -29,6 +29,15 @@ describe("engine modules", () => {
       posX: 4,
       posY: 8,
     });
+    arena.renderSprite(sprite, {
+      frameWidth: 16,
+      frameHeight: 16,
+      frameX: 0,
+      frameY: 0,
+      flipY: true,
+      posX: 4,
+      posY: 8,
+    });
     arena.drawCircle(0, 0, 10, { borderColor: "#fff" });
 
     expect(host.querySelector("canvas")).toBeInstanceOf(HTMLCanvasElement);

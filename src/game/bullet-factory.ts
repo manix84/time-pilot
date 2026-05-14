@@ -20,7 +20,7 @@ class BulletFactory implements BulletFactoryInstance {
     this._bulletSound = new SoundEngine(player.projectile.sound.src);
   }
 
-  create = (originX: number, originY: number, heading: Heading, size: number, velocity: number, color: string, playSound = true, coordinateSpace: BulletData["coordinateSpace"] = "screen", shape: BulletData["shape"] = "square", sprite?: BulletData["sprite"]): void => {
+  create = (originX: number, originY: number, heading: Heading, size: number, velocity: number, color: string, playSound = true, coordinateSpace: BulletData["coordinateSpace"] = "screen", shape: BulletData["shape"] = "square", sprite?: BulletData["sprite"], tracksPlayer = false, turnRate = 0, shootable = false, explosion?: BulletData["explosion"]): void => {
     this._bullets.push(
       new Bullet(
         this._context,
@@ -32,7 +32,11 @@ class BulletFactory implements BulletFactoryInstance {
         color,
         coordinateSpace,
         shape,
-        sprite
+        sprite,
+        tracksPlayer,
+        turnRate,
+        shootable,
+        explosion
       )
     );
 

@@ -14,8 +14,8 @@ import { getScaledEntityLimit, getSpawnRadius } from "../viewport";
 const bonusSpawnIntervalMinTicks = 600;
 const bonusSpawnIntervalRangeTicks = 600;
 const bonusSpawnPadding = 48;
-const specialBomberBombIntervalTicks = 45;
-const specialBomberBombChance = 0.35;
+const specialBomberBombIntervalTicks = 90;
+const specialBomberBombChance = 1;
 const specialBomberSpawnIntervalMinTicks = 900;
 const specialBomberSpawnIntervalRangeTicks = 900;
 const enemyFireIntervalTicks = 20;
@@ -277,12 +277,6 @@ class SpawningSystem implements SpawningSystemInstance {
       return;
     }
 
-    const levelData = levels[this._context._level].enemies.basic;
-
-    if (Math.random() > levelData.firingChance) {
-      return;
-    }
-
     const enemies = this._context._enemies
       .getEntities()
       .filter((enemy) => enemy.isAlive)
@@ -295,10 +289,21 @@ class SpawningSystem implements SpawningSystemInstance {
 
     const player = this._context._player.getData();
     const enemy = enemies[Math.floor(Math.random() * enemies.length)];
-    const heading = helpers.findHeading(enemy, {
-      posX: player.posX,
-      posY: player.posY,
-    });
+    const levelData =
+      levels[this._context._level].enemies[enemy.type] ??
+      levels[this._context._level].enemies.basic;
+
+    if (Math.random() > levelData.firingChance) {
+      return;
+    }
+
+    const heading =
+      levelData.projectile.initialAim === "facing"
+        ? enemy.heading
+        : helpers.findHeading(enemy, {
+          posX: player.posX,
+          posY: player.posY,
+        });
 
     this._context._enemyBullets.create(
       enemy.posX,
@@ -309,7 +314,12 @@ class SpawningSystem implements SpawningSystemInstance {
       levelData.projectile.color,
       false,
       "world",
-      "circle"
+      levelData.projectile.sprite ? "sprite" : "circle",
+      levelData.projectile.sprite,
+      levelData.projectile.tracksPlayer,
+      levelData.projectile.turnRate,
+      levelData.projectile.shootable,
+      levelData.projectile.explosion
     );
     this._enemyShootSound.stop();
     this._enemyShootSound.play();
@@ -357,7 +367,11 @@ class SpawningSystem implements SpawningSystemInstance {
       false,
       "world",
       levelData.projectile.sprite ? "sprite" : "circle",
-      levelData.projectile.sprite
+      levelData.projectile.sprite,
+      levelData.projectile.tracksPlayer,
+      levelData.projectile.turnRate,
+      levelData.projectile.shootable,
+      levelData.projectile.explosion
     );
   };
 

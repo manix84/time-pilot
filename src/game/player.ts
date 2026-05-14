@@ -1,6 +1,7 @@
 /* Converted from TimePilot.Player.js (AMD) to ESM TypeScript. */
 import { levels, player } from "./constants";
 import userOptions from "./user-options";
+import { drawDebugVectors } from "./debug-vectors";
 import SoundEngine from "./engine/Sound";
 import helpers from "./engine/helpers";
 import palette from "./palette";
@@ -16,6 +17,7 @@ import type {
 } from "./types";
 
 const playerConst = player;
+const playerSpriteArcDegrees = 360;
 
 class Player implements PlayerInstance {
   private _bulletFactory: BulletFactoryInstance;
@@ -42,7 +44,7 @@ class Player implements PlayerInstance {
     this._playerDeathSprite.src = playerConst.explosion.sprite.src;
 
     this._explosionSound = new SoundEngine(playerConst.explosion.sound.src);
-    this._rotationStep = 360 / playerConst.rotationFrameCount;
+    this._rotationStep = playerSpriteArcDegrees / playerConst.rotationFrameCount;
 
     this._data = {
       isAlive: true,
@@ -170,17 +172,31 @@ class Player implements PlayerInstance {
     }
   };
 
+  private _getSpriteFrame = (): { flipY: boolean; frameX: number; frameY: number } => {
+    const heading = ((this._data.heading % 360) + 360) % 360;
+    const frame =
+      Math.round(((heading + 270) % 360) / this._rotationStep) %
+      playerConst.rotationFrameCount;
+
+    return {
+      flipY: false,
+      frameX: playerConst.spriteFrameAxis === "y" ? 0 : frame,
+      frameY: playerConst.spriteFrameAxis === "y" ? frame : 0,
+    };
+  };
+
   render = (): void => {
     let color: string = palette.aircraft.playerShield;
 
     if (!this._data.deathTick && this._data.isAlive) {
+      const spriteFrame = this._getSpriteFrame();
+
       this._gameArena.renderSprite(this._playerSprite, {
         frameWidth: playerConst.frameWidth,
         frameHeight: playerConst.frameHeight,
-        frameX:
-          Math.round(((this._data.heading + 270) % 360) / this._rotationStep) %
-          playerConst.rotationFrameCount,
-        frameY: 0,
+        frameX: spriteFrame.frameX,
+        frameY: spriteFrame.frameY,
+        flipY: spriteFrame.flipY,
         renderWidth: playerConst.width,
         renderHeight: playerConst.height,
         posX: -(playerConst.width / 2),
@@ -200,6 +216,17 @@ class Player implements PlayerInstance {
       }
       this._gameArena.drawCircle(0, 0, playerConst.hitRadius, {
         borderColor: color,
+      });
+    }
+
+    if (userOptions.enableDebug && userOptions.debug.showHeadingVectors) {
+      const context = this._gameArena.getContext() as CanvasRenderingContext2D;
+      const steeringHeading =
+        this._data.newHeading === false ? this._data.heading : this._data.newHeading;
+
+      drawDebugVectors(context, 0, 0, this._data.heading, steeringHeading, {
+        fillTurnArc: userOptions.debug.showSteeringArc,
+        length: 38,
       });
     }
   };
