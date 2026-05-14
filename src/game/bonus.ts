@@ -151,15 +151,19 @@ class Bonus implements BonusInstance {
       Math.floor(this._gameTicker.getTicks() / 8) %
       levelData.animationCycle.length;
     const frameX = levelData.animationCycle[frameIndex] - 1;
+    const renderWidth = levelData.renderWidth ?? levelData.width;
+    const renderHeight = levelData.renderHeight ?? levelData.height;
 
     this._canvas.renderSprite(this._bonusSprite, {
       frameWidth: levelData.width,
       frameHeight: levelData.height,
       frameX,
       frameY: 0,
-      posX: this._data.posX - this._player.getData().posX - levelData.width / 2,
+      posX: this._data.posX - this._player.getData().posX - renderWidth / 2,
       posY:
-        this._data.posY - this._player.getData().posY - levelData.height / 2,
+        this._data.posY - this._player.getData().posY - renderHeight / 2,
+      renderWidth,
+      renderHeight,
     });
 
     if (userOptions.enableDebug && userOptions.debug.showHitboxes) {

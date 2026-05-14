@@ -606,6 +606,8 @@ export interface PropConfig {
   sprite: SpriteAsset;
   width: number;
   height: number;
+  renderWidth?: number;
+  renderHeight?: number;
   relativeVelocity: number;
   layer: number;
   reversed: boolean;
@@ -618,6 +620,8 @@ export interface BonusConfig {
   hitRadius: number;
   width: number;
   height: number;
+  renderWidth?: number;
+  renderHeight?: number;
 }
 
 export interface LevelConfig {
