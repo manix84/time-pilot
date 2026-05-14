@@ -23,7 +23,7 @@ describe("TimePilotGame", () => {
     });
     container.remove();
     userOptions.setOption("enableDebug", false);
-    userOptions.setOption("videoFilterMode", "arcade-crt");
+    userOptions.setOption("videoFilterMode", "off");
     localStorage.clear();
     vi.restoreAllMocks();
   });
@@ -57,15 +57,15 @@ describe("TimePilotGame", () => {
 
     expect(
       container.querySelector(".time-pilot-game")?.getAttribute("data-filter-mode")
-    ).toBe("arcade-crt");
+    ).toBe("off");
 
     await act(async () => {
-      userOptions.setOption("videoFilterMode", "off");
+      userOptions.setOption("videoFilterMode", "arcade-crt");
       await Promise.resolve();
     });
 
     expect(
       container.querySelector(".time-pilot-game")?.getAttribute("data-filter-mode")
-    ).toBe("off");
+    ).toBe("arcade-crt");
   });
 });

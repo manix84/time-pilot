@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { filterPresets } from "../../filter-settings";
 import Menus from "../../menus";
 import type { GameArenaInstance } from "../../types";
 import userOptions from "../../user-options";
@@ -47,7 +48,8 @@ describe("menu definitions", () => {
     userOptions.setOption("gameZoom", 100);
     userOptions.setOption("masterVolume", 10);
     userOptions.setOption("uiZoom", 100);
-    userOptions.setOption("videoFilterMode", "arcade-crt");
+    userOptions.setOption("filterSettings", { ...filterPresets.off });
+    userOptions.setOption("videoFilterMode", "off");
     userOptions.setKeyboardBinding("up", [38, 87]);
     window.history.replaceState(null, "", "/");
   });
@@ -309,21 +311,21 @@ describe("menu definitions", () => {
       expect.objectContaining({ align: "left" })
     );
 
-    menus.adjust(-1);
-    expect(userOptions.videoFilterMode).toBe("off");
+    menus.adjust(1);
+    expect(userOptions.videoFilterMode).toBe("arcade-crt");
 
     menus.next();
     menus.activate();
     menus.adjust(1);
     expect(userOptions.videoFilterMode).toBe("custom");
-    expect(userOptions.filterSettings.scanlines).toBe(36);
+    expect(userOptions.filterSettings.scanlines).toBe(1);
 
     menus.captureKey(27);
     menus.next();
     menus.next();
     menus.activate();
-    expect(userOptions.videoFilterMode).toBe("arcade-crt");
-    expect(userOptions.filterSettings.scanlines).toBe(35);
+    expect(userOptions.videoFilterMode).toBe("off");
+    expect(userOptions.filterSettings.scanlines).toBe(0);
   });
 
   it("adjusts UI and game zoom from the options menu", () => {

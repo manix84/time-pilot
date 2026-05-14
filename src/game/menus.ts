@@ -6,6 +6,7 @@ import {
   filterModes,
   filterSettingKeys,
   filterSettingLabels,
+  filterSettingDescriptions,
   filterPresets,
   normalizeFilterIntensity,
 } from "./filter-settings";
@@ -62,6 +63,7 @@ type BindingAction = keyof KeyboardBindings;
 interface MenuItem {
   action?: () => void;
   binding?: BindingAction;
+  description?: string;
   disabled?: boolean;
   getValue?: () => string;
   kind: MenuItemKind;
@@ -271,7 +273,13 @@ class Menus implements MenuSystemInstance {
       return;
     }
 
-    this._items[this._selectedIndex]?.onAdjust?.(direction);
+    const item = this._items[this._selectedIndex];
+
+    if (item?.disabled) {
+      return;
+    }
+
+    item?.onAdjust?.(direction);
   };
 
   goBack = (): void => {
@@ -421,10 +429,11 @@ class Menus implements MenuSystemInstance {
     }
 
     if (pointer.type === "drag" && this._sliderDragIndex !== null) {
-      this._setSliderFromPointer(
-        this._items[this._sliderDragIndex],
-        menuPointer
-      );
+      const item = this._items[this._sliderDragIndex];
+
+      if (!item.disabled) {
+        this._setSliderFromPointer(item, menuPointer);
+      }
       return;
     }
 
@@ -451,7 +460,10 @@ class Menus implements MenuSystemInstance {
     if (pointer.type === "press") {
       this._pressedItemIndex = itemIndex;
 
-      if (this._items[itemIndex].kind === "slider") {
+      if (
+        this._items[itemIndex].kind === "slider" &&
+        !this._items[itemIndex].disabled
+      ) {
         this._sliderDragIndex = itemIndex;
         this._setSliderFromPointer(this._items[itemIndex], menuPointer);
       }
@@ -461,6 +473,10 @@ class Menus implements MenuSystemInstance {
 
     if (pointer.type === "click") {
       if (this._items[itemIndex].kind === "slider") {
+        if (this._items[itemIndex].disabled) {
+          return;
+        }
+
         this._setSliderFromPointer(this._items[itemIndex], menuPointer);
         return;
       }
@@ -585,6 +601,10 @@ class Menus implements MenuSystemInstance {
     if (this._screen === "level") {
       this._renderLevelBlurb();
       this._renderLevelShowcase();
+    }
+
+    if (this._screen === "filter-custom") {
+      this._renderCustomFilterDescription();
     }
   };
 
@@ -825,6 +845,7 @@ class Menus implements MenuSystemInstance {
   private _createCustomFilterItems = (): MenuItem[] => {
     const items = filterSettingKeys.map((key, index) =>
       this._createItem(filterSettingLabels[key], "slider", -54 + index * 42, {
+        description: filterSettingDescriptions[key],
         getValue: () => `${userOptions.filterSettings[key]}`,
         onAdjust: (direction) =>
           this._setFilterSetting(key, userOptions.filterSettings[key] + direction),
@@ -1308,6 +1329,34 @@ class Menus implements MenuSystemInstance {
         : Math.max(targetAlpha, nextAlpha);
 
     return this._povPreviewAlpha;
+  };
+
+  private _renderCustomFilterDescription = (): void => {
+    const item = this._items[this._selectedIndex];
+
+    if (!item?.description) {
+      return;
+    }
+
+    const x = -390;
+    const y = -54;
+    const lines = this._wrapText(item.description, 28);
+
+    this._gameArena.renderText(item.label, x, y, {
+      size: 14,
+      align: "left",
+      valign: "middle",
+      color: palette.menu.selectedBackground,
+    });
+
+    lines.forEach((line, index) => {
+      this._gameArena.renderText(line, x, y + 24 + index * 18, {
+        size: 12,
+        align: "left",
+        valign: "middle",
+        color: palette.menu.itemText,
+      });
+    });
   };
 
   private _isGameZoomSelected = (): boolean => {
@@ -2003,14 +2052,14 @@ class Menus implements MenuSystemInstance {
       );
     }
 
-    return Math.max(0, Math.min(1, value / 10));
+    return Math.max(0, Math.min(1, value / (item.sliderSteps ?? 10)));
   };
 
   private _setSliderFromPointer = (
     item: MenuItem,
     pointer: MenuPointerData
   ): void => {
-    if (!item.onSetValue) {
+    if (item.disabled || !item.onSetValue) {
       return;
     }
 
@@ -2524,7 +2573,7 @@ class Menus implements MenuSystemInstance {
   };
 
   private _resetFilters = (): void => {
-    userOptions.setOption("filterSettings", { ...filterPresets["arcade-crt"] });
+    userOptions.setOption("filterSettings", { ...filterPresets.off });
     userOptions.setOption("videoFilterMode", defaultFilterMode);
   };
 

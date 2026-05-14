@@ -19,7 +19,9 @@ export type FilterSettingKey =
   | "vhsTracking"
   | "burnIn"
   | "glassReflection"
-  | "blackCrush";
+  | "blackCrush"
+  | "explosionBloomBoost"
+  | "timeWarpDistortionBoost";
 
 export type FilterSettings = Record<FilterSettingKey, number>;
 
@@ -30,7 +32,7 @@ export type FilterRuntimeBoosts = {
   lowHealthInstabilityBoost: number;
 };
 
-export const defaultFilterMode: FilterMode = "arcade-crt";
+export const defaultFilterMode: FilterMode = "off";
 
 export const filterSettingKeys: FilterSettingKey[] = [
   "scanlines",
@@ -46,6 +48,8 @@ export const filterSettingKeys: FilterSettingKey[] = [
   "burnIn",
   "glassReflection",
   "blackCrush",
+  "explosionBloomBoost",
+  "timeWarpDistortionBoost",
 ];
 
 export const filterModes: FilterMode[] = [
@@ -58,7 +62,7 @@ export const filterModes: FilterMode[] = [
 ];
 
 export const filterModeLabels: Record<FilterMode, string> = {
-  off: "Off / Pixel Perfect",
+  off: "Off",
   "arcade-crt": "Arcade CRT",
   "home-tv-crt": "Home TV CRT",
   "portable-crt": "Portable CRT",
@@ -68,11 +72,11 @@ export const filterModeLabels: Record<FilterMode, string> = {
 
 export const filterSettingLabels: Record<FilterSettingKey, string> = {
   scanlines: "Scanlines",
-  crtMask: "CRT Mask / Aperture Grille",
+  crtMask: "Aperture Grille",
   curvature: "Curvature",
-  bloom: "Bloom / Phosphor Glow",
+  bloom: "Phosphor Glow",
   horizontalBlur: "Horizontal Blur",
-  colourBleed: "Colour Bleed",
+  colourBleed: "RGB Split",
   ditherBlending: "Dither Blending",
   flicker: "Flicker",
   interference: "Interference Bands",
@@ -80,6 +84,26 @@ export const filterSettingLabels: Record<FilterSettingKey, string> = {
   burnIn: "Burn-In",
   glassReflection: "Cabinet Glass Reflection",
   blackCrush: "Black Crush",
+  explosionBloomBoost: "Explosion Bloom Boost",
+  timeWarpDistortionBoost: "Time Warp Distortion",
+};
+
+export const filterSettingDescriptions: Record<FilterSettingKey, string> = {
+  scanlines: "Dark horizontal lines between rows of pixels, like a low-resolution CRT.",
+  crtMask: "A coloured aperture grille pattern that breaks the image into red, green, and blue phosphor stripes.",
+  curvature: "Rounds the screen corners and adds a tube-like edge shape.",
+  bloom: "Soft glow around bright pixels, similar to phosphors lighting up on glass.",
+  horizontalBlur: "Smears pixels slightly left and right, reducing the hard digital edge.",
+  colourBleed: "Separates red and blue channels to create a visible RGB split at high values.",
+  ditherBlending: "Adds a fine checker blend that softens hard dither patterns and colour steps.",
+  flicker: "Adds subtle frame brightness instability. Keep low if flicker causes discomfort.",
+  interference: "Adds faint horizontal interference bands and signal noise.",
+  vhsTracking: "Moves interference vertically to mimic VHS tracking drift.",
+  burnIn: "Adds a warm ghosted centre and darker edges, like aged phosphor wear.",
+  glassReflection: "Adds a diagonal highlight as if the picture is behind cabinet glass.",
+  blackCrush: "Deepens dark tones and increases contrast in shadow areas.",
+  explosionBloomBoost: "Extra glow layered on top of phosphor glow for burst-heavy moments.",
+  timeWarpDistortionBoost: "Extra curvature and interference intended for time-warp style distortion.",
 };
 
 export const filterPresets: Record<Exclude<FilterMode, "custom">, FilterSettings> = {
@@ -97,6 +121,8 @@ export const filterPresets: Record<Exclude<FilterMode, "custom">, FilterSettings
     burnIn: 0,
     glassReflection: 0,
     blackCrush: 0,
+    explosionBloomBoost: 0,
+    timeWarpDistortionBoost: 0,
   },
   "arcade-crt": {
     scanlines: 35,
@@ -112,6 +138,8 @@ export const filterPresets: Record<Exclude<FilterMode, "custom">, FilterSettings
     burnIn: 0,
     glassReflection: 0,
     blackCrush: 10,
+    explosionBloomBoost: 0,
+    timeWarpDistortionBoost: 0,
   },
   "home-tv-crt": {
     scanlines: 25,
@@ -127,6 +155,8 @@ export const filterPresets: Record<Exclude<FilterMode, "custom">, FilterSettings
     burnIn: 0,
     glassReflection: 0,
     blackCrush: 12,
+    explosionBloomBoost: 0,
+    timeWarpDistortionBoost: 0,
   },
   "portable-crt": {
     scanlines: 45,
@@ -142,6 +172,8 @@ export const filterPresets: Record<Exclude<FilterMode, "custom">, FilterSettings
     burnIn: 0,
     glassReflection: 0,
     blackCrush: 18,
+    explosionBloomBoost: 0,
+    timeWarpDistortionBoost: 0,
   },
   vhs: {
     scanlines: 18,
@@ -157,6 +189,8 @@ export const filterPresets: Record<Exclude<FilterMode, "custom">, FilterSettings
     burnIn: 0,
     glassReflection: 0,
     blackCrush: 15,
+    explosionBloomBoost: 0,
+    timeWarpDistortionBoost: 0,
   },
 };
 
@@ -206,10 +240,14 @@ export const getFilterSettingsForMode = (
   return {
     ...baseSettings,
     bloom: normalizeFilterIntensity(
-      baseSettings.bloom + (boosts.explosionBloomBoost ?? 0)
+      baseSettings.bloom +
+        baseSettings.explosionBloomBoost +
+        (boosts.explosionBloomBoost ?? 0)
     ),
     curvature: normalizeFilterIntensity(
-      baseSettings.curvature + (boosts.timeWarpDistortionBoost ?? 0)
+      baseSettings.curvature +
+        baseSettings.timeWarpDistortionBoost +
+        (boosts.timeWarpDistortionBoost ?? 0)
     ),
     ditherBlending: normalizeFilterIntensity(
       baseSettings.ditherBlending + (boosts.bulletPersistenceBoost ?? 0)
