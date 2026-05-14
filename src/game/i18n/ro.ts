@@ -63,6 +63,7 @@ const ro: typeof en = {
     directional: "Directional",
     effectsVolume: "Volum efecte",
     fire: "Foc",
+    fullScreen: "Ecran complet",
     gameZoom: "Zoom joc",
     levelShowcase: {
       basic: {

@@ -16,6 +16,9 @@ const createArena = (): GameArenaInstance => ({
   getContext: vi.fn(() => document.createElement("canvas").getContext("2d")!),
   enterFullScreen: vi.fn(),
   exitFullScreen: vi.fn(),
+  isFullScreen: vi.fn(() => false),
+  isFullScreenLocked: vi.fn(() => false),
+  canToggleFullScreen: vi.fn(() => true),
   toggleFullScreen: vi.fn(),
   setBackgroundColor: vi.fn(),
   clear: vi.fn(),
@@ -157,8 +160,9 @@ describe("menu definitions", () => {
     expect(start).not.toHaveBeenCalled();
   });
 
-  it("opens options and adjusts volume and controller type", () => {
-    const menus = new Menus(createArena(), { start: vi.fn() });
+  it("opens options, adjusts volume, and hides control type", () => {
+    const arena = createArena();
+    const menus = new Menus(arena, { start: vi.fn() });
     userOptions.setOption("masterVolume", 5);
     userOptions.setOption("controllerType", "keyboard1");
 
@@ -169,14 +173,99 @@ describe("menu definitions", () => {
     menus.adjust(1);
     expect(userOptions.masterVolume).toBe(6);
 
+    menus.render();
+    expect(arena.renderText).not.toHaveBeenCalledWith(
+      "Control Type",
+      expect.any(Number),
+      expect.any(Number),
+      expect.anything()
+    );
+    expect(userOptions.controllerType).toBe("keyboard1");
+  });
+
+  it("toggles fullscreen from the options menu and disables it when locked", () => {
+    const arena = createArena();
+    const menus = new Menus(arena, { start: vi.fn() });
+
+    menus.showStart();
     menus.next();
+    menus.activate();
+
+    for (let i = 0; i < 5; i++) {
+      menus.next();
+    }
+
+    menus.render();
+    expect(arena.renderText).toHaveBeenCalledWith(
+      "Full Screen",
+      expect.any(Number),
+      expect.any(Number),
+      expect.objectContaining({ align: "left" })
+    );
+    expect(arena.renderText).toHaveBeenCalledWith(
+      "Off",
+      expect.any(Number),
+      expect.any(Number),
+      expect.objectContaining({ align: "right" })
+    );
+
+    menus.activate();
+    expect(arena.toggleFullScreen).toHaveBeenCalled();
+
+    vi.mocked(arena.renderText).mockClear();
+    vi.mocked(arena.isFullScreen).mockReturnValue(true);
+    menus.render();
+    expect(arena.renderText).toHaveBeenCalledWith(
+      "On",
+      expect.any(Number),
+      expect.any(Number),
+      expect.objectContaining({ align: "right" })
+    );
+
+    const lockedArena = createArena();
+    vi.mocked(lockedArena.isFullScreenLocked).mockReturnValue(true);
+    vi.mocked(lockedArena.canToggleFullScreen).mockReturnValue(false);
+    const lockedMenus = new Menus(lockedArena, { start: vi.fn() });
+
+    lockedMenus.showStart();
+    lockedMenus.next();
+    lockedMenus.activate();
+    for (let i = 0; i < 5; i++) {
+      lockedMenus.next();
+    }
+
+    lockedMenus.activate();
+    expect(lockedArena.toggleFullScreen).not.toHaveBeenCalled();
+  });
+
+  it("toggles the controls overlay from the options menu", () => {
+    const arena = createArena();
+    const menus = new Menus(arena, { start: vi.fn() });
+
+    menus.showStart();
     menus.next();
-    menus.next();
-    menus.next();
-    menus.next();
-    menus.next();
-    menus.adjust(1);
-    expect(userOptions.controllerType).toBe("keyboard2");
+    menus.activate();
+
+    for (let i = 0; i < 6; i++) {
+      menus.next();
+    }
+
+    menus.render();
+    expect(arena.renderText).toHaveBeenCalledWith(
+      "Show Controls Overlay",
+      expect.any(Number),
+      expect.any(Number),
+      expect.objectContaining({ align: "left" })
+    );
+    expect(arena.renderText).toHaveBeenCalledWith(
+      "Off",
+      expect.any(Number),
+      expect.any(Number),
+      expect.objectContaining({ align: "right" })
+    );
+
+    menus.activate();
+    expect(userOptions.debug.showControlsOverlay).toBe(true);
   });
 
   it("adjusts UI and game zoom from the options menu", () => {
@@ -235,7 +324,7 @@ describe("menu definitions", () => {
 
     menus.next();
     menus.activate();
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i < 8; i++) {
       menus.next();
     }
     menus.activate();
@@ -367,7 +456,7 @@ describe("menu definitions", () => {
     menus.next();
     menus.activate();
 
-    for (let i = 0; i < 4; i++) {
+    for (let i = 0; i < 3; i++) {
       menus.next();
     }
 
@@ -534,7 +623,7 @@ describe("menu definitions", () => {
       expect.objectContaining({ align: "center" })
     );
 
-    for (let i = 0; i < 8; i++) {
+    for (let i = 0; i < 9; i++) {
       menus.next();
     }
 
@@ -639,7 +728,7 @@ describe("menu definitions", () => {
       '"invincible":false'
     );
 
-    for (let i = 0; i < 4; i++) {
+    for (let i = 0; i < 3; i++) {
       menus.next();
     }
 
@@ -696,7 +785,7 @@ describe("menu definitions", () => {
     menus.next();
     menus.activate();
 
-    for (let i = 0; i < 6; i++) {
+    for (let i = 0; i < 5; i++) {
       menus.next();
     }
 
@@ -805,7 +894,7 @@ describe("menu definitions", () => {
     menus.next();
     menus.next();
     menus.activate();
-    for (let i = 0; i < 6; i++) {
+    for (let i = 0; i < 5; i++) {
       menus.next();
     }
     menus.activate();
@@ -851,7 +940,7 @@ describe("menu definitions", () => {
     menus.next();
     menus.activate();
 
-    for (let i = 0; i < 7; i++) {
+    for (let i = 0; i < 8; i++) {
       menus.next();
     }
 
@@ -871,7 +960,7 @@ describe("menu definitions", () => {
     menus.next();
     menus.activate();
 
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i < 7; i++) {
       menus.next();
     }
 
@@ -903,7 +992,7 @@ describe("menu definitions", () => {
     menus.next();
     menus.activate();
 
-    for (let i = 0; i < 7; i++) {
+    for (let i = 0; i < 8; i++) {
       menus.next();
     }
 

@@ -147,6 +147,9 @@ export interface GameArenaInstance extends Coordinates {
   ) => CanvasRenderingContext2D | WebGLRenderingContext;
   enterFullScreen: () => void;
   exitFullScreen: () => void;
+  isFullScreen: () => boolean;
+  isFullScreenLocked: () => boolean;
+  canToggleFullScreen: () => boolean;
   toggleFullScreen: () => void;
   setBackgroundColor: (color: string) => void;
   clear: () => void;

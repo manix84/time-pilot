@@ -36,6 +36,9 @@ const createArena = (): GameArenaInstance => {
     getContext: vi.fn(() => context),
     enterFullScreen: vi.fn(),
     exitFullScreen: vi.fn(),
+    isFullScreen: vi.fn(() => false),
+    isFullScreenLocked: vi.fn(() => false),
+    canToggleFullScreen: vi.fn(() => true),
     toggleFullScreen: vi.fn(),
     setBackgroundColor: vi.fn(),
     clear: vi.fn(),
@@ -1300,7 +1303,6 @@ describe("context-backed game modules", () => {
 
   it("renders only the active controller overlay", () => {
     const context = createContext();
-    userOptions.setOption("enableDebug", true);
     userOptions.setDebugOption("showControlsOverlay", true);
 
     context._controlInputState.activeController = "keyboard";

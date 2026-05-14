@@ -61,6 +61,7 @@ const en = {
     directional: "Directional",
     effectsVolume: "Effects Volume",
     fire: "Fire",
+    fullScreen: "Full Screen",
     gameZoom: "Game Zoom",
     levelShowcase: {
       basic: {

@@ -61,7 +61,7 @@ class Hud implements HudInstance {
       );
     }
 
-    if (userOptions.enableDebug && userOptions.debug.showControlsOverlay) {
+    if (userOptions.debug.showControlsOverlay) {
       this.renderControlsOverlay();
     }
 

@@ -700,6 +700,9 @@ class Menus implements MenuSystemInstance {
   };
 
   private _createOptionsItems = (): MenuItem[] => {
+    const showControlType = false;
+    const remapControlsY = showControlType ? 324 : 282;
+    const backY = showControlType ? 374 : 332;
     const items = [
       this._createItem(i18n.menu.masterVolume, "slider", -54, {
         getValue: () => `${userOptions.masterVolume}`,
@@ -728,25 +731,43 @@ class Menus implements MenuSystemInstance {
         onSetValue: (value) => this._setGameZoom(this._getZoomValueFromStep(value)),
         sliderSteps: this._getZoomSliderSteps(),
       }),
-      this._createItem(i18n.menu.language, "action", 156, {
+      this._createItem(i18n.menu.fullScreen, "toggle", 156, {
+        disabled:
+          this._gameArena.isFullScreenLocked() ||
+          !this._gameArena.canToggleFullScreen(),
+        getValue: () =>
+          this._gameArena.isFullScreen() ? i18n.menu.on : i18n.menu.off,
+        onAdjust: () => this._gameArena.toggleFullScreen(),
+      }),
+      this._createToggleItem(
+        i18n.menu.showControlsOverlay,
+        "showControlsOverlay",
+        198
+      ),
+      this._createItem(i18n.menu.language, "action", 240, {
         getValue: () => getLanguageName(userOptions.language),
         languageFlag: userOptions.language,
         action: () => this._goToScreen("language"),
       }),
-      this._createItem(i18n.menu.controlType, "enum", 198, {
-        getValue: () =>
-          userOptions.controllerType === "keyboard1"
-            ? i18n.menu.directional
-            : i18n.menu.rotate,
-        onAdjust: (direction) => this._adjustControllerType(direction),
-      }),
-      this._createItem(i18n.menu.remapControls, "action", 240, {
-        action: () => this._goToScreen("controls"),
-      }),
     ];
 
+    if (showControlType) {
+      items.push(
+        this._createItem(i18n.menu.controlType, "enum", 282, {
+          getValue: () =>
+            userOptions.controllerType === "keyboard1"
+              ? i18n.menu.directional
+              : i18n.menu.rotate,
+          onAdjust: (direction) => this._adjustControllerType(direction),
+        })
+      );
+    }
+
     items.push(
-      this._createItem(i18n.menu.back, "action", 290, {
+      this._createItem(i18n.menu.remapControls, "action", remapControlsY, {
+        action: () => this._goToScreen("controls"),
+      }),
+      this._createItem(i18n.menu.back, "action", backY, {
         action: () => this._goBack(),
       })
     );
@@ -858,30 +879,25 @@ class Menus implements MenuSystemInstance {
       this._createToggleItem(i18n.menu.invincibilityShield, "invincible", -54),
       this._createToggleItem(i18n.menu.showHitBoxes, "showHitboxes", -12),
       this._createToggleItem(
-        i18n.menu.showControlsOverlay,
-        "showControlsOverlay",
-        30
-      ),
-      this._createToggleItem(
         i18n.menu.showCoordinates,
         "showPlayerCoordinates",
-        72
+        30
       ),
       this._createToggleItem(
         i18n.menu.showHeadingVectors,
         "showHeadingVectors",
-        114
+        72
       ),
       this._createToggleItem(
         i18n.menu.showSteeringArc,
         "showSteeringArc",
-        156
+        114
       ),
-      this._createItem(i18n.menu.selectLevel, "action", 198, {
+      this._createItem(i18n.menu.selectLevel, "action", 156, {
         action: () => this._goToScreen("level"),
         getValue: () => this._getSelectedLevelLabel(),
       }),
-      this._createItem(i18n.menu.back, "action", 248, {
+      this._createItem(i18n.menu.back, "action", 206, {
         action: () => this._goBack(),
       }),
     ];

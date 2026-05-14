@@ -63,6 +63,7 @@ const es: typeof en = {
     directional: "Direccional",
     effectsVolume: "Volumen de efectos",
     fire: "Disparo",
+    fullScreen: "Pantalla completa",
     gameZoom: "Zoom del juego",
     levelShowcase: {
       basic: {

@@ -63,6 +63,7 @@ const nl: typeof en = {
     directional: "Richting",
     effectsVolume: "Effectvolume",
     fire: "Vuur",
+    fullScreen: "Volledig scherm",
     gameZoom: "Gamezoom",
     levelShowcase: {
       basic: {

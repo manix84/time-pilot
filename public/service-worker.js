@@ -1,6 +1,7 @@
 const CACHE_NAME = "time-pilot-v2";
 const APP_SHELL = [
   "./",
+  "./?mode=showcase",
   "./?mode=pwa",
   "./?mode=pwa#pwa",
   "./manifest.webmanifest",

@@ -22,8 +22,14 @@ type FullscreenCanvas = HTMLCanvasElement & {
 };
 type FullscreenDocument = Document & {
   cancelFullScreen?: () => void;
+  fullscreenEnabled?: boolean;
+  fullscreenElement?: Element | null;
   mozCancelFullScreen?: () => void;
+  mozFullScreenElement?: Element | null;
+  mozFullScreenEnabled?: boolean;
   webkitCancelFullScreen?: () => void;
+  webkitFullscreenElement?: Element | null;
+  webkitFullscreenEnabled?: boolean;
 };
 
 class GameArena implements GameArenaInstance {
@@ -36,7 +42,7 @@ class GameArena implements GameArenaInstance {
   private _oldWidth: number;
   private _styles?: HTMLStyleElement;
   private readonly _handleFullscreenChange = (): void => {
-    this._isInFullScreen = !this._isInFullScreen;
+    this._isInFullScreen = this.isFullScreen();
     if (this._isInFullScreen) {
       this.resize(screen.width, screen.height);
       window.console.log("Entered Full-Screen");
@@ -160,9 +166,55 @@ class GameArena implements GameArenaInstance {
     }
   };
 
+  isFullScreen = (): boolean => {
+    const doc = document as FullscreenDocument;
+
+    return Boolean(
+      doc.fullscreenElement ||
+        doc.webkitFullscreenElement ||
+        doc.mozFullScreenElement ||
+        this._isInFullScreen
+    );
+  };
+
+  isFullScreenLocked = (): boolean => {
+    const displayModes = ["fullscreen", "standalone", "minimal-ui"];
+    const standaloneNavigator = navigator as Navigator & { standalone?: boolean };
+
+    return (
+      standaloneNavigator.standalone === true ||
+      displayModes.some((mode) =>
+        window.matchMedia?.(`(display-mode: ${mode})`).matches
+      )
+    );
+  };
+
+  canToggleFullScreen = (): boolean => {
+    const doc = document as FullscreenDocument;
+    const element = this._canvas as FullscreenCanvas;
+    const fullscreenEnabled =
+      doc.fullscreenEnabled ??
+      doc.webkitFullscreenEnabled ??
+      doc.mozFullScreenEnabled ??
+      true;
+
+    return (
+      !this.isFullScreenLocked() &&
+      fullscreenEnabled !== false &&
+      Boolean(
+        element.requestFullscreen ||
+          element.mozRequestFullScreen ||
+          element.webkitRequestFullscreen
+      )
+    );
+  };
+
   toggleFullScreen = (): void => {
-    window.console.log("this._isInFullScreen", this._isInFullScreen);
-    if (this._isInFullScreen) {
+    if (!this.canToggleFullScreen()) {
+      return;
+    }
+
+    if (this.isFullScreen()) {
       this.exitFullScreen();
     } else {
       this.enterFullScreen();

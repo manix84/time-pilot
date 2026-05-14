@@ -5,6 +5,12 @@ import TimePilotGame from "./components/TimePilotGame";
 
 const pwaModeStorageKey = "timePilot.pwaMode";
 
+const isShowcaseMode = (): boolean => {
+  const url = new URL(window.location.href);
+
+  return url.searchParams.get("mode") === "showcase" || url.hash === "#showcase";
+};
+
 const isInstalledDisplayMode = (): boolean => {
   const displayModes = ["fullscreen", "standalone", "minimal-ui"];
   const standaloneNavigator = navigator as Navigator & { standalone?: boolean };
@@ -69,7 +75,7 @@ const progress = [
 ];
 
 function App() {
-  if (isInstalledDisplayMode()) {
+  if (!isShowcaseMode() && isInstalledDisplayMode()) {
     return (
       <main className={"app-shell app-shell--pwa"} aria-label={"Time Pilot"}>
         <TimePilotGame />

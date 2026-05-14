@@ -47,11 +47,12 @@ npm run preview
 
 ## 📱 Installable PWA
 
-The production build includes a web app manifest and service worker. Installing
-the site on a phone launches `?mode=pwa`, which bypasses the showcase page and
-renders only the game canvas in the installed app window. The manifest requests
-fullscreen display mode and landscape orientation so the app behaves like a
-dedicated game rather than a web page.
+The production build includes a web app manifest and service worker. Installed
+launches use `?mode=pwa#pwa`, which renders only the game canvas. The manifest
+requests fullscreen display mode and landscape orientation so the app behaves
+like a dedicated game rather than a web page.
+
+The showcase/landing page remains the default browser view.
 
 ## 🧪 Quality Checks
 
