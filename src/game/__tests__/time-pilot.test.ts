@@ -86,7 +86,7 @@ describe("TimePilot engine", () => {
       pilot.context._menus.next();
     }
     pilot.context._menus.activate();
-    for (let i = 0; i < 6; i++) {
+    for (let i = 0; i < 5; i++) {
       pilot.context._menus.next();
     }
     pilot.context._menus.activate();
