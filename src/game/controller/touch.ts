@@ -66,6 +66,10 @@ class TouchController implements Controller {
       return;
     }
 
+    this._controllerInterface.startShooting();
+    if (this._inputState) {
+      this._inputState.fire = true;
+    }
     this.updateHeadingFromPoint(point);
   };
 
@@ -107,6 +111,10 @@ class TouchController implements Controller {
       });
     }
 
+    this._controllerInterface.stopShooting();
+    if (this._inputState) {
+      this._inputState.fire = false;
+    }
     this._activeTouchId = null;
     this.clearDirectionState();
   };
