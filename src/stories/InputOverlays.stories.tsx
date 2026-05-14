@@ -217,6 +217,66 @@ const renderGamepadOverlay = (context: CanvasRenderingContext2D, x: number, y: n
   renderOvalButton(context, "R", x + 169, menuY, inputState.restart);
 };
 
+const renderTouchOverlay = (context: CanvasRenderingContext2D, x: number, y: number, inputState: ControlInputState): void => {
+  const isDirectional =
+    inputState.up || inputState.right || inputState.down || inputState.left;
+  const isPressed = inputState.fire || isDirectional;
+  const offsetX = inputState.left ? -28 : inputState.right ? 28 : 0;
+  const offsetY = inputState.up ? -28 : inputState.down ? 28 : 0;
+  const centerX = x + 80;
+  const centerY = y + 80;
+
+  context.globalAlpha = isPressed ? 0.24 : 0.12;
+  context.fillStyle = isPressed ? palette.overlay.activeWashStrong : palette.overlay.line;
+  context.beginPath();
+  context.arc(centerX, centerY, 70, 0, 2 * Math.PI);
+  context.fill();
+
+  context.globalAlpha = 0.55;
+  context.strokeStyle = palette.overlay.line;
+  context.lineWidth = 2;
+  context.beginPath();
+  context.arc(centerX, centerY, 54, 0, 2 * Math.PI);
+  context.stroke();
+
+  context.globalAlpha = 0.32;
+  context.beginPath();
+  context.moveTo(centerX - 54, centerY);
+  context.lineTo(centerX + 54, centerY);
+  context.moveTo(centerX, centerY - 54);
+  context.lineTo(centerX, centerY + 54);
+  context.stroke();
+
+  if (isDirectional) {
+    context.globalAlpha = 0.9;
+    context.strokeStyle = palette.overlay.activeFill;
+    context.beginPath();
+    context.moveTo(centerX, centerY);
+    context.lineTo(centerX + offsetX, centerY + offsetY);
+    context.stroke();
+  }
+
+  context.globalAlpha = isPressed ? 0.96 : 0.55;
+  context.fillStyle = isPressed ? palette.overlay.activeFill : "transparent";
+  context.strokeStyle = isPressed ? palette.overlay.activeFill : palette.overlay.line;
+  context.beginPath();
+  context.arc(centerX + offsetX, centerY + offsetY, 24, 0, 2 * Math.PI);
+  context.fill();
+  context.stroke();
+
+  if (isPressed) {
+    context.globalAlpha = 1;
+    renderText(
+      context,
+      "FIRE",
+      centerX + offsetX,
+      centerY + offsetY,
+      8,
+      palette.menu.selectedText
+    );
+  }
+};
+
 const InputOverlayDemo = () => {
   const [inputState, setInputState] = useState(createInputState);
   const controls = useMemo(
@@ -225,7 +285,7 @@ const InputOverlayDemo = () => {
       ["left", "A / Left"],
       ["down", "S / Down"],
       ["right", "D / Right"],
-      ["fire", "Space / A/B/X/Y"],
+      ["fire", "Space / A/B/X/Y / Touch"],
       ["menu", "Esc / Menu"],
       ["pause", "P"],
       ["restart", "R"],
@@ -282,6 +342,16 @@ const InputOverlayDemo = () => {
     },
     [inputState]
   );
+  const drawTouch = useCallback(
+    (context: CanvasRenderingContext2D, canvas: HTMLCanvasElement) => {
+      context.fillStyle = "#06101d";
+      context.fillRect(0, 0, canvas.width, canvas.height);
+      context.save();
+      renderTouchOverlay(context, 60, 10, inputState);
+      context.restore();
+    },
+    [inputState]
+  );
 
   const toggleInput = (inputName: OverlayControlInputName): void => {
     setInputState((current) => ({
@@ -307,6 +377,10 @@ const InputOverlayDemo = () => {
           <article className={"storybook-card"}>
             <h2>Gamepad</h2>
             <CanvasDemo draw={drawGamepad} height={180} width={280} />
+          </article>
+          <article className={"storybook-card"}>
+            <h2>Touch</h2>
+            <CanvasDemo draw={drawTouch} height={180} width={280} />
           </article>
         </div>
         <div className={"storybook-controls"}>
@@ -336,7 +410,7 @@ const meta = {
     docs: {
       description: {
         component:
-          "Interactive WASD and Xbox-style controller overlays. Keyboard events and story controls both update the lit state.",
+          "Interactive keyboard, gamepad, and touch joystick overlays. Keyboard events and story controls both update the lit state.",
       },
     },
   },

@@ -1335,6 +1335,30 @@ describe("context-backed game modules", () => {
       expect.any(Number),
       expect.any(Object)
     );
+
+    vi.mocked(context._gameArena.renderText).mockClear();
+    context._controlInputState.activeController = "touch";
+    context._controlInputState.fire = true;
+    context._hud.render();
+
+    expect(context._gameArena.renderText).toHaveBeenCalledWith(
+      "FIRE",
+      expect.any(Number),
+      expect.any(Number),
+      expect.objectContaining({ align: "center" })
+    );
+    expect(context._gameArena.renderText).not.toHaveBeenCalledWith(
+      "Space",
+      expect.any(Number),
+      expect.any(Number),
+      expect.any(Object)
+    );
+    expect(context._gameArena.renderText).not.toHaveBeenCalledWith(
+      "Menu",
+      expect.any(Number),
+      expect.any(Number),
+      expect.any(Object)
+    );
   });
 
   it("routes controller actions to the active menu", () => {
