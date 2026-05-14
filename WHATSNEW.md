@@ -44,6 +44,7 @@
 - Updated level 2 fighter sprite handling for the refreshed three-row directional animation and death-flash sheet.
 - Updated level 4 basic enemy sprite handling for the refreshed three-row directional animation and death-flash sheet.
 - Updated level 5 basic enemy sprite handling for the refreshed two-row animation and death-flash sheet.
+- Added the mirrored player time-warp transition effect before advancing to the next era.
 
 ## 🧭 Menu, Zoom, and Debug UX
 

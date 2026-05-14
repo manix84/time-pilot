@@ -172,6 +172,7 @@ const createContext = ({
   levelIntroUntilTick = 0,
   playerOverrides = {},
   propCount = 0,
+  timeWarpTransition,
   ticks = 200,
   level = 1,
 }: {
@@ -185,6 +186,7 @@ const createContext = ({
   levelIntroUntilTick?: number;
   playerOverrides?: Partial<PlayerData>;
   propCount?: number;
+  timeWarpTransition?: GameDataStore["_timeWarpTransition"];
   ticks?: number;
   level?: number;
 } = {}): GameDataStore => {
@@ -233,6 +235,7 @@ const createContext = ({
     _demoFadeUntilTick: demoFadeUntilTick,
     _isDemoMode: demoMode,
     _levelIntroUntilTick: levelIntroUntilTick,
+    _timeWarpTransition: timeWarpTransition,
     _controlInputState: {
       down: false,
       fire: false,
@@ -799,6 +802,56 @@ describe("game systems", () => {
     expect(vi.mocked(canvasContext.fillRect).mock.invocationCallOrder[0]).toBeLessThan(
       vi.mocked(context._menus.render).mock.invocationCallOrder[0]
     );
+  });
+
+  it("renders the mirrored time warp effect over the centered player", () => {
+    const context = createContext({
+      ticks: 221,
+      timeWarpTransition: {
+        endsAtTick: 370,
+        lives: 3,
+        nextLevel: 2,
+        score: 1000,
+        startedAtTick: 200,
+      },
+    });
+    const system = new RenderingSystem(context);
+
+    system.renderFrame();
+
+    const canvasContexts = vi
+      .mocked(context._gameArena.getContext)
+      .mock.results.map((result) => result.value as CanvasRenderingContext2D);
+    const drawImageCalls = canvasContexts.flatMap((renderingContext) =>
+      vi.mocked(renderingContext.drawImage).mock.calls
+    );
+
+    expect(context._gameArena.setBackgroundColor).toHaveBeenCalledWith("#000");
+    expect(context._props.render).not.toHaveBeenCalled();
+    expect(context._hud.render).not.toHaveBeenCalled();
+    expect(context._player.render).toHaveBeenCalled();
+    expect(drawImageCalls).toEqual(
+      expect.arrayContaining([
+        expect.arrayContaining([
+          expect.any(HTMLImageElement),
+          8,
+          0,
+          8,
+          16,
+          -16,
+          -16,
+          16,
+          32,
+        ]),
+      ])
+    );
+    expect(
+      canvasContexts.some((renderingContext) =>
+        vi.mocked(renderingContext.scale).mock.calls.some(
+          (call) => call[0] === -1 && call[1] === 1
+        )
+      )
+    ).toBe(true);
   });
 
   it("hides HUD rendering while menus are active", () => {

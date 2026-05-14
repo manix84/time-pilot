@@ -264,6 +264,14 @@ export interface LevelProgressState {
   standardEnemyKills: number;
 }
 
+export interface TimeWarpTransitionState {
+  endsAtTick: number;
+  lives: number;
+  nextLevel: number;
+  score: number;
+  startedAtTick: number;
+}
+
 export interface FormationState {
   awarded: boolean;
   escaped: boolean;
@@ -368,6 +376,7 @@ export interface GameDataStore {
   _demoFadeUntilTick?: number;
   _isDemoMode?: boolean;
   _levelIntroUntilTick?: number;
+  _timeWarpTransition?: TimeWarpTransitionState;
   _nextParachuteScore?: number;
   _controlInputState: ControlInputState;
   _gameArena: GameArenaInstance;

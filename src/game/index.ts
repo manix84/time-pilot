@@ -34,6 +34,7 @@ import userOptions from "./user-options";
 export const DEMO_LEVEL_DURATION_MS = 30000;
 export const DEMO_LEVEL_FADE_MS = 1000;
 export const LEVEL_INTRO_DURATION_MS = 5000;
+export const TIME_WARP_DURATION_MS = 3400;
 const gameFps = 50;
 const demoLevelDurationFrames = Math.max(
   1,
@@ -46,6 +47,10 @@ const demoLevelFadeFrames = Math.max(
 const levelIntroDurationFrames = Math.max(
   1,
   Math.round((LEVEL_INTRO_DURATION_MS / 1000) * gameFps)
+);
+const timeWarpDurationFrames = Math.max(
+  1,
+  Math.round((TIME_WARP_DURATION_MS / 1000) * gameFps)
 );
 const playerRotationStep = 360 / player.rotationFrameCount;
 
@@ -173,6 +178,7 @@ export class TimePilot {
     this.context._demoFadeUntilTick = 0;
     this.context._isDemoMode = false;
     this.context._levelIntroUntilTick = 0;
+    this.context._timeWarpTransition = undefined;
     this.context._nextParachuteScore = scoring.parachute.min;
     this.context._gameArena = new GameArena(this.container);
     this.context._renderTicker = new Ticker();
@@ -238,6 +244,7 @@ export class TimePilot {
     this.context._gameArena.registerAssets([
       assetPath("fonts/font.ttf"),
       assetPath("sprites/player/player.png"),
+      assetPath("sprites/player/timewarp.png"),
       assetPath("sounds/player/bullet.mp3"),
       assetPath("sprites/player/explosion.png"),
       assetPath("sprites/enemies/basic/level1.png"),
@@ -321,6 +328,11 @@ export class TimePilot {
         return;
       }
 
+      if (this.isTimeWarpActive()) {
+        this.clearIntroControls();
+        return;
+      }
+
       this.context._player.reposition();
       this.context._enemies.reposition();
       this.context._bullets.reposition();
@@ -340,6 +352,10 @@ export class TimePilot {
         return;
       }
 
+      if (this.isTimeWarpActive()) {
+        return;
+      }
+
       this.context._player.rotate();
     }, 3);
 
@@ -349,6 +365,10 @@ export class TimePilot {
       }
 
       if (this.isLevelIntroActive()) {
+        return;
+      }
+
+      if (this.isTimeWarpActive()) {
         return;
       }
 
@@ -372,11 +392,20 @@ export class TimePilot {
         return;
       }
 
+      if (this.isTimeWarpActive()) {
+        return;
+      }
+
       this.collisionSystem.detectCollisions();
     }, 1);
 
     this.context._gameTicker.addSchedule(() => {
       if (this.isDestroyed) {
+        return;
+      }
+
+      if (this.isTimeWarpActive()) {
+        this.completeTimeWarpTransition();
         return;
       }
 
@@ -387,7 +416,7 @@ export class TimePilot {
       this.context._bonuses.cleanup();
 
       if (this.context._levelProgress.bossDefeated) {
-        this.advanceAfterBossDefeat();
+        this.beginTimeWarpTransition();
       }
     }, 1);
   };
@@ -504,26 +533,60 @@ export class TimePilot {
     this.context._levelIntroUntilTick = options.skipIntro
       ? 0
       : this.context._gameTicker.getTicks() + levelIntroDurationFrames;
+    this.context._timeWarpTransition = undefined;
     this.hasSeededInitialProps = false;
   };
 
-  private advanceAfterBossDefeat = (): void => {
+  private beginTimeWarpTransition = (): void => {
+    if (this.context._timeWarpTransition) {
+      return;
+    }
+
     const score = this.context._player.getData("score") ?? 0;
     const lives = this.context._player.getData("lives") ?? 3;
     const nextLevel = this.getNextEnabledLevel();
+    const startedAtTick = this.context._gameTicker.getTicks();
 
     this.timeWarpSound.stop();
     this.timeWarpSound.play();
-    if (nextLevel > 1) {
+
+    this.context._timeWarpTransition = {
+      endsAtTick: startedAtTick + timeWarpDurationFrames,
+      lives,
+      nextLevel,
+      score,
+      startedAtTick,
+    };
+    this.context._levelProgress.bossDefeated = false;
+    this.context._enemies.clearAll();
+    this.context._bullets.clearAll();
+    this.context._enemyBullets.clearAll();
+    this.context._bonuses.clearAll();
+    this.context._player.setData("posX", 0);
+    this.context._player.setData("posY", 0);
+    this.context._player.setData("isAlive", true);
+    this.context._player.setData("deathTick", false);
+    this.context._player.stopShooting();
+    this.context._gameArena.updatePosition(0, 0);
+  };
+
+  private completeTimeWarpTransition = (): void => {
+    const transition = this.context._timeWarpTransition;
+
+    if (!transition || this.context._gameTicker.getTicks() < transition.endsAtTick) {
+      return;
+    }
+
+    if (transition.nextLevel > 1) {
       this.nextLevelSound.stop();
       this.nextLevelSound.play();
     }
 
-    this.resetWorld(nextLevel, { skipIntro: false });
-    this.context._player.setData("score", score);
-    this.context._player.setData("score", score, true);
-    this.context._player.setData("lives", lives);
-    this.context._player.setData("lives", lives, true);
+    this.resetWorld(transition.nextLevel, { skipIntro: false });
+    this.context._player.setData("score", transition.score);
+    this.context._player.setData("score", transition.score, true);
+    this.context._player.setData("lives", transition.lives);
+    this.context._player.setData("lives", transition.lives, true);
     this.spawningSystem.addInitialProps();
     this.hasSeededInitialProps = true;
   };
@@ -620,6 +683,10 @@ export class TimePilot {
       !!this.context._levelIntroUntilTick &&
       this.context._gameTicker.getTicks() < this.context._levelIntroUntilTick
     );
+  };
+
+  private isTimeWarpActive = (): boolean => {
+    return !!this.context._timeWarpTransition;
   };
 
   private clearIntroControls = (): void => {
