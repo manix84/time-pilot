@@ -10,6 +10,7 @@ export interface PositionedRadius extends Coordinates {
 }
 
 export interface SpriteFrame extends Coordinates {
+  flipY?: boolean;
   frameWidth: number;
   frameHeight: number;
   frameX: number;
@@ -95,7 +96,7 @@ export interface ControllerCommands {
 }
 
 export type ControllerType = "keyboard1" | "keyboard2";
-export type GameLanguage = "de" | "en" | "fr" | "it" | "nl" | "ro";
+export type GameLanguage = "de" | "en" | "es" | "fr" | "it" | "nl" | "ro";
 export type ControlInputName =
   | "down"
   | "fire"
@@ -131,7 +132,8 @@ export interface Controller {
 }
 
 export interface MenuPointerData extends Coordinates {
-  type: "click" | "drag" | "move" | "press" | "release";
+  deltaY?: number;
+  type: "click" | "drag" | "move" | "press" | "release" | "wheel";
 }
 
 export interface GameArenaInstance extends Coordinates {
@@ -179,6 +181,7 @@ export interface TickerInstance {
 
 export interface BulletInstance {
   removeMe: boolean;
+  explode: () => void;
   getData: (key?: keyof BulletData) => BulletData | BulletData[keyof BulletData] | undefined;
   setData: (key: keyof BulletData, value: BulletData[keyof BulletData]) => boolean;
   setLevel: (level: number) => boolean;
@@ -197,7 +200,11 @@ export interface BulletFactoryInstance {
     playSound?: boolean,
     coordinateSpace?: BulletData["coordinateSpace"],
     shape?: BulletData["shape"],
-    sprite?: BulletData["sprite"]
+    sprite?: BulletData["sprite"],
+    tracksPlayer?: boolean,
+    turnRate?: number,
+    shootable?: boolean,
+    explosion?: BulletData["explosion"]
   ) => void;
   getCount: () => number;
   getData: () => BulletData[];
@@ -255,6 +262,16 @@ export interface LevelProgressState {
   bossKillThreshold: number;
   bossSpawned: boolean;
   standardEnemyKills: number;
+}
+
+export interface TimeWarpTransitionState {
+  endsAtTick: number;
+  effectStartedAtTick: number;
+  lives: number;
+  nextLevel: number;
+  score: number;
+  screenCleared: boolean;
+  startedAtTick: number;
 }
 
 export interface FormationState {
@@ -330,11 +347,14 @@ export interface HudInstance {
 }
 
 export interface ControllerInterfaceInstance {
+  adjustUiZoom?: (direction: -1 | 1) => void;
+  resetUiZoom?: () => void;
   rotateToHeading: (desiredHeading: Heading) => void;
   rotateClockwise: () => void;
   rotateAntiClockwise: () => void;
   stop: () => void;
   toggleMenu: () => void;
+  openMainMenu?: () => void;
   openMenu?: () => void;
   startShooting: () => void;
   stopShooting: () => void;
@@ -346,6 +366,7 @@ export interface ControllerInterfaceInstance {
   rotateLeft: () => void;
   handlePointer?: (pointer: MenuPointerData) => void;
   captureKey?: (keyCode: number) => boolean;
+  goBack?: () => void;
   isMenuActive?: () => boolean;
 }
 
@@ -357,6 +378,7 @@ export interface GameDataStore {
   _demoFadeUntilTick?: number;
   _isDemoMode?: boolean;
   _levelIntroUntilTick?: number;
+  _timeWarpTransition?: TimeWarpTransitionState;
   _nextParachuteScore?: number;
   _controlInputState: ControlInputState;
   _gameArena: GameArenaInstance;
@@ -387,7 +409,9 @@ export interface RenderingSystemInstance {
 }
 
 export interface MenuSystemCommands {
+  clearLevelPreview?: () => void;
   getLevel?: () => number;
+  previewLevel?: (level: number) => void;
   selectLevel?: (level: number) => void;
   start: () => void;
 }
@@ -397,6 +421,8 @@ export interface ShowStartMenuOptions {
 }
 
 export interface MenuSystemInstance {
+  adjustUiZoom: (direction: -1 | 1) => void;
+  resetUiZoom: () => void;
   adjust: (direction: -1 | 1) => void;
   captureKey: (keyCode: number) => boolean;
   isActive: () => boolean;
@@ -405,6 +431,8 @@ export interface MenuSystemInstance {
   render: () => void;
   next: () => void;
   previous: () => void;
+  goBack: () => void;
+  goToRoot: () => void;
   activate: () => void;
   handlePointer: (pointer: MenuPointerData) => void;
 }
@@ -435,6 +463,18 @@ export interface ProjectileSpriteConfig {
   sprite: SpriteAsset;
   width: number;
   height: number;
+  frames?: number;
+  frameMode?: "animation" | "heading";
+  renderWidth?: number;
+  renderHeight?: number;
+}
+
+export interface ProjectileExplosionConfig {
+  sprite: SpriteAsset;
+  width: number;
+  height: number;
+  frames: number;
+  frameLimiter: number;
   renderWidth?: number;
   renderHeight?: number;
 }
@@ -447,6 +487,11 @@ export interface BulletData extends Coordinates {
   velocity: number;
   color: string;
   sprite?: ProjectileSpriteConfig;
+  tracksPlayer?: boolean;
+  turnRate?: number;
+  shootable?: boolean;
+  explosion?: ProjectileExplosionConfig;
+  explosionTick: number | false;
 }
 
 export interface ExplosionConfig {
@@ -464,10 +509,16 @@ export interface ProjectileConfig {
   color: string;
   sprite?: ProjectileSpriteConfig;
   sound?: SoundAsset;
+  initialAim?: "facing" | "player";
+  tracksPlayer?: boolean;
+  turnRate?: number;
+  shootable?: boolean;
+  explosion?: ProjectileExplosionConfig;
 }
 
 export interface PlayerConfig {
   sprite: SpriteAsset;
+  spriteFrameAxis?: "x" | "y";
   frameWidth: number;
   frameHeight: number;
   width: number;
@@ -480,9 +531,14 @@ export interface PlayerConfig {
 
 export interface EnemyConfig {
   animationFrames?: number;
+  animationRows?: number;
   bossDamageFrames?: number;
   countsTowardBoss: boolean;
+  deathFlashFrameY?: number;
+  deathFlashTicks?: number;
+  headingFrameOffset?: number;
   deathValue: number;
+  horizontalDirectionFrames?: number;
   sprite: SpriteAsset;
   velocity: number;
   turnLimiter: number;
@@ -597,17 +653,21 @@ export interface UserOptions {
     showSpriteCorners: boolean;
     showSpriteCenters: boolean;
     showControlsOverlay: boolean;
+    showHeadingVectors: boolean;
     showPlayerCoordinates: boolean;
+    showSteeringArc: boolean;
     invincible: boolean;
   };
   enableDebug: boolean;
   controllerType: ControllerType;
+  gameZoom: number;
   gamepadEnabled: boolean;
   keyboardBindings: KeyboardBindings;
   language: GameLanguage;
   masterVolume: number;
   musicVolume: number;
   effectsVolume: number;
+  uiZoom: number;
   setKeyboardBinding: <K extends keyof KeyboardBindings>(
     key: K,
     value: KeyboardBindings[K]

@@ -21,11 +21,36 @@ const nl: typeof en = {
     up: "Omhoog",
   },
   levels: {
-    1: { introText: "N.C. 1910" },
-    2: { introText: "N.C. 1940" },
-    3: { introText: "N.C. 1970" },
-    4: { introText: "N.C. 1982" },
-    5: { introText: "N.C. 2001" },
+    1: {
+      introText: "N.C. 1910",
+      title: "De dageraad van vlucht",
+      description:
+        "Heldere luchten, drijvende wolken en broze dubbeldekkers. Hun duiken en formaties maken elk luchtgevecht persoonlijk.",
+    },
+    2: {
+      introText: "N.C. 1940",
+      title: "Oorlog in de wolken",
+      description:
+        "Duels worden luchtoorlog. Jagers kruisen je pad terwijl zware bommenwerpers je blijven dwingen te bewegen.",
+    },
+    3: {
+      introText: "N.C. 1970",
+      title: "Het jet-tijdperk",
+      description:
+        "Techniek versnelt. Snelle vliegtuigen, scherpe aanvallen en drukke luchten laten weinig tijd om te twijfelen.",
+    },
+    4: {
+      introText: "N.C. 1982",
+      title: "De toekomstige oorlog",
+      description:
+        "Geavanceerde machines beheersen mechanische luchten. Plotselinge aanvallen en vreemde bewegingen maken elk gevecht onzeker.",
+    },
+    5: {
+      introText: "N.C. 2001",
+      title: "Voorbij morgen",
+      description:
+        "De strijd wordt buitenaards. UFOs glijden met onmogelijke snelheid door luchten waar oude regels verdwijnen.",
+    },
   },
   menu: {
     alreadyAssignedTo: (binding: string) => `Al toegewezen aan ${binding}`,
@@ -38,6 +63,31 @@ const nl: typeof en = {
     directional: "Richting",
     effectsVolume: "Effectvolume",
     fire: "Vuur",
+    gameZoom: "Gamezoom",
+    levelShowcase: {
+      basic: {
+        label: "Vijanden",
+        description: "Belangrijkste dreiging van dit tijdperk.",
+      },
+      special: {
+        label: "Speciaal",
+        description: "Zeldzame dreiging met aparte aanvallen.",
+      },
+      boss: {
+        label: "Boss",
+        description: "Zwaar doel met schadefasen.",
+      },
+      bonus: {
+        label: "Bonus",
+        description: "Verzamel voor oplopende score.",
+      },
+      projectiles: {
+        bomb: "Bom",
+        bullet: "Kogel",
+        plasma: "Plasma",
+        rocket: "Raket",
+      },
+    },
     invincibilityShield: "Onkwetsbaar schild",
     language: "Taal",
     masterVolume: "Hoofdvolume",
@@ -51,9 +101,12 @@ const nl: typeof en = {
     selectLevel: "Level kiezen",
     showControlsOverlay: "Besturing tonen",
     showCoordinates: "Coordinaten tonen",
+    showHeadingVectors: "Vectoren tonen",
     showHitBoxes: "Hitboxen tonen",
+    showSteeringArc: "Stuurboog tonen",
     soon: "Binnenkort",
     start: "Start",
+    uiZoom: "UI-zoom",
   },
 };
 

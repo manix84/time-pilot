@@ -2,6 +2,7 @@
 import { player } from "./constants";
 import i18n from "./i18n";
 import palette from "./palette";
+import { getUiScale } from "./ui-scale";
 import userOptions from "./user-options";
 import type {
   ControlInputState,
@@ -10,10 +11,6 @@ import type {
   HudInstance,
   SpriteImage,
 } from "./types";
-
-const upFacingPlayerFrame =
-  Math.round(((0 + 270) % 360) / (360 / player.rotationFrameCount)) %
-  player.rotationFrameCount;
 
 class Hud implements HudInstance {
   private _context: GameDataStore;
@@ -28,31 +25,38 @@ class Hud implements HudInstance {
     this._playerSprite.src = player.sprite.src;
     this._playerSprite.frameWidth = player.frameWidth;
     this._playerSprite.frameHeight = player.frameHeight;
-    this._playerSprite.frameX = upFacingPlayerFrame;
+    this._playerSprite.frameX = 0;
     this._playerSprite.frameY = 0;
   }
 
   render = (): void => {
+    const context = this._gameArena.getContext() as CanvasRenderingContext2D;
     const playerData = this._context._player.getData();
+    const uiScale = this._getUiScale();
+    const uiWidth = this._getUiWidth();
+    const uiHeight = this._getUiHeight();
+
+    context.save();
+    context.scale(uiScale, uiScale);
 
     this._gameArena.renderText(
       playerData.score,
-      -(this._gameArena.width / 2) + 20,
-      -(this._gameArena.height / 2) + 10,
+      -(uiWidth / 2) + 20,
+      -(uiHeight / 2) + 10,
       { size: 30 }
     );
 
     if (userOptions.enableDebug && userOptions.debug.showPlayerCoordinates) {
       this._gameArena.renderText(
         `${playerData.posX.toFixed(2)} x ${playerData.posY.toFixed(2)}`,
-        -(this._gameArena.width / 2) + 20,
-        -(this._gameArena.height / 2) + 40,
+        -(uiWidth / 2) + 20,
+        -(uiHeight / 2) + 40,
         { size: 15 }
       );
       this._gameArena.renderText(
         `${playerData.heading}°`,
-        -(this._gameArena.width / 2) + 20,
-        -(this._gameArena.height / 2) + 55,
+        -(uiWidth / 2) + 20,
+        -(uiHeight / 2) + 55,
         { size: 15 }
       );
     }
@@ -100,22 +104,29 @@ class Hud implements HudInstance {
         renderWidth: player.width,
         renderHeight: player.height,
         posX:
-          this._gameArena.width / 2 -
+          uiWidth / 2 -
           player.width -
           (player.width + 10) * i -
           10,
-        posY: -(this._gameArena.height / 2 - 10),
+        posY: -(uiHeight / 2 - 10),
       });
     }
+
+    context.restore();
   };
 
   restart = (): void => {
+    const context = this._gameArena.getContext() as CanvasRenderingContext2D;
+
+    context.save();
+    context.scale(this._getUiScale(), this._getUiScale());
     this._gameArena.renderText(i18n.hud.restarting, 0, 0, {
       size: 30,
       align: "center",
       valign: "middle",
       color: palette.text.white,
     });
+    context.restore();
   };
 
   private renderControlsOverlay = (): void => {
@@ -128,15 +139,15 @@ class Hud implements HudInstance {
     if (inputState.activeController === "gamepad") {
       this.renderGamepadOverlay(
         context,
-        this._gameArena.width / 2 - 244,
-        this._gameArena.height / 2 - 114,
+        this._getUiWidth() / 2 - 244,
+        this._getUiHeight() / 2 - 114,
         inputState
       );
     } else {
       this.renderKeyboardOverlay(
         context,
-        this._gameArena.width / 2 - 190,
-        this._gameArena.height / 2 - 124,
+        this._getUiWidth() / 2 - 190,
+        this._getUiHeight() / 2 - 124,
         inputState
       );
     }
@@ -331,6 +342,18 @@ class Hud implements HudInstance {
       color: isPressed ? palette.overlay.activeFill : palette.overlay.line,
     });
     context.restore();
+  };
+
+  private _getUiScale = (): number => {
+    return getUiScale(this._gameArena.width, this._gameArena.height);
+  };
+
+  private _getUiWidth = (): number => {
+    return this._gameArena.width / this._getUiScale();
+  };
+
+  private _getUiHeight = (): number => {
+    return this._gameArena.height / this._getUiScale();
   };
 }
 

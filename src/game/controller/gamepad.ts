@@ -16,8 +16,9 @@ class Gamepad implements Controller {
   private _controllerInterface: ControllerInterfaceInstance;
   private _inputState?: ControlInputState;
   private _isConnected = false;
+  private _isBackButtonPressed = false;
   private _isFireButtonPressed = false;
-  private _isPauseButtonPressed = false;
+  private _isMenuButtonPressed = false;
   private _isRestartButtonPressed = false;
 
   constructor(
@@ -58,21 +59,31 @@ class Gamepad implements Controller {
         this._controllerInterface.stopShooting();
       }
 
-      if (gamepad.buttons[9].pressed && !this._isPauseButtonPressed) {
-        this._isPauseButtonPressed = true;
-        this._setInputState("pause", true);
-        this._controllerInterface.togglePause();
+      if (gamepad.buttons[9].pressed && !this._isMenuButtonPressed) {
+        this._isMenuButtonPressed = true;
+        this._setInputState("menu", true);
+        this._controllerInterface.openMainMenu?.();
       } else if (!gamepad.buttons[9].pressed) {
-        this._isPauseButtonPressed = false;
-        this._setInputState("pause", false);
+        this._isMenuButtonPressed = false;
+        this._setInputState("menu", false);
       }
 
-      if (gamepad.buttons[8].pressed && !this._isRestartButtonPressed) {
+      if (
+        this._controllerInterface.isMenuActive?.() &&
+        gamepad.buttons[8].pressed &&
+        !this._isBackButtonPressed
+      ) {
+        this._isBackButtonPressed = true;
+        this._setInputState("menu", true);
+        this._controllerInterface.goBack?.();
+      } else if (!this._controllerInterface.isMenuActive?.() && gamepad.buttons[8].pressed && !this._isRestartButtonPressed) {
         this._isRestartButtonPressed = true;
         this._setInputState("restart", true);
         this._controllerInterface.restart();
       } else if (!gamepad.buttons[8].pressed) {
+        this._isBackButtonPressed = false;
         this._isRestartButtonPressed = false;
+        this._setInputState("menu", false);
         this._setInputState("restart", false);
       }
 

@@ -1,5 +1,6 @@
 import de from "./de";
 import en from "./en";
+import es from "./es";
 import fr from "./fr";
 import it from "./it";
 import nl from "./nl";
@@ -12,6 +13,7 @@ export type GameMessages = typeof en;
 export const messages: Record<GameLanguage, GameMessages> = {
   de,
   en,
+  es,
   fr,
   it,
   nl,
@@ -21,6 +23,7 @@ export const messages: Record<GameLanguage, GameMessages> = {
 export const availableLanguages: GameLanguage[] = [
   "en",
   "fr",
+  "es",
   "de",
   "it",
   "nl",

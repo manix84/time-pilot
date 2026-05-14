@@ -23,6 +23,61 @@ const scoring = {
   },
 };
 
+const playerMovementSpeed = 5;
+const projectileSpeeds = {
+  bullet1910: playerMovementSpeed * 1.1,
+  bullet1940: playerMovementSpeed * 1.25,
+  bullet1970: playerMovementSpeed * 1.35,
+  bullet1982: playerMovementSpeed * 1.6,
+  plasma2001: playerMovementSpeed * 1.75,
+  bomb1940: playerMovementSpeed * 0.9,
+  missile1970: playerMovementSpeed * 2,
+  missile1982: playerMovementSpeed * 2.2,
+};
+
+const rocketProjectileSprite = {
+  sprite: {
+    src: assetPath("sprites/enemies/projectiles/rocket.png"),
+  },
+  width: 12,
+  height: 9,
+  frames: 16,
+  renderWidth: 24,
+  renderHeight: 18,
+};
+
+const plasmaProjectileSprite = {
+  sprite: {
+    src: assetPath("sprites/enemies/projectiles/plasma.png"),
+  },
+  width: 8,
+  height: 7,
+  frames: 8,
+  frameMode: "animation" as const,
+  renderWidth: 8,
+  renderHeight: 7,
+};
+
+const bombProjectileExplosion = {
+  sprite: {
+    src: assetPath("sprites/enemies/projectiles/bomb_explosion.png"),
+  },
+  width: 11,
+  height: 11,
+  frames: 4,
+  frameLimiter: 4,
+};
+
+const plasmaProjectileExplosion = {
+  sprite: {
+    src: assetPath("sprites/enemies/projectiles/plasma_explosion.png"),
+  },
+  width: 16,
+  height: 13,
+  frames: 4,
+  frameLimiter: 4,
+};
+
 const basicEnemy = (
   level: number,
   overrides: Partial<EnemyConfig> = {}
@@ -32,18 +87,18 @@ const basicEnemy = (
   sprite: {
     src: assetPath(`sprites/enemies/basic/level${level}.png`),
   },
-  velocity: 3,
-  turnLimiter: 25,
+  velocity: 3.25,
+  turnLimiter: 32,
   width: 32,
   height: 32,
-  firingChance: 0.5,
+  firingChance: 0.35,
   hitPoints: 1,
   hitRadius: 8,
   canRotate: true,
   tracksPlayer: true,
-  spawnLimit: 10,
+  spawnLimit: 8,
   projectile: {
-    velocity: 5,
+    velocity: projectileSpeeds.bullet1910,
     size: 6,
     color: palette.aircraft.enemyBullet,
   },
@@ -54,8 +109,8 @@ const basicEnemy = (
     sound: {
       src: assetPath("sounds/enemy_explode.wav"),
     },
-    width: 32,
-    height: 32,
+    width: 16,
+    height: 16,
     frames: 4,
     frameLimiter: 5,
   },
@@ -73,11 +128,11 @@ const bossEnemy = (
   sprite: {
     src: assetPath(`sprites/enemies/boss/level${level}.png`),
   },
-  velocity: 2,
-  turnLimiter: 35,
+  velocity: 3,
+  turnLimiter: 48,
   width: 32,
   height: 16,
-  firingChance: 0.2,
+  firingChance: 0.25,
   hitPoints: 7,
   hitRadius: 18,
   canRotate: false,
@@ -86,7 +141,7 @@ const bossEnemy = (
   renderWidth: 64,
   spawnLimit: 1,
   projectile: {
-    velocity: 5,
+    velocity: projectileSpeeds.bullet1940,
     size: 6,
     color: palette.aircraft.enemyBullet,
   },
@@ -98,8 +153,8 @@ const bossEnemy = (
       src: assetPath("sounds/enemy_explode.wav"),
     },
     width: 32,
-    height: 32,
-    frames: 8,
+    height: 16,
+    frames: 4,
     frameLimiter: 5,
   },
   ...overrides,
@@ -115,7 +170,7 @@ const specialBomber = (
   sprite: {
     src: assetPath(`sprites/enemies/special-bomber/level${level}.png`),
   },
-  velocity: 3,
+  velocity: 2.75,
   turnLimiter: 9999,
   width: 32,
   height: 9,
@@ -128,7 +183,7 @@ const specialBomber = (
   renderWidth: 64,
   spawnLimit: 1,
   projectile: {
-    velocity: 4,
+    velocity: projectileSpeeds.bomb1940,
     size: 6,
     color: palette.aircraft.enemyBullet,
     sprite: {
@@ -140,16 +195,18 @@ const specialBomber = (
       renderWidth: 24,
       renderHeight: 6,
     },
+    shootable: true,
+    explosion: bombProjectileExplosion,
   },
   explosion: {
     sprite: {
-      src: assetPath("sprites/enemies/basic/explosion.png"),
+      src: assetPath("sprites/enemies/special-bomber/explosion.png"),
     },
     sound: {
       src: assetPath("sounds/enemy_explode.wav"),
     },
     width: 32,
-    height: 32,
+    height: 16,
     frames: 4,
     frameLimiter: 5,
   },
@@ -162,9 +219,9 @@ const parachuteBonus: BonusConfig = {
   },
   velocity: 2,
   animationCycle: [1, 2, 3, 4, 4, 3, 2, 1],
-  hitRadius: 10,
-  width: 32,
-  height: 32,
+  hitRadius: 8,
+  width: 16,
+  height: 16,
 };
 
 const levelOneProps: PropConfig[] = [
@@ -194,6 +251,39 @@ const levelOneProps: PropConfig[] = [
     },
     width: 92,
     height: 32,
+    relativeVelocity: 0,
+    layer: 2,
+    reversed: false,
+  },
+];
+
+const levelFiveProps: PropConfig[] = [
+  {
+    sprite: {
+      src: assetPath("sprites/props/asteroid1.png"),
+    },
+    width: 28,
+    height: 24,
+    relativeVelocity: 0.5,
+    layer: 1,
+    reversed: false,
+  },
+  {
+    sprite: {
+      src: assetPath("sprites/props/asteroid2.png"),
+    },
+    width: 28,
+    height: 30,
+    relativeVelocity: 0.25,
+    layer: 1,
+    reversed: false,
+  },
+  {
+    sprite: {
+      src: assetPath("sprites/props/asteroid3.png"),
+    },
+    width: 60,
+    height: 28,
     relativeVelocity: 0,
     layer: 2,
     reversed: false,
@@ -495,6 +585,7 @@ const timePilotConstants: TimePilotConstants = {
     sprite: {
       src: assetPath("sprites/player/player.png"),
     },
+    spriteFrameAxis: "x",
     frameWidth: 16,
     frameHeight: 16,
     width: 32,
@@ -536,7 +627,7 @@ const timePilotConstants: TimePilotConstants = {
       src: assetPath("sounds/next_level.wav"),
     },
     timeWarp: {
-      src: assetPath("sounds/timewarp.wav"),
+      src: assetPath("sounds/player/timewarp.wav"),
     },
     waveStart: {
       src: assetPath("sounds/wave_start.wav"),
@@ -563,11 +654,19 @@ const timePilotConstants: TimePilotConstants = {
         despawnRadius: 500,
       },
       player: {
-        velocity: 5,
+        velocity: playerMovementSpeed,
         turnInterval: 5,
       },
       enemies: {
-        basic: basicEnemy(1),
+        basic: basicEnemy(1, {
+          animationRows: 2,
+          deathFlashFrameY: 2,
+          deathFlashTicks: 6,
+          width: 16,
+          height: 16,
+          renderWidth: 32,
+          renderHeight: 32,
+        }),
         boss: bossEnemy(1, {
           width: 30,
           height: 16,
@@ -590,15 +689,28 @@ const timePilotConstants: TimePilotConstants = {
         despawnRadius: 500,
       },
       player: {
-        velocity: 5,
+        velocity: playerMovementSpeed,
         turnInterval: 5,
       },
       enemies: {
         basic: basicEnemy(2, {
-          velocity: 4,
-          turnLimiter: 20,
-          firingChance: 0.55,
-          spawnLimit: 12,
+          animationRows: 2,
+          deathFlashFrameY: 2,
+          deathFlashTicks: 6,
+          headingFrameOffset: 270,
+          velocity: 4.25,
+          turnLimiter: 22,
+          width: 16,
+          height: 16,
+          renderWidth: 32,
+          renderHeight: 32,
+          firingChance: 0.5,
+          spawnLimit: 11,
+          projectile: {
+            velocity: projectileSpeeds.bullet1940,
+            size: 6,
+            color: palette.aircraft.enemyBullet,
+          },
         }),
         boss: bossEnemy(2, {
           width: 32,
@@ -606,7 +718,8 @@ const timePilotConstants: TimePilotConstants = {
           hitRadius: 22,
           renderHeight: 18,
           renderWidth: 64,
-          velocity: 2.4,
+          velocity: 3.2,
+          turnLimiter: 44,
         }),
         formations: futureLevelFormations[2],
         specialBomber: specialBomber(2),
@@ -624,15 +737,32 @@ const timePilotConstants: TimePilotConstants = {
         despawnRadius: 500,
       },
       player: {
-        velocity: 5,
+        velocity: playerMovementSpeed,
         turnInterval: 5,
       },
       enemies: {
         basic: basicEnemy(3, {
+          animationRows: 2,
+          deathFlashFrameY: 2,
+          deathFlashTicks: 6,
+          horizontalDirectionFrames: 9,
+          width: 16,
+          height: 16,
+          renderWidth: 32,
+          renderHeight: 32,
           velocity: 5,
-          turnLimiter: 16,
-          firingChance: 0.65,
-          spawnLimit: 14,
+          turnLimiter: 14,
+          firingChance: 0.55,
+          spawnLimit: 13,
+          projectile: {
+            velocity: projectileSpeeds.missile1970,
+            size: 8,
+            color: palette.aircraft.enemyBullet,
+            sprite: rocketProjectileSprite,
+            tracksPlayer: true,
+            turnRate: 0.5,
+            shootable: true,
+          },
         }),
         boss: bossEnemy(3, {
           width: 32,
@@ -640,7 +770,18 @@ const timePilotConstants: TimePilotConstants = {
           hitRadius: 23,
           renderHeight: 26,
           renderWidth: 64,
-          velocity: 2.8,
+          velocity: 3.5,
+          turnLimiter: 38,
+          firingChance: 0.3,
+          projectile: {
+            velocity: projectileSpeeds.missile1970,
+            size: 8,
+            color: palette.aircraft.enemyBullet,
+            sprite: rocketProjectileSprite,
+            tracksPlayer: true,
+            turnRate: 0.5,
+            shootable: true,
+          },
         }),
         formations: futureLevelFormations[3],
       },
@@ -657,15 +798,32 @@ const timePilotConstants: TimePilotConstants = {
         despawnRadius: 500,
       },
       player: {
-        velocity: 5,
+        velocity: playerMovementSpeed,
         turnInterval: 5,
       },
       enemies: {
         basic: basicEnemy(4, {
-          velocity: 5.5,
-          turnLimiter: 14,
-          firingChance: 0.7,
+          animationRows: 2,
+          deathFlashFrameY: 2,
+          deathFlashTicks: 6,
+          headingFrameOffset: 270,
+          velocity: 6.25,
+          turnLimiter: 10,
+          width: 16,
+          height: 16,
+          renderWidth: 32,
+          renderHeight: 32,
+          firingChance: 0.65,
           spawnLimit: 15,
+          projectile: {
+            velocity: projectileSpeeds.missile1982,
+            size: 8,
+            color: palette.aircraft.enemyBullet,
+            sprite: rocketProjectileSprite,
+            tracksPlayer: true,
+            turnRate: 1,
+            shootable: true,
+          },
         }),
         boss: bossEnemy(4, {
           width: 32,
@@ -673,7 +831,18 @@ const timePilotConstants: TimePilotConstants = {
           hitRadius: 23,
           renderHeight: 26,
           renderWidth: 64,
-          velocity: 3,
+          velocity: 3.75,
+          turnLimiter: 34,
+          firingChance: 0.35,
+          projectile: {
+            velocity: projectileSpeeds.missile1982,
+            size: 8,
+            color: palette.aircraft.enemyBullet,
+            sprite: rocketProjectileSprite,
+            tracksPlayer: true,
+            turnRate: 1,
+            shootable: true,
+          },
         }),
         formations: futureLevelFormations[4],
       },
@@ -690,15 +859,32 @@ const timePilotConstants: TimePilotConstants = {
         despawnRadius: 520,
       },
       player: {
-        velocity: 5,
+        velocity: playerMovementSpeed,
         turnInterval: 5,
       },
       enemies: {
         basic: basicEnemy(5, {
-          velocity: 4.5,
-          turnLimiter: 12,
-          firingChance: 0.75,
+          animationFrames: 4,
+          deathFlashFrameY: 1,
+          deathFlashTicks: 6,
+          canRotate: false,
+          width: 16,
+          height: 16,
+          renderWidth: 32,
+          renderHeight: 32,
+          velocity: 7.5,
+          turnLimiter: 8,
+          firingChance: 0.68,
           spawnLimit: 16,
+          projectile: {
+            velocity: projectileSpeeds.plasma2001,
+            size: 6,
+            color: palette.aircraft.enemyBullet,
+            sprite: plasmaProjectileSprite,
+            initialAim: "player",
+            shootable: true,
+            explosion: plasmaProjectileExplosion,
+          },
         }),
         boss: bossEnemy(5, {
           animationFrames: 2,
@@ -708,12 +894,23 @@ const timePilotConstants: TimePilotConstants = {
           hitRadius: 24,
           renderHeight: 32,
           renderWidth: 64,
-          velocity: 2.6,
+          velocity: 4,
+          turnLimiter: 30,
+          firingChance: 0.4,
+          projectile: {
+            velocity: projectileSpeeds.plasma2001,
+            size: 6,
+            color: palette.aircraft.enemyBullet,
+            sprite: plasmaProjectileSprite,
+            initialAim: "player",
+            shootable: true,
+            explosion: plasmaProjectileExplosion,
+          },
         }),
         formations: futureLevelFormations[5],
       },
       bonus: parachuteBonus,
-      props: levelOneProps,
+      props: levelFiveProps,
     },
   },
 };

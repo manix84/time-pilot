@@ -239,6 +239,18 @@ class GameArena implements GameArenaInstance {
 
   renderSprite = (sprite: CanvasImageSource, spriteData: SpriteFrame): void => {
     const context = this.getContext() as CanvasRenderingContext2D;
+    const renderWidth = spriteData.renderWidth ?? spriteData.frameWidth;
+    const renderHeight = spriteData.renderHeight ?? spriteData.frameHeight;
+    const posY = spriteData.flipY
+      ? -(spriteData.posY + renderHeight)
+      : spriteData.posY;
+
+    context.imageSmoothingEnabled = false;
+
+    if (spriteData.flipY) {
+      context.save();
+      context.scale(1, -1);
+    }
 
     context.drawImage(
       sprite,
@@ -247,10 +259,14 @@ class GameArena implements GameArenaInstance {
       spriteData.frameWidth,
       spriteData.frameHeight,
       spriteData.posX,
-      spriteData.posY,
-      spriteData.renderWidth ?? spriteData.frameWidth,
-      spriteData.renderHeight ?? spriteData.frameHeight
+      posY,
+      renderWidth,
+      renderHeight
     );
+
+    if (spriteData.flipY) {
+      context.restore();
+    }
   };
 
   drawCircle = (posX = 0, posY = 0, radius: number, options: CircleOptions = {}): void => {

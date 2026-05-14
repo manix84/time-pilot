@@ -1,6 +1,6 @@
 # 🕹️ Time Pilot
 
-**Time Pilot** is a modernized React + TypeScript rebuild of an older browser-game prototype. The game still renders through a canvas-driven engine, but it now lives inside a Vite application with typed game modules, React lifecycle integration, CI checks, GitHub Pages deployment, and release automation.
+**Time Pilot** is a modernized React + TypeScript rebuild of an older browser-game prototype. The game still renders through a pixel-art canvas engine, but it now lives inside a Vite application with typed game modules, React lifecycle integration, CI checks, GitHub Pages deployment, and release automation.
 
 ## ✨ Highlights
 
@@ -10,7 +10,9 @@
 - 🧱 Feature-oriented source layout under `src/game`.
 - 🧪 Vitest coverage for engine helpers, controllers, menus, factories, the game host, and React integration.
 - 🎛️ In-app keyboard layout and gamepad configuration.
-- 🧭 Canvas-rendered start/options menus with keyboard, gamepad, and mouse interaction.
+- 🧭 Canvas-rendered start/options/debug menus with keyboard, gamepad, and mouse interaction.
+- 🔎 UI zoom and game POV zoom with automatic viewport scaling.
+- 🌍 Localized menus, level blurbs, and level showcase labels.
 - ✅ PR checks for tests, lint, and type checking.
 - 🚀 Automatic GitHub Pages deployment from `main`.
 - 🏷️ Automatic GitHub Release creation from the current package version.
@@ -94,8 +96,23 @@ React owns mounting and cleanup. The game engine owns simulation, rendering, inp
 The game also renders its start and options menus inside the canvas. Keyboard
 and gamepad commands move, adjust, and activate menu items through the same
 controller interface used for gameplay, while mouse input is limited to menu
-interaction. Options currently include volume levels, controller style, and
-custom keyboard bindings.
+interaction. Options currently include volume levels, UI zoom, game POV zoom,
+language, controller style, and custom keyboard bindings. UI zoom can also be
+adjusted from the keyboard with `+`/`=` and `-`. Both zoom options default to
+100% and range from 25% to 250% in 5% steps.
+
+During play, `P` pauses the game and `Escape` opens the root menu with a
+`Paused` subtitle and a `Continue` action. Pressing `Escape` again from that
+paused root menu resumes play, matching the Continue button. In submenus,
+`Escape`, `Backspace`, and the gamepad back button return to the previous menu.
+`M` and the gamepad menu button jump back to the root menu.
+
+When debug mode is unlocked, the level select menu includes translated era
+blurbs on the left, level buttons in the centre, and animated enemy, special,
+boss, and bonus previews on the right. Focusing a level also pins the background
+demo preview to that era until the level select screen is closed. Debug overlays
+can also show hitboxes, heading and steering vectors, and an optional turn-arc
+fill for intentional moving entities.
 
 ## 🧭 Project Structure
 
@@ -112,6 +129,7 @@ src/
     controller/             Keyboard and gamepad input adapters
     engine/                 Canvas arena, ticker, sound, helpers
     menus/                  Menu definitions
+    ui-scale.ts             UI and game zoom helpers
     *.ts                    Entities, factories, HUD, options
   test/
     setup.ts                Vitest jsdom/browser API shims
@@ -129,6 +147,7 @@ The current design keeps React out of the game loop. This is deliberate.
 - Entities and factories receive explicit context instead of reading a global singleton.
 - Simulation uses a fixed-step ticker at roughly 30fps for movement, spawning, collisions, cleanup, and player actions.
 - Rendering uses a separate animation-frame ticker to paint the latest entity locations and orientations as often as the browser can display them.
+- Game rendering applies pixelated POV scaling separately from HUD and menu UI scaling.
 - Rendering stays canvas-based for predictable paint ordering and frame-by-frame control.
 
 ## 🔁 CI/CD

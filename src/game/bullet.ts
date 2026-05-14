@@ -1,5 +1,6 @@
 /* Converted from TimePilot.Bullet.js (AMD) to ESM TypeScript. */
 import userOptions from "./user-options";
+import { drawDebugVectors } from "./debug-vectors";
 import helpers from "./engine/helpers";
 import palette from "./palette";
 import { getDespawnRadius } from "./viewport";
@@ -14,8 +15,10 @@ import type {
 
 class Bullet implements BulletInstance {
   private _data: BulletData;
+  private _explosionSprite?: HTMLImageElement;
   private _projectileSprite?: HTMLImageElement;
   private _gameArena: GameArenaInstance;
+  private _gameTicker: GameDataStore["_gameTicker"];
   private _level = 1;
   private _player: PlayerInstance;
 
@@ -31,9 +34,14 @@ class Bullet implements BulletInstance {
     color: string,
     coordinateSpace: BulletData["coordinateSpace"] = "screen",
     shape: BulletData["shape"] = "square",
-    sprite?: BulletData["sprite"]
+    sprite?: BulletData["sprite"],
+    tracksPlayer = false,
+    turnRate = 0,
+    shootable = false,
+    explosion?: BulletData["explosion"]
   ) {
     this._gameArena = context._gameArena;
+    this._gameTicker = context._gameTicker;
     this._player = context._player;
     this._data = {
       posX: originX,
@@ -45,11 +53,21 @@ class Bullet implements BulletInstance {
       velocity,
       color,
       sprite,
+      tracksPlayer,
+      turnRate,
+      shootable,
+      explosion,
+      explosionTick: false,
     };
 
     if (sprite) {
       this._projectileSprite = new Image();
       this._projectileSprite.src = sprite.sprite.src;
+    }
+
+    if (explosion) {
+      this._explosionSprite = new Image();
+      this._explosionSprite.src = explosion.sprite.src;
     }
   }
 
@@ -81,6 +99,17 @@ class Bullet implements BulletInstance {
     return this._level === level;
   };
 
+  explode = (): void => {
+    if (!this._data.explosion) {
+      this.removeMe = true;
+      return;
+    }
+
+    if (this._data.explosionTick === false) {
+      this._data.explosionTick = this._gameTicker.getTicks();
+    }
+  };
+
   private _checkInArena = (): void => {
     if (this.removeMe) {
       return;
@@ -109,6 +138,23 @@ class Bullet implements BulletInstance {
   };
 
   reposition = (): void => {
+    if (this._data.explosionTick !== false) {
+      return;
+    }
+
+    if (this._data.tracksPlayer && this._data.turnRate) {
+      const desiredHeading = helpers.findHeading(
+        this._data,
+        this._player.getData()
+      );
+
+      this._data.heading = helpers.rotateTo(
+        desiredHeading,
+        this._data.heading,
+        this._data.turnRate
+      );
+    }
+
     const { heading, velocity } = this._data;
 
     this._data.posX += helpers.float(
@@ -135,6 +181,11 @@ class Bullet implements BulletInstance {
 
     context.fillStyle = color;
 
+    if (this._data.explosionTick !== false) {
+      this._renderExplosion(posX, posY);
+      return;
+    }
+
     if (
       this._data.shape === "sprite" &&
       this._data.sprite &&
@@ -143,11 +194,12 @@ class Bullet implements BulletInstance {
       const renderWidth = this._data.sprite.renderWidth ?? this._data.sprite.width;
       const renderHeight =
         this._data.sprite.renderHeight ?? this._data.sprite.height;
+      const frameX = this._getSpriteFrameX();
 
       this._gameArena.renderSprite(this._projectileSprite, {
         frameWidth: this._data.sprite.width,
         frameHeight: this._data.sprite.height,
-        frameX: 0,
+        frameX,
         frameY: 0,
         posX: posX - renderWidth / 2,
         posY: posY - renderHeight / 2,
@@ -172,6 +224,74 @@ class Bullet implements BulletInstance {
         }
       );
     }
+
+    if (userOptions.enableDebug && userOptions.debug.showHeadingVectors) {
+      drawDebugVectors(
+        context,
+        posX,
+        posY,
+        this._data.heading,
+        this._data.heading,
+        {
+          fillTurnArc: userOptions.debug.showSteeringArc,
+          length: Math.max(14, this._data.size * 2),
+        }
+      );
+    }
+  };
+
+  private _renderExplosion = (posX: number, posY: number): void => {
+    if (
+      !this._data.explosion ||
+      !this._explosionSprite ||
+      this._data.explosionTick === false
+    ) {
+      this.removeMe = true;
+      return;
+    }
+
+    const explosionTick = this._data.explosionTick;
+    const frameX = Math.floor(
+      (this._gameTicker.getTicks() - explosionTick) /
+        this._data.explosion.frameLimiter
+    );
+
+    if (frameX >= this._data.explosion.frames) {
+      this.removeMe = true;
+      return;
+    }
+
+    const renderWidth =
+      this._data.explosion.renderWidth ?? this._data.explosion.width;
+    const renderHeight =
+      this._data.explosion.renderHeight ?? this._data.explosion.height;
+
+    this._gameArena.renderSprite(this._explosionSprite, {
+      frameWidth: this._data.explosion.width,
+      frameHeight: this._data.explosion.height,
+      frameX,
+      frameY: 0,
+      posX: posX - renderWidth / 2,
+      posY: posY - renderHeight / 2,
+      renderHeight,
+      renderWidth,
+    });
+  };
+
+  private _getSpriteFrameX = (): number => {
+    const frames = this._data.sprite?.frames;
+
+    if (!frames) {
+      return 0;
+    }
+
+    if (this._data.sprite?.frameMode === "animation") {
+      return Math.floor(performance.now() / 120) % frames;
+    }
+
+    const heading = ((this._data.heading % 360) + 360) % 360;
+
+    return Math.round(((heading + 270) % 360) / (360 / frames)) % frames;
   };
 }
 

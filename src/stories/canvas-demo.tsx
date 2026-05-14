@@ -17,8 +17,27 @@ export const CanvasDemo = ({ draw, height = 360, width = 560 }: CanvasDemoProps)
       return;
     }
 
-    context.clearRect(0, 0, canvas.width, canvas.height);
-    draw(context, canvas);
+    let isMounted = true;
+    const render = (): void => {
+      if (!isMounted) {
+        return;
+      }
+
+      context.clearRect(0, 0, canvas.width, canvas.height);
+      draw(context, canvas);
+    };
+
+    const fontLoad = document.fonts?.load("16px theFont");
+
+    if (fontLoad) {
+      fontLoad.then(render, render);
+    } else {
+      render();
+    }
+
+    return () => {
+      isMounted = false;
+    };
   }, [draw]);
 
   return (

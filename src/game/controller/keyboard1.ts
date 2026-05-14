@@ -32,7 +32,20 @@ class Keyboard1 implements Controller {
 
         const bindings = userOptions.keyboardBindings;
 
-        if (bindings.left.includes(event.keyCode)) {
+        if (event.keyCode === 77) {
+          event.preventDefault();
+          this._setInputState("menu", true);
+          this._controllerInterface.openMainMenu?.();
+        } else if (event.keyCode === 187 || event.keyCode === 107) {
+          event.preventDefault();
+          this._controllerInterface.adjustUiZoom?.(1);
+        } else if (event.keyCode === 189 || event.keyCode === 109) {
+          event.preventDefault();
+          this._controllerInterface.adjustUiZoom?.(-1);
+        } else if (event.keyCode === 48 || event.keyCode === 96) {
+          event.preventDefault();
+          this._controllerInterface.resetUiZoom?.();
+        } else if (bindings.left.includes(event.keyCode)) {
           event.preventDefault();
           this._setInputState("left", true);
           if (this._controllerInterface.isMenuActive?.()) {
@@ -84,11 +97,8 @@ class Keyboard1 implements Controller {
         } else if (bindings.menu.includes(event.keyCode)) {
           event.preventDefault();
           this._setInputState("menu", true);
-          if (this._controllerInterface.openMenu) {
-            this._controllerInterface.openMenu();
-          } else {
-            this._controllerInterface.toggleMenu();
-          }
+          this._controllerInterface.goBack?.();
+          this._controllerInterface.openMenu?.();
         } else if (bindings.pause.includes(event.keyCode)) {
           event.preventDefault();
           this._setInputState("pause", true);

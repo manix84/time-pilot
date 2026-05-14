@@ -34,12 +34,16 @@ describe("menu definitions", () => {
     localStorage.clear();
     userOptions.setOption("enableDebug", false);
     userOptions.setDebugOption("invincible", true);
+    userOptions.setDebugOption("showHeadingVectors", false);
     userOptions.setDebugOption("showControlsOverlay", false);
     userOptions.setDebugOption("showHitboxes", true);
     userOptions.setDebugOption("showPlayerCoordinates", true);
+    userOptions.setDebugOption("showSteeringArc", false);
     userOptions.setOption("controllerType", "keyboard1");
     userOptions.setOption("language", "en");
+    userOptions.setOption("gameZoom", 100);
     userOptions.setOption("masterVolume", 10);
+    userOptions.setOption("uiZoom", 100);
     userOptions.setKeyboardBinding("up", [38, 87]);
   });
 
@@ -101,6 +105,33 @@ describe("menu definitions", () => {
       expect.any(Number),
       expect.objectContaining({ align: "left" })
     );
+    expect(arena.renderText).toHaveBeenCalledWith(
+      "Paused",
+      0,
+      -42,
+      expect.objectContaining({ align: "center" })
+    );
+  });
+
+  it("continues from the paused root menu on escape", () => {
+    const start = vi.fn();
+    const menus = new Menus(createArena(), { start });
+
+    menus.showStart({ startLabel: "Continue" });
+
+    expect(menus.captureKey(27)).toBe(true);
+    expect(start).toHaveBeenCalled();
+  });
+
+  it("keeps the non-game root menu open on escape", () => {
+    const start = vi.fn();
+    const menus = new Menus(createArena(), { start });
+
+    menus.showStart();
+
+    expect(menus.captureKey(27)).toBe(true);
+    expect(menus.isActive()).toBe(true);
+    expect(start).not.toHaveBeenCalled();
   });
 
   it("activates normal buttons from pointer press and release", () => {
@@ -142,8 +173,81 @@ describe("menu definitions", () => {
     menus.next();
     menus.next();
     menus.next();
+    menus.next();
+    menus.next();
     menus.adjust(1);
     expect(userOptions.controllerType).toBe("keyboard2");
+  });
+
+  it("adjusts UI and game zoom from the options menu", () => {
+    const arena = createArena();
+    const menus = new Menus(arena, { start: vi.fn() });
+    userOptions.setOption("uiZoom", 100);
+    userOptions.setOption("gameZoom", 100);
+
+    menus.showStart();
+    menus.next();
+    menus.activate();
+
+    for (let i = 0; i < 3; i++) {
+      menus.next();
+    }
+
+    menus.adjust(1);
+    expect(userOptions.uiZoom).toBe(105);
+
+    menus.next();
+    menus.adjust(-1);
+    expect(userOptions.gameZoom).toBe(95);
+
+    menus.render();
+
+    expect(arena.renderText).toHaveBeenCalledWith(
+      "105%",
+      expect.any(Number),
+      expect.any(Number),
+      expect.objectContaining({ align: "right" })
+    );
+    expect(arena.renderText).toHaveBeenCalledWith(
+      "95%",
+      expect.any(Number),
+      expect.any(Number),
+      expect.objectContaining({ align: "right" })
+    );
+  });
+
+  it("uses escape and backspace to return from submenus", () => {
+    const arena = createArena();
+    const menus = new Menus(arena, { start: vi.fn() });
+
+    menus.showStart();
+    menus.next();
+    menus.activate();
+
+    expect(menus.captureKey(8)).toBe(true);
+    menus.render();
+    expect(arena.renderText).toHaveBeenCalledWith(
+      "Start",
+      expect.any(Number),
+      expect.any(Number),
+      expect.objectContaining({ align: "left" })
+    );
+
+    menus.next();
+    menus.activate();
+    for (let i = 0; i < 5; i++) {
+      menus.next();
+    }
+    menus.activate();
+
+    expect(menus.captureKey(27)).toBe(true);
+    menus.render();
+    expect(arena.renderText).toHaveBeenCalledWith(
+      "Options",
+      expect.any(Number),
+      expect.any(Number),
+      expect.objectContaining({ align: "center" })
+    );
   });
 
   it("renders slider values with a clipped progress underlay", () => {
@@ -269,7 +373,7 @@ describe("menu definitions", () => {
 
     menus.activate();
 
-    for (let i = 0; i < 6; i++) {
+    for (let i = 0; i < 5; i++) {
       menus.next();
     }
 
@@ -279,14 +383,89 @@ describe("menu definitions", () => {
     const context = vi.mocked(arena.getContext).mock.results[0]
       .value as CanvasRenderingContext2D;
 
-    expect(context.scale).toHaveBeenCalledWith(0.344, 0.344);
+    expect(context.scale).toHaveBeenCalledWith(0.24767999999999998, 0.24767999999999998);
     expect(context.rect).toHaveBeenCalledWith(
-      -1093.0232558139535,
-      -250.00000000000006,
-      2186.046511627907,
-      500.0000000000001
+      -1518.0878552971576,
+      -237.22222222222223,
+      3036.175710594315,
+      584.4444444444445
     );
     expect(context.clip).toHaveBeenCalled();
+  });
+
+  it("clips overflowing zoomed menus below the header", () => {
+    const performanceNow = vi.spyOn(performance, "now").mockReturnValue(0);
+    const arena = createArena();
+    const menus = new Menus(arena, { start: vi.fn() });
+    userOptions.setOption("uiZoom", 250);
+
+    menus.showStart();
+    menus.next();
+    menus.activate();
+    performanceNow.mockReturnValue(600);
+    menus.render();
+    vi.mocked(arena.getContext).mockClear();
+    menus.render();
+
+    const context = vi.mocked(arena.getContext).mock.results[0]
+      .value as CanvasRenderingContext2D;
+
+    expect(context.scale).toHaveBeenCalledWith(2.5, 2.5);
+    expect(context.rect).toHaveBeenCalledWith(
+      expect.any(Number),
+      expect.closeTo(-0.4),
+      expect.any(Number),
+      expect.any(Number)
+    );
+    expect(context.fillRect).toHaveBeenCalledWith(
+      expect.any(Number),
+      expect.closeTo(-0.4),
+      2,
+      expect.any(Number)
+    );
+  });
+
+  it("scrolls overflowing zoomed menus with wheel input and scrollbar drag", () => {
+    const performanceNow = vi.spyOn(performance, "now").mockReturnValue(600);
+    const arena = createArena();
+    const menus = new Menus(arena, { start: vi.fn() });
+    userOptions.setOption("uiZoom", 250);
+    const getThumbY = (context: CanvasRenderingContext2D): number => {
+      const thumbCall = vi
+        .mocked(context.fillRect)
+        .mock.calls.find((call) => call[2] === 4);
+
+      return Number(thumbCall?.[1]);
+    };
+
+    menus.showStart();
+    menus.next();
+    menus.activate();
+    menus.render();
+
+    let context = vi.mocked(arena.getContext).mock.results[0]
+      .value as CanvasRenderingContext2D;
+    const initialThumbY = getThumbY(context);
+
+    vi.mocked(arena.getContext).mockClear();
+    menus.handlePointer({ deltaY: 120, posX: 0, posY: 0, type: "wheel" });
+    menus.render();
+
+    context = vi.mocked(arena.getContext).mock.results[0]
+      .value as CanvasRenderingContext2D;
+    const wheelThumbY = getThumbY(context);
+
+    expect(wheelThumbY).toBeGreaterThan(initialThumbY);
+
+    vi.mocked(arena.getContext).mockClear();
+    menus.handlePointer({ posX: 373, posY: wheelThumbY * 2.5, type: "press" });
+    menus.handlePointer({ posX: 373, posY: (wheelThumbY + 20) * 2.5, type: "drag" });
+    menus.render();
+
+    context = vi.mocked(arena.getContext).mock.results[0]
+      .value as CanvasRenderingContext2D;
+
+    expect(getThumbY(context)).toBeGreaterThan(wheelThumbY);
   });
 
   it("keeps pointer slider input aligned with scaled menus", () => {
@@ -305,7 +484,7 @@ describe("menu definitions", () => {
 
     const context = vi.mocked(arena.getContext).mock.results[0]
       .value as CanvasRenderingContext2D;
-    const scale = 272 / 828;
+    const scale = (272 / 828) * 0.72;
 
     expect(context.scale).toHaveBeenCalledWith(scale, scale);
 
@@ -341,7 +520,7 @@ describe("menu definitions", () => {
     expect(arena.renderText).toHaveBeenCalledWith(
       "Options",
       0,
-      -124,
+      expect.any(Number),
       expect.objectContaining({ align: "center" })
     );
 
@@ -351,11 +530,11 @@ describe("menu definitions", () => {
     expect(arena.renderText).toHaveBeenCalledWith(
       "Options",
       0,
-      -166,
+      -200,
       expect.objectContaining({ align: "center" })
     );
 
-    for (let i = 0; i < 6; i++) {
+    for (let i = 0; i < 8; i++) {
       menus.next();
     }
 
@@ -460,7 +639,24 @@ describe("menu definitions", () => {
       '"invincible":false'
     );
 
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i < 4; i++) {
+      menus.next();
+    }
+
+    menus.activate();
+    expect(userOptions.debug.showHeadingVectors).toBe(true);
+    expect(localStorage.getItem("timePilot.userOptions")).toContain(
+      '"showHeadingVectors":true'
+    );
+
+    menus.next();
+    menus.activate();
+    expect(userOptions.debug.showSteeringArc).toBe(true);
+    expect(localStorage.getItem("timePilot.userOptions")).toContain(
+      '"showSteeringArc":true'
+    );
+
+    for (let i = 0; i < 2; i++) {
       menus.next();
     }
 
@@ -481,8 +677,12 @@ describe("menu definitions", () => {
     const selectLevel = vi.fn((level: number) => {
       selectedLevel = level;
     });
+    const clearLevelPreview = vi.fn();
+    const previewLevel = vi.fn();
     const menus = new Menus(arena, {
+      clearLevelPreview,
       getLevel: () => selectedLevel,
+      previewLevel,
       selectLevel,
       start: vi.fn(),
     });
@@ -496,16 +696,25 @@ describe("menu definitions", () => {
     menus.next();
     menus.activate();
 
-    for (let i = 0; i < 4; i++) {
+    for (let i = 0; i < 6; i++) {
       menus.next();
     }
 
+    const now = vi.spyOn(performance, "now").mockReturnValue(0);
+
     menus.activate();
+    expect(previewLevel).toHaveBeenLastCalledWith(1);
+
+    menus.render();
+    now.mockReturnValue(140);
     menus.render();
 
     const contexts = vi
       .mocked(arena.getContext)
       .mock.results.map((result) => result.value as CanvasRenderingContext2D);
+    const drawImageCalls = contexts.flatMap((context) =>
+      vi.mocked(context.drawImage).mock.calls
+    );
 
     expect(arena.renderText).toHaveBeenCalledWith(
       "Select Level",
@@ -519,14 +728,40 @@ describe("menu definitions", () => {
       expect.any(Number),
       expect.objectContaining({ align: "left" })
     );
+    expect(arena.renderText).toHaveBeenCalledWith(
+      "The Dawn of Flight",
+      expect.any(Number),
+      expect.any(Number),
+      expect.objectContaining({ align: "left" })
+    );
+    expect(arena.renderText).toHaveBeenCalledWith(
+      "Bullet",
+      expect.any(Number),
+      expect.any(Number),
+      expect.objectContaining({ align: "center" })
+    );
+    expect(arena.renderText).toHaveBeenCalledWith(
+      "Bright open skies,",
+      expect.any(Number),
+      expect.any(Number),
+      expect.objectContaining({ align: "left" })
+    );
     expect(
       contexts.some((context) => vi.mocked(context.drawImage).mock.calls.length > 0)
     ).toBe(true);
     expect(
-      contexts.some((context) =>
-        vi.mocked(context.drawImage).mock.calls.some(
-          (call) => call[1] === 0 && call[2] === 0 && call[3] === 32 && call[4] === 32
-        )
+      drawImageCalls.some(
+        (call) => call[1] === 64 && call[2] === 0 && call[3] === 16 && call[4] === 16
+      )
+    ).toBe(true);
+    expect(
+      drawImageCalls.some(
+        (call) => call[1] === 64 && call[2] === 16 && call[3] === 16 && call[4] === 16
+      )
+    ).toBe(true);
+    expect(
+      drawImageCalls.some(
+        (call) => call[1] === 0 && call[2] === 16 && call[3] === 16 && call[4] === 16
       )
     ).toBe(true);
     expect(arena.renderText).not.toHaveBeenCalledWith(
@@ -537,9 +772,69 @@ describe("menu definitions", () => {
     );
 
     menus.next();
+    expect(previewLevel).toHaveBeenLastCalledWith(2);
+    expect(selectLevel).not.toHaveBeenCalled();
     menus.activate();
 
+    expect(clearLevelPreview).toHaveBeenCalled();
     expect(selectLevel).toHaveBeenCalledWith(2);
+  });
+
+  it("fades the level select menu backplate and restores it on escape", () => {
+    const arena = createArena();
+    const menus = new Menus(arena, {
+      getLevel: () => 1,
+      previewLevel: vi.fn(),
+      selectLevel: vi.fn(),
+      start: vi.fn(),
+    });
+    const now = vi.spyOn(performance, "now").mockReturnValue(0);
+
+    menus.showStart();
+    for (const keyCode of [38, 38, 40, 40, 37, 39, 37, 39, 66, 65]) {
+      menus.captureKey(keyCode);
+    }
+
+    menus.next();
+    menus.next();
+    menus.activate();
+    for (let i = 0; i < 6; i++) {
+      menus.next();
+    }
+    menus.activate();
+
+    vi.mocked(arena.getContext).mockClear();
+    now.mockReturnValue(3900);
+    menus.render();
+
+    const fadedContexts = vi
+      .mocked(arena.getContext)
+      .mock.results.map((result) => result.value as CanvasRenderingContext2D);
+
+    expect(
+      fadedContexts.some((context) =>
+        vi.mocked(context.fillRect).mock.calls.some(
+          (call) => call[0] === -400 && call[1] === -300 && call[2] === 800 && call[3] === 600
+        )
+      )
+    ).toBe(false);
+
+    vi.mocked(arena.getContext).mockClear();
+    now.mockReturnValue(3200);
+    menus.captureKey(27);
+    menus.render();
+
+    const restoredContexts = vi
+      .mocked(arena.getContext)
+      .mock.results.map((result) => result.value as CanvasRenderingContext2D);
+
+    expect(
+      restoredContexts.some((context) =>
+        vi.mocked(context.fillRect).mock.calls.some(
+          (call) => call[0] === -400 && call[1] === -300 && call[2] === 800 && call[3] === 600
+        )
+      )
+    ).toBe(true);
   });
 
   it("captures a replacement keyboard binding", () => {
@@ -549,7 +844,7 @@ describe("menu definitions", () => {
     menus.next();
     menus.activate();
 
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i < 7; i++) {
       menus.next();
     }
 
@@ -569,7 +864,7 @@ describe("menu definitions", () => {
     menus.next();
     menus.activate();
 
-    for (let i = 0; i < 3; i++) {
+    for (let i = 0; i < 5; i++) {
       menus.next();
     }
 
@@ -601,7 +896,7 @@ describe("menu definitions", () => {
     menus.next();
     menus.activate();
 
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i < 7; i++) {
       menus.next();
     }
 
