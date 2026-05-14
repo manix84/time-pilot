@@ -27,6 +27,7 @@ const createControls = (): ControllerInterfaceInstance => {
     rotateRight: vi.fn(),
     rotateLeft: vi.fn(),
     handlePointer: vi.fn(),
+    captureKey: vi.fn(() => false),
     goBack: vi.fn(),
     isMenuActive: vi.fn(() => false),
   };
@@ -162,6 +163,33 @@ describe("controller modules", () => {
     expect(controls.adjustUiZoom).toHaveBeenCalledWith(-1);
     expect(controls.resetUiZoom).toHaveBeenCalledTimes(2);
     expect(controls.rotateToHeading).not.toHaveBeenCalled();
+
+    keyboard.disconnect?.();
+  });
+
+  it("uses F to toggle fullscreen before gameplay or menu actions", () => {
+    const controls = createControls();
+    const inputState = createInputState();
+    const keyboard = new Keyboard1(controls, inputState);
+
+    document.documentElement.dispatchEvent(new KeyboardEvent("keydown", { keyCode: 70 }));
+
+    expect(controls.toggleFullScreen).toHaveBeenCalledTimes(1);
+    expect(controls.startShooting).not.toHaveBeenCalled();
+    expect(controls.openMenu).not.toHaveBeenCalled();
+
+    keyboard.disconnect?.();
+  });
+
+  it("keeps F fullscreen behavior in the alternate keyboard controller", () => {
+    const controls = createControls();
+    const inputState = createInputState();
+    const keyboard = new Keyboard2(controls, inputState);
+
+    document.documentElement.dispatchEvent(new KeyboardEvent("keydown", { keyCode: 70 }));
+
+    expect(controls.toggleFullScreen).toHaveBeenCalledTimes(1);
+    expect(controls.startShooting).not.toHaveBeenCalled();
 
     keyboard.disconnect?.();
   });
