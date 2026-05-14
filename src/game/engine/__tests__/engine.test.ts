@@ -71,6 +71,56 @@ describe("engine modules", () => {
     expect(callback).toHaveBeenLastCalledWith({ loaded: 2, remaining: 0 });
   });
 
+  it("toggles browser fullscreen using current document state", () => {
+    const host = document.createElement("div");
+    Object.defineProperty(host, "clientWidth", { value: 640 });
+    Object.defineProperty(host, "clientHeight", { value: 480 });
+
+    let fullscreenElement: Element | null = null;
+    Object.defineProperty(document, "fullscreenEnabled", {
+      configurable: true,
+      value: true,
+    });
+    Object.defineProperty(document, "fullscreenElement", {
+      configurable: true,
+      get: () => fullscreenElement,
+    });
+    Object.defineProperty(document, "exitFullscreen", {
+      configurable: true,
+      value: vi.fn(() => {
+        fullscreenElement = null;
+        document.dispatchEvent(new Event("fullscreenchange"));
+      }),
+    });
+
+    const arena = new GameArena(host);
+    const canvas = arena.getElement();
+    Object.defineProperty(canvas, "requestFullscreen", {
+      configurable: true,
+      value: vi.fn(() => {
+        fullscreenElement = canvas;
+        document.dispatchEvent(new Event("fullscreenchange"));
+      }),
+    });
+
+    arena.toggleFullScreen();
+
+    expect(canvas.requestFullscreen).toHaveBeenCalled();
+    expect(arena.isFullScreen()).toBe(true);
+
+    fullscreenElement = null;
+    document.dispatchEvent(new Event("fullscreenchange"));
+
+    expect(arena.isFullScreen()).toBe(false);
+
+    arena.toggleFullScreen();
+    expect(canvas.requestFullscreen).toHaveBeenCalledTimes(2);
+
+    arena.toggleFullScreen();
+    expect(document.exitFullscreen).toHaveBeenCalledTimes(1);
+    expect(arena.isFullScreen()).toBe(false);
+  });
+
   it("runs scheduled ticker callbacks and stop callbacks", async () => {
     const ticker = new Ticker();
     const scheduled = vi.fn();

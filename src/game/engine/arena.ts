@@ -22,6 +22,7 @@ type FullscreenCanvas = HTMLCanvasElement & {
 };
 type FullscreenDocument = Document & {
   cancelFullScreen?: () => void;
+  exitFullscreen?: () => void;
   fullscreenEnabled?: boolean;
   fullscreenElement?: Element | null;
   mozCancelFullScreen?: () => void;
@@ -157,7 +158,9 @@ class GameArena implements GameArenaInstance {
 
   exitFullScreen = (): void => {
     const doc = document as FullscreenDocument;
-    if (doc.cancelFullScreen) {
+    if (doc.exitFullscreen) {
+      doc.exitFullscreen();
+    } else if (doc.cancelFullScreen) {
       doc.cancelFullScreen();
     } else if (doc.mozCancelFullScreen) {
       doc.mozCancelFullScreen();
@@ -172,8 +175,7 @@ class GameArena implements GameArenaInstance {
     return Boolean(
       doc.fullscreenElement ||
         doc.webkitFullscreenElement ||
-        doc.mozFullScreenElement ||
-        this._isInFullScreen
+        doc.mozFullScreenElement
     );
   };
 
@@ -192,11 +194,21 @@ class GameArena implements GameArenaInstance {
   canToggleFullScreen = (): boolean => {
     const doc = document as FullscreenDocument;
     const element = this._canvas as FullscreenCanvas;
+    const canExitFullScreen = Boolean(
+      doc.exitFullscreen ||
+        doc.cancelFullScreen ||
+        doc.mozCancelFullScreen ||
+        doc.webkitCancelFullScreen
+    );
     const fullscreenEnabled =
       doc.fullscreenEnabled ??
       doc.webkitFullscreenEnabled ??
       doc.mozFullScreenEnabled ??
       true;
+
+    if (this.isFullScreen()) {
+      return !this.isFullScreenLocked() && canExitFullScreen;
+    }
 
     return (
       !this.isFullScreenLocked() &&
