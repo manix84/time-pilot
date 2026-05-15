@@ -515,7 +515,15 @@ describe("game systems", () => {
       true,
       0.5,
       true,
-      undefined,
+      expect.objectContaining({
+        frameLimiter: 4,
+        frames: 4,
+        height: 11,
+        sprite: expect.objectContaining({
+          src: "/sprites/enemies/projectiles/rocket_explosion.png",
+        }),
+        width: 11,
+      }),
       expect.objectContaining({
         src: "/sounds/enemies/basic/rocket_launch.wav",
       }),
@@ -556,7 +564,15 @@ describe("game systems", () => {
       true,
       1,
       true,
-      undefined,
+      expect.objectContaining({
+        frameLimiter: 4,
+        frames: 4,
+        height: 11,
+        sprite: expect.objectContaining({
+          src: "/sprites/enemies/projectiles/rocket_explosion.png",
+        }),
+        width: 11,
+      }),
       expect.objectContaining({
         src: "/sounds/enemies/basic/rocket_launch.wav",
       }),

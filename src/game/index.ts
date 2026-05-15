@@ -328,6 +328,7 @@ export class TimePilot {
       assetPath("sprites/enemies/projectiles/plasma.png"),
       assetPath("sprites/enemies/projectiles/plasma_explosion.png"),
       assetPath("sprites/enemies/projectiles/rocket.png"),
+      assetPath("sprites/enemies/projectiles/rocket_explosion.png"),
       assetPath("sprites/bonuses/parachute.png"),
       assetPath("sprites/props/asteroid1.png"),
       assetPath("sprites/props/asteroid2.png"),

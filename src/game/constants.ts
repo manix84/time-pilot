@@ -104,6 +104,16 @@ const bombProjectileExplosion = {
   frameLimiter: 4,
 };
 
+const rocketProjectileExplosion = {
+  sprite: {
+    src: assetPath("sprites/enemies/projectiles/rocket_explosion.png"),
+  },
+  width: 11,
+  height: 11,
+  frames: 4,
+  frameLimiter: 4,
+};
+
 const plasmaProjectileExplosion = {
   sprite: {
     src: assetPath("sprites/enemies/projectiles/plasma_explosion.png"),
@@ -831,6 +841,7 @@ const timePilotConstants: TimePilotConstants = {
             sprite: rocketProjectileSprite,
             sound: rocketLaunchSound,
             flightSound: rocketFlightSound,
+            explosion: rocketProjectileExplosion,
             explosionSound: rocketExplosionSound,
             tracksPlayer: true,
             turnRate: 0.5,
@@ -853,6 +864,7 @@ const timePilotConstants: TimePilotConstants = {
             sprite: rocketProjectileSprite,
             sound: rocketLaunchSound,
             flightSound: rocketFlightSound,
+            explosion: rocketProjectileExplosion,
             explosionSound: rocketExplosionSound,
             tracksPlayer: true,
             turnRate: 0.5,
@@ -898,6 +910,7 @@ const timePilotConstants: TimePilotConstants = {
             sprite: rocketProjectileSprite,
             sound: rocketLaunchSound,
             flightSound: rocketFlightSound,
+            explosion: rocketProjectileExplosion,
             explosionSound: rocketExplosionSound,
             tracksPlayer: true,
             turnRate: 1,
@@ -920,6 +933,7 @@ const timePilotConstants: TimePilotConstants = {
             sprite: rocketProjectileSprite,
             sound: rocketLaunchSound,
             flightSound: rocketFlightSound,
+            explosion: rocketProjectileExplosion,
             explosionSound: rocketExplosionSound,
             tracksPlayer: true,
             turnRate: 1,
