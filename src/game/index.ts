@@ -26,6 +26,7 @@ import type {
   CollisionSystemInstance,
   Controller,
   ControllerType,
+  ControlInputSource,
   GameDataStore,
   RenderingSystemInstance,
   SpawningSystemInstance,
@@ -54,6 +55,16 @@ const timeWarpDelayFrames = Math.max(
   Math.round((TIME_WARP_DELAY_MS / 1000) * gameFps)
 );
 const playerRotationStep = 360 / player.rotationFrameCount;
+
+export const getDefaultActiveController = (): ControlInputSource => {
+  const hasTouchPoints =
+    typeof navigator !== "undefined" && navigator.maxTouchPoints > 0;
+  const hasCoarsePointer =
+    typeof window !== "undefined" &&
+    window.matchMedia?.("(pointer: coarse)").matches === true;
+
+  return hasTouchPoints || hasCoarsePointer ? "touch" : "keyboard";
+};
 
 export interface TimePilotOptions {
   controllerType?: ControllerType;
@@ -172,7 +183,7 @@ export class TimePilot {
       restart: false,
       right: false,
       up: false,
-      activeController: "keyboard",
+      activeController: getDefaultActiveController(),
     };
     this.context._formations = {};
     this.context._levelProgress = this.createLevelProgress(1);

@@ -25,6 +25,10 @@ describe("TimePilot engine", () => {
     userOptions.setOption("gamepadEnabled", true);
     userOptions.setOption("language", "en");
     userOptions.setOption("uiZoom", 100);
+    Object.defineProperty(navigator, "maxTouchPoints", {
+      configurable: true,
+      value: 0,
+    });
     vi.restoreAllMocks();
   });
 
@@ -58,6 +62,28 @@ describe("TimePilot engine", () => {
     expect(userOptions.controllerType).toBe("keyboard2");
     expect(userOptions.gamepadEnabled).toBe(false);
     expect(requestAnimationFrameSpy).not.toHaveBeenCalled();
+
+    game.destroyGame();
+  });
+
+  it("defaults the active controls overlay to touch on touch devices", async () => {
+    Object.defineProperty(navigator, "maxTouchPoints", {
+      configurable: true,
+      value: 1,
+    });
+
+    const game = new TimePilot(host, { debug: true });
+    const pilot = game as unknown as {
+      context: {
+        _controlInputState: {
+          activeController: string;
+        };
+      };
+    };
+
+    await new Promise((resolve) => window.setTimeout(resolve, 5));
+
+    expect(pilot.context._controlInputState.activeController).toBe("touch");
 
     game.destroyGame();
   });
