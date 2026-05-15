@@ -166,6 +166,7 @@ const levelShowcaseFrameDuration = 260;
 const povPreviewFadeDuration = 250;
 const povPreviewFrameDuration = 180;
 const submenuHeaderTopGap = 34;
+const touchScrollDragThreshold = 8;
 const keyBindingRows: Array<{ binding: BindingAction; label: string }> = [
   { binding: "up", label: i18n.keys.up },
   { binding: "left", label: i18n.keys.left },
@@ -200,6 +201,10 @@ class Menus implements MenuSystemInstance {
   private _screenHistory: MenuScreen[] = [];
   private _pressedItemIndex: number | null = null;
   private _pressedItemDragged = false;
+  private _pressStartPointer: MenuPointerData | null = null;
+  private _touchScrollDrag:
+    | { lastY: number; pointerStartY: number; scrollStarted: boolean }
+    | null = null;
   private _scrollBarDrag: { pointerStartY: number; scrollStartY: number } | null = null;
   private _selectedIndex = 0;
   private _shouldRevealSelected = true;
@@ -235,6 +240,8 @@ class Menus implements MenuSystemInstance {
     this._screenHistory = [];
     this._pressedItemIndex = null;
     this._pressedItemDragged = false;
+    this._pressStartPointer = null;
+    this._touchScrollDrag = null;
     this._scrollBarDrag = null;
     this._selectedIndex = 0;
     this._shouldRevealSelected = true;
@@ -263,6 +270,8 @@ class Menus implements MenuSystemInstance {
     this._screenHistory = [];
     this._pressedItemIndex = null;
     this._pressedItemDragged = false;
+    this._pressStartPointer = null;
+    this._touchScrollDrag = null;
     this._scrollBarDrag = null;
     this._sliderDragIndex = null;
     this._selectedIndex = 0;
@@ -283,6 +292,8 @@ class Menus implements MenuSystemInstance {
     this._screenHistory = [];
     this._pressedItemIndex = null;
     this._pressedItemDragged = false;
+    this._pressStartPointer = null;
+    this._touchScrollDrag = null;
     this._scrollBarDrag = null;
     this._selectedIndex = 0;
     this._shouldRevealSelected = true;
@@ -303,6 +314,8 @@ class Menus implements MenuSystemInstance {
     this._bindingWarning = "";
     this._pressedItemIndex = null;
     this._pressedItemDragged = false;
+    this._pressStartPointer = null;
+    this._touchScrollDrag = null;
     this._scrollBarDrag = null;
     this._sliderDragIndex = null;
   };
@@ -396,6 +409,8 @@ class Menus implements MenuSystemInstance {
     this._bindingWarning = "";
     this._pressedItemIndex = null;
     this._pressedItemDragged = false;
+    this._pressStartPointer = null;
+    this._touchScrollDrag = null;
     this._scrollBarDrag = null;
     this._sliderDragIndex = null;
     this._scrollY = 0;
@@ -510,6 +525,18 @@ class Menus implements MenuSystemInstance {
       return;
     }
 
+    if (pointer.type === "press") {
+      this._pressStartPointer = menuPointer;
+      this._touchScrollDrag =
+        pointer.source === "touch"
+          ? {
+            lastY: menuPointer.posY,
+            pointerStartY: menuPointer.posY,
+            scrollStarted: false,
+          }
+          : null;
+    }
+
     if (pointer.type === "release") {
       const releasedItemIndex = this._items.findIndex((item) =>
         this._isInsideItem(menuPointer, item)
@@ -519,6 +546,8 @@ class Menus implements MenuSystemInstance {
       this._sliderDragIndex = null;
       this._scrollBarDrag = null;
       this._pressedItemIndex = null;
+      this._pressStartPointer = null;
+      this._touchScrollDrag = null;
       const wasDragged = this._pressedItemDragged;
       this._pressedItemDragged = false;
 
@@ -539,6 +568,12 @@ class Menus implements MenuSystemInstance {
       this._setScrollFromThumbDrag(menuPointer.posY);
       this._shouldRevealSelected = false;
       return;
+    }
+
+    if (pointer.type === "drag" && pointer.source === "touch") {
+      if (this._handleTouchScrollDrag(menuPointer)) {
+        return;
+      }
     }
 
     if (pointer.type === "drag" && this._sliderDragIndex !== null) {
@@ -2492,6 +2527,40 @@ class Menus implements MenuSystemInstance {
     this._scrollY = this._clampScrollY(this._scrollY - deltaY);
   };
 
+  private _handleTouchScrollDrag = (pointer: MenuPointerData): boolean => {
+    if (!this._touchScrollDrag || !this._isMenuScrollable()) {
+      return false;
+    }
+
+    if (!this._touchScrollDrag.scrollStarted) {
+      const startPointer = this._pressStartPointer;
+      const dragX = startPointer ? pointer.posX - startPointer.posX : 0;
+      const dragY = pointer.posY - this._touchScrollDrag.pointerStartY;
+
+      if (Math.abs(dragY) < touchScrollDragThreshold) {
+        return false;
+      }
+
+      if (Math.abs(dragX) > Math.abs(dragY)) {
+        return false;
+      }
+
+      this._touchScrollDrag.scrollStarted = true;
+      this._pressedItemDragged = true;
+      this._sliderDragIndex = null;
+    }
+
+    const pointerDeltaY = pointer.posY - this._touchScrollDrag.lastY;
+    this._touchScrollDrag.lastY = pointer.posY;
+
+    this._scrollBy(-pointerDeltaY);
+    this._shouldRevealSelected = false;
+    return true;
+  };
+
+  private _isMenuScrollable = (): boolean =>
+    this._getScrollThumbGeometry(this._getItemsViewport()) !== null;
+
   private _setScrollFromThumbDrag = (pointerY: number): void => {
     if (!this._scrollBarDrag) {
       return;
@@ -2758,6 +2827,8 @@ class Menus implements MenuSystemInstance {
     this._screenHistory = [];
     this._pressedItemIndex = null;
     this._pressedItemDragged = false;
+    this._pressStartPointer = null;
+    this._touchScrollDrag = null;
     this._scrollBarDrag = null;
     this._sliderDragIndex = null;
     this._selectedIndex = 0;
@@ -2784,6 +2855,8 @@ class Menus implements MenuSystemInstance {
     this._bindingWarning = "";
     this._pressedItemIndex = null;
     this._pressedItemDragged = false;
+    this._pressStartPointer = null;
+    this._touchScrollDrag = null;
     this._scrollBarDrag = null;
     this._sliderDragIndex = null;
     this._scrollY = 0;
@@ -2810,6 +2883,8 @@ class Menus implements MenuSystemInstance {
     this._bindingWarning = "";
     this._pressedItemIndex = null;
     this._pressedItemDragged = false;
+    this._pressStartPointer = null;
+    this._touchScrollDrag = null;
     this._scrollBarDrag = null;
     this._sliderDragIndex = null;
     this._scrollY = 0;

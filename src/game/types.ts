@@ -145,6 +145,7 @@ export interface Controller {
 
 export interface MenuPointerData extends Coordinates {
   deltaY?: number;
+  source?: "mouse" | "touch";
   type: "click" | "drag" | "move" | "press" | "release" | "wheel";
 }
 

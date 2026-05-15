@@ -82,6 +82,7 @@ class TouchController implements Controller {
     if (this._controllerInterface.isMenuActive?.()) {
       this._controllerInterface.handlePointer?.({
         ...point,
+        source: "touch",
         type: "press",
       });
       return;
@@ -112,6 +113,7 @@ class TouchController implements Controller {
     if (this._controllerInterface.isMenuActive?.()) {
       this._controllerInterface.handlePointer?.({
         ...point,
+        source: "touch",
         type: "drag",
       });
       return;
@@ -140,6 +142,7 @@ class TouchController implements Controller {
 
       this._controllerInterface.handlePointer?.({
         ...point,
+        source: "touch",
         type: "release",
       });
     }

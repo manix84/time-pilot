@@ -326,6 +326,18 @@ describe("menu definitions", () => {
     expect(start).toHaveBeenCalledTimes(1);
   });
 
+  it("keeps tiny touch drags as taps", () => {
+    const start = vi.fn();
+    const menus = new Menus(createArena(), { start });
+
+    menus.showStart();
+    menus.handlePointer({ posX: 0, posY: 0, source: "touch", type: "press" });
+    menus.handlePointer({ posX: 2, posY: 5, source: "touch", type: "drag" });
+    menus.handlePointer({ posX: 2, posY: 5, source: "touch", type: "release" });
+
+    expect(start).toHaveBeenCalledTimes(1);
+  });
+
   it("does not activate a pressed button when released outside it", () => {
     const start = vi.fn();
     const menus = new Menus(createArena(), { start });
@@ -832,6 +844,39 @@ describe("menu definitions", () => {
       .value as CanvasRenderingContext2D;
 
     expect(getThumbY(context)).toBeGreaterThan(wheelThumbY);
+  });
+
+  it("scrolls overflowing menus with touch drag gestures", () => {
+    const arena = createArena();
+    const menus = new Menus(arena, { start: vi.fn() });
+    userOptions.setOption("uiZoom", 250);
+    const getThumbY = (context: CanvasRenderingContext2D): number => {
+      const thumbCall = vi
+        .mocked(context.fillRect)
+        .mock.calls.find((call) => call[2] === 4);
+
+      return Number(thumbCall?.[1]);
+    };
+
+    menus.showStart();
+    menus.next();
+    menus.activate();
+    menus.render();
+
+    let context = vi.mocked(arena.getContext).mock.results[0]
+      .value as CanvasRenderingContext2D;
+    const initialThumbY = getThumbY(context);
+
+    vi.mocked(arena.getContext).mockClear();
+    menus.handlePointer({ posX: 0, posY: 0, source: "touch", type: "press" });
+    menus.handlePointer({ posX: 0, posY: -160, source: "touch", type: "drag" });
+    menus.handlePointer({ posX: 0, posY: -160, source: "touch", type: "release" });
+    menus.render();
+
+    context = vi.mocked(arena.getContext).mock.results[0]
+      .value as CanvasRenderingContext2D;
+
+    expect(getThumbY(context)).toBeGreaterThan(initialThumbY);
   });
 
   it("keeps pointer slider input aligned with scaled menus", () => {
