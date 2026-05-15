@@ -188,6 +188,7 @@ export class TimePilot {
     this.context._renderTicker.stop();
     this.context._renderTicker.clearSchedule();
     this.context._renderTicker.clearTicks();
+    this.renderingSystem.destroy?.();
 
     this.context._currentController.forEach((controller: Controller) => {
       if (typeof controller.disconnect === "function") {

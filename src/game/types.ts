@@ -438,6 +438,7 @@ export interface SpawningSystemInstance {
 
 export interface RenderingSystemInstance {
   renderFrame: () => void;
+  destroy?: () => void;
 }
 
 export interface MenuSystemCommands {

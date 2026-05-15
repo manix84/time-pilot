@@ -1,4 +1,5 @@
 import { assetPath } from "../asset-path";
+import AchievementNotifications from "../achievement-notifications";
 import { levels, player } from "../constants";
 import { getLevelIntroText } from "../i18n";
 import {
@@ -17,14 +18,22 @@ const playerRotationStep = 360 / player.rotationFrameCount;
 
 class RenderingSystem implements RenderingSystemInstance {
   private _context: GameDataStore;
+  private _achievementNotifications: AchievementNotifications;
   private _playerSprite = new Image();
   private _timeWarpSprite = new Image();
 
   constructor(context: GameDataStore) {
     this._context = context;
+    this._achievementNotifications = new AchievementNotifications(
+      context._gameArena
+    );
     this._playerSprite.src = player.sprite.src;
     this._timeWarpSprite.src = assetPath("sprites/player/timewarp.png");
   }
+
+  destroy = (): void => {
+    this._achievementNotifications.destroy();
+  };
 
   renderFrame = (): void => {
     this._context._gameArena.clear();
@@ -47,6 +56,7 @@ class RenderingSystem implements RenderingSystemInstance {
     this.renderLevelIntroText();
     this.renderDemoLevelFade();
     this._context._menus.render();
+    this._achievementNotifications.render();
   };
 
   private renderWorld = (): void => {
