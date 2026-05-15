@@ -10,9 +10,11 @@
 - 🧱 Feature-oriented source layout under `src/game`.
 - 🧪 Vitest coverage for engine helpers, controllers, menus, factories, the game host, and React integration.
 - 🎛️ In-app keyboard layout and gamepad configuration.
-- 🧭 Canvas-rendered start/options/debug menus with keyboard, gamepad, and mouse interaction.
+- 🧭 Canvas-rendered start/options/debug menus with keyboard, gamepad, mouse, and touch interaction.
 - 🔎 UI zoom and game POV zoom with automatic viewport scaling.
-- 📱 Installable PWA mode that launches straight into the game canvas in fullscreen display mode.
+- 📱 Installable offline PWA mode that launches straight into the game canvas in fullscreen display mode.
+- 🔁 Root-menu update flow that applies waiting PWA updates without interrupting play.
+- 📺 Optional CRT/VHS filter presets with custom sliders.
 - 🌍 Localized menus, level blurbs, and level showcase labels.
 - ✅ PR checks for tests, lint, and type checking.
 - 🚀 Automatic GitHub Pages deployment from `main`.
@@ -48,9 +50,16 @@ npm run preview
 ## 📱 Installable PWA
 
 The production build includes a web app manifest and service worker. Installed
-launches use the dedicated `/pwa/` endpoint, which renders only the game canvas. The manifest
-requests fullscreen display mode and landscape orientation so the app behaves
-like a dedicated game rather than a web page.
+launches use the dedicated `/pwa/` endpoint, which renders only the game canvas.
+The manifest requests fullscreen display mode and landscape orientation so the
+app behaves like a dedicated game rather than a web page.
+
+The service worker caches the app shell plus core game sprites, fonts, and
+sounds so the installed game can continue to run offline after it has been
+installed or loaded. When the browser is online, the app checks for a new
+service worker on load, reconnect, and tab focus. Updates wait in the
+background and are applied only from the non-playing root menu through the
+`Update` button, followed by the player time-warp animation and a reload.
 
 The showcase/landing page remains the default browser view.
 
@@ -71,7 +80,7 @@ The test suite covers:
 
 - Engine helpers, collision checks, object cloning, headings, and rotation math.
 - Canvas arena, ticker, and sound wrappers using browser API shims.
-- Keyboard and gamepad controller adapters.
+- Keyboard, gamepad, mouse, and touch controller adapters.
 - Menu definitions and state callbacks.
 - Game entities, factories, HUD wiring, and context-backed modules.
 - The `TimePilot` orchestrator and React `TimePilotGame` host component.
@@ -97,19 +106,24 @@ const { setContainerElement, pause, resume, restart, destroy } =
 
 React owns mounting and cleanup. The game engine owns simulation, rendering, input, and timing.
 
-`TimePilotGame` includes controller settings for:
+`TimePilotGame` includes controller settings and input handling for:
 
 - **Directional keyboard**: arrow keys or WASD point directly up, right, down, or left.
 - **Rotate keyboard**: left/right rotate the player around the current heading.
 - **Gamepad**: enables or disables browser Gamepad API polling.
+- **Touch**: steering is relative to where the thumb first touches the screen,
+  firing happens while touching, two-finger taps open the menu, three-finger
+  taps request restart, and pinch gestures adjust UI and game zoom together.
 
 The game also renders its start and options menus inside the canvas. Keyboard
 and gamepad commands move, adjust, and activate menu items through the same
-controller interface used for gameplay, while mouse input is limited to menu
-interaction. Options currently include volume levels, UI zoom, game POV zoom,
-language, controller style, and custom keyboard bindings. UI zoom can also be
-adjusted from the keyboard with `+`/`=` and `-`. Both zoom options default to
-100% and range from 25% to 250% in 5% steps.
+controller interface used for gameplay. Mouse and touch input support pointer
+selection, scroll wheel or drag scrolling on overflowing menus, and scrollbar
+dragging. Options currently include volume levels, fullscreen, controls overlay,
+UI zoom, game POV zoom, video filters, language, and custom keyboard bindings.
+UI zoom can also be adjusted from the keyboard with `+`/`=` and `-`, and reset
+with `0`. Both zoom options default to 100% and range from 25% to 250% in 5%
+steps.
 
 During play, `P` pauses the game and `Escape` opens the root menu with a
 `Paused` subtitle and a `Continue` action. Pressing `Escape` again from that
@@ -117,12 +131,28 @@ paused root menu resumes play, matching the Continue button. In submenus,
 `Escape`, `Backspace`, and the gamepad back button return to the previous menu.
 `M` and the gamepad menu button jump back to the root menu.
 
+The root menu can also enter a watchable gameplay demo. In demo view, the menu
+drops away, the logo animates to the submenu position, HUD elements remain
+visible, and any player input returns to the root menu. The demo player is not
+invincible: it can die, auto-continue, score points, dodge threats, shoot
+enemies/projectiles/bosses, and collect parachute bonuses.
+
+Game over now uses a canvas dialogue. If continues remain, the primary action
+is `Continue`; otherwise it becomes `Restart`. `Exit` returns to the root menu.
+
 When debug mode is unlocked, the level select menu includes translated era
 blurbs on the left, level buttons in the centre, and animated enemy, special,
 boss, and bonus previews on the right. Focusing a level also pins the background
 demo preview to that era until the level select screen is closed. Debug overlays
 can also show hitboxes, heading and steering vectors, and an optional turn-arc
 fill for intentional moving entities.
+
+Gameplay now includes score-based extra lives at 10,000 points and every
+50,000 points after, compact HUD life counts once they reach nine lives,
+continues, era-specific projectile tuning, homing rockets for levels 3 and 4,
+level 5 plasma shots, shootable rockets/bombs/plasma, refreshed cloud and
+asteroid props, and the six-second time-warp transition between eras. Entity
+sounds support spatial panning where the browser allows it.
 
 ## 🧭 Project Structure
 
@@ -139,7 +169,9 @@ src/
     controller/             Keyboard and gamepad input adapters
     engine/                 Canvas arena, ticker, sound, helpers
     menus/                  Menu definitions
+    systems/                Collision, spawning, and rendering systems
     ui-scale.ts             UI and game zoom helpers
+    time-warp.ts            Player time-warp sequence timing
     *.ts                    Entities, factories, HUD, options
   test/
     setup.ts                Vitest jsdom/browser API shims
@@ -155,7 +187,7 @@ The current design keeps React out of the game loop. This is deliberate.
 - Entities, factories, controllers, HUD, and engine wrappers are class-based modules.
 - Collision, spawning, and frame rendering live in dedicated systems under `src/game/systems`.
 - Entities and factories receive explicit context instead of reading a global singleton.
-- Simulation uses a fixed-step ticker at roughly 30fps for movement, spawning, collisions, cleanup, and player actions.
+- Simulation uses a fixed-step ticker at 50fps for movement, spawning, collisions, cleanup, and player actions.
 - Rendering uses a separate animation-frame ticker to paint the latest entity locations and orientations as often as the browser can display them.
 - Game rendering applies pixelated POV scaling separately from HUD and menu UI scaling.
 - Rendering stays canvas-based for predictable paint ordering and frame-by-frame control.
@@ -167,6 +199,7 @@ GitHub Actions are configured for:
 - **Run Tests** on pull requests to `main`.
 - **Run Lint** on pull requests to `main`.
 - **Run TypeCheck** on pull requests to `main`.
+- **Build** on pull requests to `main`.
 - **Deploy to GitHub Pages** on pushes to `main`.
 - **Release Current Version** on pushes to `main`.
 
@@ -193,9 +226,10 @@ npm run precommit:staged
 npm run version:bump
 ```
 
-`precommit:staged` temporarily hides unstaged work, type-checks staged
-TypeScript files from a staged snapshot, and lints only staged lintable files.
-Pull request checks still run the full project scans.
+`precommit:staged` checks a temporary checkout of the staged index. It
+type-checks staged TypeScript files from that staged snapshot and lints only
+staged lintable files, without stashing or inspecting unstaged work. Pull
+request checks still run full project scans.
 
 The version bump script inspects staged changes:
 

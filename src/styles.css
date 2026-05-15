@@ -14,6 +14,11 @@ html {
 }
 
 html,
+body {
+  scroll-padding-top: 1rem;
+}
+
+html,
 body,
 #root {
   margin: 0;
@@ -148,6 +153,48 @@ input {
   line-height: 1.65;
 }
 
+.hero-status {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  margin: 1.4rem 0 0;
+}
+
+.hero-status span {
+  border: 1px solid rgba(126, 219, 211, 0.36);
+  border-radius: 999px;
+  padding: 0.48rem 0.72rem;
+  background: rgba(2, 10, 18, 0.68);
+  color: #e9fcff;
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin: 1.25rem 0 0;
+}
+
+.hero-actions a {
+  border: 1px solid rgba(255, 212, 0, 0.55);
+  border-radius: 6px;
+  padding: 0.72rem 0.95rem;
+  color: #07110e;
+  background: #ffd45e;
+  font-size: 0.88rem;
+  font-weight: 900;
+  text-decoration: none;
+  text-transform: uppercase;
+}
+
+.hero-actions a + a {
+  border-color: rgba(126, 219, 211, 0.42);
+  color: #e8fbff;
+  background: rgba(7, 22, 32, 0.86);
+}
+
 .game-panel {
   min-width: 0;
   border: 1px solid rgba(126, 219, 211, 0.42);
@@ -157,6 +204,18 @@ input {
   box-shadow:
     0 24px 70px rgba(0, 0, 0, 0.5),
     0 0 0 1px rgba(255, 212, 0, 0.08) inset;
+}
+
+.game-panel-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  margin: 0 0 0.6rem;
+  color: #7edbd3;
+  font-size: 0.74rem;
+  font-weight: 900;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
 }
 
 .time-pilot-game {
@@ -452,10 +511,22 @@ input {
   background: #0b1724;
 }
 
+.features-band {
+  background:
+    linear-gradient(135deg, rgba(126, 219, 211, 0.1), transparent 42%),
+    #0a1018;
+}
+
 .goals-band {
   background:
     linear-gradient(135deg, rgba(255, 140, 0, 0.16), transparent 34%),
     #11131a;
+}
+
+.systems-band {
+  background:
+    linear-gradient(135deg, rgba(84, 193, 138, 0.14), transparent 38%),
+    #081410;
 }
 
 .progress-band {
@@ -495,6 +566,12 @@ input {
   gap: 1rem;
 }
 
+.feature-grid {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 0.85rem;
+}
+
 .info-card {
   min-height: 10rem;
   border: 1px solid rgba(126, 219, 211, 0.22);
@@ -503,15 +580,42 @@ input {
   background: rgba(5, 12, 22, 0.58);
 }
 
+.feature-tile {
+  grid-column: span 2;
+  min-height: 12rem;
+  border: 1px solid rgba(255, 212, 0, 0.2);
+  border-radius: 8px;
+  padding: 1rem;
+  background: rgba(5, 12, 22, 0.68);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.06) inset;
+}
+
+.feature-tile:nth-child(1),
+.feature-tile:nth-child(2) {
+  grid-column: span 3;
+}
+
 .info-card h3 {
   margin: 0;
   color: #ffd400;
   font-size: 1.08rem;
 }
 
+.feature-tile h3 {
+  margin: 0;
+  color: #ffcf4a;
+  font-size: 1.05rem;
+}
+
 .info-card p {
   margin: 0.75rem 0 0;
   color: #cfe0ed;
+  line-height: 1.55;
+}
+
+.feature-tile p {
+  margin: 0.7rem 0 0;
+  color: #d7e6f0;
   line-height: 1.55;
 }
 
@@ -545,6 +649,22 @@ input {
   color: #ffd400;
   font-size: 0.78rem;
   font-weight: 800;
+}
+
+.system-list {
+  display: grid;
+  gap: 0.85rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.system-list li {
+  border-left: 3px solid #7edbd3;
+  padding: 0.9rem 1rem;
+  background: rgba(255, 255, 255, 0.055);
+  color: #e9f3ff;
+  line-height: 1.55;
 }
 
 .progress-list {
@@ -583,8 +703,15 @@ input {
   }
 
   .info-grid,
+  .feature-grid,
   .progress-list {
     grid-template-columns: 1fr 1fr;
+  }
+
+  .feature-tile,
+  .feature-tile:nth-child(1),
+  .feature-tile:nth-child(2) {
+    grid-column: auto;
   }
 }
 
@@ -606,6 +733,7 @@ input {
   }
 
   .info-grid,
+  .feature-grid,
   .progress-list {
     grid-template-columns: 1fr;
   }

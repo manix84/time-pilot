@@ -17,21 +17,69 @@ const controlGroups = [
   {
     title: "Menus",
     details:
-      "Esc opens the start menu. Use keyboard, gamepad, or mouse to choose options.",
+      "Esc or M opens the root menu. Use keyboard, gamepad, mouse, or touch to choose options.",
+  },
+  {
+    title: "Touch",
+    details:
+      "Touch and drag from where your thumb lands to steer and fire. Pinch adjusts UI and game zoom together.",
+  },
+];
+
+const featureHighlights = [
+  {
+    title: "Offline PWA",
+    details:
+      "Install the canvas-only app, keep core sprites and sounds cached, and play when the network drops.",
+  },
+  {
+    title: "Safe updates",
+    details:
+      "New builds wait in the background and surface an Update button on the root menu instead of interrupting play.",
+  },
+  {
+    title: "Touch ready",
+    details:
+      "Thumb-relative steering, pinch zoom, touch menu scrolling, and multi-touch shortcuts keep phone play practical.",
+  },
+  {
+    title: "Arcade tuning",
+    details:
+      "Era-specific enemy speeds, rockets, bombs, plasma shots, specials, bosses, extra lives, and continues.",
+  },
+  {
+    title: "Visual options",
+    details:
+      "UI zoom, game POV zoom, fullscreen controls, and CRT/VHS-style filter presets with custom sliders.",
+  },
+  {
+    title: "Debug tools",
+    details:
+      "Level previews, hitboxes, vectors, steering arcs, sprite showcases, and Storybook views for hard-to-see systems.",
   },
 ];
 
 const goals = [
-  "Survive incoming waves while staying clear of collisions.",
-  "Destroy enemy ships before they crowd the playfield.",
-  "Collect bonus drops when they appear and keep flying as the pace builds.",
+  "Survive readable waves while staying clear of collisions, rockets, bombs, and plasma.",
+  "Destroy enemies, specials, projectiles, and bosses before they crowd the playfield.",
+  "Collect parachute bonuses, earn extra lives, and keep flying through each time warp.",
+];
+
+const systemUpdates = [
+  "50fps simulation with separate animation-frame rendering.",
+  "Spatial entity audio for bosses, rockets, bullets, bombs, and explosions.",
+  "Watch Demo mode with a mortal autopilot that scores, dodges, shoots, continues, and collects bonuses.",
+  "Staged-only local pre-commit checks with full-project pull request scans.",
 ];
 
 const progress = [
   "React + TypeScript host",
   "Canvas game loop",
-  "Start and options menus",
-  "Keyboard and gamepad input",
+  "Scrollable localized menus",
+  "Keyboard, gamepad, mouse, and touch input",
+  "Offline installable PWA",
+  "Manual update flow",
+  "CRT/VHS filter options",
   "Vitest coverage",
   "GitHub Pages deployment",
 ];
@@ -68,15 +116,31 @@ function App() {
             </h1>
             <p className={"hero-summary"}>
               A modern React + TypeScript port of a canvas arcade game, packaged
-              as a playable browser demo with typed engine modules, configurable
-              controls, and automated release checks.
+              as a playable browser demo and installable offline PWA with typed
+              engine modules, configurable controls, and automated release
+              checks.
             </p>
+            <div className={"hero-status"} aria-label={"Current build features"}>
+              <span>Offline PWA</span>
+              <span>Touch controls</span>
+              <span>Manual updates</span>
+              <span>CRT filters</span>
+            </div>
+            <div className={"hero-actions"}>
+              <a href={"#play"}>Play now</a>
+              <a href={"pwa/"}>Open app view</a>
+            </div>
           </div>
 
           <section
+            id={"play"}
             className={"game-panel"}
             aria-label={"Playable Time Pilot demo"}
           >
+            <div className={"game-panel-header"}>
+              <span>Live build</span>
+              <span>Canvas engine</span>
+            </div>
             <TimePilotGame />
           </section>
         </div>
@@ -90,10 +154,27 @@ function App() {
           </div>
           <p>
             Time Pilot is currently focused on the essentials: fast movement,
-            readable waves, canvas-rendered menus, and a codebase that is easy
-            to keep improving. The demo above is the project as it stands now,
-            not a mockup.
+            readable waves, canvas-rendered menus, touch-friendly controls, and
+            a codebase that is easy to keep improving. The demo above is the
+            project as it stands now, not a mockup.
           </p>
+        </div>
+      </section>
+
+      <section className={"showcase-band features-band"}>
+        <div className={"section-inner"}>
+          <div className={"section-heading"}>
+            <p className={"section-kicker"}>Current Build</p>
+            <h2>More than a browser embed.</h2>
+          </div>
+          <div className={"feature-grid"}>
+            {featureHighlights.map((feature) => (
+              <article className={"feature-tile"} key={feature.title}>
+                <h3>{feature.title}</h3>
+                <p>{feature.details}</p>
+              </article>
+            ))}
+          </div>
         </div>
       </section>
 
@@ -125,6 +206,20 @@ function App() {
               <li key={goal}>{goal}</li>
             ))}
           </ol>
+        </div>
+      </section>
+
+      <section className={"showcase-band systems-band"}>
+        <div className={"section-inner split-section"}>
+          <div>
+            <p className={"section-kicker"}>Under The Hood</p>
+            <h2>Small systems that keep the arcade loop readable.</h2>
+          </div>
+          <ul className={"system-list"}>
+            {systemUpdates.map((item) => (
+              <li key={item}>{item}</li>
+            ))}
+          </ul>
         </div>
       </section>
 
