@@ -86,6 +86,15 @@ describe("menu definitions", () => {
     expect(menus.isActive()).toBe(true);
     expect(context.transform).not.toHaveBeenCalled();
     expect(context.drawImage).toHaveBeenCalled();
+    expect(arena.renderText).toHaveBeenCalledWith(
+      expect.stringMatching(/^v\d+\.\d+\.\d+/),
+      388,
+      290,
+      expect.objectContaining({
+        align: "right",
+        valign: "bottom",
+      })
+    );
     expect(start).toHaveBeenCalled();
   });
 
