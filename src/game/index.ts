@@ -263,6 +263,7 @@ export class TimePilot {
         this.exitToRootMenu();
       },
       getContinues: () => this.context._player.getData("continues") ?? 0,
+      getAchievements: () => this.context._achievements?.getStatuses() ?? [],
       getLevel: () => this.selectedStartLevel,
       previewLevel: (level) => {
         this.previewDebugLevel(level);

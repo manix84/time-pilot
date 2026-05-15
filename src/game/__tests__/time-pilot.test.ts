@@ -357,7 +357,7 @@ describe("TimePilot engine", () => {
     await new Promise((resolve) => window.setTimeout(resolve, 5));
 
     pilot.context._menus.showStart();
-    for (let i = 0; i < 2; i++) {
+    for (let i = 0; i < 3; i++) {
       pilot.context._menus.next();
     }
     pilot.context._menus.activate();

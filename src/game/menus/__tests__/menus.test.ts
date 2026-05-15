@@ -162,6 +162,7 @@ describe("menu definitions", () => {
 
     menus.next();
     menus.next();
+    menus.next();
     menus.activate();
 
     expect(applyUpdate).toHaveBeenCalled();
@@ -188,6 +189,7 @@ describe("menu definitions", () => {
     );
 
     vi.mocked(arena.renderText).mockClear();
+    menus.next();
     menus.next();
     menus.next();
     menus.next();
@@ -245,6 +247,142 @@ describe("menu definitions", () => {
       expect.any(Number),
       expect.any(Number),
       expect.objectContaining({ align: "left" })
+    );
+  });
+
+  it("opens the achievements page from the root menu with icon frames and progress", () => {
+    const arena = createArena();
+    const icon = (name: string) => ({
+      frameWidth: 64,
+      frameHeight: 64,
+      lockedFrameX: 0,
+      unlockedFrameX: 1,
+      src: `/sprites/achievements/${name}`,
+    });
+    const menus = new Menus(arena, {
+      getAchievements: () => [
+        {
+          id: "last-chance",
+          name: "Last Chance",
+          description: "Reach a new era on your final life.",
+          icon: icon("achievement_lastChance.png"),
+          unlocked: true,
+        },
+        {
+          id: "quarter-master",
+          name: "Quarter Master",
+          description: "Use continues 25 times total.",
+          icon: icon("achievement_quarterMaster.png"),
+          progress: {
+            current: 7,
+            goal: 25,
+          },
+          progressGoal: 25,
+          unlocked: false,
+        },
+        {
+          id: "pilot-error",
+          name: "Pilot Error",
+          description: "Lose a life by flying directly into an enemy.",
+          icon: icon("achievement_pilotError.png"),
+          unlocked: false,
+        },
+      ],
+      start: vi.fn(),
+    });
+
+    menus.showStart();
+    menus.render();
+
+    const optionsY = vi
+      .mocked(arena.renderText)
+      .mock.calls.find((call) => call[0] === "Options")?.[2];
+    const achievementsY = vi
+      .mocked(arena.renderText)
+      .mock.calls.find((call) => call[0] === "Achievements")?.[2];
+
+    expect(optionsY).toBeLessThan(
+      typeof achievementsY === "number" ? achievementsY : Number.NaN
+    );
+
+    vi.mocked(arena.renderText).mockClear();
+    vi.mocked(arena.getContext).mockClear();
+    menus.next();
+    menus.next();
+    menus.activate();
+    menus.render();
+
+    expect(arena.renderText).toHaveBeenCalledWith(
+      "Achievements",
+      expect.any(Number),
+      expect.any(Number),
+      expect.objectContaining({ align: "center" })
+    );
+    expect(arena.renderText).toHaveBeenCalledWith(
+      "Quarter Master",
+      expect.any(Number),
+      expect.any(Number),
+      expect.objectContaining({ align: "left" })
+    );
+    expect(arena.renderText).toHaveBeenCalledWith(
+      "7/25",
+      expect.any(Number),
+      expect.any(Number),
+      expect.objectContaining({ align: "left" })
+    );
+
+    const fillRectCalls = vi
+      .mocked(arena.getContext)
+      .mock.results.flatMap((result) =>
+        vi.mocked((result.value as CanvasRenderingContext2D).fillRect).mock.calls
+      );
+
+    expect(fillRectCalls.length).toBeGreaterThan(0);
+  });
+
+  it("does not crash the achievements page while icon art is missing", () => {
+    const arena = createArena();
+    const menus = new Menus(arena, {
+      getAchievements: () => [
+        {
+          id: "last-chance",
+          name: "Last Chance",
+          description: "Reach a new era on your final life.",
+          icon: {
+            frameWidth: 64,
+            frameHeight: 64,
+            lockedFrameX: 0,
+            unlockedFrameX: 1,
+            src: "/sprites/achievements/not-created-yet.png",
+          },
+          unlocked: false,
+        },
+      ],
+      start: vi.fn(),
+    });
+
+    menus.showStart();
+    menus.next();
+    menus.next();
+    menus.activate();
+
+    expect(() => menus.render()).not.toThrow();
+
+    const strokeRectCalls = vi
+      .mocked(arena.getContext)
+      .mock.results.flatMap((result) =>
+        vi.mocked((result.value as CanvasRenderingContext2D).strokeRect).mock.calls
+      );
+
+    expect(strokeRectCalls).toEqual(
+      expect.arrayContaining([
+        expect.arrayContaining([
+          expect.any(Number),
+          expect.any(Number),
+          48,
+          48,
+        ]),
+      ])
     );
   });
 
@@ -1118,6 +1256,7 @@ describe("menu definitions", () => {
 
     menus.next();
     menus.next();
+    menus.next();
     menus.activate();
     menus.render();
 
@@ -1201,6 +1340,7 @@ describe("menu definitions", () => {
       menus.captureKey(keyCode);
     }
 
+    menus.next();
     menus.next();
     menus.next();
     menus.activate();
@@ -1311,6 +1451,7 @@ describe("menu definitions", () => {
       menus.captureKey(keyCode);
     }
 
+    menus.next();
     menus.next();
     menus.next();
     menus.activate();

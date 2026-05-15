@@ -109,6 +109,7 @@ import type {
   FilterSettings,
 } from "./filter-settings";
 import type AchievementSystem from "./achievements";
+import type { AchievementStatus } from "./achievements";
 export type GameLanguage = "de" | "en" | "es" | "fr" | "it" | "nl" | "ro";
 export type ControlInputName =
   | "down"
@@ -447,6 +448,7 @@ export interface MenuSystemCommands {
   continueGame?: () => void;
   exitToRoot?: () => void;
   getContinues?: () => number;
+  getAchievements?: () => AchievementStatus[];
   getLevel?: () => number;
   previewLevel?: (level: number) => void;
   restart?: () => void;

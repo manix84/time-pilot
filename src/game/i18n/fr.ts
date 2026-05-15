@@ -54,6 +54,7 @@ const fr: typeof en = {
     },
   },
   menu: {
+    achievements: "Achievements",
     alreadyAssignedTo: (binding: string) => `Deja assigne a ${binding}`,
     back: "Retour",
     cancel: "Annuler",

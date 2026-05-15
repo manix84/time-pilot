@@ -54,6 +54,7 @@ const de: typeof en = {
     },
   },
   menu: {
+    achievements: "Achievements",
     alreadyAssignedTo: (binding: string) => `Bereits ${binding} zugewiesen`,
     back: "Zurueck",
     cancel: "Abbrechen",

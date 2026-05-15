@@ -278,6 +278,13 @@ describe("AchievementSystem", () => {
     const restored = new AchievementSystem(context);
 
     expect(restored.hasUnlocked("quarter-master")).toBe(true);
+    expect(
+      restored.getStatuses().find((achievement) => achievement.id === "quarter-master")
+        ?.progress
+    ).toEqual({
+      current: 25,
+      goal: 25,
+    });
   });
 
   it("tracks clean missile-heavy waves", () => {

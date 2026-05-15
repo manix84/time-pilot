@@ -43,6 +43,15 @@ export interface AchievementDefinition {
     unlockedFrameX: number;
     src: string;
   };
+  progressGoal?: number;
+}
+
+export interface AchievementStatus extends AchievementDefinition {
+  progress?: {
+    current: number;
+    goal: number;
+  };
+  unlocked: boolean;
 }
 
 const achievementIcon = (fileName: string): AchievementDefinition["icon"] => ({
@@ -197,6 +206,7 @@ export const achievementDefinitions: AchievementDefinition[] = [
     name: "Quarter Master",
     description: "Use continues 25 times total.",
     icon: achievementIcon("achievement_quarterMaster.png"),
+    progressGoal: 25,
   },
 ];
 
@@ -320,6 +330,23 @@ class AchievementSystem {
   getUnlocked = (): AchievementId[] => [...this.unlocked];
 
   hasUnlocked = (id: AchievementId): boolean => this.unlocked.has(id);
+
+  getStatuses = (): AchievementStatus[] =>
+    achievementDefinitions.map((achievement) => {
+      const progress =
+        achievement.id === "quarter-master" && achievement.progressGoal
+          ? {
+            current: this.counters.continuesUsed,
+            goal: achievement.progressGoal,
+          }
+          : undefined;
+
+      return {
+        ...achievement,
+        progress,
+        unlocked: this.hasUnlocked(achievement.id),
+      };
+    });
 
   onRunStarted = (playerData: PlayerData): void => {
     const tick = this.getTicks();
