@@ -41,8 +41,42 @@ describe("engine modules", () => {
     arena.drawCircle(0, 0, 10, { borderColor: "#fff" });
 
     expect(host.querySelector("canvas")).toBeInstanceOf(HTMLCanvasElement);
+    expect(host.querySelector("canvas")?.tabIndex).toBe(0);
     expect(arena.width).toBe(640);
     expect(arena.height).toBe(480);
+  });
+
+  it("renders spaced text with expanded spacing and stroke alignment", () => {
+    const host = document.createElement("div");
+    Object.defineProperty(host, "clientWidth", { value: 640 });
+    Object.defineProperty(host, "clientHeight", { value: 480 });
+
+    const arena = new GameArena(host);
+    const context = arena.getContext() as CanvasRenderingContext2D;
+    const fillText = vi.spyOn(context, "fillText");
+    const strokeText = vi.spyOn(context, "strokeText");
+    const measureText = vi.fn(
+      (text) =>
+        ({
+          width: text === " " ? 4 : 10,
+        }) as TextMetrics
+    );
+    context.measureText = measureText;
+
+    arena.renderText("A B", 100, 20, {
+      align: "center",
+      stroke: "#123",
+      strokeWidth: 2,
+    });
+
+    expect(measureText).toHaveBeenCalledWith("A");
+    expect(measureText).toHaveBeenCalledWith(" ");
+    expect(measureText).toHaveBeenCalledWith("B");
+    expect(fillText).toHaveBeenCalledWith("A", 86, 20);
+    expect(fillText).toHaveBeenCalledWith("B", 104, 20);
+    expect(strokeText).toHaveBeenCalledWith("A", 86, 20);
+    expect(strokeText).toHaveBeenCalledWith("B", 104, 20);
+    expect(fillText).not.toHaveBeenCalledWith(" ", expect.any(Number), 20);
   });
 
   it("registers and preloads every asset", async () => {

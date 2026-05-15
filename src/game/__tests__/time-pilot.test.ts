@@ -301,7 +301,7 @@ describe("TimePilot engine", () => {
     pilot.continueDemoIfNeeded();
 
     expect(pilot.context._player.getData("lives")).toBe(3);
-    expect(pilot.context._player.getData("continues")).toBe(99);
+    expect(pilot.context._player.getData("continues")).toBe(Infinity);
     expect(pilot.context._player.getData("score")).toBe(1200);
     expect(pilot.context._player.getData("nextExtraLifeScore")).toBe(10000);
     expect(pilot.context._player.getData("isAlive")).toBe(true);

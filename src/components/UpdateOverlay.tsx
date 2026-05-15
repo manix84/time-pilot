@@ -17,11 +17,13 @@ type UpdateOverlayProps = {
 const gameFps = 50;
 const frameDurationMs = 1000 / gameFps;
 const playerRenderSize = 64;
+const statusTextOffsetY = 96;
 const warpRenderScale = 4;
 const playerRotationStep = 360 / player.rotationFrameCount;
 
 function UpdateOverlay({ onWarpComplete, state }: UpdateOverlayProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const statusLabel = state === "warping" ? "Complete" : "Updating...";
   const stateRef = useRef(state);
   const onWarpCompleteRef = useRef(onWarpComplete);
 
@@ -49,6 +51,7 @@ function UpdateOverlay({ onWarpComplete, state }: UpdateOverlayProps) {
 
     playerSprite.src = player.sprite.src;
     timeWarpSprite.src = assetPath("sprites/player/timewarp.png");
+    void document.fonts?.load("18px theFont");
 
     const resizeCanvas = (): void => {
       const deviceScale = window.devicePixelRatio || 1;
@@ -128,6 +131,23 @@ function UpdateOverlay({ onWarpComplete, state }: UpdateOverlayProps) {
       }
     };
 
+    const drawStatusText = (label: string): void => {
+      if (!context) {
+        return;
+      }
+
+      context.save();
+      context.font = "18px theFont";
+      context.textAlign = "center";
+      context.textBaseline = "middle";
+      context.lineWidth = 4;
+      context.strokeStyle = "#000";
+      context.fillStyle = "#FFF";
+      context.strokeText(label, 0, statusTextOffsetY);
+      context.fillText(label, 0, statusTextOffsetY);
+      context.restore();
+    };
+
     const render = (now: number): void => {
       if (!context) {
         return;
@@ -164,9 +184,11 @@ function UpdateOverlay({ onWarpComplete, state }: UpdateOverlayProps) {
         if (renderState) {
           drawPlayer(renderState.playerMode, 90);
         }
+        drawStatusText("Complete");
       } else {
         sequenceStartedAt = now;
         drawPlayer("normal", (now / 18) % 360);
+        drawStatusText("Updating...");
       }
 
       context.restore();
@@ -185,7 +207,8 @@ function UpdateOverlay({ onWarpComplete, state }: UpdateOverlayProps) {
 
   return (
     <div className={"time-pilot-update-overlay"} role={"status"} aria-live={"polite"}>
-      <canvas ref={canvasRef} />
+      <span className={"time-pilot-update-status-text"}>{statusLabel}</span>
+      <canvas aria-hidden={"true"} ref={canvasRef} />
     </div>
   );
 }

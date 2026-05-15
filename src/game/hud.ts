@@ -1,19 +1,31 @@
 /* Converted from TimePilot.Hud.js (AMD) to ESM TypeScript. */
-import { player } from "./constants";
+import { levels, player } from "./constants";
 import i18n from "./i18n";
 import palette from "./palette";
 import { getUiScale } from "./ui-scale";
 import userOptions from "./user-options";
 import type {
   ControlInputState,
+  EnemyConfig,
   GameArenaInstance,
   GameDataStore,
   HudInstance,
   SpriteImage,
 } from "./types";
 
+const bossProgressSlots = 10;
+const bossProgressWidth = 300;
+const bossProgressHeight = 34;
+const bossProgressPadding = 3;
+const bossProgressEdgeInset = 6;
+const bossProgressBottomInset = 4;
+const bossProgressFrameDuration = 140;
+const bossProgressEnemyScale = 0.5;
+const directionalEnemyVisibleHeight = 8;
+
 class Hud implements HudInstance {
   private _context: GameDataStore;
+  private _enemySprites: Partial<Record<number, SpriteImage>> = {};
   private _gameArena: GameArenaInstance;
   private _playerSprite: SpriteImage;
 
@@ -66,8 +78,203 @@ class Hud implements HudInstance {
     }
 
     this.renderLives(playerData.lives, uiWidth, uiHeight);
+    this.renderCredits(playerData.continues, uiWidth, uiHeight);
+    this.renderBossProgress(uiWidth, uiHeight);
 
     context.restore();
+  };
+
+  private renderCredits = (
+    continues: number,
+    uiWidth: number,
+    uiHeight: number
+  ): void => {
+    this._gameArena.renderText(
+      `${i18n.hud.credits} ${this.formatCredits(continues)}`,
+      uiWidth / 2 - bossProgressEdgeInset,
+      uiHeight / 2 - bossProgressBottomInset - bossProgressHeight / 2,
+      {
+        size: 14,
+        align: "right",
+        valign: "middle",
+        color: palette.text.white,
+      }
+    );
+  };
+
+  private formatCredits = (continues: number): string => {
+    if (!Number.isFinite(continues) || continues < 0) {
+      return "∞";
+    }
+
+    return `${Math.max(0, Math.min(99, Math.floor(continues)))}`.padStart(
+      2,
+      "0"
+    );
+  };
+
+  private renderBossProgress = (uiWidth: number, uiHeight: number): void => {
+    const levelConfig = levels[this._context._level];
+
+    if (!levelConfig) {
+      return;
+    }
+
+    const progress = this._context._levelProgress;
+    const threshold = progress.bossKillThreshold;
+
+    if (threshold <= 0 || progress.bossSpawned || progress.bossDefeated) {
+      return;
+    }
+
+    const context = this._gameArena.getContext() as CanvasRenderingContext2D;
+    const x = -(uiWidth / 2) + bossProgressEdgeInset;
+    const y = uiHeight / 2 - bossProgressBottomInset - bossProgressHeight;
+    const progressRatio = Math.max(
+      0,
+      Math.min(1, progress.standardEnemyKills / threshold)
+    );
+    const filledSlots = Math.floor(progressRatio * bossProgressSlots);
+    const partialSlotProgress = progressRatio * bossProgressSlots - filledSlots;
+
+    context.save();
+    for (let slot = 0; slot < bossProgressSlots; slot++) {
+      this.renderBossProgressEnemy(levelConfig.enemies.basic, slot, x, y, 0.18);
+    }
+
+    const fillWidth =
+      ((filledSlots + partialSlotProgress) / bossProgressSlots) *
+      bossProgressWidth;
+
+    if (fillWidth > 0) {
+      context.save();
+      context.beginPath();
+      context.rect(x, y, fillWidth, bossProgressHeight);
+      context.clip();
+      for (let slot = 0; slot < bossProgressSlots; slot++) {
+        this.renderBossProgressEnemy(levelConfig.enemies.basic, slot, x, y, 1);
+      }
+      context.restore();
+    }
+
+    context.restore();
+  };
+
+  private renderBossProgressEnemy = (
+    enemyConfig: EnemyConfig,
+    slot: number,
+    barX: number,
+    barY: number,
+    alpha: number
+  ): void => {
+    const context = this._gameArena.getContext() as CanvasRenderingContext2D;
+    const sprite = this.getEnemySprite(this._context._level);
+    const slotWidth =
+      (bossProgressWidth - bossProgressPadding * 2) / bossProgressSlots;
+    const renderHeight =
+      Math.min(28, bossProgressHeight - bossProgressPadding * 2) *
+      bossProgressEnemyScale;
+    const frame = this.getRightFacingEnemyFrame(enemyConfig);
+    const sourceHeight = this.getBossProgressSourceHeight(enemyConfig);
+    const sourceX = frame.x * enemyConfig.width;
+    const sourceY =
+      frame.y * enemyConfig.height + (enemyConfig.height - sourceHeight) / 2;
+    const renderWidth = renderHeight * (enemyConfig.width / sourceHeight);
+    const posX =
+      barX + bossProgressPadding + slot * slotWidth + (slotWidth - renderWidth) / 2;
+    const posY = barY + (bossProgressHeight - renderHeight) / 2;
+
+    context.save();
+    context.globalAlpha *= alpha;
+    context.imageSmoothingEnabled = false;
+    context.drawImage(
+      sprite,
+      sourceX,
+      sourceY,
+      enemyConfig.width,
+      sourceHeight,
+      posX,
+      posY,
+      renderWidth,
+      renderHeight
+    );
+    context.restore();
+  };
+
+  private getBossProgressSourceHeight = (enemyConfig: EnemyConfig): number => {
+    if (
+      enemyConfig.canRotate ||
+      enemyConfig.horizontalDirectionFrames ||
+      enemyConfig.animationRows
+    ) {
+      return Math.min(directionalEnemyVisibleHeight, enemyConfig.height);
+    }
+
+    return enemyConfig.height;
+  };
+
+  private getRightFacingEnemyFrame = (
+    enemyConfig: EnemyConfig
+  ): { x: number; y: number } => {
+    const tick = Math.floor(performance.now() / bossProgressFrameDuration);
+
+    if (enemyConfig.damageFrames) {
+      return {
+        x: 0,
+        y: tick % (enemyConfig.animationRows ?? 1),
+      };
+    }
+
+    if (enemyConfig.animationRows && enemyConfig.horizontalDirectionFrames) {
+      return {
+        x: 0,
+        y: tick % enemyConfig.animationRows,
+      };
+    }
+
+    if (enemyConfig.animationRows) {
+      return {
+        x: enemyConfig.canRotate
+          ? this.getDirectionalFrameForHeading(enemyConfig, 90)
+          : tick % (enemyConfig.animationFrames ?? 1),
+        y: tick % enemyConfig.animationRows,
+      };
+    }
+
+    if (enemyConfig.animationFrames && !enemyConfig.canRotate) {
+      return {
+        x: tick % enemyConfig.animationFrames,
+        y: 0,
+      };
+    }
+
+    if (enemyConfig.canRotate) {
+      return {
+        x: this.getDirectionalFrameForHeading(enemyConfig, 90),
+        y: 0,
+      };
+    }
+
+    return { x: 0, y: 0 };
+  };
+
+  private getDirectionalFrameForHeading = (
+    enemyConfig: EnemyConfig,
+    heading: number
+  ): number =>
+    Math.floor(
+      ((heading + (enemyConfig.headingFrameOffset ?? 0) + 360) % 360) / 22.5
+    );
+
+  private getEnemySprite = (level: number): SpriteImage => {
+    if (this._enemySprites[level]) {
+      return this._enemySprites[level];
+    }
+
+    const sprite = new Image() as SpriteImage;
+    sprite.src = levels[level].enemies.basic.sprite.src;
+    this._enemySprites[level] = sprite;
+    return sprite;
   };
 
   private renderLives = (lives: number, uiWidth: number, uiHeight: number): void => {

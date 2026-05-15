@@ -60,7 +60,7 @@ const timeWarpDelayFrames = Math.max(
   Math.round((TIME_WARP_DELAY_MS / 1000) * gameFps)
 );
 const continueLives = 3;
-const demoContinues = 99;
+const demoContinues = Infinity;
 const demoAttackRadius = 520;
 const demoAttackStrength = 1.7;
 const demoBonusTargetPriority = 1.8;
@@ -623,6 +623,8 @@ export class TimePilot {
       this.startDemoMode();
     }
 
+    this.context._demoFadeStartedAtTick = 0;
+    this.context._demoFadeUntilTick = 0;
     this.context._player.stopShooting();
   };
 

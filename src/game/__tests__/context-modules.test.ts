@@ -134,6 +134,13 @@ const createContext = (): GameDataStore => {
   return context;
 };
 
+const getHudLifeIconCalls = (context: GameDataStore) =>
+  vi
+    .mocked(context._gameArena.renderSprite)
+    .mock.calls.filter(([sprite]) =>
+      (sprite as HTMLImageElement).src.includes("/sprites/player/player.png")
+    );
+
 describe("context-backed game modules", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -493,7 +500,7 @@ describe("context-backed game modules", () => {
     context._player.setData("lives", 9);
     context._hud.render();
 
-    expect(context._gameArena.renderSprite).toHaveBeenCalledTimes(1);
+    expect(getHudLifeIconCalls(context)).toHaveLength(1);
     expect(context._gameArena.renderText).toHaveBeenCalledWith(
       "9 x",
       expect.any(Number),
@@ -508,7 +515,7 @@ describe("context-backed game modules", () => {
     context._player.setData("lives", 8);
     context._hud.render();
 
-    expect(context._gameArena.renderSprite).toHaveBeenCalledTimes(8);
+    expect(getHudLifeIconCalls(context)).toHaveLength(8);
     expect(context._gameArena.renderText).not.toHaveBeenCalledWith(
       "8 x",
       expect.any(Number),
@@ -534,7 +541,7 @@ describe("context-backed game modules", () => {
 
     context._hud.render();
 
-    expect(context._gameArena.renderSprite).toHaveBeenCalledTimes(3);
+    expect(getHudLifeIconCalls(context)).toHaveLength(3);
     expect(context._gameArena.renderSprite).toHaveBeenCalledWith(
       expect.any(HTMLImageElement),
       expect.objectContaining({
@@ -563,6 +570,84 @@ describe("context-backed game modules", () => {
       expect.any(Number),
       expect.any(Object)
     );
+  });
+
+  it("renders remaining credits in the mirrored bottom HUD position", () => {
+    const context = createContext();
+
+    context._player.setData("continues", 1);
+    context._hud.render();
+
+    expect(context._gameArena.renderText).toHaveBeenCalledWith(
+      "Credits 01",
+      394,
+      279,
+      expect.objectContaining({
+        align: "right",
+        valign: "middle",
+      })
+    );
+  });
+
+  it("localizes the HUD credits label", () => {
+    const context = createContext();
+    userOptions.setOption("language", "es");
+
+    context._player.setData("continues", Infinity);
+    context._hud.render();
+
+    expect(context._gameArena.renderText).toHaveBeenCalledWith(
+      "Creditos ∞",
+      394,
+      279,
+      expect.objectContaining({ align: "right" })
+    );
+  });
+
+  it("renders boss progress ships clipped to the current kill progress", () => {
+    const context = createContext();
+    const canvasContext = context._gameArena.getContext() as CanvasRenderingContext2D;
+    const drawImage = vi.spyOn(canvasContext, "drawImage");
+    const rect = vi.spyOn(canvasContext, "rect");
+
+    context._levelProgress.standardEnemyKills = 28;
+    context._hud.render();
+
+    expect(drawImage).toHaveBeenCalledTimes(20);
+    expect(rect).toHaveBeenCalledWith(-394, 262, 150, 34);
+  });
+
+  it("fills boss progress at the threshold and hides it once the boss is spawned", () => {
+    const context = createContext();
+    const canvasContext = context._gameArena.getContext() as CanvasRenderingContext2D;
+    const drawImage = vi.spyOn(canvasContext, "drawImage");
+    const rect = vi.spyOn(canvasContext, "rect");
+
+    context._levelProgress.standardEnemyKills = 56;
+    context._hud.render();
+
+    expect(drawImage).toHaveBeenCalledTimes(20);
+    expect(rect).toHaveBeenCalledWith(-394, 262, 300, 34);
+
+    drawImage.mockClear();
+    rect.mockClear();
+    context._levelProgress.bossSpawned = true;
+    context._hud.render();
+
+    expect(drawImage).not.toHaveBeenCalled();
+    expect(rect).not.toHaveBeenCalledWith(-394, 262, expect.any(Number), 34);
+  });
+
+  it("hides boss progress after the boss is defeated", () => {
+    const context = createContext();
+    const canvasContext = context._gameArena.getContext() as CanvasRenderingContext2D;
+    const drawImage = vi.spyOn(canvasContext, "drawImage");
+
+    context._levelProgress.standardEnemyKills = 56;
+    context._levelProgress.bossDefeated = true;
+    context._hud.render();
+
+    expect(drawImage).not.toHaveBeenCalled();
   });
 
   it("creates, exposes, renders, and clears enemies, props, and bonuses", () => {
