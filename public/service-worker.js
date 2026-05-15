@@ -1,9 +1,11 @@
-const CACHE_NAME = "time-pilot-v4";
+const CACHE_NAME = "time-pilot-v5";
 const APP_SHELL = [
   "./",
   "./index.html",
   "./pwa/",
   "./pwa/index.html",
+  "./assets/app.css",
+  "./assets/main.js",
   "./manifest.webmanifest",
   "./pwa-icon-512.png",
   "./pwa-icon.svg",
@@ -126,6 +128,41 @@ const networkFirst = async (request) => {
   }
 };
 
+const getLegacyEntryAssetFallback = async (request) => {
+  const url = new URL(request.url);
+  const fallbackPath = url.pathname.endsWith(".css")
+    ? "./assets/app.css"
+    : url.pathname.endsWith(".js")
+      ? "./assets/main.js"
+      : "";
+
+  if (!fallbackPath || !/\/assets\/main-[^/]+\.(css|js)$/.test(url.pathname)) {
+    return undefined;
+  }
+
+  const cachedResponse = await caches.match(fallbackPath);
+
+  if (cachedResponse) {
+    return cachedResponse;
+  }
+
+  try {
+    return await fetch(fallbackPath);
+  } catch {
+    return undefined;
+  }
+};
+
+const networkFirstEntryAsset = async (request) => {
+  const response = await networkFirst(request);
+
+  if (response.ok) {
+    return response;
+  }
+
+  return (await getLegacyEntryAssetFallback(request)) ?? response;
+};
+
 const getNavigationFallback = async (request) => {
   const url = new URL(request.url);
   const fallbackPath = url.pathname.includes("/pwa/")
@@ -167,6 +204,11 @@ self.addEventListener("fetch", (event) => {
         throw new Error(`No offline page available for ${event.request.url}`);
       })
     );
+    return;
+  }
+
+  if (["script", "style"].includes(event.request.destination)) {
+    event.respondWith(networkFirstEntryAsset(event.request));
     return;
   }
 

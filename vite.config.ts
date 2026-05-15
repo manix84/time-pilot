@@ -24,6 +24,14 @@ export default defineConfig({
         main: path.resolve(dirname, "index.html"),
         pwa: path.resolve(dirname, "pwa/index.html"),
       },
+      output: {
+        assetFileNames: (assetInfo) =>
+          assetInfo.names.some((name) => name.endsWith(".css"))
+            ? "assets/app.css"
+            : "assets/[name][extname]",
+        chunkFileNames: "assets/[name].js",
+        entryFileNames: "assets/app.js",
+      },
     },
   },
   server: {
