@@ -976,8 +976,6 @@ class Menus implements MenuSystemInstance {
         onAdjust: (direction) => this._adjustFilterMode(direction),
       }),
       this._createItem(i18n.menu.customCrtOptions, "action", -12, {
-        getValue: () =>
-          userOptions.videoFilterMode === "custom" ? i18n.menu.on : i18n.menu.off,
         action: () => this._goToScreen("filter-custom"),
       }),
       this._createItem(i18n.menu.resetFilters, "action", 30, {
@@ -993,9 +991,12 @@ class Menus implements MenuSystemInstance {
     const items = filterSettingKeys.map((key, index) =>
       this._createItem(filterSettingLabels[key], "slider", -54 + index * 42, {
         description: filterSettingDescriptions[key],
-        getValue: () => `${userOptions.filterSettings[key]}`,
+        getValue: () => `${this._getEditableFilterSettings()[key]}`,
         onAdjust: (direction) =>
-          this._setFilterSetting(key, userOptions.filterSettings[key] + direction),
+          this._setFilterSetting(
+            key,
+            this._getEditableFilterSettings()[key] + direction
+          ),
         onSetValue: (value) => this._setFilterSetting(key, value),
         sliderSteps: 100,
       })
@@ -2841,7 +2842,21 @@ class Menus implements MenuSystemInstance {
     key: keyof typeof userOptions.filterSettings,
     value: number
   ): void => {
-    userOptions.setFilterSetting(key, normalizeFilterIntensity(value));
+    const filterSettings = {
+      ...this._getEditableFilterSettings(),
+      [key]: normalizeFilterIntensity(value),
+    };
+
+    userOptions.setOption("filterSettings", filterSettings);
+    userOptions.setOption("videoFilterMode", "custom");
+  };
+
+  private _getEditableFilterSettings = (): typeof userOptions.filterSettings => {
+    if (userOptions.videoFilterMode === "custom") {
+      return userOptions.filterSettings;
+    }
+
+    return filterPresets[userOptions.videoFilterMode] ?? filterPresets.off;
   };
 
   private _setDebugLives = (lives: number): void => {

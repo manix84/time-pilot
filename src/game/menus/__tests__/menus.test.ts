@@ -507,6 +507,39 @@ describe("menu definitions", () => {
     expect(userOptions.filterSettings.scanlines).toBe(0);
   });
 
+  it("uses the active filter preset as the custom filter edit baseline", () => {
+    const arena = createArena();
+    const menus = new Menus(arena, { start: vi.fn() });
+    userOptions.setOption("videoFilterMode", "arcade-crt");
+    userOptions.setOption("filterSettings", { ...filterPresets.off });
+
+    menus.showStart();
+    menus.next();
+    menus.activate();
+
+    for (let i = 0; i < 5; i++) {
+      menus.next();
+    }
+
+    menus.activate();
+    menus.next();
+    menus.activate();
+    menus.render();
+
+    expect(arena.renderText).toHaveBeenCalledWith(
+      "35",
+      expect.any(Number),
+      expect.any(Number),
+      expect.objectContaining({ align: "right" })
+    );
+
+    menus.adjust(1);
+
+    expect(userOptions.videoFilterMode).toBe("custom");
+    expect(userOptions.filterSettings.scanlines).toBe(36);
+    expect(userOptions.filterSettings.crtMask).toBe(filterPresets["arcade-crt"].crtMask);
+  });
+
   it("adjusts UI and game zoom from the options menu", () => {
     const arena = createArena();
     const menus = new Menus(arena, { start: vi.fn() });
