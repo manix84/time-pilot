@@ -175,6 +175,7 @@ const keyBindingRows: Array<{ binding: BindingAction; label: string }> = [
   { binding: "fire", label: i18n.menu.fire },
 ];
 const konamiCode = [38, 38, 40, 40, 37, 39, 37, 39, 66, 65];
+const touchKonamiSwipeThreshold = 36;
 
 class Menus implements MenuSystemInstance {
   private _active = false;
@@ -484,7 +485,7 @@ class Menus implements MenuSystemInstance {
     }
 
     if (!this._awaitingBinding) {
-      this._captureKonamiKey(keyCode);
+      this._captureKonamiInput(keyCode);
       return false;
     }
 
@@ -518,6 +519,20 @@ class Menus implements MenuSystemInstance {
     this._resetLevelMenuIdleState();
 
     const menuPointer = this._getScaledPointer(pointer);
+
+    if (
+      pointer.type === "release" &&
+      pointer.source === "touch" &&
+      this._captureTouchKonamiInput(menuPointer)
+    ) {
+      this._sliderDragIndex = null;
+      this._scrollBarDrag = null;
+      this._pressedItemIndex = null;
+      this._pressStartPointer = null;
+      this._touchScrollDrag = null;
+      this._pressedItemDragged = false;
+      return;
+    }
 
     if (pointer.type === "wheel") {
       this._scrollBy((pointer.deltaY ?? 0) / this._getMenuScale());
@@ -2781,7 +2796,34 @@ class Menus implements MenuSystemInstance {
     return from + (to - from) * progress;
   };
 
-  private _captureKonamiKey = (keyCode: number): void => {
+  private _captureTouchKonamiInput = (pointer: MenuPointerData): boolean => {
+    if (this._screen !== "start" || this._debugUnlocked || !this._pressStartPointer) {
+      return false;
+    }
+
+    const deltaX = pointer.posX - this._pressStartPointer.posX;
+    const deltaY = pointer.posY - this._pressStartPointer.posY;
+    const absX = Math.abs(deltaX);
+    const absY = Math.abs(deltaY);
+
+    if (Math.max(absX, absY) >= touchKonamiSwipeThreshold) {
+      this._captureKonamiInput(
+        absX > absY ? (deltaX < 0 ? 37 : 39) : deltaY < 0 ? 38 : 40
+      );
+      return true;
+    }
+
+    const expectedInput = konamiCode[this._konamiIndex];
+
+    if (expectedInput === 66 || expectedInput === 65) {
+      this._captureKonamiInput(expectedInput);
+      return true;
+    }
+
+    return false;
+  };
+
+  private _captureKonamiInput = (keyCode: number): void => {
     if (this._screen !== "start" || this._debugUnlocked) {
       return;
     }

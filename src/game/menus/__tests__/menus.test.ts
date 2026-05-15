@@ -1034,6 +1034,45 @@ describe("menu definitions", () => {
     );
   });
 
+  it("unlocks the debug menu with touch Konami gestures", () => {
+    const arena = createArena();
+    const menus = new Menus(arena, { start: vi.fn() });
+    const swipe = (deltaX: number, deltaY: number): void => {
+      menus.handlePointer({ posX: 0, posY: 0, source: "touch", type: "press" });
+      menus.handlePointer({
+        posX: deltaX,
+        posY: deltaY,
+        source: "touch",
+        type: "release",
+      });
+    };
+    const tap = (): void => {
+      menus.handlePointer({ posX: 120, posY: 0, source: "touch", type: "press" });
+      menus.handlePointer({ posX: 120, posY: 0, source: "touch", type: "release" });
+    };
+
+    menus.showStart();
+    swipe(0, -48);
+    swipe(0, -48);
+    swipe(0, 48);
+    swipe(0, 48);
+    swipe(-48, 0);
+    swipe(48, 0);
+    swipe(-48, 0);
+    swipe(48, 0);
+    tap();
+    tap();
+    menus.render();
+
+    expect(userOptions.enableDebug).toBe(true);
+    expect(arena.renderText).toHaveBeenCalledWith(
+      "Debug",
+      expect.any(Number),
+      expect.any(Number),
+      expect.objectContaining({ align: "left" })
+    );
+  });
+
   it("does not consume regular menu navigation keys", () => {
     const menus = new Menus(createArena(), { start: vi.fn() });
 
