@@ -28,7 +28,6 @@ jobs:
 
   typecheck:
     name: Run TypeCheck
-    needs: lint
     runs-on: ubuntu-latest
 
     steps:
@@ -49,7 +48,6 @@ jobs:
 
   tests:
     name: Run Tests
-    needs: typecheck
     runs-on: ubuntu-latest
 
     steps:
@@ -73,7 +71,7 @@ jobs:
 
   build:
     name: Dry Run Build
-    needs: tests
+    needs: [tests, lint, typecheck]
     runs-on: ubuntu-latest
 
     steps:
