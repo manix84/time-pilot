@@ -200,6 +200,33 @@ describe("TimePilot engine", () => {
     game.destroyGame();
   });
 
+  it("aims the demo player at bonuses when it is safe", async () => {
+    const game = new TimePilot(host, { debug: true, gamepadEnabled: false });
+    const pilot = game as unknown as {
+      startDemoMode: () => void;
+      updateDemoAutopilot: () => void;
+      context: {
+        _bonuses: {
+          create: (posX: number, posY: number) => void;
+        };
+        _player: {
+          getData: (key: "newHeading") => number | false | undefined;
+        };
+      };
+    };
+
+    await new Promise((resolve) => window.setTimeout(resolve, 5));
+
+    pilot.startDemoMode();
+    pilot.context._bonuses.create(120, 0);
+
+    pilot.updateDemoAutopilot();
+
+    expect(pilot.context._player.getData("newHeading")).toBe(90);
+
+    game.destroyGame();
+  });
+
   it("does not force the demo player alive while death is resolving", async () => {
     const game = new TimePilot(host, { debug: true, gamepadEnabled: false });
     const pilot = game as unknown as {

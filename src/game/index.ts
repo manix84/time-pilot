@@ -62,6 +62,7 @@ const continueLives = 3;
 const demoContinues = 99;
 const demoAttackRadius = 520;
 const demoAttackStrength = 1.7;
+const demoBonusTargetPriority = 1.8;
 const demoEnemyAvoidanceRadius = 118;
 const demoLives = 3;
 const demoProjectileAvoidanceLookAhead = 170;
@@ -828,6 +829,23 @@ export class TimePilot {
         ),
         position,
         priority: bulletData.tracksPlayer ? 5 : 3.2,
+      });
+    });
+
+    this.context._bonuses.getEntities().forEach((bonus) => {
+      const bonusData = bonus.getData();
+
+      if (bonusData.removeMe) {
+        return;
+      }
+
+      bestTarget = this.getHigherPriorityDemoTarget(bestTarget, {
+        distance: Math.hypot(
+          bonusData.posX - playerData.posX,
+          bonusData.posY - playerData.posY
+        ),
+        position: { posX: bonusData.posX, posY: bonusData.posY },
+        priority: demoBonusTargetPriority,
       });
     });
 
