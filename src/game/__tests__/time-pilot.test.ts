@@ -173,6 +173,33 @@ describe("TimePilot engine", () => {
     game.destroyGame();
   });
 
+  it("aims the demo player at attack targets when not dodging", async () => {
+    const game = new TimePilot(host, { debug: true, gamepadEnabled: false });
+    const pilot = game as unknown as {
+      startDemoMode: () => void;
+      updateDemoAutopilot: () => void;
+      context: {
+        _enemies: {
+          create: (posX: number, posY: number, heading: number) => void;
+        };
+        _player: {
+          getData: (key: "newHeading") => number | false | undefined;
+        };
+      };
+    };
+
+    await new Promise((resolve) => window.setTimeout(resolve, 5));
+
+    pilot.startDemoMode();
+    pilot.context._enemies.create(-120, 0, 90);
+
+    pilot.updateDemoAutopilot();
+
+    expect(pilot.context._player.getData("newHeading")).toBe(270);
+
+    game.destroyGame();
+  });
+
   it("does not force the demo player alive while death is resolving", async () => {
     const game = new TimePilot(host, { debug: true, gamepadEnabled: false });
     const pilot = game as unknown as {

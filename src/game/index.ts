@@ -60,6 +60,8 @@ const timeWarpDelayFrames = Math.max(
 );
 const continueLives = 3;
 const demoContinues = 99;
+const demoAttackRadius = 520;
+const demoAttackStrength = 1.7;
 const demoEnemyAvoidanceRadius = 118;
 const demoLives = 3;
 const demoProjectileAvoidanceLookAhead = 170;
@@ -647,13 +649,22 @@ export class TimePilot {
     const wanderVector = this.vectorFromHeading(wanderHeading);
     const projectileAvoidance = this.getDemoProjectileAvoidanceVector();
     const enemyAvoidance = this.getDemoEnemyAvoidanceVector();
+    const attackVector = this.getDemoAttackVector();
+    const danger = Math.min(
+      1,
+      Math.hypot(projectileAvoidance.x, projectileAvoidance.y) +
+        Math.hypot(enemyAvoidance.x, enemyAvoidance.y)
+    );
+    const attackStrength = demoAttackStrength * (1 - danger * 0.75);
     const desiredVector = this.normalizeVector({
       x:
         wanderVector.x +
+        attackVector.x * attackStrength +
         projectileAvoidance.x * demoProjectileAvoidanceStrength +
         enemyAvoidance.x * 1.45,
       y:
         wanderVector.y +
+        attackVector.y * attackStrength +
         projectileAvoidance.y * demoProjectileAvoidanceStrength +
         enemyAvoidance.y * 1.45,
     });
@@ -676,7 +687,7 @@ export class TimePilot {
       avoidY += avoidance.y;
     });
 
-    return this.normalizeVector({ x: avoidX, y: avoidY });
+    return { x: avoidX, y: avoidY };
   };
 
   private getDemoProjectileAvoidanceForBullet = (
@@ -767,7 +778,116 @@ export class TimePilot {
       avoidY += normalized.y * strength;
     });
 
-    return this.normalizeVector({ x: avoidX, y: avoidY });
+    return { x: avoidX, y: avoidY };
+  };
+
+  private getDemoAttackVector = (): { x: number; y: number } => {
+    const playerData = this.context._player.getData();
+    let bestTarget:
+      | {
+          distance: number;
+          position: { posX: number; posY: number };
+          priority: number;
+        }
+      | undefined;
+
+    this.context._enemies.getEntities().forEach((enemy) => {
+      if (!enemy.isAlive) {
+        return;
+      }
+
+      const enemyData = enemy.getData() as EnemyData;
+
+      bestTarget = this.getHigherPriorityDemoTarget(bestTarget, {
+        distance: Math.hypot(
+          enemyData.posX - playerData.posX,
+          enemyData.posY - playerData.posY
+        ),
+        position: { posX: enemyData.posX, posY: enemyData.posY },
+        priority: this.getDemoEnemyTargetPriority(enemyData),
+      });
+    });
+
+    this.context._enemyBullets.getEntities().forEach((bullet) => {
+      if (bullet.removeMe) {
+        return;
+      }
+
+      const bulletData = bullet.getData() as BulletData;
+
+      if (bulletData.explosionTick !== false || !bulletData.shootable) {
+        return;
+      }
+
+      const position = this.getDemoProjectileWorldPosition(bulletData);
+
+      bestTarget = this.getHigherPriorityDemoTarget(bestTarget, {
+        distance: Math.hypot(
+          position.posX - playerData.posX,
+          position.posY - playerData.posY
+        ),
+        position,
+        priority: bulletData.tracksPlayer ? 5 : 3.2,
+      });
+    });
+
+    if (!bestTarget) {
+      return { x: 0, y: 0 };
+    }
+
+    return this.normalizeVector({
+      x: bestTarget.position.posX - playerData.posX,
+      y: bestTarget.position.posY - playerData.posY,
+    });
+  };
+
+  private getHigherPriorityDemoTarget = <
+    T extends {
+      distance: number;
+      position: { posX: number; posY: number };
+      priority: number;
+    },
+  >(
+    current: T | undefined,
+    candidate: T
+  ): T | undefined => {
+    if (candidate.distance > demoAttackRadius) {
+      return current;
+    }
+
+    if (!current) {
+      return candidate;
+    }
+
+    const currentScore = current.priority / Math.max(1, current.distance);
+    const candidateScore = candidate.priority / Math.max(1, candidate.distance);
+
+    return candidateScore > currentScore ? candidate : current;
+  };
+
+  private getDemoEnemyTargetPriority = (enemyData: EnemyData): number => {
+    if (enemyData.type === "boss") {
+      return 4;
+    }
+
+    if (enemyData.type === "specialBomber") {
+      return 3.4;
+    }
+
+    return 2.4;
+  };
+
+  private getDemoProjectileWorldPosition = (
+    bulletData: BulletData
+  ): { posX: number; posY: number } => {
+    const playerData = this.context._player.getData();
+
+    return bulletData.coordinateSpace === "world"
+      ? { posX: bulletData.posX, posY: bulletData.posY }
+      : {
+        posX: playerData.posX + bulletData.posX,
+        posY: playerData.posY + bulletData.posY,
+      };
   };
 
   private vectorFromHeading = (heading: number): { x: number; y: number } => {
