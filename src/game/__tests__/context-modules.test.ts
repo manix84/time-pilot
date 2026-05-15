@@ -116,6 +116,8 @@ const createContext = (): GameDataStore => {
     resetUiZoom: vi.fn(),
     captureKey: vi.fn(() => false),
     isActive: vi.fn(() => false),
+    isWatchingDemo: vi.fn(() => false),
+    showDemoWatch: vi.fn(),
     showGameOver: vi.fn(),
     showStart: vi.fn(),
     showRestartConfirm: vi.fn(),

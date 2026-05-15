@@ -63,6 +63,7 @@ const fr: typeof en = {
     controls: "Commandes",
     customCrtOptions: "Custom CRT Options",
     debug: "Debug",
+    demo: "Demo",
     directional: "Directionnel",
     effectsVolume: "Volume des effets",
     exit: "Quitter",
@@ -107,6 +108,7 @@ const fr: typeof en = {
     start: "Demarrer",
     uiZoom: "Zoom UI",
     videoFilterMode: "Video Filter Mode",
+    watchDemo: "Voir demo",
   },
 };
 

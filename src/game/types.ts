@@ -431,6 +431,7 @@ export interface RenderingSystemInstance {
 }
 
 export interface MenuSystemCommands {
+  canWatchDemo?: () => boolean;
   clearLevelPreview?: () => void;
   continueGame?: () => void;
   exitToRoot?: () => void;
@@ -442,6 +443,7 @@ export interface MenuSystemCommands {
   setDebugContinues?: (continues: number) => void;
   setDebugLives?: (lives: number) => void;
   start: () => void;
+  watchDemo?: () => void;
 }
 
 export interface ShowStartMenuOptions {
@@ -454,7 +456,9 @@ export interface MenuSystemInstance {
   adjust: (direction: -1 | 1) => void;
   captureKey: (keyCode: number) => boolean;
   isActive: () => boolean;
+  isWatchingDemo: () => boolean;
   showStart: (options?: ShowStartMenuOptions) => void;
+  showDemoWatch: () => void;
   showGameOver: () => void;
   showRestartConfirm: () => void;
   hide: () => void;

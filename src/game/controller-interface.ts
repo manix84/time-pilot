@@ -51,6 +51,11 @@ class ControllerInterface implements ControllerInterfaceInstance {
 
   rotateToHeading = (desiredHeading: Heading): void => {
     if (this._menus.isActive()) {
+      if (this._menus.isWatchingDemo()) {
+        this._menus.showStart({ startLabel: i18n.menu.start });
+        return;
+      }
+
       if (desiredHeading === 0) {
         this._menus.previous();
       } else if (desiredHeading === 180) {
@@ -68,6 +73,11 @@ class ControllerInterface implements ControllerInterfaceInstance {
 
   rotateClockwise = (): void => {
     if (this._menus.isActive()) {
+      if (this._menus.isWatchingDemo()) {
+        this._menus.showStart({ startLabel: i18n.menu.start });
+        return;
+      }
+
       this._menus.adjust(1);
       return;
     }
@@ -80,6 +90,11 @@ class ControllerInterface implements ControllerInterfaceInstance {
 
   rotateAntiClockwise = (): void => {
     if (this._menus.isActive()) {
+      if (this._menus.isWatchingDemo()) {
+        this._menus.showStart({ startLabel: i18n.menu.start });
+        return;
+      }
+
       this._menus.adjust(-1);
       return;
     }
@@ -119,6 +134,11 @@ class ControllerInterface implements ControllerInterfaceInstance {
 
   startShooting = (): void => {
     if (this._menus.isActive()) {
+      if (this._menus.isWatchingDemo()) {
+        this._menus.showStart({ startLabel: i18n.menu.start });
+        return;
+      }
+
       this._menus.activate();
       return;
     }
@@ -136,6 +156,11 @@ class ControllerInterface implements ControllerInterfaceInstance {
 
   togglePause = (): void => {
     if (this._menus.isActive()) {
+      if (this._menus.isWatchingDemo()) {
+        this._menus.showStart({ startLabel: i18n.menu.start });
+        return;
+      }
+
       this._menus.activate();
       return;
     }
@@ -145,6 +170,11 @@ class ControllerInterface implements ControllerInterfaceInstance {
 
   restart = (): void => {
     if (this._menus.isActive()) {
+      if (this._menus.isWatchingDemo()) {
+        this._menus.showStart({ startLabel: i18n.menu.start });
+        return;
+      }
+
       this._menus.activate();
       return;
     }
@@ -153,6 +183,11 @@ class ControllerInterface implements ControllerInterfaceInstance {
   };
 
   requestRestartConfirmation = (): void => {
+    if (this._menus.isWatchingDemo()) {
+      this._menus.showStart({ startLabel: i18n.menu.start });
+      return;
+    }
+
     if (!this._player.getData().isAlive) {
       this._commands.restart();
       return;

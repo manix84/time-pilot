@@ -63,6 +63,7 @@ const nl: typeof en = {
     controls: "Besturing",
     customCrtOptions: "Custom CRT Options",
     debug: "Debug",
+    demo: "Demo",
     directional: "Richting",
     effectsVolume: "Effectvolume",
     exit: "Afsluiten",
@@ -119,6 +120,7 @@ const nl: typeof en = {
     start: "Start",
     uiZoom: "UI-zoom",
     videoFilterMode: "Video Filter Mode",
+    watchDemo: "Demo bekijken",
   },
 };
 

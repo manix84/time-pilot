@@ -88,6 +88,99 @@ describe("TimePilot engine", () => {
     game.destroyGame();
   });
 
+  it("mirrors demo autopilot controls into the controls overlay state", async () => {
+    const game = new TimePilot(host, { debug: true, gamepadEnabled: false });
+    const pilot = game as unknown as {
+      startDemoMode: () => void;
+      updateDemoAutopilot: () => void;
+      context: {
+        _controlInputState: {
+          down: boolean;
+          fire: boolean;
+          left: boolean;
+          right: boolean;
+          up: boolean;
+        };
+      };
+    };
+
+    await new Promise((resolve) => window.setTimeout(resolve, 5));
+
+    pilot.startDemoMode();
+    pilot.updateDemoAutopilot();
+
+    expect(pilot.context._controlInputState.fire).toBe(true);
+    expect(pilot.context._controlInputState.right).toBe(true);
+    expect(pilot.context._controlInputState.left).toBe(false);
+    expect(pilot.context._controlInputState.up).toBe(false);
+    expect(pilot.context._controlInputState.down).toBe(false);
+
+    game.destroyGame();
+  });
+
+  it("does not force the demo player alive while death is resolving", async () => {
+    const game = new TimePilot(host, { debug: true, gamepadEnabled: false });
+    const pilot = game as unknown as {
+      startDemoMode: () => void;
+      updateDemoAutopilot: () => void;
+      context: {
+        _controlInputState: {
+          fire: boolean;
+          right: boolean;
+        };
+        _player: {
+          getData: (key?: string) => Record<string, unknown>;
+          setData: (key: string, value: unknown) => void;
+        };
+      };
+    };
+
+    await new Promise((resolve) => window.setTimeout(resolve, 5));
+
+    pilot.startDemoMode();
+    pilot.context._player.setData("isAlive", false);
+    pilot.context._controlInputState.fire = true;
+    pilot.context._controlInputState.right = true;
+
+    pilot.updateDemoAutopilot();
+
+    expect(pilot.context._player.getData("isAlive")).toBe(false);
+    expect(pilot.context._controlInputState.fire).toBe(false);
+    expect(pilot.context._controlInputState.right).toBe(false);
+
+    game.destroyGame();
+  });
+
+  it("auto-continues the demo after the final death without game-over state", async () => {
+    const game = new TimePilot(host, { debug: true, gamepadEnabled: false });
+    const pilot = game as unknown as {
+      continueDemoIfNeeded: () => void;
+      startDemoMode: () => void;
+      context: {
+        _player: {
+          getData: (key?: string) => Record<string, unknown>;
+          setData: (key: string, value: unknown) => void;
+        };
+      };
+    };
+
+    await new Promise((resolve) => window.setTimeout(resolve, 5));
+
+    pilot.startDemoMode();
+    pilot.context._player.setData("lives", 0);
+    pilot.context._player.setData("isAlive", false);
+    pilot.context._player.getData().removeMe = true;
+
+    pilot.continueDemoIfNeeded();
+
+    expect(pilot.context._player.getData("lives")).toBe(3);
+    expect(pilot.context._player.getData("continues")).toBe(99);
+    expect(pilot.context._player.getData("isAlive")).toBe(true);
+    expect(pilot.context._player.getData("removeMe")).toBeUndefined();
+
+    game.destroyGame();
+  });
+
   it("starts the player game from the selected debug level", async () => {
     const game = new TimePilot(host, { debug: true });
     const pilot = game as unknown as {

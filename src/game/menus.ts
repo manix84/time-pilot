@@ -48,6 +48,7 @@ type MenuScreen =
   | "filters"
   | "filter-custom"
   | "debug"
+  | "demo-watch"
   | "game-over"
   | "language"
   | "restart-confirm"
@@ -213,6 +214,10 @@ class Menus implements MenuSystemInstance {
     return this._active;
   };
 
+  isWatchingDemo = (): boolean => {
+    return this._active && this._screen === "demo-watch";
+  };
+
   showStart = (options: ShowStartMenuOptions = {}): void => {
     if (this._active && this._screen === "level") {
       this._commands.clearLevelPreview?.();
@@ -241,6 +246,24 @@ class Menus implements MenuSystemInstance {
     }
 
     this._goToScreen("restart-confirm");
+  };
+
+  showDemoWatch = (): void => {
+    this._active = true;
+    this._awaitingBinding = null;
+    this._bindingWarning = "";
+    this._screen = "demo-watch";
+    this._screenHistory = [];
+    this._pressedItemIndex = null;
+    this._scrollBarDrag = null;
+    this._sliderDragIndex = null;
+    this._selectedIndex = 0;
+    this._shouldRevealSelected = false;
+    this._levelPreviewedLevel = undefined;
+    this._resetLevelMenuIdleState();
+    this._scrollY = 0;
+    this._transition = null;
+    this._buildItems();
   };
 
   showGameOver = (): void => {
@@ -274,6 +297,11 @@ class Menus implements MenuSystemInstance {
   };
 
   next = (): void => {
+    if (this.isWatchingDemo()) {
+      this._exitDemoWatch();
+      return;
+    }
+
     if (!this._active || !this._items.length) {
       return;
     }
@@ -285,6 +313,11 @@ class Menus implements MenuSystemInstance {
   };
 
   previous = (): void => {
+    if (this.isWatchingDemo()) {
+      this._exitDemoWatch();
+      return;
+    }
+
     if (!this._active || !this._items.length) {
       return;
     }
@@ -297,6 +330,11 @@ class Menus implements MenuSystemInstance {
   };
 
   adjust = (direction: -1 | 1): void => {
+    if (this.isWatchingDemo()) {
+      this._exitDemoWatch();
+      return;
+    }
+
     if (!this._active) {
       return;
     }
@@ -311,6 +349,11 @@ class Menus implements MenuSystemInstance {
   };
 
   goBack = (): void => {
+    if (this.isWatchingDemo()) {
+      this._exitDemoWatch();
+      return;
+    }
+
     if (!this._active || this._screen === "start") {
       return;
     }
@@ -319,6 +362,11 @@ class Menus implements MenuSystemInstance {
   };
 
   goToRoot = (): void => {
+    if (this.isWatchingDemo()) {
+      this._exitDemoWatch();
+      return;
+    }
+
     if (!this._active || this._screen === "start") {
       return;
     }
@@ -346,6 +394,11 @@ class Menus implements MenuSystemInstance {
   };
 
   activate = (): void => {
+    if (this.isWatchingDemo()) {
+      this._exitDemoWatch();
+      return;
+    }
+
     if (!this._active) {
       return;
     }
@@ -375,6 +428,11 @@ class Menus implements MenuSystemInstance {
   captureKey = (keyCode: number): boolean => {
     if (!this._active) {
       return false;
+    }
+
+    if (this.isWatchingDemo()) {
+      this._exitDemoWatch();
+      return true;
     }
 
     this._resetLevelMenuIdleState();
@@ -415,6 +473,13 @@ class Menus implements MenuSystemInstance {
 
   handlePointer = (pointer: MenuPointerData): void => {
     if (!this._active) {
+      return;
+    }
+
+    if (this.isWatchingDemo()) {
+      if (pointer.type !== "move") {
+        this._exitDemoWatch();
+      }
       return;
     }
 
@@ -524,7 +589,7 @@ class Menus implements MenuSystemInstance {
     const levelMenuOpacity = this._getLevelMenuOpacity(levelMenuIdleProgress);
     const backplateOpacity = 1 - levelMenuIdleProgress;
 
-    if (backplateOpacity > 0) {
+    if (this._screen !== "demo-watch" && backplateOpacity > 0) {
       context.save();
       context.globalAlpha *= backplateOpacity;
       context.fillStyle = palette.menu.backplate;
@@ -726,6 +791,8 @@ class Menus implements MenuSystemInstance {
   private _buildItems = (): void => {
     if (this._screen === "start") {
       this._items = this._createStartItems();
+    } else if (this._screen === "demo-watch") {
+      this._items = [];
     } else if (this._screen === "options") {
       this._items = this._createOptionsItems();
     } else if (this._screen === "filters") {
@@ -752,16 +819,37 @@ class Menus implements MenuSystemInstance {
       this._createItem(this._startLabel, "action", -22, {
         action: this._commands.start,
       }),
+    ];
+
+    const showWatchDemo = this._commands.canWatchDemo?.() ?? false;
+
+    items.push(
       this._createItem(i18n.menu.options, "action", 28, {
         action: () => this._goToScreen("options"),
-      }),
-    ];
+      })
+    );
 
     if (this._debugUnlocked) {
       items.push(
         this._createItem(i18n.menu.debug, "action", 78, {
           action: () => this._goToScreen("debug"),
         })
+      );
+    }
+
+    if (showWatchDemo) {
+      items.push(
+        this._createItem(
+          i18n.menu.watchDemo,
+          "action",
+          this._debugUnlocked ? 128 : 78,
+          {
+            action: () => {
+              this._commands.watchDemo?.();
+              this.showDemoWatch();
+            },
+          }
+        )
       );
     }
 
@@ -2570,6 +2658,10 @@ class Menus implements MenuSystemInstance {
       return i18n.menu.debug;
     }
 
+    if (this._screen === "demo-watch") {
+      return i18n.menu.demo;
+    }
+
     if (this._screen === "game-over") {
       return i18n.menu.gameOver;
     }
@@ -2591,6 +2683,10 @@ class Menus implements MenuSystemInstance {
 
   private _isPausedRootMenu = (): boolean => {
     return this._screen === "start" && this._startLabel === i18n.menu.continue;
+  };
+
+  private _exitDemoWatch = (): void => {
+    this.showStart({ startLabel: i18n.menu.start });
   };
 
   private _goToScreen = (screen: MenuScreen): void => {

@@ -324,6 +324,8 @@ const createContext = ({
       resetUiZoom: vi.fn(),
       captureKey: vi.fn(() => false),
       isActive: vi.fn(() => false),
+      isWatchingDemo: vi.fn(() => false),
+      showDemoWatch: vi.fn(),
       showGameOver: vi.fn(),
       showStart: vi.fn(),
       showRestartConfirm: vi.fn(),
@@ -901,6 +903,18 @@ describe("game systems", () => {
     system.renderFrame();
 
     expect(context._hud.render).not.toHaveBeenCalled();
+    expect(context._menus.render).toHaveBeenCalled();
+  });
+
+  it("renders HUD while watching the menu demo", () => {
+    const context = createContext();
+    vi.mocked(context._menus.isActive).mockReturnValue(true);
+    vi.mocked(context._menus.isWatchingDemo).mockReturnValue(true);
+    const system = new RenderingSystem(context);
+
+    system.renderFrame();
+
+    expect(context._hud.render).toHaveBeenCalled();
     expect(context._menus.render).toHaveBeenCalled();
   });
 

@@ -40,7 +40,7 @@ class RenderingSystem implements RenderingSystemInstance {
     );
     this.renderWorld();
 
-    if (!this._context._menus.isActive()) {
+    if (!this._context._menus.isActive() || this._context._menus.isWatchingDemo()) {
       this._context._hud.render();
     }
 

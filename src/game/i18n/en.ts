@@ -61,6 +61,7 @@ const en = {
     controls: "Controls",
     customCrtOptions: "Custom CRT Options",
     debug: "Debug",
+    demo: "Demo",
     directional: "Directional",
     effectsVolume: "Effects Volume",
     exit: "Exit",
@@ -117,6 +118,7 @@ const en = {
     start: "Start",
     uiZoom: "UI Zoom",
     videoFilterMode: "Video Filter Mode",
+    watchDemo: "Watch Demo",
   },
 };
 

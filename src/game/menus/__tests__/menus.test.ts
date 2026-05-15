@@ -122,6 +122,59 @@ describe("menu definitions", () => {
     );
   });
 
+  it("shows watch demo during demo mode and exits it on input", () => {
+    const watchDemo = vi.fn();
+    const arena = createArena();
+    userOptions.setOption("enableDebug", true);
+    const menus = new Menus(arena, {
+      canWatchDemo: () => true,
+      start: vi.fn(),
+      watchDemo,
+    });
+
+    menus.showStart();
+    menus.render();
+    const renderCalls = vi.mocked(arena.renderText).mock.calls;
+    const debugY = renderCalls.find((call) => call[0] === "Debug")?.[2];
+    const watchDemoY = renderCalls.find((call) => call[0] === "Watch Demo")?.[2];
+    expect(debugY).toBeLessThan(
+      typeof watchDemoY === "number" ? watchDemoY : Number.NaN
+    );
+
+    vi.mocked(arena.renderText).mockClear();
+    menus.next();
+    menus.next();
+    menus.next();
+    menus.activate();
+    menus.render();
+
+    expect(watchDemo).toHaveBeenCalled();
+    expect(menus.isWatchingDemo()).toBe(true);
+    expect(arena.renderText).toHaveBeenCalledWith(
+      "Demo",
+      expect.any(Number),
+      expect.any(Number),
+      expect.objectContaining({ align: "center" })
+    );
+    expect(arena.renderText).not.toHaveBeenCalledWith(
+      "Watch Demo",
+      expect.any(Number),
+      expect.any(Number),
+      expect.any(Object)
+    );
+
+    menus.activate();
+
+    expect(menus.isWatchingDemo()).toBe(false);
+    menus.render();
+    expect(arena.renderText).toHaveBeenCalledWith(
+      "Watch Demo",
+      expect.any(Number),
+      expect.any(Number),
+      expect.objectContaining({ align: "left" })
+    );
+  });
+
   it("shows restart confirmation and only restarts after confirmation", () => {
     const restart = vi.fn();
     const arena = createArena();

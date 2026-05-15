@@ -55,6 +55,8 @@ const timeWarpDelayFrames = Math.max(
   Math.round((TIME_WARP_DELAY_MS / 1000) * gameFps)
 );
 const continueLives = 3;
+const demoContinues = 99;
+const demoLives = 3;
 const playerRotationStep = 360 / player.rotationFrameCount;
 
 export const getDefaultActiveController = (): ControlInputSource => {
@@ -139,6 +141,7 @@ export class TimePilot {
     this.isDestroyed = true;
     this.isDemoMode = false;
     this.context._isDemoMode = false;
+    this.clearControlInputState();
     SoundEngine.stopAll();
 
     this.context._gameTicker.stop();
@@ -213,6 +216,7 @@ export class TimePilot {
     this.context._bonuses = new BonusFactory(this.context);
     this.context._hud = new Hud(this.context);
     this.context._menus = new Menus(this.context._gameArena, {
+      canWatchDemo: () => this.isDemoMode,
       clearLevelPreview: () => {
         this.clearDebugLevelPreview();
       },
@@ -242,6 +246,9 @@ export class TimePilot {
       },
       start: () => {
         this.beginGame();
+      },
+      watchDemo: () => {
+        this.watchDemo();
       },
     });
     this.collisionSystem = new CollisionSystem(this.context);
@@ -460,6 +467,7 @@ export class TimePilot {
         this.beginTimeWarpTransition();
       }
 
+      this.continueDemoIfNeeded();
       this.showGameOverIfNeeded();
     }, 1);
   };
@@ -562,10 +570,19 @@ export class TimePilot {
     this.isDebugLevelPreviewLocked = false;
     SoundEngine.setMuted(true);
     this.resetWorld(this.getRandomDemoLevel(), { skipIntro: true });
+    this.configureDemoPlayerData();
     this.spawningSystem.addInitialProps();
     this.hasSeededInitialProps = true;
     this.context._menus.showStart({ startLabel: i18n.menu.start });
     this.context._gameTicker.start();
+  };
+
+  private watchDemo = (): void => {
+    if (!this.isDemoMode) {
+      this.startDemoMode();
+    }
+
+    this.context._player.stopShooting();
   };
 
   private openPauseMenu = (): void => {
@@ -586,6 +603,13 @@ export class TimePilot {
       return;
     }
 
+    const playerData = this.context._player.getData();
+
+    if (!playerData.isAlive) {
+      this.clearControlInputState();
+      return;
+    }
+
     const frame = this.context._gameTicker.getTicks();
     const desiredHeading =
       (90 + Math.sin(frame / 45) * 90 + Math.sin(frame / 120) * 45 + 360) % 360;
@@ -594,8 +618,42 @@ export class TimePilot {
       "newHeading",
       Math.round(desiredHeading / playerRotationStep) * playerRotationStep
     );
-    this.context._player.setData("isAlive", true);
+    this.updateDemoControlOverlay(desiredHeading);
     this.context._player.startShooting();
+  };
+
+  private updateDemoControlOverlay = (heading: number): void => {
+    const radians = heading * (Math.PI / 180);
+    const inputState = this.context._controlInputState;
+    const axisX = Math.sin(radians);
+    const axisY = -Math.cos(radians);
+    const threshold = 0.35;
+
+    inputState.left = axisX < -threshold;
+    inputState.right = axisX > threshold;
+    inputState.up = axisY < -threshold;
+    inputState.down = axisY > threshold;
+    inputState.fire = true;
+    inputState.menu = false;
+    inputState.pause = false;
+    inputState.restart = false;
+    inputState.rotateLeft = false;
+    inputState.rotateRight = false;
+  };
+
+  private clearControlInputState = (): void => {
+    const inputState = this.context._controlInputState;
+
+    inputState.down = false;
+    inputState.fire = false;
+    inputState.left = false;
+    inputState.menu = false;
+    inputState.pause = false;
+    inputState.restart = false;
+    inputState.right = false;
+    inputState.up = false;
+    inputState.rotateLeft = false;
+    inputState.rotateRight = false;
   };
 
   private advanceDemoLevel = (): void => {
@@ -605,6 +663,7 @@ export class TimePilot {
 
     this.startDemoLevelFade();
     this.resetWorld(this.getRandomDemoLevel(), { skipIntro: true });
+    this.configureDemoPlayerData();
     this.spawningSystem.addInitialProps();
     this.hasSeededInitialProps = true;
   };
@@ -633,6 +692,35 @@ export class TimePilot {
     this.context._timeWarpTransition = undefined;
     this.hasSeededInitialProps = false;
     this.hasShownGameOver = false;
+  };
+
+  private configureDemoPlayerData = (): void => {
+    this.context._player.setData("lives", demoLives);
+    this.context._player.setData("continues", demoContinues);
+    this.context._player.setData("isAlive", true);
+    this.context._player.setData("deathTick", false);
+    this.context._player.stopShooting();
+    this.clearControlInputState();
+  };
+
+  private continueDemoIfNeeded = (): void => {
+    const playerData = this.context._player.getData();
+
+    if (
+      !this.isDemoMode ||
+      playerData.isAlive ||
+      playerData.lives > 0 ||
+      !playerData.removeMe
+    ) {
+      return;
+    }
+
+    const level = this.context._level;
+
+    this.resetWorld(level, { skipIntro: true });
+    this.configureDemoPlayerData();
+    this.spawningSystem.addInitialProps();
+    this.hasSeededInitialProps = true;
   };
 
   private showGameOverIfNeeded = (): void => {
