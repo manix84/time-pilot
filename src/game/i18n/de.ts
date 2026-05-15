@@ -7,6 +7,7 @@ const de: typeof en = {
   },
   title: "ZEITPILOT",
   hud: {
+    credits: "Credits",
     gameOver: "Spiel vorbei",
     paused: "Pausiert",
     pressPauseToContinue: 'Druecke "P" zum Fortsetzen',

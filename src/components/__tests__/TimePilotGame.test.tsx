@@ -3,6 +3,7 @@ import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import userOptions from "../../game/user-options";
 import TimePilotGame from "../TimePilotGame";
+import UpdateOverlay from "../UpdateOverlay";
 
 describe("TimePilotGame", () => {
   let container: HTMLDivElement;
@@ -67,5 +68,36 @@ describe("TimePilotGame", () => {
     expect(
       container.querySelector(".time-pilot-game")?.getAttribute("data-filter-mode")
     ).toBe("arcade-crt");
+  });
+
+  it("exposes update overlay status text to assistive technology", async () => {
+    const onWarpComplete = vi.fn();
+    vi.spyOn(window, "requestAnimationFrame").mockReturnValue(1);
+    vi.spyOn(window, "cancelAnimationFrame").mockImplementation(() => {});
+
+    await act(async () => {
+      root.render(
+        <UpdateOverlay onWarpComplete={onWarpComplete} state={"updating"} />
+      );
+      await new Promise((resolve) => window.setTimeout(resolve, 5));
+    });
+
+    expect(container.querySelector('[role="status"]')?.textContent).toBe(
+      "Updating..."
+    );
+
+    await act(async () => {
+      root.render(
+        <UpdateOverlay onWarpComplete={onWarpComplete} state={"warping"} />
+      );
+      await new Promise((resolve) => window.setTimeout(resolve, 5));
+    });
+
+    expect(container.querySelector('[role="status"]')?.textContent).toBe(
+      "Complete"
+    );
+    expect(container.querySelector("canvas")?.getAttribute("aria-hidden")).toBe(
+      "true"
+    );
   });
 });

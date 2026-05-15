@@ -23,6 +23,7 @@ const playerRotationStep = 360 / player.rotationFrameCount;
 
 function UpdateOverlay({ onWarpComplete, state }: UpdateOverlayProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const statusLabel = state === "warping" ? "Complete" : "Updating...";
   const stateRef = useRef(state);
   const onWarpCompleteRef = useRef(onWarpComplete);
 
@@ -206,7 +207,8 @@ function UpdateOverlay({ onWarpComplete, state }: UpdateOverlayProps) {
 
   return (
     <div className={"time-pilot-update-overlay"} role={"status"} aria-live={"polite"}>
-      <canvas ref={canvasRef} />
+      <span className={"time-pilot-update-status-text"}>{statusLabel}</span>
+      <canvas aria-hidden={"true"} ref={canvasRef} />
     </div>
   );
 }

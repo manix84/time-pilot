@@ -90,7 +90,7 @@ class Hud implements HudInstance {
     uiHeight: number
   ): void => {
     this._gameArena.renderText(
-      `Credits ${this.formatCredits(continues)}`,
+      `${i18n.hud.credits} ${this.formatCredits(continues)}`,
       uiWidth / 2 - bossProgressEdgeInset,
       uiHeight / 2 - bossProgressBottomInset - bossProgressHeight / 2,
       {
@@ -123,7 +123,7 @@ class Hud implements HudInstance {
     const progress = this._context._levelProgress;
     const threshold = progress.bossKillThreshold;
 
-    if (threshold <= 0 || progress.bossDefeated) {
+    if (threshold <= 0 || progress.bossSpawned || progress.bossDefeated) {
       return;
     }
 

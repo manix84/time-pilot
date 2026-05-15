@@ -86,10 +86,20 @@ describe("menu definitions", () => {
     expect(menus.isActive()).toBe(true);
     expect(context.transform).not.toHaveBeenCalled();
     expect(context.drawImage).toHaveBeenCalled();
-    expect(arena.renderText).toHaveBeenCalledWith(
-      expect.stringMatching(/^v\d+\.\d+\.\d+/),
-      expect.any(Number),
-      expect.any(Number),
+    const versionCall = vi
+      .mocked(arena.renderText)
+      .mock.calls.find(([message]) => /^v\d+\.\d+\.\d+/.test(String(message)));
+    const startMenuScale =
+      Math.min(1, (arena.width - 48) / 828, (arena.height - 48) / 500) * 1;
+
+    expect(versionCall?.[0]).toEqual(expect.stringMatching(/^v\d+\.\d+\.\d+/));
+    expect(versionCall?.[1]).toBeCloseTo(
+      (arena.width / 2 - 12) / startMenuScale
+    );
+    expect(versionCall?.[2]).toBeCloseTo(
+      (arena.height / 2 - 10) / startMenuScale
+    );
+    expect(versionCall?.[3]).toEqual(
       expect.objectContaining({
         align: "right",
         valign: "bottom",

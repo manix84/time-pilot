@@ -7,6 +7,7 @@ const nl: typeof en = {
   },
   title: "TIJDPILOOT",
   hud: {
+    credits: "Credits",
     gameOver: "Spel voorbij",
     paused: "Gepauzeerd",
     pressPauseToContinue: 'Druk op "P" om door te gaan',

@@ -5,6 +5,7 @@ const en = {
   },
   title: "TIME PILOT",
   hud: {
+    credits: "Credits",
     gameOver: "Game Over",
     paused: "Paused",
     pressPauseToContinue: 'Press "P" to continue',

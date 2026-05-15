@@ -7,6 +7,7 @@ const fr: typeof en = {
   },
   title: "PILOTE DU TEMPS",
   hud: {
+    credits: "Credits",
     gameOver: "Partie terminee",
     paused: "Pause",
     pressPauseToContinue: 'Appuyez sur "P" pour continuer',

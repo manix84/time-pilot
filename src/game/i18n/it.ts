@@ -7,6 +7,7 @@ const it: typeof en = {
   },
   title: "PILOTA DEL TEMPO",
   hud: {
+    credits: "Crediti",
     gameOver: "Fine partita",
     paused: "Pausa",
     pressPauseToContinue: 'Premi "P" per continuare',

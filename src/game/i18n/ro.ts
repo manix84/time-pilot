@@ -7,6 +7,7 @@ const ro: typeof en = {
   },
   title: "PILOTUL TIMPULUI",
   hud: {
+    credits: "Credite",
     gameOver: "Joc terminat",
     paused: "Pauza",
     pressPauseToContinue: 'Apasa "P" pentru continuare',
