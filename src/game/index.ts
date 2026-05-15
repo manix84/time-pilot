@@ -211,6 +211,9 @@ export class TimePilot {
       previewLevel: (level) => {
         this.previewDebugLevel(level);
       },
+      restart: () => {
+        this.restartGame();
+      },
       selectLevel: (level) => {
         this.selectDebugLevel(level);
         this.beginGame();

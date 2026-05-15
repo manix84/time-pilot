@@ -55,6 +55,7 @@ const ro: typeof en = {
   menu: {
     alreadyAssignedTo: (binding: string) => `Deja atribuit la ${binding}`,
     back: "Inapoi",
+    cancel: "Anuleaza",
     continue: "Continua",
     controlType: "Tip control",
     current: "Selectat",
@@ -100,6 +101,8 @@ const ro: typeof en = {
     options: "Optiuni",
     pressAKey: "Apasa o tasta",
     remapControls: "Reconfigureaza",
+    restart: "Restart",
+    restartConfirmTitle: "Reincepi jocul?",
     resetFilters: "Reset Filters",
     rotate: "Rotire",
     selectLevel: "Alege nivelul",

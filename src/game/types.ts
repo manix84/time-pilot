@@ -370,6 +370,7 @@ export interface HudInstance {
 export interface ControllerInterfaceInstance {
   adjustUiZoom?: (direction: -1 | 1) => void;
   resetUiZoom?: () => void;
+  requestRestartConfirmation?: () => void;
   rotateToHeading: (desiredHeading: Heading) => void;
   rotateClockwise: () => void;
   rotateAntiClockwise: () => void;
@@ -433,6 +434,7 @@ export interface MenuSystemCommands {
   clearLevelPreview?: () => void;
   getLevel?: () => number;
   previewLevel?: (level: number) => void;
+  restart?: () => void;
   selectLevel?: (level: number) => void;
   start: () => void;
 }
@@ -448,6 +450,7 @@ export interface MenuSystemInstance {
   captureKey: (keyCode: number) => boolean;
   isActive: () => boolean;
   showStart: (options?: ShowStartMenuOptions) => void;
+  showRestartConfirm: () => void;
   hide: () => void;
   render: () => void;
   next: () => void;

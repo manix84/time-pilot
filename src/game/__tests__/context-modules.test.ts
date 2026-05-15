@@ -117,6 +117,7 @@ const createContext = (): GameDataStore => {
     captureKey: vi.fn(() => false),
     isActive: vi.fn(() => false),
     showStart: vi.fn(),
+    showRestartConfirm: vi.fn(),
     hide: vi.fn(),
     render: vi.fn(),
     next: vi.fn(),
@@ -1307,6 +1308,30 @@ describe("context-backed game modules", () => {
     expect(pause).toHaveBeenCalled();
     expect(restart).toHaveBeenCalled();
     expect(context._gameArena.renderText).toHaveBeenCalled();
+  });
+
+  it("opens restart confirmation for alive players and skips it when dead", () => {
+    const context = createContext();
+    const restart = vi.fn();
+    const openMenu = vi.fn(() => {
+      vi.mocked(context._menus.isActive).mockReturnValue(true);
+    });
+    const controls = new ControllerInterface(context, { restart, openMenu });
+
+    controls.requestRestartConfirmation();
+
+    expect(openMenu).toHaveBeenCalled();
+    expect(context._menus.showRestartConfirm).toHaveBeenCalled();
+    expect(restart).not.toHaveBeenCalled();
+
+    vi.mocked(context._menus.showRestartConfirm).mockClear();
+    vi.mocked(context._menus.isActive).mockReturnValue(false);
+    context._player.setData("isAlive", false);
+
+    controls.requestRestartConfirmation();
+
+    expect(restart).toHaveBeenCalled();
+    expect(context._menus.showRestartConfirm).not.toHaveBeenCalled();
   });
 
   it("renders only the active controller overlay", () => {

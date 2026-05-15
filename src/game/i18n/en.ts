@@ -53,6 +53,7 @@ const en = {
   menu: {
     alreadyAssignedTo: (binding: string) => `Already assigned to ${binding}`,
     back: "Back",
+    cancel: "Cancel",
     continue: "Continue",
     controlType: "Control Type",
     current: "Selected",
@@ -98,6 +99,8 @@ const en = {
     options: "Options",
     pressAKey: "Press a key",
     remapControls: "Remap Controls",
+    restart: "Restart",
+    restartConfirmTitle: "Restart Game?",
     resetFilters: "Reset Filters",
     rotate: "Rotate",
     selectLevel: "Select Level",

@@ -55,6 +55,7 @@ const de: typeof en = {
   menu: {
     alreadyAssignedTo: (binding: string) => `Bereits ${binding} zugewiesen`,
     back: "Zurueck",
+    cancel: "Abbrechen",
     continue: "Weiter",
     controlType: "Steuerung",
     current: "Ausgewaehlt",
@@ -100,6 +101,8 @@ const de: typeof en = {
     options: "Optionen",
     pressAKey: "Taste druecken",
     remapControls: "Tasten belegen",
+    restart: "Neustart",
+    restartConfirmTitle: "Spiel neu starten?",
     resetFilters: "Reset Filters",
     rotate: "Drehen",
     selectLevel: "Level waehlen",

@@ -325,6 +325,7 @@ const createContext = ({
       captureKey: vi.fn(() => false),
       isActive: vi.fn(() => false),
       showStart: vi.fn(),
+      showRestartConfirm: vi.fn(),
       hide: vi.fn(),
       render: vi.fn(),
       next: vi.fn(),

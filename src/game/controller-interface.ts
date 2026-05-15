@@ -152,6 +152,21 @@ class ControllerInterface implements ControllerInterfaceInstance {
     this._commands.restart();
   };
 
+  requestRestartConfirmation = (): void => {
+    if (!this._player.getData().isAlive) {
+      this._commands.restart();
+      return;
+    }
+
+    if (!this._menus.isActive()) {
+      this._commands.openMenu();
+    }
+
+    if (this._menus.isActive()) {
+      this._menus.showRestartConfirm();
+    }
+  };
+
   rotateCounterClockwise = (): void => {
     this.rotateAntiClockwise();
   };

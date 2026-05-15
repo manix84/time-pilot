@@ -55,6 +55,7 @@ const fr: typeof en = {
   menu: {
     alreadyAssignedTo: (binding: string) => `Deja assigne a ${binding}`,
     back: "Retour",
+    cancel: "Annuler",
     continue: "Continuer",
     controlType: "Type de controle",
     current: "Selectionne",
@@ -88,6 +89,8 @@ const fr: typeof en = {
     options: "Options",
     pressAKey: "Appuyez sur une touche",
     remapControls: "Reconfigurer",
+    restart: "Redemarrer",
+    restartConfirmTitle: "Redemarrer le jeu ?",
     resetFilters: "Reset Filters",
     rotate: "Rotation",
     selectLevel: "Choisir niveau",

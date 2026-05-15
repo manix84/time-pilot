@@ -55,6 +55,7 @@ const nl: typeof en = {
   menu: {
     alreadyAssignedTo: (binding: string) => `Al toegewezen aan ${binding}`,
     back: "Terug",
+    cancel: "Annuleren",
     continue: "Doorgaan",
     controlType: "Besturingstype",
     current: "Geselecteerd",
@@ -100,6 +101,8 @@ const nl: typeof en = {
     options: "Opties",
     pressAKey: "Druk op een toets",
     remapControls: "Toetsen instellen",
+    restart: "Herstarten",
+    restartConfirmTitle: "Game herstarten?",
     resetFilters: "Reset Filters",
     rotate: "Draaien",
     selectLevel: "Level kiezen",

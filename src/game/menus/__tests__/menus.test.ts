@@ -120,6 +120,37 @@ describe("menu definitions", () => {
     );
   });
 
+  it("shows restart confirmation and only restarts after confirmation", () => {
+    const restart = vi.fn();
+    const arena = createArena();
+    const menus = new Menus(arena, { start: vi.fn(), restart });
+
+    menus.showStart({ startLabel: "Continue" });
+    menus.showRestartConfirm();
+    menus.render();
+
+    expect(arena.renderText).toHaveBeenCalledWith(
+      "Restart Game?",
+      expect.any(Number),
+      expect.any(Number),
+      expect.objectContaining({ align: "center" })
+    );
+    expect(arena.renderText).toHaveBeenCalledWith(
+      "Restart",
+      expect.any(Number),
+      expect.any(Number),
+      expect.objectContaining({ align: "left" })
+    );
+
+    menus.next();
+    menus.activate();
+    expect(restart).not.toHaveBeenCalled();
+
+    menus.showRestartConfirm();
+    menus.activate();
+    expect(restart).toHaveBeenCalled();
+  });
+
   it("continues from the paused root menu on escape", () => {
     const start = vi.fn();
     const menus = new Menus(createArena(), { start });

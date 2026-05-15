@@ -11,6 +11,7 @@ const createControls = (): ControllerInterfaceInstance => {
   return {
     adjustUiZoom: vi.fn(),
     resetUiZoom: vi.fn(),
+    requestRestartConfirmation: vi.fn(),
     rotateToHeading: vi.fn(),
     rotateClockwise: vi.fn(),
     rotateAntiClockwise: vi.fn(),
@@ -47,17 +48,31 @@ const createInputState = (): ControlInputState => {
   };
 };
 
-const dispatchTouch = (canvas: HTMLCanvasElement, type: string, touch: { clientX: number; clientY: number; identifier?: number }): void => {
+const createTouch = (touch: {
+  clientX: number;
+  clientY: number;
+  identifier?: number;
+}): Touch =>
+  ({
+    identifier: touch.identifier ?? 1,
+    clientX: touch.clientX,
+    clientY: touch.clientY,
+  }) as Touch;
+
+const dispatchTouch = (
+  canvas: HTMLCanvasElement,
+  type: string,
+  touch: { clientX: number; clientY: number; identifier?: number },
+  touches = [touch]
+): void => {
   const event = new Event(type, { bubbles: true, cancelable: true });
+  const activeTouches = touches.map(createTouch);
 
   Object.defineProperty(event, "changedTouches", {
-    value: [
-      {
-        identifier: touch.identifier ?? 1,
-        clientX: touch.clientX,
-        clientY: touch.clientY,
-      },
-    ],
+    value: [createTouch(touch)],
+  });
+  Object.defineProperty(event, "touches", {
+    value: activeTouches,
   });
 
   canvas.dispatchEvent(event);
@@ -584,6 +599,74 @@ describe("controller modules", () => {
       type: "release",
     });
     expect(controls.rotateToHeading).not.toHaveBeenCalled();
+
+    touch.disconnect?.();
+  });
+
+  it("maps two-finger touch taps to the main menu", () => {
+    const controls = createControls();
+    const inputState = createInputState();
+    const canvas = document.createElement("canvas");
+    const touch = new TouchController(canvas, controls, inputState);
+    const touches = [
+      { clientX: 100, clientY: 100, identifier: 1 },
+      { clientX: 160, clientY: 100, identifier: 2 },
+    ];
+
+    dispatchTouch(canvas, "touchstart", touches[1], touches);
+    dispatchTouch(canvas, "touchend", touches[1], []);
+
+    expect(controls.openMainMenu).toHaveBeenCalledTimes(1);
+    expect(inputState.activeController).toBe("touch");
+    expect(inputState.menu).toBe(true);
+
+    touch.disconnect?.();
+  });
+
+  it("maps three-finger touch taps to restart confirmation", () => {
+    const controls = createControls();
+    const inputState = createInputState();
+    const canvas = document.createElement("canvas");
+    const touch = new TouchController(canvas, controls, inputState);
+    const touches = [
+      { clientX: 100, clientY: 100, identifier: 1 },
+      { clientX: 160, clientY: 100, identifier: 2 },
+      { clientX: 130, clientY: 150, identifier: 3 },
+    ];
+
+    dispatchTouch(canvas, "touchstart", touches[2], touches);
+    dispatchTouch(canvas, "touchend", touches[2], []);
+
+    expect(controls.requestRestartConfirmation).toHaveBeenCalledTimes(1);
+    expect(controls.restart).not.toHaveBeenCalled();
+    expect(inputState.activeController).toBe("touch");
+    expect(inputState.restart).toBe(true);
+
+    touch.disconnect?.();
+  });
+
+  it("pinch zooms the UI and game together in small steps", () => {
+    const controls = createControls();
+    const inputState = createInputState();
+    const canvas = document.createElement("canvas");
+    const touch = new TouchController(canvas, controls, inputState);
+    const startTouches = [
+      { clientX: 100, clientY: 100, identifier: 1 },
+      { clientX: 200, clientY: 100, identifier: 2 },
+    ];
+    const movedTouches = [
+      { clientX: 80, clientY: 100, identifier: 1 },
+      { clientX: 220, clientY: 100, identifier: 2 },
+    ];
+
+    dispatchTouch(canvas, "touchstart", startTouches[1], startTouches);
+    dispatchTouch(canvas, "touchmove", movedTouches[1], movedTouches);
+    dispatchTouch(canvas, "touchend", movedTouches[1], []);
+
+    expect(userOptions.uiZoom).toBe(110);
+    expect(userOptions.gameZoom).toBe(110);
+    expect(controls.openMainMenu).not.toHaveBeenCalled();
+    expect(inputState.activeController).toBe("touch");
 
     touch.disconnect?.();
   });

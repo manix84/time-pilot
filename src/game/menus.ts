@@ -49,6 +49,7 @@ type MenuScreen =
   | "filter-custom"
   | "debug"
   | "language"
+  | "restart-confirm"
   | "level";
 type MenuItemKind = "action" | "enum" | "slider" | "key" | "toggle";
 type ToggleDebugOption =
@@ -230,6 +231,14 @@ class Menus implements MenuSystemInstance {
     this._scrollY = 0;
     this._transition = null;
     this._buildItems();
+  };
+
+  showRestartConfirm = (): void => {
+    if (!this._active) {
+      this.showStart({ startLabel: i18n.menu.continue });
+    }
+
+    this._goToScreen("restart-confirm");
   };
 
   hide = (): void => {
@@ -708,6 +717,8 @@ class Menus implements MenuSystemInstance {
       this._items = this._createControlsItems();
     } else if (this._screen === "language") {
       this._items = this._createLanguageItems();
+    } else if (this._screen === "restart-confirm") {
+      this._items = this._createRestartConfirmItems();
     } else if (this._screen === "debug") {
       this._items = this._createDebugItems();
     } else {
@@ -876,6 +887,17 @@ class Menus implements MenuSystemInstance {
       this._createKeyBindingItem("right", 60, -12, 86, 34),
       this._createKeyBindingItem("fire", -146, 30, 292, 34),
       this._createItem(i18n.menu.back, "action", 92, {
+        action: () => this._goBack(),
+      }),
+    ];
+  };
+
+  private _createRestartConfirmItems = (): MenuItem[] => {
+    return [
+      this._createItem(i18n.menu.restart, "action", -12, {
+        action: () => this._commands.restart?.(),
+      }),
+      this._createItem(i18n.menu.cancel, "action", 38, {
         action: () => this._goBack(),
       }),
     ];
@@ -2485,6 +2507,10 @@ class Menus implements MenuSystemInstance {
 
     if (this._screen === "language") {
       return i18n.menu.language;
+    }
+
+    if (this._screen === "restart-confirm") {
+      return i18n.menu.restartConfirmTitle;
     }
 
     if (this._screen === "level") {
