@@ -439,6 +439,8 @@ export interface MenuSystemCommands {
   previewLevel?: (level: number) => void;
   restart?: () => void;
   selectLevel?: (level: number) => void;
+  setDebugContinues?: (continues: number) => void;
+  setDebugLives?: (lives: number) => void;
   start: () => void;
 }
 
@@ -706,6 +708,8 @@ export interface UserOptions {
   };
   enableDebug: boolean;
   controllerType: ControllerType;
+  debugContinues: number;
+  debugLives: number;
   gameZoom: number;
   gamepadEnabled: boolean;
   filterSettings: FilterSettings;

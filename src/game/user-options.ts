@@ -33,6 +33,8 @@ type PersistedUserOptions = Pick<
   UserOptions,
   | "controllerType"
   | "debug"
+  | "debugContinues"
+  | "debugLives"
   | "enableDebug"
   | "effectsVolume"
   | "gamepadEnabled"
@@ -72,6 +74,8 @@ const defaultPersistedOptions: PersistedUserOptions = {
     showSteeringArc: false,
     invincible: true,
   },
+  debugContinues: 3,
+  debugLives: 3,
   enableDebug: false,
   controllerType: "keyboard1" as ControllerType,
   gameZoom: zoomDefaultPercent,
@@ -97,6 +101,19 @@ const normalizeZoomOption = (value: unknown): number => {
       : value;
 
   return Math.max(zoomMinPercent, Math.min(zoomMaxPercent, percent));
+};
+
+const normalizeIntegerOption = (
+  value: unknown,
+  defaultValue: number,
+  min: number,
+  max: number
+): number => {
+  if (typeof value !== "number" || !Number.isFinite(value)) {
+    return defaultValue;
+  }
+
+  return Math.max(min, Math.min(max, Math.round(value)));
 };
 
 const getOptionsStorage = (): Storage | null => {
@@ -191,6 +208,8 @@ const writeUserOptions = (): void => {
       JSON.stringify({
         controllerType: userOptions.controllerType,
         debug: userOptions.debug,
+        debugContinues: userOptions.debugContinues,
+        debugLives: userOptions.debugLives,
         enableDebug: userOptions.enableDebug,
         effectsVolume: userOptions.effectsVolume,
         gamepadEnabled: userOptions.gamepadEnabled,
@@ -291,6 +310,18 @@ var userOptions: UserOptions = {
    */
   controllerType:
     storedOptions.controllerType ?? defaultPersistedOptions.controllerType,
+  debugContinues: normalizeIntegerOption(
+    storedOptions.debugContinues,
+    defaultPersistedOptions.debugContinues,
+    0,
+    99
+  ),
+  debugLives: normalizeIntegerOption(
+    storedOptions.debugLives,
+    defaultPersistedOptions.debugLives,
+    1,
+    99
+  ),
   gameZoom: normalizeZoomOption(storedOptions.gameZoom),
 
   /**

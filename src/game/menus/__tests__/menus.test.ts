@@ -44,6 +44,8 @@ describe("menu definitions", () => {
     userOptions.setDebugOption("showPlayerCoordinates", true);
     userOptions.setDebugOption("showSteeringArc", false);
     userOptions.setOption("controllerType", "keyboard1");
+    userOptions.setOption("debugContinues", 3);
+    userOptions.setOption("debugLives", 3);
     userOptions.setOption("language", "en");
     userOptions.setOption("gameZoom", 100);
     userOptions.setOption("masterVolume", 10);
@@ -612,7 +614,7 @@ describe("menu definitions", () => {
 
     menus.activate();
 
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i < 7; i++) {
       menus.next();
     }
 
@@ -895,6 +897,20 @@ describe("menu definitions", () => {
       '"showSteeringArc":true'
     );
 
+    menus.next();
+    menus.adjust(1);
+    expect(userOptions.debugLives).toBe(4);
+    expect(localStorage.getItem("timePilot.userOptions")).toContain(
+      '"debugLives":4'
+    );
+
+    menus.next();
+    menus.adjust(1);
+    expect(userOptions.debugContinues).toBe(4);
+    expect(localStorage.getItem("timePilot.userOptions")).toContain(
+      '"debugContinues":4'
+    );
+
     for (let i = 0; i < 2; i++) {
       menus.next();
     }
@@ -935,7 +951,7 @@ describe("menu definitions", () => {
     menus.next();
     menus.activate();
 
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i < 7; i++) {
       menus.next();
     }
 
@@ -1044,7 +1060,7 @@ describe("menu definitions", () => {
     menus.next();
     menus.next();
     menus.activate();
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i < 7; i++) {
       menus.next();
     }
     menus.activate();

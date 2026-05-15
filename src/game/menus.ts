@@ -82,6 +82,7 @@ interface MenuItem {
     y: number;
   };
   sliderSteps?: number;
+  sliderMin?: number;
 }
 
 interface MenuViewport {
@@ -1050,11 +1051,27 @@ class Menus implements MenuSystemInstance {
         "showSteeringArc",
         114
       ),
-      this._createItem(i18n.menu.selectLevel, "action", 156, {
+      this._createItem(i18n.menu.lives, "slider", 156, {
+        getValue: () => `${userOptions.debugLives}`,
+        onAdjust: (direction) =>
+          this._setDebugLives(userOptions.debugLives + direction),
+        onSetValue: (value) => this._setDebugLives(value),
+        sliderMin: 1,
+        sliderSteps: 99,
+      }),
+      this._createItem(i18n.menu.continues, "slider", 198, {
+        getValue: () => `${userOptions.debugContinues}`,
+        onAdjust: (direction) =>
+          this._setDebugContinues(userOptions.debugContinues + direction),
+        onSetValue: (value) => this._setDebugContinues(value),
+        sliderMin: 0,
+        sliderSteps: 99,
+      }),
+      this._createItem(i18n.menu.selectLevel, "action", 240, {
         action: () => this._goToScreen("level"),
         getValue: () => this._getSelectedLevelLabel(),
       }),
-      this._createItem(i18n.menu.back, "action", 206, {
+      this._createItem(i18n.menu.back, "action", 290, {
         action: () => this._goBack(),
       }),
     ];
@@ -2116,7 +2133,10 @@ class Menus implements MenuSystemInstance {
       );
     }
 
-    return Math.max(0, Math.min(1, value / (item.sliderSteps ?? 10)));
+    const sliderMin = item.sliderMin ?? 0;
+    const sliderMax = item.sliderSteps ?? 10;
+
+    return Math.max(0, Math.min(1, (value - sliderMin) / (sliderMax - sliderMin)));
   };
 
   private _setSliderFromPointer = (
@@ -2132,7 +2152,10 @@ class Menus implements MenuSystemInstance {
       Math.min(1, (pointer.posX - item.rect.x) / item.rect.width)
     );
 
-    item.onSetValue(Math.round(progress * (item.sliderSteps ?? 10)));
+    const sliderMin = item.sliderMin ?? 0;
+    const sliderMax = item.sliderSteps ?? 10;
+
+    item.onSetValue(Math.round(sliderMin + progress * (sliderMax - sliderMin)));
   };
 
   private _getMenuViewport = (): MenuViewport => {
@@ -2642,6 +2665,20 @@ class Menus implements MenuSystemInstance {
     value: number
   ): void => {
     userOptions.setFilterSetting(key, normalizeFilterIntensity(value));
+  };
+
+  private _setDebugLives = (lives: number): void => {
+    const value = Math.max(1, Math.min(99, Math.round(lives)));
+
+    userOptions.setOption("debugLives", value);
+    this._commands.setDebugLives?.(value);
+  };
+
+  private _setDebugContinues = (continues: number): void => {
+    const value = Math.max(0, Math.min(99, Math.round(continues)));
+
+    userOptions.setOption("debugContinues", value);
+    this._commands.setDebugContinues?.(value);
   };
 
   private _resetFilters = (): void => {

@@ -234,6 +234,12 @@ export class TimePilot {
         this.selectDebugLevel(level);
         this.beginGame();
       },
+      setDebugContinues: (continues) => {
+        this.context._player.setData("continues", continues, true);
+      },
+      setDebugLives: (lives) => {
+        this.context._player.setData("lives", lives, true);
+      },
       start: () => {
         this.beginGame();
       },

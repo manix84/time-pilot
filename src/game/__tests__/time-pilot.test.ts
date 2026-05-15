@@ -112,7 +112,7 @@ describe("TimePilot engine", () => {
       pilot.context._menus.next();
     }
     pilot.context._menus.activate();
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i < 7; i++) {
       pilot.context._menus.next();
     }
     pilot.context._menus.activate();
