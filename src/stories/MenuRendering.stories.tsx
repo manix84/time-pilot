@@ -11,6 +11,10 @@ type TransitionInspectableMenu = {
   _transition: null;
 };
 
+const menuStoryCanvasWidth = 800;
+const menuStoryCanvasHeight = 600;
+const menuStoryRenderScale = 1;
+
 const renderMenuFrame = (
   context: CanvasRenderingContext2D,
   canvas: HTMLCanvasElement,
@@ -20,6 +24,7 @@ const renderMenuFrame = (
   context.fillRect(0, 0, canvas.width, canvas.height);
   context.save();
   context.translate(canvas.width / 2, canvas.height / 2);
+  context.scale(menuStoryRenderScale, menuStoryRenderScale);
   menu.render();
   context.restore();
 };
@@ -73,9 +78,9 @@ const drawMenu = (context: CanvasRenderingContext2D, canvas: HTMLCanvasElement, 
 };
 
 const MenuLiveDemo = ({
-  height = 520,
+  height = menuStoryCanvasHeight,
   screen,
-  width = 760,
+  width = menuStoryCanvasWidth,
 }: {
   height?: number;
   screen: MenuScreenDemo;
@@ -174,9 +179,9 @@ const MenuTransitionDemo = () => {
   return (
     <canvas
       className={"storybook-canvas"}
-      height={520}
+      height={menuStoryCanvasHeight}
       ref={canvasRef}
-      width={560}
+      width={menuStoryCanvasWidth}
     />
   );
 };
@@ -203,33 +208,45 @@ const MenuRenderingDemo = () => {
 
   return (
     <main className={"storybook-surface"}>
-      <section className={"storybook-section"}>
+      <section className={"storybook-section storybook-menu-section"}>
         <p className={"storybook-eyebrow"}>Game UI</p>
         <h1 className={"storybook-title"}>Menu Rendering</h1>
-        <div className={"storybook-demo-grid"}>
+        <div className={"storybook-demo-grid storybook-menu-grid"}>
           <article className={"storybook-card"}>
             <h2>Main Menu</h2>
-            <CanvasDemo draw={drawStart} height={420} width={560} />
+            <CanvasDemo
+              draw={drawStart}
+              height={menuStoryCanvasHeight}
+              width={menuStoryCanvasWidth}
+            />
           </article>
           <article className={"storybook-card"}>
             <h2>Paused Root Menu</h2>
-            <MenuLiveDemo height={420} screen={"paused"} width={560} />
+            <MenuLiveDemo screen={"paused"} />
           </article>
           <article className={"storybook-card"}>
             <h2>Options Menu</h2>
-            <CanvasDemo draw={drawOptions} height={520} width={560} />
+            <CanvasDemo
+              draw={drawOptions}
+              height={menuStoryCanvasHeight}
+              width={menuStoryCanvasWidth}
+            />
           </article>
           <article className={"storybook-card"}>
             <h2>Game Zoom Preview</h2>
-            <MenuLiveDemo height={520} screen={"zoom"} width={760} />
+            <MenuLiveDemo screen={"zoom"} />
           </article>
           <article className={"storybook-card"}>
             <h2>Debug Menu</h2>
-            <CanvasDemo draw={drawDebug} height={460} width={560} />
+            <CanvasDemo
+              draw={drawDebug}
+              height={menuStoryCanvasHeight}
+              width={menuStoryCanvasWidth}
+            />
           </article>
-          <article className={"storybook-card"}>
+          <article className={"storybook-card storybook-wide-card"}>
             <h2>Level Select Showcase</h2>
-            <MenuLiveDemo height={520} screen={"level"} width={900} />
+            <MenuLiveDemo screen={"level"} />
           </article>
           <article className={"storybook-card"}>
             <h2>Submenu Transition</h2>

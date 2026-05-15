@@ -175,6 +175,10 @@ const achievementCardHeight = 112;
 const achievementCardMinWidthForThreeColumns = 620;
 const achievementCardMinWidthForTwoColumns = 420;
 const achievementIconRenderSize = 48;
+const timePilotVersion =
+  typeof __TIME_PILOT_VERSION__ === "undefined"
+    ? "dev"
+    : __TIME_PILOT_VERSION__;
 const keyBindingRows: Array<{ binding: BindingAction; label: string }> = [
   { binding: "up", label: i18n.keys.up },
   { binding: "left", label: i18n.keys.left },
@@ -749,7 +753,7 @@ class Menus implements MenuSystemInstance {
 
   private _renderBuildNumber = (menuScale: number): void => {
     this._gameArena.renderText(
-      `v${__TIME_PILOT_VERSION__}`,
+      `v${timePilotVersion}`,
       this._gameArena.width / (2 * menuScale) - 12 / menuScale,
       this._gameArena.height / (2 * menuScale) - 10 / menuScale,
       {

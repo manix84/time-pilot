@@ -1,5 +1,6 @@
 import type { Preview } from "@storybook/react-vite";
 import { assetPath } from "../src/game/asset-path";
+import userOptions from "../src/game/user-options";
 import "../src/styles.css";
 
 if (typeof document !== "undefined") {
@@ -13,7 +14,26 @@ if (typeof document !== "undefined") {
   document.head.appendChild(style);
 }
 
+const storybookZoomPercent = 100;
+
+const resetStorybookZoom = (): void => {
+  if (userOptions.uiZoom !== storybookZoomPercent) {
+    userOptions.setOption("uiZoom", storybookZoomPercent);
+  }
+
+  if (userOptions.gameZoom !== storybookZoomPercent) {
+    userOptions.setOption("gameZoom", storybookZoomPercent);
+  }
+};
+
 const preview: Preview = {
+  decorators: [
+    (Story) => {
+      resetStorybookZoom();
+
+      return Story();
+    },
+  ],
   parameters: {
     controls: {
       disable: true,
