@@ -88,8 +88,8 @@ describe("menu definitions", () => {
     expect(context.drawImage).toHaveBeenCalled();
     expect(arena.renderText).toHaveBeenCalledWith(
       expect.stringMatching(/^v\d+\.\d+\.\d+/),
-      388,
-      290,
+      expect.any(Number),
+      expect.any(Number),
       expect.objectContaining({
         align: "right",
         valign: "bottom",

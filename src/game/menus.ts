@@ -718,18 +718,18 @@ class Menus implements MenuSystemInstance {
         color: palette.menu.waitingText,
       });
     }
-    context.restore();
 
     if (this._screen === "start") {
-      this._renderBuildNumber();
+      this._renderBuildNumber(menuScale);
     }
+    context.restore();
   };
 
-  private _renderBuildNumber = (): void => {
+  private _renderBuildNumber = (menuScale: number): void => {
     this._gameArena.renderText(
       `v${__TIME_PILOT_VERSION__}`,
-      this._gameArena.width / 2 - 12,
-      this._gameArena.height / 2 - 10,
+      this._gameArena.width / (2 * menuScale) - 12 / menuScale,
+      this._gameArena.height / (2 * menuScale) - 10 / menuScale,
       {
         size: 10,
         align: "right",
