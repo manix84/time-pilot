@@ -110,10 +110,65 @@ describe("TimePilot engine", () => {
     pilot.updateDemoAutopilot();
 
     expect(pilot.context._controlInputState.fire).toBe(true);
-    expect(pilot.context._controlInputState.right).toBe(true);
-    expect(pilot.context._controlInputState.left).toBe(false);
-    expect(pilot.context._controlInputState.up).toBe(false);
-    expect(pilot.context._controlInputState.down).toBe(false);
+    expect(
+      [
+        pilot.context._controlInputState.right,
+        pilot.context._controlInputState.left,
+        pilot.context._controlInputState.up,
+        pilot.context._controlInputState.down,
+      ].some(Boolean)
+    ).toBe(true);
+
+    game.destroyGame();
+  });
+
+  it("steers the demo player away from incoming projectiles", async () => {
+    const game = new TimePilot(host, { debug: true, gamepadEnabled: false });
+    const pilot = game as unknown as {
+      startDemoMode: () => void;
+      updateDemoAutopilot: () => void;
+      context: {
+        _controlInputState: {
+          left: boolean;
+          right: boolean;
+        };
+        _enemyBullets: {
+          create: (
+            originX: number,
+            originY: number,
+            heading: number,
+            size: number,
+            velocity: number,
+            color: string,
+            playSound?: boolean,
+            coordinateSpace?: "screen" | "world"
+          ) => void;
+        };
+        _player: {
+          getData: (key: "newHeading") => number | false | undefined;
+        };
+      };
+    };
+
+    await new Promise((resolve) => window.setTimeout(resolve, 5));
+
+    pilot.startDemoMode();
+    pilot.context._enemyBullets.create(
+      0,
+      -60,
+      180,
+      6,
+      8,
+      "#fff",
+      false,
+      "world"
+    );
+
+    pilot.updateDemoAutopilot();
+
+    expect(pilot.context._player.getData("newHeading")).toBe(270);
+    expect(pilot.context._controlInputState.left).toBe(true);
+    expect(pilot.context._controlInputState.right).toBe(false);
 
     game.destroyGame();
   });

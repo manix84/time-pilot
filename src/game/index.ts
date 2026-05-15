@@ -23,10 +23,14 @@ import SpawningSystem from "./systems/spawning";
 import { timeWarpAnimationTicks, timeWarpDelayMs } from "./time-warp";
 import type {
   AssetProgress,
+  BulletData,
+  BulletInstance,
   CollisionSystemInstance,
   Controller,
   ControllerType,
   ControlInputSource,
+  EnemyData,
+  EnemyInstance,
   GameDataStore,
   RenderingSystemInstance,
   SpawningSystemInstance,
@@ -56,7 +60,11 @@ const timeWarpDelayFrames = Math.max(
 );
 const continueLives = 3;
 const demoContinues = 99;
+const demoEnemyAvoidanceRadius = 118;
 const demoLives = 3;
+const demoProjectileAvoidanceLookAhead = 170;
+const demoProjectileAvoidanceRadius = 82;
+const demoProjectileAvoidanceStrength = 3.2;
 const playerRotationStep = 360 / player.rotationFrameCount;
 
 export const getDefaultActiveController = (): ControlInputSource => {
@@ -611,8 +619,7 @@ export class TimePilot {
     }
 
     const frame = this.context._gameTicker.getTicks();
-    const desiredHeading =
-      (90 + Math.sin(frame / 45) * 90 + Math.sin(frame / 120) * 45 + 360) % 360;
+    const desiredHeading = this.getDemoAutopilotHeading(frame);
 
     this.context._player.setData(
       "newHeading",
@@ -621,6 +628,168 @@ export class TimePilot {
     this.updateDemoControlOverlay(desiredHeading);
     this.context._player.startShooting();
   };
+
+  private getDemoAutopilotHeading = (frame: number): number => {
+    const wanderHeading =
+      (90 + Math.sin(frame / 45) * 90 + Math.sin(frame / 120) * 45 + 360) % 360;
+    const wanderVector = this.vectorFromHeading(wanderHeading);
+    const projectileAvoidance = this.getDemoProjectileAvoidanceVector();
+    const enemyAvoidance = this.getDemoEnemyAvoidanceVector();
+    const desiredVector = this.normalizeVector({
+      x:
+        wanderVector.x +
+        projectileAvoidance.x * demoProjectileAvoidanceStrength +
+        enemyAvoidance.x * 1.45,
+      y:
+        wanderVector.y +
+        projectileAvoidance.y * demoProjectileAvoidanceStrength +
+        enemyAvoidance.y * 1.45,
+    });
+
+    if (Math.hypot(desiredVector.x, desiredVector.y) <= 0.001) {
+      return wanderHeading;
+    }
+
+    return this.headingFromVector(desiredVector.x, desiredVector.y);
+  };
+
+  private getDemoProjectileAvoidanceVector = (): { x: number; y: number } => {
+    let avoidX = 0;
+    let avoidY = 0;
+
+    this.context._enemyBullets.getEntities().forEach((bullet) => {
+      const avoidance = this.getDemoProjectileAvoidanceForBullet(bullet);
+
+      avoidX += avoidance.x;
+      avoidY += avoidance.y;
+    });
+
+    return this.normalizeVector({ x: avoidX, y: avoidY });
+  };
+
+  private getDemoProjectileAvoidanceForBullet = (
+    bullet: BulletInstance
+  ): { x: number; y: number } => {
+    if (bullet.removeMe) {
+      return { x: 0, y: 0 };
+    }
+
+    const bulletData = bullet.getData() as BulletData;
+
+    if (bulletData.explosionTick !== false) {
+      return { x: 0, y: 0 };
+    }
+
+    const playerData = this.context._player.getData();
+    const bulletPosition =
+      bulletData.coordinateSpace === "world"
+        ? { posX: bulletData.posX, posY: bulletData.posY }
+        : {
+          posX: playerData.posX + bulletData.posX,
+          posY: playerData.posY + bulletData.posY,
+        };
+    const bulletDirection = this.vectorFromHeading(bulletData.heading);
+    const toPlayer = {
+      x: playerData.posX - bulletPosition.posX,
+      y: playerData.posY - bulletPosition.posY,
+    };
+    const alongPath = this.dotProduct(toPlayer, bulletDirection);
+
+    if (alongPath < -24 || alongPath > demoProjectileAvoidanceLookAhead) {
+      return { x: 0, y: 0 };
+    }
+
+    const closestPoint = {
+      x: bulletPosition.posX + bulletDirection.x * alongPath,
+      y: bulletPosition.posY + bulletDirection.y * alongPath,
+    };
+    const fromPath = {
+      x: playerData.posX - closestPoint.x,
+      y: playerData.posY - closestPoint.y,
+    };
+    const pathDistance = Math.hypot(fromPath.x, fromPath.y);
+
+    if (pathDistance > demoProjectileAvoidanceRadius) {
+      return { x: 0, y: 0 };
+    }
+
+    const perpendicular =
+      pathDistance <= 0.001
+        ? { x: -bulletDirection.y, y: bulletDirection.x }
+        : this.normalizeVector(fromPath);
+    const urgency =
+      (1 - pathDistance / demoProjectileAvoidanceRadius) *
+      (1 - Math.max(0, alongPath) / demoProjectileAvoidanceLookAhead);
+
+    return {
+      x: perpendicular.x * urgency,
+      y: perpendicular.y * urgency,
+    };
+  };
+
+  private getDemoEnemyAvoidanceVector = (): { x: number; y: number } => {
+    const playerData = this.context._player.getData();
+    let avoidX = 0;
+    let avoidY = 0;
+
+    this.context._enemies.getEntities().forEach((enemy: EnemyInstance) => {
+      if (!enemy.isAlive) {
+        return;
+      }
+
+      const enemyData = enemy.getData() as EnemyData;
+      const away = {
+        x: playerData.posX - enemyData.posX,
+        y: playerData.posY - enemyData.posY,
+      };
+      const distance = Math.hypot(away.x, away.y);
+
+      if (distance <= 0.001 || distance > demoEnemyAvoidanceRadius) {
+        return;
+      }
+
+      const normalized = this.normalizeVector(away);
+      const strength = 1 - distance / demoEnemyAvoidanceRadius;
+
+      avoidX += normalized.x * strength;
+      avoidY += normalized.y * strength;
+    });
+
+    return this.normalizeVector({ x: avoidX, y: avoidY });
+  };
+
+  private vectorFromHeading = (heading: number): { x: number; y: number } => {
+    const radians = heading * (Math.PI / 180);
+
+    return {
+      x: Math.sin(radians),
+      y: -Math.cos(radians),
+    };
+  };
+
+  private headingFromVector = (x: number, y: number): number => {
+    const heading = Math.atan2(x, -y) * (180 / Math.PI);
+
+    return (heading + 360) % 360;
+  };
+
+  private normalizeVector = (vector: { x: number; y: number }): { x: number; y: number } => {
+    const length = Math.hypot(vector.x, vector.y);
+
+    if (length <= 0.001) {
+      return { x: 0, y: 0 };
+    }
+
+    return {
+      x: vector.x / length,
+      y: vector.y / length,
+    };
+  };
+
+  private dotProduct = (
+    a: { x: number; y: number },
+    b: { x: number; y: number }
+  ): number => a.x * b.x + a.y * b.y;
 
   private updateDemoControlOverlay = (heading: number): void => {
     const radians = heading * (Math.PI / 180);

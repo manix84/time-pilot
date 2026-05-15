@@ -411,7 +411,7 @@ describe("game systems", () => {
     expect(context._player.kill).not.toHaveBeenCalled();
   });
 
-  it("keeps the player alive while demo collisions continue resolving bullets", () => {
+  it("allows demo collisions to kill the player while still resolving bullets", () => {
     const context = createContext({ demoMode: true });
     const system = new CollisionSystem(context);
 
@@ -419,7 +419,7 @@ describe("game systems", () => {
 
     const [enemy] = context._enemies.getEntities();
     expect(enemy.kill).toHaveBeenCalled();
-    expect(context._player.kill).not.toHaveBeenCalled();
+    expect(context._player.kill).toHaveBeenCalled();
   });
 
   it("skips collisions when enemies or the player are not alive", () => {
