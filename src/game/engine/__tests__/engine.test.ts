@@ -41,6 +41,7 @@ describe("engine modules", () => {
     arena.drawCircle(0, 0, 10, { borderColor: "#fff" });
 
     expect(host.querySelector("canvas")).toBeInstanceOf(HTMLCanvasElement);
+    expect(host.querySelector("canvas")?.tabIndex).toBe(0);
     expect(arena.width).toBe(640);
     expect(arena.height).toBe(480);
   });

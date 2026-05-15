@@ -105,6 +105,8 @@ class GameArena implements GameArenaInstance {
       "font-family: 'theFont';" +
       `src: url('${assetPath("fonts/font.ttf")}');` +
       " }";
+    this._canvas.tabIndex = 0;
+    this._canvas.style.outline = "none";
 
     this._containerElement.appendChild(this._styles);
     this._containerElement.appendChild(this._canvas);

@@ -34,6 +34,7 @@ class Mouse implements Controller {
   };
 
   private handlePress = (event: MouseEvent): void => {
+    this._canvas.focus();
     this._isPressed = true;
     this._isDragging = false;
     this._controllerInterface.handlePointer?.({

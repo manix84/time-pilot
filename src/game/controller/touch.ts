@@ -63,6 +63,7 @@ class TouchController implements Controller {
 
   private handleTouchStart = (event: TouchEvent): void => {
     event.preventDefault();
+    this._canvas.focus();
 
     if (event.touches.length >= 2) {
       this.startMultiTouchGesture(event);
