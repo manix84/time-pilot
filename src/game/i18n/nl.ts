@@ -64,9 +64,11 @@ const nl: typeof en = {
     debug: "Debug",
     directional: "Richting",
     effectsVolume: "Effectvolume",
+    exit: "Afsluiten",
     fire: "Vuur",
     filters: "Filters",
     fullScreen: "Volledig scherm",
+    gameOver: "Spel voorbij",
     gameZoom: "Gamezoom",
     levelShowcase: {
       basic: {

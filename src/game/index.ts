@@ -54,6 +54,7 @@ const timeWarpDelayFrames = Math.max(
   1,
   Math.round((TIME_WARP_DELAY_MS / 1000) * gameFps)
 );
+const continueLives = 3;
 const playerRotationStep = 360 / player.rotationFrameCount;
 
 export const getDefaultActiveController = (): ControlInputSource => {
@@ -78,6 +79,7 @@ export class TimePilot {
   private readonly context = {} as GameDataStore;
   private collisionSystem!: CollisionSystemInstance;
   private hasSeededInitialProps = false;
+  private hasShownGameOver = false;
   private hasStartedGame = false;
   private isDestroyed = false;
   private isDemoMode = false;
@@ -105,7 +107,7 @@ export class TimePilot {
   restartGame = (): void => {
     window.console.info("Restarting");
     SoundEngine.destroyAll();
-    this.context._gameTicker.stop(() => {
+    const reset = () => {
       this.context._hud.restart();
 
       this.context._gameTicker.clearTicks();
@@ -118,12 +120,19 @@ export class TimePilot {
       this.context._bonuses.clearAll();
       this.context._player.resetData();
       this.hasSeededInitialProps = false;
+      this.hasShownGameOver = false;
       this.hasStartedGame = false;
       this.selectedStartLevel = 1;
 
       this.configureGameLoop();
       this.startDemoMode();
-    });
+    };
+
+    if (this.context._gameTicker.isRunning) {
+      this.context._gameTicker.stop(reset);
+    } else {
+      reset();
+    }
   };
 
   destroyGame = (): void => {
@@ -207,6 +216,13 @@ export class TimePilot {
       clearLevelPreview: () => {
         this.clearDebugLevelPreview();
       },
+      continueGame: () => {
+        this.continueGame();
+      },
+      exitToRoot: () => {
+        this.exitToRootMenu();
+      },
+      getContinues: () => this.context._player.getData("continues") ?? 0,
       getLevel: () => this.selectedStartLevel,
       previewLevel: (level) => {
         this.previewDebugLevel(level);
@@ -437,6 +453,8 @@ export class TimePilot {
       if (this.context._levelProgress.bossDefeated) {
         this.beginTimeWarpTransition();
       }
+
+      this.showGameOverIfNeeded();
     }, 1);
   };
 
@@ -460,6 +478,7 @@ export class TimePilot {
       this.gameStartSound.play();
       this.resetWorld(this.selectedStartLevel, { skipIntro: false });
       this.hasStartedGame = true;
+      this.hasShownGameOver = false;
     }
 
     this.context._menus.hide();
@@ -470,6 +489,59 @@ export class TimePilot {
     }
 
     this.context._gameTicker.start();
+  };
+
+  private continueGame = (): void => {
+    const continues = this.context._player.getData("continues") ?? 0;
+
+    if (continues <= 0) {
+      return;
+    }
+
+    const level = this.context._level;
+    const score = this.context._player.getData("score") ?? 0;
+    const nextExtraLifeScore =
+      this.context._player.getData("nextExtraLifeScore") ??
+      scoring.extraLife.first;
+
+    this.stopMenuMusic();
+    SoundEngine.resumePaused();
+    SoundEngine.setMuted(false);
+    this.isDemoMode = false;
+    this.context._isDemoMode = false;
+    this.hasStartedGame = true;
+    this.hasShownGameOver = false;
+
+    this.resetWorld(level, { skipIntro: false });
+    this.context._player.setData("nextExtraLifeScore", nextExtraLifeScore, true);
+    this.context._player.setData("score", score, true);
+    this.context._player.setData("lives", continueLives, true);
+    this.context._player.setData("continues", continues - 1, true);
+    this.context._menus.hide();
+    this.spawningSystem.addInitialProps();
+    this.hasSeededInitialProps = true;
+    this.context._gameTicker.start();
+  };
+
+  private exitToRootMenu = (): void => {
+    SoundEngine.stopAll();
+    this.context._gameTicker.stop();
+    this.context._gameTicker.clearTicks();
+    this.context._gameTicker.clearSchedule();
+    this.context._renderTicker.clearSchedule();
+    this.context._enemies.clearAll();
+    this.context._bullets.clearAll();
+    this.context._enemyBullets.clearAll();
+    this.context._props.clearAll();
+    this.context._bonuses.clearAll();
+    this.context._player.resetData();
+    this.hasSeededInitialProps = false;
+    this.hasShownGameOver = false;
+    this.hasStartedGame = false;
+    this.selectedStartLevel = 1;
+
+    this.configureGameLoop();
+    this.startDemoMode();
   };
 
   private startDemoMode = (): void => {
@@ -554,6 +626,29 @@ export class TimePilot {
       : this.context._gameTicker.getTicks() + levelIntroDurationFrames;
     this.context._timeWarpTransition = undefined;
     this.hasSeededInitialProps = false;
+    this.hasShownGameOver = false;
+  };
+
+  private showGameOverIfNeeded = (): void => {
+    const playerData = this.context._player.getData();
+
+    if (
+      this.hasShownGameOver ||
+      this.isDemoMode ||
+      this.isTimeWarpTransitionActive() ||
+      !this.hasStartedGame ||
+      playerData.isAlive ||
+      playerData.lives > 0 ||
+      !playerData.removeMe
+    ) {
+      return;
+    }
+
+    this.hasShownGameOver = true;
+    this.context._player.stopShooting();
+    this.context._gameTicker.stop();
+    this.playMenuMusic();
+    this.context._menus.showGameOver();
   };
 
   private beginTimeWarpTransition = (): void => {

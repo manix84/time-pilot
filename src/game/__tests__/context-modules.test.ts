@@ -116,6 +116,7 @@ const createContext = (): GameDataStore => {
     resetUiZoom: vi.fn(),
     captureKey: vi.fn(() => false),
     isActive: vi.fn(() => false),
+    showGameOver: vi.fn(),
     showStart: vi.fn(),
     showRestartConfirm: vi.fn(),
     hide: vi.fn(),
@@ -411,17 +412,17 @@ describe("context-backed game modules", () => {
     expect(context._gameArena.updatePosition).toHaveBeenCalledWith(0, 0);
   });
 
-  it("shows game over only after the final life is lost", () => {
+  it("leaves final-life game over messaging to the menu system", () => {
     const context = createContext();
     context._player.setData("lives", 1);
 
     context._player.kill();
     context._hud.render();
 
-    expect(context._gameArena.renderText).toHaveBeenCalledWith(
+    expect(context._gameArena.renderText).not.toHaveBeenCalledWith(
       "Game Over",
-      0,
-      0,
+      expect.any(Number),
+      expect.any(Number),
       expect.any(Object)
     );
   });

@@ -62,9 +62,11 @@ const en = {
     debug: "Debug",
     directional: "Directional",
     effectsVolume: "Effects Volume",
+    exit: "Exit",
     fire: "Fire",
     filters: "Filters",
     fullScreen: "Full Screen",
+    gameOver: "Game Over",
     gameZoom: "Game Zoom",
     levelShowcase: {
       basic: {

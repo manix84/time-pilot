@@ -432,6 +432,9 @@ export interface RenderingSystemInstance {
 
 export interface MenuSystemCommands {
   clearLevelPreview?: () => void;
+  continueGame?: () => void;
+  exitToRoot?: () => void;
+  getContinues?: () => number;
   getLevel?: () => number;
   previewLevel?: (level: number) => void;
   restart?: () => void;
@@ -450,6 +453,7 @@ export interface MenuSystemInstance {
   captureKey: (keyCode: number) => boolean;
   isActive: () => boolean;
   showStart: (options?: ShowStartMenuOptions) => void;
+  showGameOver: () => void;
   showRestartConfirm: () => void;
   hide: () => void;
   render: () => void;

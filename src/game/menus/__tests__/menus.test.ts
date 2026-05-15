@@ -151,6 +151,65 @@ describe("menu definitions", () => {
     expect(restart).toHaveBeenCalled();
   });
 
+  it("shows continue on game over when continues remain", () => {
+    const continueGame = vi.fn();
+    const exitToRoot = vi.fn();
+    const arena = createArena();
+    const menus = new Menus(arena, {
+      continueGame,
+      exitToRoot,
+      getContinues: () => 1,
+      start: vi.fn(),
+    });
+
+    menus.showGameOver();
+    menus.render();
+
+    expect(arena.renderText).toHaveBeenCalledWith(
+      "Game Over",
+      expect.any(Number),
+      expect.any(Number),
+      expect.objectContaining({ align: "center" })
+    );
+    expect(arena.renderText).toHaveBeenCalledWith(
+      "Continue",
+      expect.any(Number),
+      expect.any(Number),
+      expect.objectContaining({ align: "left" })
+    );
+
+    menus.activate();
+    expect(continueGame).toHaveBeenCalled();
+
+    menus.showGameOver();
+    menus.next();
+    menus.activate();
+    expect(exitToRoot).toHaveBeenCalled();
+  });
+
+  it("shows restart on game over when no continues remain", () => {
+    const restart = vi.fn();
+    const arena = createArena();
+    const menus = new Menus(arena, {
+      getContinues: () => 0,
+      restart,
+      start: vi.fn(),
+    });
+
+    menus.showGameOver();
+    menus.render();
+
+    expect(arena.renderText).toHaveBeenCalledWith(
+      "Restart",
+      expect.any(Number),
+      expect.any(Number),
+      expect.objectContaining({ align: "left" })
+    );
+
+    menus.activate();
+    expect(restart).toHaveBeenCalled();
+  });
+
   it("continues from the paused root menu on escape", () => {
     const start = vi.fn();
     const menus = new Menus(createArena(), { start });

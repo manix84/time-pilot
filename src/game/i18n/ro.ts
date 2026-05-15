@@ -64,9 +64,11 @@ const ro: typeof en = {
     debug: "Debug",
     directional: "Directional",
     effectsVolume: "Volum efecte",
+    exit: "Iesire",
     fire: "Foc",
     filters: "Filters",
     fullScreen: "Ecran complet",
+    gameOver: "Joc terminat",
     gameZoom: "Zoom joc",
     levelShowcase: {
       basic: {

@@ -64,9 +64,11 @@ const es: typeof en = {
     debug: "Debug",
     directional: "Direccional",
     effectsVolume: "Volumen de efectos",
+    exit: "Salir",
     fire: "Disparo",
     filters: "Filters",
     fullScreen: "Pantalla completa",
+    gameOver: "Fin de la partida",
     gameZoom: "Zoom del juego",
     levelShowcase: {
       basic: {

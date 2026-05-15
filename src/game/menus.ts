@@ -48,6 +48,7 @@ type MenuScreen =
   | "filters"
   | "filter-custom"
   | "debug"
+  | "game-over"
   | "language"
   | "restart-confirm"
   | "level";
@@ -239,6 +240,23 @@ class Menus implements MenuSystemInstance {
     }
 
     this._goToScreen("restart-confirm");
+  };
+
+  showGameOver = (): void => {
+    this._active = true;
+    this._awaitingBinding = null;
+    this._bindingWarning = "";
+    this._screen = "game-over";
+    this._screenHistory = [];
+    this._pressedItemIndex = null;
+    this._scrollBarDrag = null;
+    this._selectedIndex = 0;
+    this._shouldRevealSelected = true;
+    this._levelPreviewedLevel = undefined;
+    this._resetLevelMenuIdleState();
+    this._scrollY = 0;
+    this._transition = null;
+    this._buildItems();
   };
 
   hide = (): void => {
@@ -717,6 +735,8 @@ class Menus implements MenuSystemInstance {
       this._items = this._createControlsItems();
     } else if (this._screen === "language") {
       this._items = this._createLanguageItems();
+    } else if (this._screen === "game-over") {
+      this._items = this._createGameOverItems();
     } else if (this._screen === "restart-confirm") {
       this._items = this._createRestartConfirmItems();
     } else if (this._screen === "debug") {
@@ -899,6 +919,28 @@ class Menus implements MenuSystemInstance {
       }),
       this._createItem(i18n.menu.cancel, "action", 38, {
         action: () => this._goBack(),
+      }),
+    ];
+  };
+
+  private _createGameOverItems = (): MenuItem[] => {
+    const continues = this._commands.getContinues?.() ?? 0;
+    const canContinue = continues > 0;
+
+    return [
+      this._createItem(
+        canContinue ? i18n.menu.continue : i18n.menu.restart,
+        "action",
+        -12,
+        {
+          action: () =>
+            canContinue
+              ? this._commands.continueGame?.()
+              : this._commands.restart?.(),
+        }
+      ),
+      this._createItem(i18n.menu.exit, "action", 38, {
+        action: () => this._commands.exitToRoot?.(),
       }),
     ];
   };
@@ -2503,6 +2545,10 @@ class Menus implements MenuSystemInstance {
 
     if (this._screen === "debug") {
       return i18n.menu.debug;
+    }
+
+    if (this._screen === "game-over") {
+      return i18n.menu.gameOver;
     }
 
     if (this._screen === "language") {

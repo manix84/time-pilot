@@ -64,9 +64,11 @@ const fr: typeof en = {
     debug: "Debug",
     directional: "Directionnel",
     effectsVolume: "Volume des effets",
+    exit: "Quitter",
     fire: "Tir",
     filters: "Filters",
     fullScreen: "Plein ecran",
+    gameOver: "Partie terminee",
     gameZoom: "Zoom jeu",
     levelShowcase: {
       basic: { label: "Ennemis", description: "Appareil principal de cette ere." },
