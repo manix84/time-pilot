@@ -6,6 +6,8 @@ import { spawnSync } from "node:child_process";
 const repoRoot = resolve(".");
 const lintExtensions = /\.(cjs|cts|js|jsx|mjs|mts|ts|tsx)$/i;
 const typecheckExtensions = /\.(cts|mts|ts|tsx)$/i;
+const appTypecheckPaths = /^(src|\.storybook)\//;
+const ambientTypecheckFiles = ["src/vite-env.d.ts"];
 const binSuffix = process.platform === "win32" ? ".cmd" : "";
 
 function run(command, args, options = {}) {
@@ -77,13 +79,33 @@ function runLint(files, snapshotDir) {
 }
 
 function runTypecheck(files, snapshotDir) {
-  const typecheckFiles = files.filter((file) => typecheckExtensions.test(file));
+  const stagedTypeScriptFiles = files.filter((file) =>
+    typecheckExtensions.test(file)
+  );
+  const typecheckFiles = stagedTypeScriptFiles.filter((file) =>
+    appTypecheckPaths.test(file)
+  );
+  const skippedTypecheckFiles = stagedTypeScriptFiles.filter(
+    (file) => !appTypecheckPaths.test(file)
+  );
 
   if (!typecheckFiles.length) {
     console.log("Pre-commit typecheck skipped: no staged TypeScript files.");
     return;
   }
 
+  if (skippedTypecheckFiles.length) {
+    console.log(
+      `Pre-commit typecheck skipped ${skippedTypecheckFiles.length} config/tool file(s): ${skippedTypecheckFiles.join(", ")}`
+    );
+  }
+
+  const projectTypecheckFiles = [
+    ...new Set([
+      ...typecheckFiles,
+      ...ambientTypecheckFiles.filter((file) => existsSync(join(snapshotDir, file))),
+    ]),
+  ];
   const tempConfigPath = join(snapshotDir, "tsconfig.staged.json");
 
   writeFileSync(
@@ -91,7 +113,7 @@ function runTypecheck(files, snapshotDir) {
     `${JSON.stringify(
       {
         extends: "./tsconfig.json",
-        files: typecheckFiles,
+        files: projectTypecheckFiles,
         include: [],
         compilerOptions: {
           noEmit: true,

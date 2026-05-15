@@ -38,6 +38,7 @@ class Mouse implements Controller {
     this._isDragging = false;
     this._controllerInterface.handlePointer?.({
       ...this.getCanvasPoint(event),
+      source: "mouse",
       type: "press",
     });
   };
@@ -49,6 +50,7 @@ class Mouse implements Controller {
 
     this._controllerInterface.handlePointer?.({
       ...this.getCanvasPoint(event),
+      source: "mouse",
       type: this._isPressed ? "drag" : "move",
     });
   };
@@ -62,6 +64,7 @@ class Mouse implements Controller {
 
     this._controllerInterface.handlePointer?.({
       ...point,
+      source: "mouse",
       type: "release",
     });
 
@@ -83,6 +86,7 @@ class Mouse implements Controller {
     this._controllerInterface.handlePointer?.({
       ...this.getCanvasPoint(event),
       deltaY: event.deltaY,
+      source: "mouse",
       type: "wheel",
     });
   };

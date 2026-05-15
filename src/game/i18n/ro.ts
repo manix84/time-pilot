@@ -119,6 +119,7 @@ const ro: typeof en = {
     soon: "In curand",
     start: "Start",
     uiZoom: "Zoom UI",
+    update: "Actualizeaza",
     videoFilterMode: "Video Filter Mode",
     watchDemo: "Vezi demo",
   },

@@ -418,16 +418,19 @@ describe("controller modules", () => {
     expect(controls.handlePointer).toHaveBeenCalledWith({
       posX: 0,
       posY: 0,
+      source: "mouse",
       type: "move",
     });
     expect(controls.handlePointer).toHaveBeenCalledWith({
       posX: 0,
       posY: 0,
+      source: "mouse",
       type: "press",
     });
     expect(controls.handlePointer).toHaveBeenCalledWith({
       posX: 0,
       posY: 0,
+      source: "mouse",
       type: "release",
     });
 
@@ -465,11 +468,13 @@ describe("controller modules", () => {
     expect(controls.handlePointer).toHaveBeenCalledWith({
       posX: -200,
       posY: 0,
+      source: "mouse",
       type: "press",
     });
     expect(controls.handlePointer).toHaveBeenCalledWith({
       posX: 100,
       posY: 0,
+      source: "mouse",
       type: "drag",
     });
     expect(controls.handlePointer).not.toHaveBeenCalledWith({
@@ -480,6 +485,7 @@ describe("controller modules", () => {
     expect(controls.handlePointer).toHaveBeenCalledWith({
       posX: 100,
       posY: 0,
+      source: "mouse",
       type: "release",
     });
 
@@ -517,11 +523,13 @@ describe("controller modules", () => {
     expect(controls.handlePointer).toHaveBeenCalledWith({
       posX: 500,
       posY: 400,
+      source: "mouse",
       type: "release",
     });
     expect(controls.handlePointer).toHaveBeenLastCalledWith({
       posX: 0,
       posY: 0,
+      source: "mouse",
       type: "move",
     });
 
@@ -560,6 +568,7 @@ describe("controller modules", () => {
       deltaY: 120,
       posX: 0,
       posY: 0,
+      source: "mouse",
       type: "wheel",
     });
 
@@ -652,16 +661,19 @@ describe("controller modules", () => {
     expect(controls.handlePointer).toHaveBeenCalledWith({
       posX: 0,
       posY: 0,
+      source: "touch",
       type: "press",
     });
     expect(controls.handlePointer).toHaveBeenCalledWith({
       posX: 40,
       posY: 20,
+      source: "touch",
       type: "drag",
     });
     expect(controls.handlePointer).toHaveBeenCalledWith({
       posX: 40,
       posY: 20,
+      source: "touch",
       type: "release",
     });
     expect(controls.rotateToHeading).not.toHaveBeenCalled();

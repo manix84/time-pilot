@@ -166,6 +166,7 @@ const levelShowcaseFrameDuration = 260;
 const povPreviewFadeDuration = 250;
 const povPreviewFrameDuration = 180;
 const submenuHeaderTopGap = 34;
+const touchScrollDragThreshold = 8;
 const keyBindingRows: Array<{ binding: BindingAction; label: string }> = [
   { binding: "up", label: i18n.keys.up },
   { binding: "left", label: i18n.keys.left },
@@ -174,6 +175,7 @@ const keyBindingRows: Array<{ binding: BindingAction; label: string }> = [
   { binding: "fire", label: i18n.menu.fire },
 ];
 const konamiCode = [38, 38, 40, 40, 37, 39, 37, 39, 66, 65];
+const touchKonamiSwipeThreshold = 36;
 
 class Menus implements MenuSystemInstance {
   private _active = false;
@@ -200,6 +202,10 @@ class Menus implements MenuSystemInstance {
   private _screenHistory: MenuScreen[] = [];
   private _pressedItemIndex: number | null = null;
   private _pressedItemDragged = false;
+  private _pressStartPointer: MenuPointerData | null = null;
+  private _touchScrollDrag:
+    | { lastY: number; pointerStartY: number; scrollStarted: boolean }
+    | null = null;
   private _scrollBarDrag: { pointerStartY: number; scrollStartY: number } | null = null;
   private _selectedIndex = 0;
   private _shouldRevealSelected = true;
@@ -235,6 +241,8 @@ class Menus implements MenuSystemInstance {
     this._screenHistory = [];
     this._pressedItemIndex = null;
     this._pressedItemDragged = false;
+    this._pressStartPointer = null;
+    this._touchScrollDrag = null;
     this._scrollBarDrag = null;
     this._selectedIndex = 0;
     this._shouldRevealSelected = true;
@@ -263,6 +271,8 @@ class Menus implements MenuSystemInstance {
     this._screenHistory = [];
     this._pressedItemIndex = null;
     this._pressedItemDragged = false;
+    this._pressStartPointer = null;
+    this._touchScrollDrag = null;
     this._scrollBarDrag = null;
     this._sliderDragIndex = null;
     this._selectedIndex = 0;
@@ -283,6 +293,8 @@ class Menus implements MenuSystemInstance {
     this._screenHistory = [];
     this._pressedItemIndex = null;
     this._pressedItemDragged = false;
+    this._pressStartPointer = null;
+    this._touchScrollDrag = null;
     this._scrollBarDrag = null;
     this._selectedIndex = 0;
     this._shouldRevealSelected = true;
@@ -303,6 +315,8 @@ class Menus implements MenuSystemInstance {
     this._bindingWarning = "";
     this._pressedItemIndex = null;
     this._pressedItemDragged = false;
+    this._pressStartPointer = null;
+    this._touchScrollDrag = null;
     this._scrollBarDrag = null;
     this._sliderDragIndex = null;
   };
@@ -396,6 +410,8 @@ class Menus implements MenuSystemInstance {
     this._bindingWarning = "";
     this._pressedItemIndex = null;
     this._pressedItemDragged = false;
+    this._pressStartPointer = null;
+    this._touchScrollDrag = null;
     this._scrollBarDrag = null;
     this._sliderDragIndex = null;
     this._scrollY = 0;
@@ -469,7 +485,7 @@ class Menus implements MenuSystemInstance {
     }
 
     if (!this._awaitingBinding) {
-      this._captureKonamiKey(keyCode);
+      this._captureKonamiInput(keyCode);
       return false;
     }
 
@@ -504,10 +520,36 @@ class Menus implements MenuSystemInstance {
 
     const menuPointer = this._getScaledPointer(pointer);
 
+    if (
+      pointer.type === "release" &&
+      pointer.source === "touch" &&
+      this._captureTouchKonamiInput(menuPointer)
+    ) {
+      this._sliderDragIndex = null;
+      this._scrollBarDrag = null;
+      this._pressedItemIndex = null;
+      this._pressStartPointer = null;
+      this._touchScrollDrag = null;
+      this._pressedItemDragged = false;
+      return;
+    }
+
     if (pointer.type === "wheel") {
       this._scrollBy((pointer.deltaY ?? 0) / this._getMenuScale());
       this._shouldRevealSelected = false;
       return;
+    }
+
+    if (pointer.type === "press") {
+      this._pressStartPointer = menuPointer;
+      this._touchScrollDrag =
+        pointer.source === "touch"
+          ? {
+            lastY: menuPointer.posY,
+            pointerStartY: menuPointer.posY,
+            scrollStarted: false,
+          }
+          : null;
     }
 
     if (pointer.type === "release") {
@@ -519,6 +561,8 @@ class Menus implements MenuSystemInstance {
       this._sliderDragIndex = null;
       this._scrollBarDrag = null;
       this._pressedItemIndex = null;
+      this._pressStartPointer = null;
+      this._touchScrollDrag = null;
       const wasDragged = this._pressedItemDragged;
       this._pressedItemDragged = false;
 
@@ -539,6 +583,12 @@ class Menus implements MenuSystemInstance {
       this._setScrollFromThumbDrag(menuPointer.posY);
       this._shouldRevealSelected = false;
       return;
+    }
+
+    if (pointer.type === "drag" && pointer.source === "touch") {
+      if (this._handleTouchScrollDrag(menuPointer)) {
+        return;
+      }
     }
 
     if (pointer.type === "drag" && this._sliderDragIndex !== null) {
@@ -669,6 +719,24 @@ class Menus implements MenuSystemInstance {
       });
     }
     context.restore();
+
+    if (this._screen === "start") {
+      this._renderBuildNumber();
+    }
+  };
+
+  private _renderBuildNumber = (): void => {
+    this._gameArena.renderText(
+      `v${__TIME_PILOT_VERSION__}`,
+      this._gameArena.width / 2 - 12,
+      this._gameArena.height / 2 - 10,
+      {
+        size: 10,
+        align: "right",
+        valign: "bottom",
+        color: palette.menu.mutedText,
+      }
+    );
   };
 
   private _renderLogo = (
@@ -842,6 +910,7 @@ class Menus implements MenuSystemInstance {
   };
 
   private _createStartItems = (): MenuItem[] => {
+    let itemY = -22;
     const items = [
       this._createItem(this._startLabel, "action", -22, {
         action: this._commands.start,
@@ -849,19 +918,33 @@ class Menus implements MenuSystemInstance {
     ];
 
     const showWatchDemo = this._commands.canWatchDemo?.() ?? false;
+    const showUpdate =
+      !this._isPausedRootMenu() && (this._commands.canApplyUpdate?.() ?? false);
+    itemY += 50;
 
     items.push(
-      this._createItem(i18n.menu.options, "action", 28, {
+      this._createItem(i18n.menu.options, "action", itemY, {
         action: () => this._goToScreen("options"),
       })
     );
+    itemY += 50;
+
+    if (showUpdate) {
+      items.push(
+        this._createItem(i18n.menu.update, "action", itemY, {
+          action: () => this._commands.applyUpdate?.(),
+        })
+      );
+      itemY += 50;
+    }
 
     if (this._debugUnlocked) {
       items.push(
-        this._createItem(i18n.menu.debug, "action", 78, {
+        this._createItem(i18n.menu.debug, "action", itemY, {
           action: () => this._goToScreen("debug"),
         })
       );
+      itemY += 50;
     }
 
     if (showWatchDemo) {
@@ -869,7 +952,7 @@ class Menus implements MenuSystemInstance {
         this._createItem(
           i18n.menu.watchDemo,
           "action",
-          this._debugUnlocked ? 128 : 78,
+          itemY,
           {
             action: () => {
               this._commands.watchDemo?.();
@@ -2492,6 +2575,40 @@ class Menus implements MenuSystemInstance {
     this._scrollY = this._clampScrollY(this._scrollY - deltaY);
   };
 
+  private _handleTouchScrollDrag = (pointer: MenuPointerData): boolean => {
+    if (!this._touchScrollDrag || !this._isMenuScrollable()) {
+      return false;
+    }
+
+    if (!this._touchScrollDrag.scrollStarted) {
+      const startPointer = this._pressStartPointer;
+      const dragX = startPointer ? pointer.posX - startPointer.posX : 0;
+      const dragY = pointer.posY - this._touchScrollDrag.pointerStartY;
+
+      if (Math.abs(dragY) < touchScrollDragThreshold) {
+        return false;
+      }
+
+      if (Math.abs(dragX) > Math.abs(dragY)) {
+        return false;
+      }
+
+      this._touchScrollDrag.scrollStarted = true;
+      this._pressedItemDragged = true;
+      this._sliderDragIndex = null;
+    }
+
+    const pointerDeltaY = pointer.posY - this._touchScrollDrag.lastY;
+    this._touchScrollDrag.lastY = pointer.posY;
+
+    this._scrollBy(-pointerDeltaY);
+    this._shouldRevealSelected = false;
+    return true;
+  };
+
+  private _isMenuScrollable = (): boolean =>
+    this._getScrollThumbGeometry(this._getItemsViewport()) !== null;
+
   private _setScrollFromThumbDrag = (pointerY: number): void => {
     if (!this._scrollBarDrag) {
       return;
@@ -2679,7 +2796,34 @@ class Menus implements MenuSystemInstance {
     return from + (to - from) * progress;
   };
 
-  private _captureKonamiKey = (keyCode: number): void => {
+  private _captureTouchKonamiInput = (pointer: MenuPointerData): boolean => {
+    if (this._screen !== "start" || this._debugUnlocked || !this._pressStartPointer) {
+      return false;
+    }
+
+    const deltaX = pointer.posX - this._pressStartPointer.posX;
+    const deltaY = pointer.posY - this._pressStartPointer.posY;
+    const absX = Math.abs(deltaX);
+    const absY = Math.abs(deltaY);
+
+    if (Math.max(absX, absY) >= touchKonamiSwipeThreshold) {
+      this._captureKonamiInput(
+        absX > absY ? (deltaX < 0 ? 37 : 39) : deltaY < 0 ? 38 : 40
+      );
+      return true;
+    }
+
+    const expectedInput = konamiCode[this._konamiIndex];
+
+    if (expectedInput === 66 || expectedInput === 65) {
+      this._captureKonamiInput(expectedInput);
+      return true;
+    }
+
+    return false;
+  };
+
+  private _captureKonamiInput = (keyCode: number): void => {
     if (this._screen !== "start" || this._debugUnlocked) {
       return;
     }
@@ -2758,6 +2902,8 @@ class Menus implements MenuSystemInstance {
     this._screenHistory = [];
     this._pressedItemIndex = null;
     this._pressedItemDragged = false;
+    this._pressStartPointer = null;
+    this._touchScrollDrag = null;
     this._scrollBarDrag = null;
     this._sliderDragIndex = null;
     this._selectedIndex = 0;
@@ -2784,6 +2930,8 @@ class Menus implements MenuSystemInstance {
     this._bindingWarning = "";
     this._pressedItemIndex = null;
     this._pressedItemDragged = false;
+    this._pressStartPointer = null;
+    this._touchScrollDrag = null;
     this._scrollBarDrag = null;
     this._sliderDragIndex = null;
     this._scrollY = 0;
@@ -2810,6 +2958,8 @@ class Menus implements MenuSystemInstance {
     this._bindingWarning = "";
     this._pressedItemIndex = null;
     this._pressedItemDragged = false;
+    this._pressStartPointer = null;
+    this._touchScrollDrag = null;
     this._scrollBarDrag = null;
     this._sliderDragIndex = null;
     this._scrollY = 0;

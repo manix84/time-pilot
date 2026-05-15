@@ -119,6 +119,7 @@ const it: typeof en = {
     soon: "Presto",
     start: "Inizia",
     uiZoom: "Zoom UI",
+    update: "Aggiorna",
     videoFilterMode: "Video Filter Mode",
     watchDemo: "Guarda demo",
   },

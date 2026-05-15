@@ -145,6 +145,7 @@ export interface Controller {
 
 export interface MenuPointerData extends Coordinates {
   deltaY?: number;
+  source?: "mouse" | "touch";
   type: "click" | "drag" | "move" | "press" | "release" | "wheel";
 }
 
@@ -437,7 +438,9 @@ export interface RenderingSystemInstance {
 }
 
 export interface MenuSystemCommands {
+  applyUpdate?: () => void;
   canWatchDemo?: () => boolean;
+  canApplyUpdate?: () => boolean;
   clearLevelPreview?: () => void;
   continueGame?: () => void;
   exitToRoot?: () => void;
