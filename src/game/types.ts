@@ -251,6 +251,7 @@ export interface PlayerInstance {
   shoot: () => void;
   render: () => void;
   kill: () => void;
+  setRespawnCallback?: (callback: () => void) => void;
 }
 
 export interface EnemyInstance {
@@ -323,8 +324,9 @@ export interface PropInstance {
   removeMe: boolean;
   getData(): PropData;
   getData<K extends keyof PropData>(key: K): PropData[K] | undefined;
+  isFlyThrough: () => boolean;
   reposition: () => void;
-  render: () => void;
+  render: (options?: { opacity?: number }) => void;
 }
 
 export interface PropFactoryInstance {
@@ -333,7 +335,10 @@ export interface PropFactoryInstance {
   getData: () => PropData[];
   cleanup: () => void;
   reposition: () => void;
-  render: (layer?: number | false) => void;
+  render: (
+    layer?: number | false,
+    options?: { excludeFlyThrough?: boolean; flyThroughOnly?: boolean; opacity?: number }
+  ) => void;
   clearAll: () => void;
 }
 
@@ -370,6 +375,7 @@ export interface HudInstance {
 export interface ControllerInterfaceInstance {
   adjustUiZoom?: (direction: -1 | 1) => void;
   resetUiZoom?: () => void;
+  requestRestartConfirmation?: () => void;
   rotateToHeading: (desiredHeading: Heading) => void;
   rotateClockwise: () => void;
   rotateAntiClockwise: () => void;
@@ -402,6 +408,7 @@ export interface GameDataStore {
   _timeWarpTransition?: TimeWarpTransitionState;
   _nextParachuteScore?: number;
   _controlInputState: ControlInputState;
+  _demoControlInputState?: ControlInputState;
   _gameArena: GameArenaInstance;
   _renderTicker: TickerInstance;
   _gameTicker: TickerInstance;
@@ -430,11 +437,19 @@ export interface RenderingSystemInstance {
 }
 
 export interface MenuSystemCommands {
+  canWatchDemo?: () => boolean;
   clearLevelPreview?: () => void;
+  continueGame?: () => void;
+  exitToRoot?: () => void;
+  getContinues?: () => number;
   getLevel?: () => number;
   previewLevel?: (level: number) => void;
+  restart?: () => void;
   selectLevel?: (level: number) => void;
+  setDebugContinues?: (continues: number) => void;
+  setDebugLives?: (lives: number) => void;
   start: () => void;
+  watchDemo?: () => void;
 }
 
 export interface ShowStartMenuOptions {
@@ -447,7 +462,11 @@ export interface MenuSystemInstance {
   adjust: (direction: -1 | 1) => void;
   captureKey: (keyCode: number) => boolean;
   isActive: () => boolean;
+  isWatchingDemo: () => boolean;
   showStart: (options?: ShowStartMenuOptions) => void;
+  showDemoWatch: () => void;
+  showGameOver: () => void;
+  showRestartConfirm: () => void;
   hide: () => void;
   render: () => void;
   next: () => void;
@@ -608,6 +627,7 @@ export interface PropConfig {
   height: number;
   renderWidth?: number;
   renderHeight?: number;
+  foregroundOpacity?: number;
   relativeVelocity: number;
   layer: number;
   reversed: boolean;
@@ -699,6 +719,8 @@ export interface UserOptions {
   };
   enableDebug: boolean;
   controllerType: ControllerType;
+  debugContinues: number;
+  debugLives: number;
   gameZoom: number;
   gamepadEnabled: boolean;
   filterSettings: FilterSettings;

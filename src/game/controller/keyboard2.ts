@@ -31,6 +31,12 @@ class Keyboard2 implements Controller {
         }
 
         const bindings = userOptions.keyboardBindings;
+        const menuActive = this._controllerInterface.isMenuActive?.() ?? false;
+
+        if (menuActive && event.repeat && this._isMenuCommandKey(event.keyCode)) {
+          event.preventDefault();
+          return;
+        }
 
         if (event.keyCode === 77) {
           event.preventDefault();
@@ -50,45 +56,51 @@ class Keyboard2 implements Controller {
           this._controllerInterface.toggleFullScreen();
         } else if (bindings.left.includes(event.keyCode)) {
           event.preventDefault();
-          this._setInputState("left", true);
-          if (this._controllerInterface.isMenuActive?.()) {
+          if (menuActive) {
             this._controllerInterface.rotateToHeading(270);
           } else if (userOptions.controllerType === "keyboard2") {
+            this._setInputState("left", true);
             this._controllerInterface.rotateAntiClockwise();
           } else {
+            this._setInputState("left", true);
             this._controllerInterface.rotateToHeading(270);
           }
         } else if (bindings.up.includes(event.keyCode)) {
           event.preventDefault();
-          this._setInputState("up", true);
           if (
-            this._controllerInterface.isMenuActive?.() ||
+            menuActive ||
             userOptions.controllerType === "keyboard1"
           ) {
+            if (!menuActive) {
+              this._setInputState("up", true);
+            }
             this._controllerInterface.rotateToHeading(0);
           }
         } else if (bindings.right.includes(event.keyCode)) {
           event.preventDefault();
-          this._setInputState("right", true);
-          if (this._controllerInterface.isMenuActive?.()) {
+          if (menuActive) {
             this._controllerInterface.rotateToHeading(90);
           } else if (userOptions.controllerType === "keyboard2") {
+            this._setInputState("right", true);
             this._controllerInterface.rotateClockwise();
           } else {
+            this._setInputState("right", true);
             this._controllerInterface.rotateToHeading(90);
           }
         } else if (bindings.down.includes(event.keyCode)) {
           event.preventDefault();
-          this._setInputState("down", true);
           if (
-            this._controllerInterface.isMenuActive?.() ||
+            menuActive ||
             userOptions.controllerType === "keyboard1"
           ) {
+            if (!menuActive) {
+              this._setInputState("down", true);
+            }
             this._controllerInterface.rotateToHeading(180);
           }
         } else if (
           event.keyCode === 13 &&
-          this._controllerInterface.isMenuActive?.()
+          menuActive
         ) {
           event.preventDefault();
           this._controllerInterface.startShooting();
@@ -156,6 +168,19 @@ class Keyboard2 implements Controller {
 
       this._inputState[key] = isPressed;
     }
+  };
+
+  private _isMenuCommandKey = (keyCode: number): boolean => {
+    const bindings = userOptions.keyboardBindings;
+
+    return (
+      keyCode === 13 ||
+      bindings.fire.includes(keyCode) ||
+      bindings.left.includes(keyCode) ||
+      bindings.up.includes(keyCode) ||
+      bindings.right.includes(keyCode) ||
+      bindings.down.includes(keyCode)
+    );
   };
 }
 

@@ -324,7 +324,11 @@ const createContext = ({
       resetUiZoom: vi.fn(),
       captureKey: vi.fn(() => false),
       isActive: vi.fn(() => false),
+      isWatchingDemo: vi.fn(() => false),
+      showDemoWatch: vi.fn(),
+      showGameOver: vi.fn(),
       showStart: vi.fn(),
+      showRestartConfirm: vi.fn(),
       hide: vi.fn(),
       render: vi.fn(),
       next: vi.fn(),
@@ -407,7 +411,7 @@ describe("game systems", () => {
     expect(context._player.kill).not.toHaveBeenCalled();
   });
 
-  it("keeps the player alive while demo collisions continue resolving bullets", () => {
+  it("allows demo collisions to kill the player while still resolving bullets", () => {
     const context = createContext({ demoMode: true });
     const system = new CollisionSystem(context);
 
@@ -415,7 +419,7 @@ describe("game systems", () => {
 
     const [enemy] = context._enemies.getEntities();
     expect(enemy.kill).toHaveBeenCalled();
-    expect(context._player.kill).not.toHaveBeenCalled();
+    expect(context._player.kill).toHaveBeenCalled();
   });
 
   it("skips collisions when enemies or the player are not alive", () => {
@@ -511,7 +515,15 @@ describe("game systems", () => {
       true,
       0.5,
       true,
-      undefined,
+      expect.objectContaining({
+        frameLimiter: 4,
+        frames: 4,
+        height: 11,
+        sprite: expect.objectContaining({
+          src: "/sprites/enemies/projectiles/rocket_explosion.png",
+        }),
+        width: 11,
+      }),
       expect.objectContaining({
         src: "/sounds/enemies/basic/rocket_launch.wav",
       }),
@@ -552,7 +564,15 @@ describe("game systems", () => {
       true,
       1,
       true,
-      undefined,
+      expect.objectContaining({
+        frameLimiter: 4,
+        frames: 4,
+        height: 11,
+        sprite: expect.objectContaining({
+          src: "/sprites/enemies/projectiles/rocket_explosion.png",
+        }),
+        width: 11,
+      }),
       expect.objectContaining({
         src: "/sounds/enemies/basic/rocket_launch.wav",
       }),
@@ -782,12 +802,21 @@ describe("game systems", () => {
     expect(context._gameArena.clear).toHaveBeenCalled();
     expect(context._gameArena.setBackgroundColor).toHaveBeenCalledWith("#4FC3F7");
     expect(context._props.render).toHaveBeenNthCalledWith(1, 1);
+    expect(context._props.render).toHaveBeenNthCalledWith(2, 2, {
+      flyThroughOnly: true,
+    });
     expect(context._bonuses.render).toHaveBeenCalled();
     expect(context._bullets.render).toHaveBeenCalled();
     expect(context._enemies.render).toHaveBeenCalled();
     expect(context._enemyBullets.render).toHaveBeenCalled();
     expect(context._player.render).toHaveBeenCalled();
-    expect(context._props.render).toHaveBeenNthCalledWith(2, 2);
+    expect(context._props.render).toHaveBeenNthCalledWith(3, 2, {
+      excludeFlyThrough: true,
+    });
+    expect(context._props.render).toHaveBeenNthCalledWith(4, 2, {
+      flyThroughOnly: true,
+      opacity: 0.5,
+    });
     expect(context._hud.render).toHaveBeenCalled();
     expect(context._menus.render).toHaveBeenCalled();
   });
@@ -899,6 +928,18 @@ describe("game systems", () => {
     system.renderFrame();
 
     expect(context._hud.render).not.toHaveBeenCalled();
+    expect(context._menus.render).toHaveBeenCalled();
+  });
+
+  it("renders HUD while watching the menu demo", () => {
+    const context = createContext();
+    vi.mocked(context._menus.isActive).mockReturnValue(true);
+    vi.mocked(context._menus.isWatchingDemo).mockReturnValue(true);
+    const system = new RenderingSystem(context);
+
+    system.renderFrame();
+
+    expect(context._hud.render).toHaveBeenCalled();
     expect(context._menus.render).toHaveBeenCalled();
   });
 

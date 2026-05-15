@@ -55,17 +55,22 @@ const de: typeof en = {
   menu: {
     alreadyAssignedTo: (binding: string) => `Bereits ${binding} zugewiesen`,
     back: "Zurueck",
+    cancel: "Abbrechen",
+    continues: "Continues",
     continue: "Weiter",
     controlType: "Steuerung",
     current: "Ausgewaehlt",
     controls: "Tasten",
     customCrtOptions: "Custom CRT Options",
     debug: "Debug",
+    demo: "Demo",
     directional: "Richtung",
     effectsVolume: "Effektlautstaerke",
+    exit: "Beenden",
     fire: "Feuer",
     filters: "Filters",
     fullScreen: "Vollbild",
+    gameOver: "Spiel vorbei",
     gameZoom: "Spiel-Zoom",
     levelShowcase: {
       basic: {
@@ -93,6 +98,7 @@ const de: typeof en = {
     },
     invincibilityShield: "Unverwundbarkeit",
     language: "Sprache",
+    lives: "Leben",
     masterVolume: "Gesamtlautstaerke",
     musicVolume: "Musiklautstaerke",
     off: "Aus",
@@ -100,6 +106,8 @@ const de: typeof en = {
     options: "Optionen",
     pressAKey: "Taste druecken",
     remapControls: "Tasten belegen",
+    restart: "Neustart",
+    restartConfirmTitle: "Spiel neu starten?",
     resetFilters: "Reset Filters",
     rotate: "Drehen",
     selectLevel: "Level waehlen",
@@ -112,6 +120,7 @@ const de: typeof en = {
     start: "Start",
     uiZoom: "UI-Zoom",
     videoFilterMode: "Video Filter Mode",
+    watchDemo: "Demo ansehen",
   },
 };
 

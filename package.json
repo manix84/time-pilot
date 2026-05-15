@@ -1,7 +1,7 @@
 {
   "name": "time-pilot",
   "private": true,
-  "version": "18.0.0",
+  "version": "18.20.1",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -11,6 +11,7 @@
     "test": "vitest run",
     "storybook": "storybook dev -p 6006",
     "build:storybook": "storybook build",
+    "precommit:staged": "node scripts/pre-commit-staged-checks.mjs",
     "version:bump": "node scripts/smart-version-bump.mjs",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix"

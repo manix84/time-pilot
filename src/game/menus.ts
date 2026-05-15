@@ -48,7 +48,10 @@ type MenuScreen =
   | "filters"
   | "filter-custom"
   | "debug"
+  | "demo-watch"
+  | "game-over"
   | "language"
+  | "restart-confirm"
   | "level";
 type MenuItemKind = "action" | "enum" | "slider" | "key" | "toggle";
 type ToggleDebugOption =
@@ -80,6 +83,7 @@ interface MenuItem {
     y: number;
   };
   sliderSteps?: number;
+  sliderMin?: number;
 }
 
 interface MenuViewport {
@@ -145,6 +149,8 @@ const menuDesignHeight = 500;
 const menuDesignWidth = 660;
 const submenuItemOffsetY = 22;
 const menuTransitionDuration = 500;
+const demoSubtitleFadeDuration = 250;
+const demoSubtitleExitFadeDuration = 100;
 const startLogoScale = 2;
 const submenuLogoScale = 0.78;
 const logoBottomWidth = 390;
@@ -175,6 +181,7 @@ class Menus implements MenuSystemInstance {
   private _bindingWarning = "";
   private _commands: MenuSystemCommands;
   private _debugUnlocked = false;
+  private _demoWatchStartedAt = 0;
   private _gameArena: GameArenaInstance;
   private _items: MenuItem[] = [];
   private _konamiIndex = 0;
@@ -192,6 +199,7 @@ class Menus implements MenuSystemInstance {
   private _screen: MenuScreen = "start";
   private _screenHistory: MenuScreen[] = [];
   private _pressedItemIndex: number | null = null;
+  private _pressedItemDragged = false;
   private _scrollBarDrag: { pointerStartY: number; scrollStartY: number } | null = null;
   private _selectedIndex = 0;
   private _shouldRevealSelected = true;
@@ -210,6 +218,10 @@ class Menus implements MenuSystemInstance {
     return this._active;
   };
 
+  isWatchingDemo = (): boolean => {
+    return this._active && this._screen === "demo-watch";
+  };
+
   showStart = (options: ShowStartMenuOptions = {}): void => {
     if (this._active && this._screen === "level") {
       this._commands.clearLevelPreview?.();
@@ -222,6 +234,55 @@ class Menus implements MenuSystemInstance {
     this._screen = "start";
     this._screenHistory = [];
     this._pressedItemIndex = null;
+    this._pressedItemDragged = false;
+    this._scrollBarDrag = null;
+    this._selectedIndex = 0;
+    this._shouldRevealSelected = true;
+    this._levelPreviewedLevel = undefined;
+    this._resetLevelMenuIdleState();
+    this._scrollY = 0;
+    this._transition = null;
+    this._buildItems();
+  };
+
+  showRestartConfirm = (): void => {
+    if (!this._active) {
+      this.showStart({ startLabel: i18n.menu.continue });
+    }
+
+    this._goToScreen("restart-confirm");
+  };
+
+  showDemoWatch = (): void => {
+    const previousScreen = this._screen;
+
+    this._active = true;
+    this._awaitingBinding = null;
+    this._bindingWarning = "";
+    this._screen = "demo-watch";
+    this._screenHistory = [];
+    this._pressedItemIndex = null;
+    this._pressedItemDragged = false;
+    this._scrollBarDrag = null;
+    this._sliderDragIndex = null;
+    this._selectedIndex = 0;
+    this._shouldRevealSelected = false;
+    this._levelPreviewedLevel = undefined;
+    this._resetLevelMenuIdleState();
+    this._scrollY = 0;
+    this._buildItems();
+    this._demoWatchStartedAt = performance.now();
+    this._startTransition(previousScreen, "demo-watch");
+  };
+
+  showGameOver = (): void => {
+    this._active = true;
+    this._awaitingBinding = null;
+    this._bindingWarning = "";
+    this._screen = "game-over";
+    this._screenHistory = [];
+    this._pressedItemIndex = null;
+    this._pressedItemDragged = false;
     this._scrollBarDrag = null;
     this._selectedIndex = 0;
     this._shouldRevealSelected = true;
@@ -241,11 +302,17 @@ class Menus implements MenuSystemInstance {
     this._awaitingBinding = null;
     this._bindingWarning = "";
     this._pressedItemIndex = null;
+    this._pressedItemDragged = false;
     this._scrollBarDrag = null;
     this._sliderDragIndex = null;
   };
 
   next = (): void => {
+    if (this.isWatchingDemo()) {
+      this._exitDemoWatch();
+      return;
+    }
+
     if (!this._active || !this._items.length) {
       return;
     }
@@ -257,6 +324,11 @@ class Menus implements MenuSystemInstance {
   };
 
   previous = (): void => {
+    if (this.isWatchingDemo()) {
+      this._exitDemoWatch();
+      return;
+    }
+
     if (!this._active || !this._items.length) {
       return;
     }
@@ -269,6 +341,11 @@ class Menus implements MenuSystemInstance {
   };
 
   adjust = (direction: -1 | 1): void => {
+    if (this.isWatchingDemo()) {
+      this._exitDemoWatch();
+      return;
+    }
+
     if (!this._active) {
       return;
     }
@@ -283,6 +360,11 @@ class Menus implements MenuSystemInstance {
   };
 
   goBack = (): void => {
+    if (this.isWatchingDemo()) {
+      this._exitDemoWatch();
+      return;
+    }
+
     if (!this._active || this._screen === "start") {
       return;
     }
@@ -291,6 +373,11 @@ class Menus implements MenuSystemInstance {
   };
 
   goToRoot = (): void => {
+    if (this.isWatchingDemo()) {
+      this._exitDemoWatch();
+      return;
+    }
+
     if (!this._active || this._screen === "start") {
       return;
     }
@@ -308,6 +395,7 @@ class Menus implements MenuSystemInstance {
     this._awaitingBinding = null;
     this._bindingWarning = "";
     this._pressedItemIndex = null;
+    this._pressedItemDragged = false;
     this._scrollBarDrag = null;
     this._sliderDragIndex = null;
     this._scrollY = 0;
@@ -318,6 +406,11 @@ class Menus implements MenuSystemInstance {
   };
 
   activate = (): void => {
+    if (this.isWatchingDemo()) {
+      this._exitDemoWatch();
+      return;
+    }
+
     if (!this._active) {
       return;
     }
@@ -341,12 +434,22 @@ class Menus implements MenuSystemInstance {
       return;
     }
 
+    if ((item.kind === "enum" || item.kind === "slider") && item.onAdjust) {
+      item.onAdjust(-1);
+      return;
+    }
+
     item.action?.();
   };
 
   captureKey = (keyCode: number): boolean => {
     if (!this._active) {
       return false;
+    }
+
+    if (this.isWatchingDemo()) {
+      this._exitDemoWatch();
+      return true;
     }
 
     this._resetLevelMenuIdleState();
@@ -390,6 +493,13 @@ class Menus implements MenuSystemInstance {
       return;
     }
 
+    if (this.isWatchingDemo()) {
+      if (pointer.type !== "move") {
+        this._exitDemoWatch();
+      }
+      return;
+    }
+
     this._resetLevelMenuIdleState();
 
     const menuPointer = this._getScaledPointer(pointer);
@@ -409,11 +519,13 @@ class Menus implements MenuSystemInstance {
       this._sliderDragIndex = null;
       this._scrollBarDrag = null;
       this._pressedItemIndex = null;
+      const wasDragged = this._pressedItemDragged;
+      this._pressedItemDragged = false;
 
       if (
         pressedItemIndex !== null &&
         releasedItemIndex === pressedItemIndex &&
-        this._items[pressedItemIndex].kind !== "slider"
+        (this._items[pressedItemIndex].kind !== "slider" || !wasDragged)
       ) {
         this._selectedIndex = pressedItemIndex;
         this.activate();
@@ -423,6 +535,7 @@ class Menus implements MenuSystemInstance {
     }
 
     if (pointer.type === "drag" && this._scrollBarDrag) {
+      this._pressedItemDragged = true;
       this._setScrollFromThumbDrag(menuPointer.posY);
       this._shouldRevealSelected = false;
       return;
@@ -430,6 +543,7 @@ class Menus implements MenuSystemInstance {
 
     if (pointer.type === "drag" && this._sliderDragIndex !== null) {
       const item = this._items[this._sliderDragIndex];
+      this._pressedItemDragged = true;
 
       if (!item.disabled) {
         this._setSliderFromPointer(item, menuPointer);
@@ -459,13 +573,13 @@ class Menus implements MenuSystemInstance {
 
     if (pointer.type === "press") {
       this._pressedItemIndex = itemIndex;
+      this._pressedItemDragged = false;
 
       if (
         this._items[itemIndex].kind === "slider" &&
         !this._items[itemIndex].disabled
       ) {
         this._sliderDragIndex = itemIndex;
-        this._setSliderFromPointer(this._items[itemIndex], menuPointer);
       }
 
       return;
@@ -477,7 +591,7 @@ class Menus implements MenuSystemInstance {
           return;
         }
 
-        this._setSliderFromPointer(this._items[itemIndex], menuPointer);
+        this.activate();
         return;
       }
 
@@ -496,7 +610,7 @@ class Menus implements MenuSystemInstance {
     const levelMenuOpacity = this._getLevelMenuOpacity(levelMenuIdleProgress);
     const backplateOpacity = 1 - levelMenuIdleProgress;
 
-    if (backplateOpacity > 0) {
+    if (this._screen !== "demo-watch" && backplateOpacity > 0) {
       context.save();
       context.globalAlpha *= backplateOpacity;
       context.fillStyle = palette.menu.backplate;
@@ -517,13 +631,19 @@ class Menus implements MenuSystemInstance {
     context.scale(menuScale, menuScale);
     this._renderLogo(context, layout.logoY, layout.logoScale);
 
-    if (this._screen !== "start") {
-      this._gameArena.renderText(this._getScreenTitle(), 0, layout.titleY, {
-        size: 18,
-        align: "center",
-        valign: "middle",
-        color: palette.menu.mutedText,
-      });
+    if (this._shouldRenderScreenTitle()) {
+      const titleOpacity = this._getScreenTitleOpacity();
+      context.save();
+      context.globalAlpha *= titleOpacity;
+      if (titleOpacity > 0.01) {
+        this._gameArena.renderText(this._getRenderedScreenTitle(), 0, layout.titleY, {
+          size: 18,
+          align: "center",
+          valign: "middle",
+          color: palette.menu.mutedText,
+        });
+      }
+      context.restore();
     } else if (this._isPausedRootMenu()) {
       this._gameArena.renderText(i18n.hud.paused, 0, -42, {
         size: 18,
@@ -698,6 +818,8 @@ class Menus implements MenuSystemInstance {
   private _buildItems = (): void => {
     if (this._screen === "start") {
       this._items = this._createStartItems();
+    } else if (this._screen === "demo-watch") {
+      this._items = [];
     } else if (this._screen === "options") {
       this._items = this._createOptionsItems();
     } else if (this._screen === "filters") {
@@ -708,6 +830,10 @@ class Menus implements MenuSystemInstance {
       this._items = this._createControlsItems();
     } else if (this._screen === "language") {
       this._items = this._createLanguageItems();
+    } else if (this._screen === "game-over") {
+      this._items = this._createGameOverItems();
+    } else if (this._screen === "restart-confirm") {
+      this._items = this._createRestartConfirmItems();
     } else if (this._screen === "debug") {
       this._items = this._createDebugItems();
     } else {
@@ -720,16 +846,37 @@ class Menus implements MenuSystemInstance {
       this._createItem(this._startLabel, "action", -22, {
         action: this._commands.start,
       }),
+    ];
+
+    const showWatchDemo = this._commands.canWatchDemo?.() ?? false;
+
+    items.push(
       this._createItem(i18n.menu.options, "action", 28, {
         action: () => this._goToScreen("options"),
-      }),
-    ];
+      })
+    );
 
     if (this._debugUnlocked) {
       items.push(
         this._createItem(i18n.menu.debug, "action", 78, {
           action: () => this._goToScreen("debug"),
         })
+      );
+    }
+
+    if (showWatchDemo) {
+      items.push(
+        this._createItem(
+          i18n.menu.watchDemo,
+          "action",
+          this._debugUnlocked ? 128 : 78,
+          {
+            action: () => {
+              this._commands.watchDemo?.();
+              this.showDemoWatch();
+            },
+          }
+        )
       );
     }
 
@@ -829,8 +976,6 @@ class Menus implements MenuSystemInstance {
         onAdjust: (direction) => this._adjustFilterMode(direction),
       }),
       this._createItem(i18n.menu.customCrtOptions, "action", -12, {
-        getValue: () =>
-          userOptions.videoFilterMode === "custom" ? i18n.menu.on : i18n.menu.off,
         action: () => this._goToScreen("filter-custom"),
       }),
       this._createItem(i18n.menu.resetFilters, "action", 30, {
@@ -846,9 +991,12 @@ class Menus implements MenuSystemInstance {
     const items = filterSettingKeys.map((key, index) =>
       this._createItem(filterSettingLabels[key], "slider", -54 + index * 42, {
         description: filterSettingDescriptions[key],
-        getValue: () => `${userOptions.filterSettings[key]}`,
+        getValue: () => `${this._getEditableFilterSettings()[key]}`,
         onAdjust: (direction) =>
-          this._setFilterSetting(key, userOptions.filterSettings[key] + direction),
+          this._setFilterSetting(
+            key,
+            this._getEditableFilterSettings()[key] + direction
+          ),
         onSetValue: (value) => this._setFilterSetting(key, value),
         sliderSteps: 100,
       })
@@ -877,6 +1025,39 @@ class Menus implements MenuSystemInstance {
       this._createKeyBindingItem("fire", -146, 30, 292, 34),
       this._createItem(i18n.menu.back, "action", 92, {
         action: () => this._goBack(),
+      }),
+    ];
+  };
+
+  private _createRestartConfirmItems = (): MenuItem[] => {
+    return [
+      this._createItem(i18n.menu.restart, "action", -12, {
+        action: () => this._commands.restart?.(),
+      }),
+      this._createItem(i18n.menu.cancel, "action", 38, {
+        action: () => this._goBack(),
+      }),
+    ];
+  };
+
+  private _createGameOverItems = (): MenuItem[] => {
+    const continues = this._commands.getContinues?.() ?? 0;
+    const canContinue = continues > 0;
+
+    return [
+      this._createItem(
+        canContinue ? i18n.menu.continue : i18n.menu.restart,
+        "action",
+        -12,
+        {
+          action: () =>
+            canContinue
+              ? this._commands.continueGame?.()
+              : this._commands.restart?.(),
+        }
+      ),
+      this._createItem(i18n.menu.exit, "action", 38, {
+        action: () => this._commands.exitToRoot?.(),
       }),
     ];
   };
@@ -986,11 +1167,27 @@ class Menus implements MenuSystemInstance {
         "showSteeringArc",
         114
       ),
-      this._createItem(i18n.menu.selectLevel, "action", 156, {
+      this._createItem(i18n.menu.lives, "slider", 156, {
+        getValue: () => `${userOptions.debugLives}`,
+        onAdjust: (direction) =>
+          this._setDebugLives(userOptions.debugLives + direction),
+        onSetValue: (value) => this._setDebugLives(value),
+        sliderMin: 1,
+        sliderSteps: 99,
+      }),
+      this._createItem(i18n.menu.continues, "slider", 198, {
+        getValue: () => `${userOptions.debugContinues}`,
+        onAdjust: (direction) =>
+          this._setDebugContinues(userOptions.debugContinues + direction),
+        onSetValue: (value) => this._setDebugContinues(value),
+        sliderMin: 0,
+        sliderSteps: 99,
+      }),
+      this._createItem(i18n.menu.selectLevel, "action", 240, {
         action: () => this._goToScreen("level"),
         getValue: () => this._getSelectedLevelLabel(),
       }),
-      this._createItem(i18n.menu.back, "action", 206, {
+      this._createItem(i18n.menu.back, "action", 290, {
         action: () => this._goBack(),
       }),
     ];
@@ -2052,7 +2249,10 @@ class Menus implements MenuSystemInstance {
       );
     }
 
-    return Math.max(0, Math.min(1, value / (item.sliderSteps ?? 10)));
+    const sliderMin = item.sliderMin ?? 0;
+    const sliderMax = item.sliderSteps ?? 10;
+
+    return Math.max(0, Math.min(1, (value - sliderMin) / (sliderMax - sliderMin)));
   };
 
   private _setSliderFromPointer = (
@@ -2068,7 +2268,10 @@ class Menus implements MenuSystemInstance {
       Math.min(1, (pointer.posX - item.rect.x) / item.rect.width)
     );
 
-    item.onSetValue(Math.round(progress * (item.sliderSteps ?? 10)));
+    const sliderMin = item.sliderMin ?? 0;
+    const sliderMax = item.sliderSteps ?? 10;
+
+    item.onSetValue(Math.round(sliderMin + progress * (sliderMax - sliderMin)));
   };
 
   private _getMenuViewport = (): MenuViewport => {
@@ -2400,6 +2603,40 @@ class Menus implements MenuSystemInstance {
     return this._getLogoY(screen) + 42;
   };
 
+  private _getScreenTitleOpacity = (): number => {
+    if (this._isExitingDemoWatch()) {
+      const elapsed = performance.now() - (this._transition?.startedAt ?? 0);
+
+      return Math.max(0, Math.min(1, 1 - elapsed / demoSubtitleExitFadeDuration));
+    }
+
+    if (this._screen !== "demo-watch") {
+      return 1;
+    }
+
+    const elapsed = performance.now() - this._demoWatchStartedAt;
+    const progress =
+      (elapsed - menuTransitionDuration) / demoSubtitleFadeDuration;
+
+    return Math.max(0, Math.min(1, progress));
+  };
+
+  private _shouldRenderScreenTitle = (): boolean => {
+    return this._screen !== "start" || this._isExitingDemoWatch();
+  };
+
+  private _getRenderedScreenTitle = (): string => {
+    if (this._isExitingDemoWatch()) {
+      return i18n.menu.demo;
+    }
+
+    return this._getScreenTitle();
+  };
+
+  private _isExitingDemoWatch = (): boolean => {
+    return this._transition?.from === "demo-watch" && this._transition.to === "start";
+  };
+
   private _getItemTransitionOffset = (): number => {
     if (!this._transition) {
       return 0;
@@ -2483,8 +2720,20 @@ class Menus implements MenuSystemInstance {
       return i18n.menu.debug;
     }
 
+    if (this._screen === "demo-watch") {
+      return i18n.menu.demo;
+    }
+
+    if (this._screen === "game-over") {
+      return i18n.menu.gameOver;
+    }
+
     if (this._screen === "language") {
       return i18n.menu.language;
+    }
+
+    if (this._screen === "restart-confirm") {
+      return i18n.menu.restartConfirmTitle;
     }
 
     if (this._screen === "level") {
@@ -2496,6 +2745,28 @@ class Menus implements MenuSystemInstance {
 
   private _isPausedRootMenu = (): boolean => {
     return this._screen === "start" && this._startLabel === i18n.menu.continue;
+  };
+
+  private _exitDemoWatch = (): void => {
+    const previousScreen = this._screen;
+
+    this._active = true;
+    this._awaitingBinding = null;
+    this._bindingWarning = "";
+    this._startLabel = i18n.menu.start;
+    this._screen = "start";
+    this._screenHistory = [];
+    this._pressedItemIndex = null;
+    this._pressedItemDragged = false;
+    this._scrollBarDrag = null;
+    this._sliderDragIndex = null;
+    this._selectedIndex = 0;
+    this._shouldRevealSelected = true;
+    this._levelPreviewedLevel = undefined;
+    this._resetLevelMenuIdleState();
+    this._scrollY = 0;
+    this._buildItems();
+    this._startTransition(previousScreen, "start");
   };
 
   private _goToScreen = (screen: MenuScreen): void => {
@@ -2512,6 +2783,7 @@ class Menus implements MenuSystemInstance {
     this._awaitingBinding = null;
     this._bindingWarning = "";
     this._pressedItemIndex = null;
+    this._pressedItemDragged = false;
     this._scrollBarDrag = null;
     this._sliderDragIndex = null;
     this._scrollY = 0;
@@ -2537,6 +2809,7 @@ class Menus implements MenuSystemInstance {
     this._awaitingBinding = null;
     this._bindingWarning = "";
     this._pressedItemIndex = null;
+    this._pressedItemDragged = false;
     this._scrollBarDrag = null;
     this._sliderDragIndex = null;
     this._scrollY = 0;
@@ -2569,7 +2842,35 @@ class Menus implements MenuSystemInstance {
     key: keyof typeof userOptions.filterSettings,
     value: number
   ): void => {
-    userOptions.setFilterSetting(key, normalizeFilterIntensity(value));
+    const filterSettings = {
+      ...this._getEditableFilterSettings(),
+      [key]: normalizeFilterIntensity(value),
+    };
+
+    userOptions.setOption("filterSettings", filterSettings);
+    userOptions.setOption("videoFilterMode", "custom");
+  };
+
+  private _getEditableFilterSettings = (): typeof userOptions.filterSettings => {
+    if (userOptions.videoFilterMode === "custom") {
+      return userOptions.filterSettings;
+    }
+
+    return filterPresets[userOptions.videoFilterMode] ?? filterPresets.off;
+  };
+
+  private _setDebugLives = (lives: number): void => {
+    const value = Math.max(1, Math.min(99, Math.round(lives)));
+
+    userOptions.setOption("debugLives", value);
+    this._commands.setDebugLives?.(value);
+  };
+
+  private _setDebugContinues = (continues: number): void => {
+    const value = Math.max(0, Math.min(99, Math.round(continues)));
+
+    userOptions.setOption("debugContinues", value);
+    this._commands.setDebugContinues?.(value);
   };
 
   private _resetFilters = (): void => {

@@ -1,4 +1,5 @@
 import helpers from "../engine/helpers";
+import { clampZoomPercent, zoomStepPercent } from "../ui-scale";
 import type {
   ControlInputName,
   ControlInputState,
@@ -6,13 +7,25 @@ import type {
   ControllerInterfaceInstance,
   Coordinates,
 } from "../types";
+import userOptions from "../user-options";
+
+type TouchGestureMode = "multi" | "single" | null;
 
 class TouchController implements Controller {
   private readonly _canvas: HTMLCanvasElement;
   private readonly _controllerInterface: ControllerInterfaceInstance;
   private readonly _deadZone = 18;
+  private readonly _pinchSensitivity = 35;
+  private readonly _tapMaxDuration = 260;
   private readonly _inputState?: ControlInputState;
   private _activeTouchId: number | null = null;
+  private _gestureMode: TouchGestureMode = null;
+  private _maxTouchCount = 0;
+  private _multiTouchMoved = false;
+  private _multiTouchStartedAt = 0;
+  private _pinchBaseGameZoom = 100;
+  private _pinchBaseUiZoom = 100;
+  private _pinchStartDistance = 0;
   private _touchOrigin: Coordinates | null = null;
 
   constructor(
@@ -51,11 +64,17 @@ class TouchController implements Controller {
   private handleTouchStart = (event: TouchEvent): void => {
     event.preventDefault();
 
+    if (event.touches.length >= 2) {
+      this.startMultiTouchGesture(event);
+      return;
+    }
+
     const touch = event.changedTouches[0];
     if (!touch) {
       return;
     }
 
+    this._gestureMode = "single";
     this._activeTouchId = touch.identifier;
     const point = this.getCanvasPoint(touch);
     this._touchOrigin = point;
@@ -78,6 +97,11 @@ class TouchController implements Controller {
   private handleTouchMove = (event: TouchEvent): void => {
     event.preventDefault();
 
+    if (this._gestureMode === "multi") {
+      this.updatePinchZoom(event);
+      return;
+    }
+
     const touch = this.getActiveTouch(event.changedTouches);
     if (!touch) {
       return;
@@ -99,6 +123,13 @@ class TouchController implements Controller {
   private handleTouchEnd = (event: TouchEvent): void => {
     event.preventDefault();
 
+    if (this._gestureMode === "multi") {
+      if (event.touches.length === 0) {
+        this.finishMultiTouchGesture();
+      }
+      return;
+    }
+
     const touch = this.getActiveTouch(event.changedTouches);
     if (!touch) {
       return;
@@ -118,8 +149,110 @@ class TouchController implements Controller {
       this._inputState.fire = false;
     }
     this._activeTouchId = null;
+    this._gestureMode = null;
     this._touchOrigin = null;
     this.clearDirectionState();
+  };
+
+  private startMultiTouchGesture = (event: TouchEvent): void => {
+    this.stopSingleTouchInput();
+
+    this._gestureMode = "multi";
+    this._maxTouchCount = Math.max(this._maxTouchCount, event.touches.length);
+    this._multiTouchMoved = false;
+    this._multiTouchStartedAt = performance.now();
+    this._pinchStartDistance = this.getTouchDistance(event.touches);
+    this._pinchBaseGameZoom = userOptions.gameZoom;
+    this._pinchBaseUiZoom = userOptions.uiZoom;
+
+    if (this._inputState) {
+      this._inputState.activeController = "touch";
+    }
+  };
+
+  private updatePinchZoom = (event: TouchEvent): void => {
+    this._maxTouchCount = Math.max(this._maxTouchCount, event.touches.length);
+
+    if (event.touches.length < 2 || this._pinchStartDistance <= 0) {
+      return;
+    }
+
+    const distance = this.getTouchDistance(event.touches);
+    const zoomDelta = Math.log(distance / this._pinchStartDistance) * this._pinchSensitivity;
+    const steppedDelta =
+      Math.round(zoomDelta / zoomStepPercent) * zoomStepPercent;
+
+    if (Math.abs(steppedDelta) >= zoomStepPercent) {
+      this._multiTouchMoved = true;
+    }
+
+    userOptions.setOption(
+      "uiZoom",
+      clampZoomPercent(this._pinchBaseUiZoom + steppedDelta)
+    );
+    userOptions.setOption(
+      "gameZoom",
+      clampZoomPercent(this._pinchBaseGameZoom + steppedDelta)
+    );
+  };
+
+  private finishMultiTouchGesture = (): void => {
+    const wasTap =
+      !this._multiTouchMoved &&
+      performance.now() - this._multiTouchStartedAt <= this._tapMaxDuration;
+
+    if (wasTap) {
+      if (this._maxTouchCount >= 3) {
+        this._controllerInterface.requestRestartConfirmation?.();
+        this.setInputPulse("restart");
+      } else if (this._maxTouchCount === 2) {
+        this._controllerInterface.openMainMenu?.();
+        this.setInputPulse("menu");
+      }
+    }
+
+    this._gestureMode = null;
+    this._maxTouchCount = 0;
+    this._multiTouchMoved = false;
+    this._multiTouchStartedAt = 0;
+    this._pinchStartDistance = 0;
+  };
+
+  private stopSingleTouchInput = (): void => {
+    if (this._activeTouchId === null) {
+      return;
+    }
+
+    this._controllerInterface.stopShooting();
+    if (this._inputState) {
+      this._inputState.fire = false;
+    }
+    this._activeTouchId = null;
+    this._touchOrigin = null;
+    this.clearDirectionState();
+  };
+
+  private setInputPulse = (input: Extract<ControlInputName, "menu" | "restart">): void => {
+    if (!this._inputState) {
+      return;
+    }
+
+    this._inputState.activeController = "touch";
+    this._inputState[input] = true;
+    window.setTimeout(() => {
+      this._inputState![input] = false;
+    }, 120);
+  };
+
+  private getTouchDistance = (touchList: TouchList): number => {
+    const first = touchList[0];
+    const second = touchList[1];
+
+    if (!first || !second) {
+      return 0;
+    }
+
+    return Math.hypot(first.clientX - second.clientX, first.clientY - second.clientY);
   };
 
   private getActiveTouch = (touchList: TouchList): Touch | null => {

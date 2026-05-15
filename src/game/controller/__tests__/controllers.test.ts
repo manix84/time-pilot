@@ -11,6 +11,7 @@ const createControls = (): ControllerInterfaceInstance => {
   return {
     adjustUiZoom: vi.fn(),
     resetUiZoom: vi.fn(),
+    requestRestartConfirmation: vi.fn(),
     rotateToHeading: vi.fn(),
     rotateClockwise: vi.fn(),
     rotateAntiClockwise: vi.fn(),
@@ -47,17 +48,31 @@ const createInputState = (): ControlInputState => {
   };
 };
 
-const dispatchTouch = (canvas: HTMLCanvasElement, type: string, touch: { clientX: number; clientY: number; identifier?: number }): void => {
+const createTouch = (touch: {
+  clientX: number;
+  clientY: number;
+  identifier?: number;
+}): Touch =>
+  ({
+    identifier: touch.identifier ?? 1,
+    clientX: touch.clientX,
+    clientY: touch.clientY,
+  }) as Touch;
+
+const dispatchTouch = (
+  canvas: HTMLCanvasElement,
+  type: string,
+  touch: { clientX: number; clientY: number; identifier?: number },
+  touches = [touch]
+): void => {
   const event = new Event(type, { bubbles: true, cancelable: true });
+  const activeTouches = touches.map(createTouch);
 
   Object.defineProperty(event, "changedTouches", {
-    value: [
-      {
-        identifier: touch.identifier ?? 1,
-        clientX: touch.clientX,
-        clientY: touch.clientY,
-      },
-    ],
+    value: [createTouch(touch)],
+  });
+  Object.defineProperty(event, "touches", {
+    value: activeTouches,
   });
 
   canvas.dispatchEvent(event);
@@ -123,6 +138,29 @@ describe("controller modules", () => {
     keyboard.disconnect?.();
   });
 
+  it("ignores repeated keyboard menu navigation and activation events", () => {
+    const controls = createControls();
+    vi.mocked(controls.isMenuActive).mockReturnValue(true);
+    const inputState = createInputState();
+    const keyboard = new Keyboard1(controls, inputState);
+
+    document.documentElement.dispatchEvent(new KeyboardEvent("keydown", { keyCode: 40 }));
+    document.documentElement.dispatchEvent(
+      new KeyboardEvent("keydown", { keyCode: 40, repeat: true })
+    );
+    document.documentElement.dispatchEvent(new KeyboardEvent("keydown", { keyCode: 13 }));
+    document.documentElement.dispatchEvent(
+      new KeyboardEvent("keydown", { keyCode: 13, repeat: true })
+    );
+
+    expect(controls.rotateToHeading).toHaveBeenCalledTimes(1);
+    expect(controls.rotateToHeading).toHaveBeenCalledWith(180);
+    expect(controls.startShooting).toHaveBeenCalledTimes(1);
+    expect(inputState.down).toBe(false);
+
+    keyboard.disconnect?.();
+  });
+
   it("maps gamepad menu and back buttons to menu actions", async () => {
     const controls = createControls();
     const inputState = createInputState();
@@ -145,6 +183,49 @@ describe("controller modules", () => {
     expect(controls.openMainMenu).toHaveBeenCalled();
     expect(controls.restart).not.toHaveBeenCalled();
     expect(inputState.menu).toBe(true);
+  });
+
+  it("snaps gamepad menu direction to one cardinal input and waits for release", async () => {
+    const controls = createControls();
+    const inputState = createInputState();
+    vi.mocked(controls.isMenuActive).mockReturnValue(true);
+    const gamepad = {
+      axes: [0.35, 1],
+      buttons: Array.from({ length: 16 }, () => ({ pressed: false })),
+    };
+    vi.spyOn(navigator, "getGamepads").mockReturnValue([
+      gamepad as unknown as globalThis.Gamepad,
+    ]);
+
+    const controller = new Gamepad(controls, inputState);
+    await new Promise((resolve) => window.setTimeout(resolve, 5));
+    controller.disconnect?.();
+
+    expect(controls.rotateToHeading).toHaveBeenCalledTimes(1);
+    expect(controls.rotateToHeading).toHaveBeenCalledWith(180);
+    expect(inputState.down).toBe(true);
+    expect(inputState.right).toBe(false);
+  });
+
+  it("ignores menu gamepad stick drift while another controller is active", async () => {
+    const controls = createControls();
+    const inputState = createInputState();
+    vi.mocked(controls.isMenuActive).mockReturnValue(true);
+    const gamepad = {
+      axes: [0.35, 0.3],
+      buttons: Array.from({ length: 16 }, () => ({ pressed: false })),
+    };
+    vi.spyOn(navigator, "getGamepads").mockReturnValue([
+      gamepad as unknown as globalThis.Gamepad,
+    ]);
+
+    const controller = new Gamepad(controls, inputState);
+    await new Promise((resolve) => window.setTimeout(resolve, 5));
+    controller.disconnect?.();
+
+    expect(controls.rotateToHeading).not.toHaveBeenCalled();
+    expect(inputState.down).toBe(false);
+    expect(inputState.right).toBe(false);
   });
 
   it("maps plus, minus, and zero keys to UI zoom controls", () => {
@@ -584,6 +665,74 @@ describe("controller modules", () => {
       type: "release",
     });
     expect(controls.rotateToHeading).not.toHaveBeenCalled();
+
+    touch.disconnect?.();
+  });
+
+  it("maps two-finger touch taps to the main menu", () => {
+    const controls = createControls();
+    const inputState = createInputState();
+    const canvas = document.createElement("canvas");
+    const touch = new TouchController(canvas, controls, inputState);
+    const touches = [
+      { clientX: 100, clientY: 100, identifier: 1 },
+      { clientX: 160, clientY: 100, identifier: 2 },
+    ];
+
+    dispatchTouch(canvas, "touchstart", touches[1], touches);
+    dispatchTouch(canvas, "touchend", touches[1], []);
+
+    expect(controls.openMainMenu).toHaveBeenCalledTimes(1);
+    expect(inputState.activeController).toBe("touch");
+    expect(inputState.menu).toBe(true);
+
+    touch.disconnect?.();
+  });
+
+  it("maps three-finger touch taps to restart confirmation", () => {
+    const controls = createControls();
+    const inputState = createInputState();
+    const canvas = document.createElement("canvas");
+    const touch = new TouchController(canvas, controls, inputState);
+    const touches = [
+      { clientX: 100, clientY: 100, identifier: 1 },
+      { clientX: 160, clientY: 100, identifier: 2 },
+      { clientX: 130, clientY: 150, identifier: 3 },
+    ];
+
+    dispatchTouch(canvas, "touchstart", touches[2], touches);
+    dispatchTouch(canvas, "touchend", touches[2], []);
+
+    expect(controls.requestRestartConfirmation).toHaveBeenCalledTimes(1);
+    expect(controls.restart).not.toHaveBeenCalled();
+    expect(inputState.activeController).toBe("touch");
+    expect(inputState.restart).toBe(true);
+
+    touch.disconnect?.();
+  });
+
+  it("pinch zooms the UI and game together in small steps", () => {
+    const controls = createControls();
+    const inputState = createInputState();
+    const canvas = document.createElement("canvas");
+    const touch = new TouchController(canvas, controls, inputState);
+    const startTouches = [
+      { clientX: 100, clientY: 100, identifier: 1 },
+      { clientX: 200, clientY: 100, identifier: 2 },
+    ];
+    const movedTouches = [
+      { clientX: 80, clientY: 100, identifier: 1 },
+      { clientX: 220, clientY: 100, identifier: 2 },
+    ];
+
+    dispatchTouch(canvas, "touchstart", startTouches[1], startTouches);
+    dispatchTouch(canvas, "touchmove", movedTouches[1], movedTouches);
+    dispatchTouch(canvas, "touchend", movedTouches[1], []);
+
+    expect(userOptions.uiZoom).toBe(110);
+    expect(userOptions.gameZoom).toBe(110);
+    expect(controls.openMainMenu).not.toHaveBeenCalled();
+    expect(inputState.activeController).toBe("touch");
 
     touch.disconnect?.();
   });

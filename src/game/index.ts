@@ -23,9 +23,15 @@ import SpawningSystem from "./systems/spawning";
 import { timeWarpAnimationTicks, timeWarpDelayMs } from "./time-warp";
 import type {
   AssetProgress,
+  BulletData,
+  BulletInstance,
   CollisionSystemInstance,
   Controller,
   ControllerType,
+  ControlInputSource,
+  ControlInputState,
+  EnemyData,
+  EnemyInstance,
   GameDataStore,
   RenderingSystemInstance,
   SpawningSystemInstance,
@@ -53,7 +59,46 @@ const timeWarpDelayFrames = Math.max(
   1,
   Math.round((TIME_WARP_DELAY_MS / 1000) * gameFps)
 );
+const continueLives = 3;
+const demoContinues = 99;
+const demoAttackRadius = 520;
+const demoAttackStrength = 1.7;
+const demoBonusTargetPriority = 1.8;
+const demoEnemyAvoidanceRadius = 118;
+const demoLives = 3;
+const demoProjectileAvoidanceLookAhead = 170;
+const demoProjectileAvoidanceRadius = 82;
+const demoProjectileAvoidanceStrength = 3.2;
 const playerRotationStep = 360 / player.rotationFrameCount;
+
+type DemoProgressSnapshot = {
+  nextExtraLifeScore: number;
+  score: number;
+};
+
+export const getDefaultActiveController = (): ControlInputSource => {
+  const hasTouchPoints =
+    typeof navigator !== "undefined" && navigator.maxTouchPoints > 0;
+  const hasCoarsePointer =
+    typeof window !== "undefined" &&
+    window.matchMedia?.("(pointer: coarse)").matches === true;
+
+  return hasTouchPoints || hasCoarsePointer ? "touch" : "keyboard";
+};
+
+const createControlInputState = (
+  activeController: ControlInputSource = getDefaultActiveController()
+): ControlInputState => ({
+  down: false,
+  fire: false,
+  left: false,
+  menu: false,
+  pause: false,
+  restart: false,
+  right: false,
+  up: false,
+  activeController,
+});
 
 export interface TimePilotOptions {
   controllerType?: ControllerType;
@@ -67,6 +112,7 @@ export class TimePilot {
   private readonly context = {} as GameDataStore;
   private collisionSystem!: CollisionSystemInstance;
   private hasSeededInitialProps = false;
+  private hasShownGameOver = false;
   private hasStartedGame = false;
   private isDestroyed = false;
   private isDemoMode = false;
@@ -94,7 +140,7 @@ export class TimePilot {
   restartGame = (): void => {
     window.console.info("Restarting");
     SoundEngine.destroyAll();
-    this.context._gameTicker.stop(() => {
+    const reset = () => {
       this.context._hud.restart();
 
       this.context._gameTicker.clearTicks();
@@ -107,18 +153,27 @@ export class TimePilot {
       this.context._bonuses.clearAll();
       this.context._player.resetData();
       this.hasSeededInitialProps = false;
+      this.hasShownGameOver = false;
       this.hasStartedGame = false;
       this.selectedStartLevel = 1;
 
       this.configureGameLoop();
       this.startDemoMode();
-    });
+    };
+
+    if (this.context._gameTicker.isRunning) {
+      this.context._gameTicker.stop(reset);
+    } else {
+      reset();
+    }
   };
 
   destroyGame = (): void => {
     this.isDestroyed = true;
     this.isDemoMode = false;
     this.context._isDemoMode = false;
+    this.clearControlInputState();
+    this.clearDemoControlInputState();
     SoundEngine.stopAll();
 
     this.context._gameTicker.stop();
@@ -163,17 +218,10 @@ export class TimePilot {
     userOptions.setOption("controllerType", this.options.controllerType);
     userOptions.setOption("gamepadEnabled", this.options.gamepadEnabled);
 
-    this.context._controlInputState = {
-      down: false,
-      fire: false,
-      left: false,
-      menu: false,
-      pause: false,
-      restart: false,
-      right: false,
-      up: false,
-      activeController: "keyboard",
-    };
+    this.context._controlInputState = createControlInputState();
+    this.context._demoControlInputState = createControlInputState(
+      this.context._controlInputState.activeController
+    );
     this.context._formations = {};
     this.context._levelProgress = this.createLevelProgress(1);
     this.context._demoFadeStartedAtTick = 0;
@@ -190,22 +238,43 @@ export class TimePilot {
     this.context._player = new Player(this.context);
     this.context._enemies = new EnemyFactory(this.context);
     this.context._props = new PropFactory(this.context);
+    this.context._player.setRespawnCallback?.(this.seedRespawnProps);
     this.context._bonuses = new BonusFactory(this.context);
     this.context._hud = new Hud(this.context);
     this.context._menus = new Menus(this.context._gameArena, {
+      canWatchDemo: () => this.isDemoMode,
       clearLevelPreview: () => {
         this.clearDebugLevelPreview();
       },
+      continueGame: () => {
+        this.continueGame();
+      },
+      exitToRoot: () => {
+        this.exitToRootMenu();
+      },
+      getContinues: () => this.context._player.getData("continues") ?? 0,
       getLevel: () => this.selectedStartLevel,
       previewLevel: (level) => {
         this.previewDebugLevel(level);
+      },
+      restart: () => {
+        this.restartGame();
       },
       selectLevel: (level) => {
         this.selectDebugLevel(level);
         this.beginGame();
       },
+      setDebugContinues: (continues) => {
+        this.context._player.setData("continues", continues, true);
+      },
+      setDebugLives: (lives) => {
+        this.context._player.setData("lives", lives, true);
+      },
       start: () => {
         this.beginGame();
+      },
+      watchDemo: () => {
+        this.watchDemo();
       },
     });
     this.collisionSystem = new CollisionSystem(this.context);
@@ -268,6 +337,7 @@ export class TimePilot {
       assetPath("sprites/enemies/projectiles/plasma.png"),
       assetPath("sprites/enemies/projectiles/plasma_explosion.png"),
       assetPath("sprites/enemies/projectiles/rocket.png"),
+      assetPath("sprites/enemies/projectiles/rocket_explosion.png"),
       assetPath("sprites/bonuses/parachute.png"),
       assetPath("sprites/props/asteroid1.png"),
       assetPath("sprites/props/asteroid2.png"),
@@ -423,6 +493,9 @@ export class TimePilot {
       if (this.context._levelProgress.bossDefeated) {
         this.beginTimeWarpTransition();
       }
+
+      this.continueDemoIfNeeded();
+      this.showGameOverIfNeeded();
     }, 1);
   };
 
@@ -446,6 +519,7 @@ export class TimePilot {
       this.gameStartSound.play();
       this.resetWorld(this.selectedStartLevel, { skipIntro: false });
       this.hasStartedGame = true;
+      this.hasShownGameOver = false;
     }
 
     this.context._menus.hide();
@@ -456,6 +530,65 @@ export class TimePilot {
     }
 
     this.context._gameTicker.start();
+  };
+
+  private continueGame = (): void => {
+    const continues = this.context._player.getData("continues") ?? 0;
+
+    if (continues <= 0) {
+      return;
+    }
+
+    const level = this.context._level;
+    const score = this.context._player.getData("score") ?? 0;
+    const nextExtraLifeScore =
+      this.context._player.getData("nextExtraLifeScore") ??
+      scoring.extraLife.first;
+
+    this.stopMenuMusic();
+    SoundEngine.resumePaused();
+    SoundEngine.setMuted(false);
+    this.isDemoMode = false;
+    this.context._isDemoMode = false;
+    this.hasStartedGame = true;
+    this.hasShownGameOver = false;
+
+    this.resetWorld(level, { skipIntro: false });
+    this.context._player.setData("nextExtraLifeScore", nextExtraLifeScore, true);
+    this.context._player.setData("score", score, true);
+    this.context._player.setData("lives", continueLives, true);
+    this.context._player.setData("continues", continues - 1, true);
+    this.context._menus.hide();
+    this.spawningSystem.addInitialProps();
+    this.hasSeededInitialProps = true;
+    this.context._gameTicker.start();
+  };
+
+  private seedRespawnProps = (): void => {
+    this.context._props.clearAll();
+    this.spawningSystem.addInitialProps();
+    this.hasSeededInitialProps = true;
+  };
+
+  private exitToRootMenu = (): void => {
+    SoundEngine.stopAll();
+    this.context._gameTicker.stop();
+    this.context._gameTicker.clearTicks();
+    this.context._gameTicker.clearSchedule();
+    this.context._renderTicker.clearSchedule();
+    this.context._enemies.clearAll();
+    this.context._bullets.clearAll();
+    this.context._enemyBullets.clearAll();
+    this.context._props.clearAll();
+    this.context._bonuses.clearAll();
+    this.context._player.resetData();
+    this.hasSeededInitialProps = false;
+    this.hasShownGameOver = false;
+    this.hasStartedGame = false;
+    this.selectedStartLevel = 1;
+
+    this.configureGameLoop();
+    this.startDemoMode();
   };
 
   private startDemoMode = (): void => {
@@ -470,10 +603,19 @@ export class TimePilot {
     this.isDebugLevelPreviewLocked = false;
     SoundEngine.setMuted(true);
     this.resetWorld(this.getRandomDemoLevel(), { skipIntro: true });
+    this.configureDemoPlayerData();
     this.spawningSystem.addInitialProps();
     this.hasSeededInitialProps = true;
     this.context._menus.showStart({ startLabel: i18n.menu.start });
     this.context._gameTicker.start();
+  };
+
+  private watchDemo = (): void => {
+    if (!this.isDemoMode) {
+      this.startDemoMode();
+    }
+
+    this.context._player.stopShooting();
   };
 
   private openPauseMenu = (): void => {
@@ -494,16 +636,368 @@ export class TimePilot {
       return;
     }
 
+    const playerData = this.context._player.getData();
+
+    if (!playerData.isAlive) {
+      this.clearDemoControlInputState();
+      return;
+    }
+
     const frame = this.context._gameTicker.getTicks();
-    const desiredHeading =
-      (90 + Math.sin(frame / 45) * 90 + Math.sin(frame / 120) * 45 + 360) % 360;
+    const desiredHeading = this.getDemoAutopilotHeading(frame);
 
     this.context._player.setData(
       "newHeading",
       Math.round(desiredHeading / playerRotationStep) * playerRotationStep
     );
-    this.context._player.setData("isAlive", true);
+    this.updateDemoControlOverlay(desiredHeading);
     this.context._player.startShooting();
+  };
+
+  private getDemoAutopilotHeading = (frame: number): number => {
+    const wanderHeading =
+      (90 + Math.sin(frame / 45) * 90 + Math.sin(frame / 120) * 45 + 360) % 360;
+    const wanderVector = this.vectorFromHeading(wanderHeading);
+    const projectileAvoidance = this.getDemoProjectileAvoidanceVector();
+    const enemyAvoidance = this.getDemoEnemyAvoidanceVector();
+    const attackVector = this.getDemoAttackVector();
+    const danger = Math.min(
+      1,
+      Math.hypot(projectileAvoidance.x, projectileAvoidance.y) +
+        Math.hypot(enemyAvoidance.x, enemyAvoidance.y)
+    );
+    const attackStrength = demoAttackStrength * (1 - danger * 0.75);
+    const desiredVector = this.normalizeVector({
+      x:
+        wanderVector.x +
+        attackVector.x * attackStrength +
+        projectileAvoidance.x * demoProjectileAvoidanceStrength +
+        enemyAvoidance.x * 1.45,
+      y:
+        wanderVector.y +
+        attackVector.y * attackStrength +
+        projectileAvoidance.y * demoProjectileAvoidanceStrength +
+        enemyAvoidance.y * 1.45,
+    });
+
+    if (Math.hypot(desiredVector.x, desiredVector.y) <= 0.001) {
+      return wanderHeading;
+    }
+
+    return this.headingFromVector(desiredVector.x, desiredVector.y);
+  };
+
+  private getDemoProjectileAvoidanceVector = (): { x: number; y: number } => {
+    let avoidX = 0;
+    let avoidY = 0;
+
+    this.context._enemyBullets.getEntities().forEach((bullet) => {
+      const avoidance = this.getDemoProjectileAvoidanceForBullet(bullet);
+
+      avoidX += avoidance.x;
+      avoidY += avoidance.y;
+    });
+
+    return { x: avoidX, y: avoidY };
+  };
+
+  private getDemoProjectileAvoidanceForBullet = (
+    bullet: BulletInstance
+  ): { x: number; y: number } => {
+    if (bullet.removeMe) {
+      return { x: 0, y: 0 };
+    }
+
+    const bulletData = bullet.getData() as BulletData;
+
+    if (bulletData.explosionTick !== false) {
+      return { x: 0, y: 0 };
+    }
+
+    const playerData = this.context._player.getData();
+    const bulletPosition =
+      bulletData.coordinateSpace === "world"
+        ? { posX: bulletData.posX, posY: bulletData.posY }
+        : {
+          posX: playerData.posX + bulletData.posX,
+          posY: playerData.posY + bulletData.posY,
+        };
+    const bulletDirection = this.vectorFromHeading(bulletData.heading);
+    const toPlayer = {
+      x: playerData.posX - bulletPosition.posX,
+      y: playerData.posY - bulletPosition.posY,
+    };
+    const alongPath = this.dotProduct(toPlayer, bulletDirection);
+
+    if (alongPath < -24 || alongPath > demoProjectileAvoidanceLookAhead) {
+      return { x: 0, y: 0 };
+    }
+
+    const closestPoint = {
+      x: bulletPosition.posX + bulletDirection.x * alongPath,
+      y: bulletPosition.posY + bulletDirection.y * alongPath,
+    };
+    const fromPath = {
+      x: playerData.posX - closestPoint.x,
+      y: playerData.posY - closestPoint.y,
+    };
+    const pathDistance = Math.hypot(fromPath.x, fromPath.y);
+
+    if (pathDistance > demoProjectileAvoidanceRadius) {
+      return { x: 0, y: 0 };
+    }
+
+    const perpendicular =
+      pathDistance <= 0.001
+        ? { x: -bulletDirection.y, y: bulletDirection.x }
+        : this.normalizeVector(fromPath);
+    const urgency =
+      (1 - pathDistance / demoProjectileAvoidanceRadius) *
+      (1 - Math.max(0, alongPath) / demoProjectileAvoidanceLookAhead);
+
+    return {
+      x: perpendicular.x * urgency,
+      y: perpendicular.y * urgency,
+    };
+  };
+
+  private getDemoEnemyAvoidanceVector = (): { x: number; y: number } => {
+    const playerData = this.context._player.getData();
+    let avoidX = 0;
+    let avoidY = 0;
+
+    this.context._enemies.getEntities().forEach((enemy: EnemyInstance) => {
+      if (!enemy.isAlive) {
+        return;
+      }
+
+      const enemyData = enemy.getData() as EnemyData;
+      const away = {
+        x: playerData.posX - enemyData.posX,
+        y: playerData.posY - enemyData.posY,
+      };
+      const distance = Math.hypot(away.x, away.y);
+
+      if (distance <= 0.001 || distance > demoEnemyAvoidanceRadius) {
+        return;
+      }
+
+      const normalized = this.normalizeVector(away);
+      const strength = 1 - distance / demoEnemyAvoidanceRadius;
+
+      avoidX += normalized.x * strength;
+      avoidY += normalized.y * strength;
+    });
+
+    return { x: avoidX, y: avoidY };
+  };
+
+  private getDemoAttackVector = (): { x: number; y: number } => {
+    const playerData = this.context._player.getData();
+    let bestTarget:
+      | {
+          distance: number;
+          position: { posX: number; posY: number };
+          priority: number;
+        }
+      | undefined;
+
+    this.context._enemies.getEntities().forEach((enemy) => {
+      if (!enemy.isAlive) {
+        return;
+      }
+
+      const enemyData = enemy.getData() as EnemyData;
+
+      bestTarget = this.getHigherPriorityDemoTarget(bestTarget, {
+        distance: Math.hypot(
+          enemyData.posX - playerData.posX,
+          enemyData.posY - playerData.posY
+        ),
+        position: { posX: enemyData.posX, posY: enemyData.posY },
+        priority: this.getDemoEnemyTargetPriority(enemyData),
+      });
+    });
+
+    this.context._enemyBullets.getEntities().forEach((bullet) => {
+      if (bullet.removeMe) {
+        return;
+      }
+
+      const bulletData = bullet.getData() as BulletData;
+
+      if (bulletData.explosionTick !== false || !bulletData.shootable) {
+        return;
+      }
+
+      const position = this.getDemoProjectileWorldPosition(bulletData);
+
+      bestTarget = this.getHigherPriorityDemoTarget(bestTarget, {
+        distance: Math.hypot(
+          position.posX - playerData.posX,
+          position.posY - playerData.posY
+        ),
+        position,
+        priority: bulletData.tracksPlayer ? 5 : 3.2,
+      });
+    });
+
+    this.context._bonuses.getEntities().forEach((bonus) => {
+      const bonusData = bonus.getData();
+
+      if (bonusData.removeMe) {
+        return;
+      }
+
+      bestTarget = this.getHigherPriorityDemoTarget(bestTarget, {
+        distance: Math.hypot(
+          bonusData.posX - playerData.posX,
+          bonusData.posY - playerData.posY
+        ),
+        position: { posX: bonusData.posX, posY: bonusData.posY },
+        priority: demoBonusTargetPriority,
+      });
+    });
+
+    if (!bestTarget) {
+      return { x: 0, y: 0 };
+    }
+
+    return this.normalizeVector({
+      x: bestTarget.position.posX - playerData.posX,
+      y: bestTarget.position.posY - playerData.posY,
+    });
+  };
+
+  private getHigherPriorityDemoTarget = <
+    T extends {
+      distance: number;
+      position: { posX: number; posY: number };
+      priority: number;
+    },
+  >(
+    current: T | undefined,
+    candidate: T
+  ): T | undefined => {
+    if (candidate.distance > demoAttackRadius) {
+      return current;
+    }
+
+    if (!current) {
+      return candidate;
+    }
+
+    const currentScore = current.priority / Math.max(1, current.distance);
+    const candidateScore = candidate.priority / Math.max(1, candidate.distance);
+
+    return candidateScore > currentScore ? candidate : current;
+  };
+
+  private getDemoEnemyTargetPriority = (enemyData: EnemyData): number => {
+    if (enemyData.type === "boss") {
+      return 4;
+    }
+
+    if (enemyData.type === "specialBomber") {
+      return 3.4;
+    }
+
+    return 2.4;
+  };
+
+  private getDemoProjectileWorldPosition = (
+    bulletData: BulletData
+  ): { posX: number; posY: number } => {
+    const playerData = this.context._player.getData();
+
+    return bulletData.coordinateSpace === "world"
+      ? { posX: bulletData.posX, posY: bulletData.posY }
+      : {
+        posX: playerData.posX + bulletData.posX,
+        posY: playerData.posY + bulletData.posY,
+      };
+  };
+
+  private vectorFromHeading = (heading: number): { x: number; y: number } => {
+    const radians = heading * (Math.PI / 180);
+
+    return {
+      x: Math.sin(radians),
+      y: -Math.cos(radians),
+    };
+  };
+
+  private headingFromVector = (x: number, y: number): number => {
+    const heading = Math.atan2(x, -y) * (180 / Math.PI);
+
+    return (heading + 360) % 360;
+  };
+
+  private normalizeVector = (vector: { x: number; y: number }): { x: number; y: number } => {
+    const length = Math.hypot(vector.x, vector.y);
+
+    if (length <= 0.001) {
+      return { x: 0, y: 0 };
+    }
+
+    return {
+      x: vector.x / length,
+      y: vector.y / length,
+    };
+  };
+
+  private dotProduct = (
+    a: { x: number; y: number },
+    b: { x: number; y: number }
+  ): number => a.x * b.x + a.y * b.y;
+
+  private updateDemoControlOverlay = (heading: number): void => {
+    const radians = heading * (Math.PI / 180);
+    const inputState = this.getDemoControlInputState();
+    const axisX = Math.sin(radians);
+    const axisY = -Math.cos(radians);
+    const threshold = 0.35;
+
+    inputState.activeController = this.context._controlInputState.activeController;
+    inputState.left = axisX < -threshold;
+    inputState.right = axisX > threshold;
+    inputState.up = axisY < -threshold;
+    inputState.down = axisY > threshold;
+    inputState.fire = true;
+    inputState.menu = false;
+    inputState.pause = false;
+    inputState.restart = false;
+    inputState.rotateLeft = false;
+    inputState.rotateRight = false;
+  };
+
+  private clearInputState = (inputState: ControlInputState): void => {
+    inputState.down = false;
+    inputState.fire = false;
+    inputState.left = false;
+    inputState.menu = false;
+    inputState.pause = false;
+    inputState.restart = false;
+    inputState.right = false;
+    inputState.up = false;
+    inputState.rotateLeft = false;
+    inputState.rotateRight = false;
+  };
+
+  private clearControlInputState = (): void => {
+    this.clearInputState(this.context._controlInputState);
+  };
+
+  private clearDemoControlInputState = (): void => {
+    this.clearInputState(this.getDemoControlInputState());
+  };
+
+  private getDemoControlInputState = (): ControlInputState => {
+    this.context._demoControlInputState ??= createControlInputState(
+      this.context._controlInputState.activeController
+    );
+
+    return this.context._demoControlInputState;
   };
 
   private advanceDemoLevel = (): void => {
@@ -511,8 +1005,12 @@ export class TimePilot {
       return;
     }
 
+    const progress = this.getDemoProgressSnapshot();
+
     this.startDemoLevelFade();
     this.resetWorld(this.getRandomDemoLevel(), { skipIntro: true });
+    this.configureDemoPlayerData();
+    this.restoreDemoProgress(progress);
     this.spawningSystem.addInitialProps();
     this.hasSeededInitialProps = true;
   };
@@ -540,6 +1038,75 @@ export class TimePilot {
       : this.context._gameTicker.getTicks() + levelIntroDurationFrames;
     this.context._timeWarpTransition = undefined;
     this.hasSeededInitialProps = false;
+    this.hasShownGameOver = false;
+  };
+
+  private configureDemoPlayerData = (): void => {
+    this.context._player.setData("lives", demoLives);
+    this.context._player.setData("continues", demoContinues);
+    this.context._player.setData("isAlive", true);
+    this.context._player.setData("deathTick", false);
+    this.context._player.stopShooting();
+    this.clearDemoControlInputState();
+  };
+
+  private getDemoProgressSnapshot = (): DemoProgressSnapshot => ({
+    nextExtraLifeScore:
+      this.context._player.getData("nextExtraLifeScore") ??
+      scoring.extraLife.first,
+    score: this.context._player.getData("score") ?? 0,
+  });
+
+  private restoreDemoProgress = (progress: DemoProgressSnapshot): void => {
+    this.context._player.setData(
+      "nextExtraLifeScore",
+      progress.nextExtraLifeScore
+    );
+    this.context._player.setData("score", progress.score);
+  };
+
+  private continueDemoIfNeeded = (): void => {
+    const playerData = this.context._player.getData();
+
+    if (
+      !this.isDemoMode ||
+      playerData.isAlive ||
+      playerData.lives > 0 ||
+      !playerData.removeMe
+    ) {
+      return;
+    }
+
+    const level = this.context._level;
+    const progress = this.getDemoProgressSnapshot();
+
+    this.resetWorld(level, { skipIntro: true });
+    this.configureDemoPlayerData();
+    this.restoreDemoProgress(progress);
+    this.spawningSystem.addInitialProps();
+    this.hasSeededInitialProps = true;
+  };
+
+  private showGameOverIfNeeded = (): void => {
+    const playerData = this.context._player.getData();
+
+    if (
+      this.hasShownGameOver ||
+      this.isDemoMode ||
+      this.isTimeWarpTransitionActive() ||
+      !this.hasStartedGame ||
+      playerData.isAlive ||
+      playerData.lives > 0 ||
+      !playerData.removeMe
+    ) {
+      return;
+    }
+
+    this.hasShownGameOver = true;
+    this.context._player.stopShooting();
+    this.context._gameTicker.stop();
+    this.playMenuMusic();
+    this.context._menus.showGameOver();
   };
 
   private beginTimeWarpTransition = (): void => {

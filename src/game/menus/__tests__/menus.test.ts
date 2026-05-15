@@ -44,6 +44,8 @@ describe("menu definitions", () => {
     userOptions.setDebugOption("showPlayerCoordinates", true);
     userOptions.setDebugOption("showSteeringArc", false);
     userOptions.setOption("controllerType", "keyboard1");
+    userOptions.setOption("debugContinues", 3);
+    userOptions.setOption("debugLives", 3);
     userOptions.setOption("language", "en");
     userOptions.setOption("gameZoom", 100);
     userOptions.setOption("masterVolume", 10);
@@ -120,6 +122,177 @@ describe("menu definitions", () => {
     );
   });
 
+  it("shows watch demo during demo mode and exits it on input", () => {
+    const performanceNow = vi.spyOn(performance, "now").mockReturnValue(0);
+    const watchDemo = vi.fn();
+    const arena = createArena();
+    userOptions.setOption("enableDebug", true);
+    const menus = new Menus(arena, {
+      canWatchDemo: () => true,
+      start: vi.fn(),
+      watchDemo,
+    });
+
+    menus.showStart();
+    menus.render();
+    const renderCalls = vi.mocked(arena.renderText).mock.calls;
+    const debugY = renderCalls.find((call) => call[0] === "Debug")?.[2];
+    const watchDemoY = renderCalls.find((call) => call[0] === "Watch Demo")?.[2];
+    expect(debugY).toBeLessThan(
+      typeof watchDemoY === "number" ? watchDemoY : Number.NaN
+    );
+
+    vi.mocked(arena.renderText).mockClear();
+    menus.next();
+    menus.next();
+    menus.next();
+    menus.activate();
+    menus.render();
+
+    expect(watchDemo).toHaveBeenCalled();
+    expect(menus.isWatchingDemo()).toBe(true);
+    expect(arena.renderText).not.toHaveBeenCalledWith(
+      "Demo",
+      expect.any(Number),
+      expect.any(Number),
+      expect.any(Object)
+    );
+
+    performanceNow.mockReturnValue(750);
+    menus.render();
+    expect(arena.renderText).toHaveBeenCalledWith(
+      "Demo",
+      expect.any(Number),
+      expect.any(Number),
+      expect.objectContaining({ align: "center" })
+    );
+    expect(arena.renderText).not.toHaveBeenCalledWith(
+      "Watch Demo",
+      expect.any(Number),
+      expect.any(Number),
+      expect.any(Object)
+    );
+
+    vi.mocked(arena.renderText).mockClear();
+    performanceNow.mockReturnValue(800);
+    menus.activate();
+
+    expect(menus.isWatchingDemo()).toBe(false);
+    menus.render();
+    expect(arena.renderText).toHaveBeenCalledWith(
+      "Demo",
+      expect.any(Number),
+      expect.any(Number),
+      expect.objectContaining({ align: "center" })
+    );
+
+    vi.mocked(arena.renderText).mockClear();
+    performanceNow.mockReturnValue(901);
+    menus.render();
+    expect(arena.renderText).not.toHaveBeenCalledWith(
+      "Demo",
+      expect.any(Number),
+      expect.any(Number),
+      expect.any(Object)
+    );
+    expect(arena.renderText).toHaveBeenCalledWith(
+      "Watch Demo",
+      expect.any(Number),
+      expect.any(Number),
+      expect.objectContaining({ align: "left" })
+    );
+  });
+
+  it("shows restart confirmation and only restarts after confirmation", () => {
+    const restart = vi.fn();
+    const arena = createArena();
+    const menus = new Menus(arena, { start: vi.fn(), restart });
+
+    menus.showStart({ startLabel: "Continue" });
+    menus.showRestartConfirm();
+    menus.render();
+
+    expect(arena.renderText).toHaveBeenCalledWith(
+      "Restart Game?",
+      expect.any(Number),
+      expect.any(Number),
+      expect.objectContaining({ align: "center" })
+    );
+    expect(arena.renderText).toHaveBeenCalledWith(
+      "Restart",
+      expect.any(Number),
+      expect.any(Number),
+      expect.objectContaining({ align: "left" })
+    );
+
+    menus.next();
+    menus.activate();
+    expect(restart).not.toHaveBeenCalled();
+
+    menus.showRestartConfirm();
+    menus.activate();
+    expect(restart).toHaveBeenCalled();
+  });
+
+  it("shows continue on game over when continues remain", () => {
+    const continueGame = vi.fn();
+    const exitToRoot = vi.fn();
+    const arena = createArena();
+    const menus = new Menus(arena, {
+      continueGame,
+      exitToRoot,
+      getContinues: () => 1,
+      start: vi.fn(),
+    });
+
+    menus.showGameOver();
+    menus.render();
+
+    expect(arena.renderText).toHaveBeenCalledWith(
+      "Game Over",
+      expect.any(Number),
+      expect.any(Number),
+      expect.objectContaining({ align: "center" })
+    );
+    expect(arena.renderText).toHaveBeenCalledWith(
+      "Continue",
+      expect.any(Number),
+      expect.any(Number),
+      expect.objectContaining({ align: "left" })
+    );
+
+    menus.activate();
+    expect(continueGame).toHaveBeenCalled();
+
+    menus.showGameOver();
+    menus.next();
+    menus.activate();
+    expect(exitToRoot).toHaveBeenCalled();
+  });
+
+  it("shows restart on game over when no continues remain", () => {
+    const restart = vi.fn();
+    const arena = createArena();
+    const menus = new Menus(arena, {
+      getContinues: () => 0,
+      restart,
+      start: vi.fn(),
+    });
+
+    menus.showGameOver();
+    menus.render();
+
+    expect(arena.renderText).toHaveBeenCalledWith(
+      "Restart",
+      expect.any(Number),
+      expect.any(Number),
+      expect.objectContaining({ align: "left" })
+    );
+
+    menus.activate();
+    expect(restart).toHaveBeenCalled();
+  });
+
   it("continues from the paused root menu on escape", () => {
     const start = vi.fn();
     const menus = new Menus(createArena(), { start });
@@ -174,8 +347,11 @@ describe("menu definitions", () => {
     menus.next();
     menus.activate();
 
+    menus.activate();
+    expect(userOptions.masterVolume).toBe(4);
+
     menus.adjust(1);
-    expect(userOptions.masterVolume).toBe(6);
+    expect(userOptions.masterVolume).toBe(5);
 
     menus.render();
     expect(arena.renderText).not.toHaveBeenCalledWith(
@@ -311,8 +487,11 @@ describe("menu definitions", () => {
       expect.objectContaining({ align: "left" })
     );
 
+    menus.activate();
+    expect(userOptions.videoFilterMode).toBe("custom");
+
     menus.adjust(1);
-    expect(userOptions.videoFilterMode).toBe("arcade-crt");
+    expect(userOptions.videoFilterMode).toBe("off");
 
     menus.next();
     menus.activate();
@@ -326,6 +505,39 @@ describe("menu definitions", () => {
     menus.activate();
     expect(userOptions.videoFilterMode).toBe("off");
     expect(userOptions.filterSettings.scanlines).toBe(0);
+  });
+
+  it("uses the active filter preset as the custom filter edit baseline", () => {
+    const arena = createArena();
+    const menus = new Menus(arena, { start: vi.fn() });
+    userOptions.setOption("videoFilterMode", "arcade-crt");
+    userOptions.setOption("filterSettings", { ...filterPresets.off });
+
+    menus.showStart();
+    menus.next();
+    menus.activate();
+
+    for (let i = 0; i < 5; i++) {
+      menus.next();
+    }
+
+    menus.activate();
+    menus.next();
+    menus.activate();
+    menus.render();
+
+    expect(arena.renderText).toHaveBeenCalledWith(
+      "35",
+      expect.any(Number),
+      expect.any(Number),
+      expect.objectContaining({ align: "right" })
+    );
+
+    menus.adjust(1);
+
+    expect(userOptions.videoFilterMode).toBe("custom");
+    expect(userOptions.filterSettings.scanlines).toBe(36);
+    expect(userOptions.filterSettings.crtMask).toBe(filterPresets["arcade-crt"].crtMask);
   });
 
   it("adjusts UI and game zoom from the options menu", () => {
@@ -432,7 +644,7 @@ describe("menu definitions", () => {
     );
   });
 
-  it("sets slider values from pointer clicks at the nearest step", () => {
+  it("steps slider values left from pointer taps and clicks", () => {
     const menus = new Menus(createArena(), { start: vi.fn() });
     userOptions.setOption("masterVolume", 10);
 
@@ -440,28 +652,32 @@ describe("menu definitions", () => {
     menus.next();
     menus.activate();
 
-    const transitionScale = 752 / 828;
-
     menus.handlePointer({
-      posX: -9 * transitionScale,
-      posY: -14 * transitionScale,
+      posX: 0,
+      posY: -14 * (752 / 828),
       type: "click",
     });
-    expect(userOptions.masterVolume).toBe(5);
+    expect(userOptions.masterVolume).toBe(9);
 
     menus.handlePointer({
-      posX: -150 * transitionScale,
-      posY: -14 * transitionScale,
+      posX: 0,
+      posY: -14 * (752 / 828),
+      type: "press",
+    });
+    menus.handlePointer({
+      posX: 0,
+      posY: -14 * (752 / 828),
+      type: "release",
+    });
+    expect(userOptions.masterVolume).toBe(8);
+
+    userOptions.setOption("masterVolume", 0);
+    menus.handlePointer({
+      posX: 0,
+      posY: -14 * (752 / 828),
       type: "click",
     });
     expect(userOptions.masterVolume).toBe(0);
-
-    menus.handlePointer({
-      posX: 150 * transitionScale,
-      posY: -14 * transitionScale,
-      type: "click",
-    });
-    expect(userOptions.masterVolume).toBe(10);
   });
 
   it("drags slider values to the pointer position until release", () => {
@@ -479,7 +695,7 @@ describe("menu definitions", () => {
       posY: -14 * transitionScale,
       type: "press",
     });
-    expect(userOptions.masterVolume).toBe(2);
+    expect(userOptions.masterVolume).toBe(10);
 
     menus.handlePointer({ posX: 0, posY: -14 * transitionScale, type: "drag" });
     expect(userOptions.masterVolume).toBe(5);
@@ -521,8 +737,9 @@ describe("menu definitions", () => {
     }
 
     menus.activate();
+    menus.adjust(1);
 
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i < 7; i++) {
       menus.next();
     }
 
@@ -643,7 +860,7 @@ describe("menu definitions", () => {
       type: "click",
     });
 
-    expect(userOptions.masterVolume).toBe(5);
+    expect(userOptions.masterVolume).toBe(9);
   });
 
   it("animates the title position into and out of submenus", () => {
@@ -805,6 +1022,20 @@ describe("menu definitions", () => {
       '"showSteeringArc":true'
     );
 
+    menus.next();
+    menus.adjust(1);
+    expect(userOptions.debugLives).toBe(4);
+    expect(localStorage.getItem("timePilot.userOptions")).toContain(
+      '"debugLives":4'
+    );
+
+    menus.next();
+    menus.adjust(1);
+    expect(userOptions.debugContinues).toBe(4);
+    expect(localStorage.getItem("timePilot.userOptions")).toContain(
+      '"debugContinues":4'
+    );
+
     for (let i = 0; i < 2; i++) {
       menus.next();
     }
@@ -845,7 +1076,7 @@ describe("menu definitions", () => {
     menus.next();
     menus.activate();
 
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i < 7; i++) {
       menus.next();
     }
 
@@ -954,7 +1185,7 @@ describe("menu definitions", () => {
     menus.next();
     menus.next();
     menus.activate();
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i < 7; i++) {
       menus.next();
     }
     menus.activate();

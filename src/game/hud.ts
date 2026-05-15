@@ -65,36 +65,6 @@ class Hud implements HudInstance {
       this.renderControlsOverlay();
     }
 
-    if (!playerData.isAlive && playerData.lives <= 0) {
-      this._gameArena.renderText(i18n.hud.gameOver, 0, 0, {
-        size: 30,
-        align: "center",
-        valign: "middle",
-        color: palette.text.white,
-      });
-      this._gameArena.renderText(i18n.hud.pressRestartToReset, 0, 30, {
-        size: 20,
-        align: "center",
-        valign: "middle",
-        color: palette.text.white,
-      });
-    }
-
-    if (!this._context._gameTicker.isRunning) {
-      this._gameArena.renderText(i18n.hud.paused, 0, 25, {
-        size: 25,
-        align: "center",
-        valign: "middle",
-        color: palette.text.white,
-      });
-      this._gameArena.renderText(i18n.hud.pressPauseToContinue, 0, 45, {
-        size: 20,
-        align: "center",
-        valign: "middle",
-        color: palette.text.white,
-      });
-    }
-
     this.renderLives(playerData.lives, uiWidth, uiHeight);
 
     context.restore();
@@ -152,7 +122,10 @@ class Hud implements HudInstance {
 
   private renderControlsOverlay = (): void => {
     const context = this._gameArena.getContext() as CanvasRenderingContext2D;
-    const inputState = this._context._controlInputState;
+    const inputState =
+      this._context._isDemoMode && this._context._demoControlInputState
+        ? this._context._demoControlInputState
+        : this._context._controlInputState;
 
     context.save();
     context.globalAlpha = 0.9;

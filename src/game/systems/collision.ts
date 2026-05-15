@@ -24,7 +24,7 @@ class CollisionSystem implements CollisionSystemInstance {
 
     this._detectShootableProjectileHits(bullets);
 
-    if (!this._context._isDemoMode && playerData.isAlive) {
+    if (playerData.isAlive) {
       this._context._enemyBullets.getEntities().forEach((bullet) => {
         if (bullet.removeMe) {
           return;
@@ -90,7 +90,6 @@ class CollisionSystem implements CollisionSystemInstance {
       }
 
       if (
-        !this._context._isDemoMode &&
         enemy.detectCollision(
           playerData.posX,
           playerData.posY,

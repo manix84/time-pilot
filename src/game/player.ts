@@ -21,6 +21,7 @@ const playerSpriteArcDegrees = 360;
 
 class Player implements PlayerInstance {
   private _bulletFactory: BulletFactoryInstance;
+  private _context: GameDataStore;
   private _data: PlayerData;
   private _dataDefaults: PlayerData;
   private _enemyBulletFactory: BulletFactoryInstance;
@@ -28,11 +29,13 @@ class Player implements PlayerInstance {
   private _explosionSound: SoundEngine;
   private _gameArena: GameArenaInstance;
   private _gameTicker: TickerInstance;
+  private _onRespawn?: () => void;
   private _playerDeathSprite: HTMLImageElement;
   private _playerSprite: HTMLImageElement;
   private _rotationStep: number;
 
   constructor(context: GameDataStore) {
+    this._context = context;
     this._gameArena = context._gameArena;
     this._gameTicker = context._gameTicker;
     this._bulletFactory = context._bullets;
@@ -57,8 +60,8 @@ class Player implements PlayerInstance {
       posX: 0,
       posY: 0,
       exploading: 0,
-      continues: 0,
-      lives: 3,
+      continues: userOptions.debugContinues,
+      lives: userOptions.debugLives,
       nextExtraLifeScore: scoring.extraLife.first,
       score: 0,
       level: 1,
@@ -101,6 +104,10 @@ class Player implements PlayerInstance {
     }
 
     return false;
+  };
+
+  setRespawnCallback = (callback: () => void): void => {
+    this._onRespawn = callback;
   };
 
   resetData = (): void => {
@@ -236,9 +243,9 @@ class Player implements PlayerInstance {
 
     if (
       userOptions.enableDebug &&
-      (userOptions.debug.invincible || userOptions.debug.showHitboxes)
+      (this._isDebugInvincibleActive() || userOptions.debug.showHitboxes)
     ) {
-      if (userOptions.debug.invincible) {
+      if (this._isDebugInvincibleActive()) {
         color = helpers.getRandomColor();
         playerConst.hitRadius = (playerConst.width + playerConst.height) / 4;
       }
@@ -260,7 +267,7 @@ class Player implements PlayerInstance {
   };
 
   kill = (): void => {
-    if (userOptions.enableDebug && userOptions.debug.invincible) {
+    if (this._isDebugInvincibleActive()) {
       return;
     }
 
@@ -277,6 +284,14 @@ class Player implements PlayerInstance {
     this._explosionSound.play();
   };
 
+  private _isDebugInvincibleActive = (): boolean => {
+    return (
+      userOptions.enableDebug &&
+      userOptions.debug.invincible &&
+      !this._context._isDemoMode
+    );
+  };
+
   private _respawnAtLevelStart = (): void => {
     this._data.isAlive = true;
     this._data.deathTick = false;
@@ -289,6 +304,7 @@ class Player implements PlayerInstance {
     this._bulletFactory.clearAll();
     this._enemyBulletFactory.clearAll();
     this._gameArena.updatePosition(this._data.posX, this._data.posY);
+    this._onRespawn?.();
   };
 }
 

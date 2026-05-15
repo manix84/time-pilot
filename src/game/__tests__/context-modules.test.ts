@@ -116,7 +116,11 @@ const createContext = (): GameDataStore => {
     resetUiZoom: vi.fn(),
     captureKey: vi.fn(() => false),
     isActive: vi.fn(() => false),
+    isWatchingDemo: vi.fn(() => false),
+    showDemoWatch: vi.fn(),
+    showGameOver: vi.fn(),
     showStart: vi.fn(),
+    showRestartConfirm: vi.fn(),
     hide: vi.fn(),
     render: vi.fn(),
     next: vi.fn(),
@@ -386,7 +390,9 @@ describe("context-backed game modules", () => {
 
   it("spends a life and respawns the player at level start after death", () => {
     const context = createContext();
+    const handleRespawn = vi.fn();
     vi.mocked(context._gameTicker.getTicks).mockReturnValue(10);
+    context._player.setRespawnCallback?.(handleRespawn);
     context._player.setData("score", 1200);
     context._player.setData("posX", 50);
     context._player.setData("posY", -30);
@@ -408,19 +414,46 @@ describe("context-backed game modules", () => {
     expect(context._player.getData("posY")).toBe(0);
     expect(context._enemyBullets.getCount()).toBe(0);
     expect(context._gameArena.updatePosition).toHaveBeenCalledWith(0, 0);
+    expect(handleRespawn).toHaveBeenCalledTimes(1);
   });
 
-  it("shows game over only after the final life is lost", () => {
+  it("allows the demo player to die even when debug invincibility is enabled", () => {
+    const context = createContext();
+    context._isDemoMode = true;
+    userOptions.setOption("enableDebug", true);
+    userOptions.setDebugOption("invincible", true);
+    context._player.setData("lives", 3);
+
+    context._player.kill();
+
+    expect(context._player.getData("lives")).toBe(2);
+    expect(context._player.getData("isAlive")).toBe(false);
+  });
+
+  it("steers slower enemies toward a trailing point behind the player", () => {
+    const context = createContext();
+    vi.mocked(context._gameTicker.getTicks).mockReturnValue(32);
+    context._player.setData("heading", 90);
+    context._enemies.create(0, -100, 180);
+    const enemy = context._enemies.getEntities()[0];
+
+    enemy.setData("tickOffset", 0);
+    enemy.reposition();
+
+    expect(enemy.getData("heading")).toBe(202.5);
+  });
+
+  it("leaves final-life game over messaging to the menu system", () => {
     const context = createContext();
     context._player.setData("lives", 1);
 
     context._player.kill();
     context._hud.render();
 
-    expect(context._gameArena.renderText).toHaveBeenCalledWith(
+    expect(context._gameArena.renderText).not.toHaveBeenCalledWith(
       "Game Over",
-      0,
-      0,
+      expect.any(Number),
+      expect.any(Number),
       expect.any(Object)
     );
   });
@@ -576,6 +609,35 @@ describe("context-backed game modules", () => {
         renderWidth: 32,
       })
     );
+  });
+
+  it("renders the largest cloud as a fly-through overlay only for clouds", () => {
+    const context = createContext();
+    vi.spyOn(Math, "random").mockReturnValue(0.8);
+
+    context._props.create(50, 50);
+    context._props.render(2, { flyThroughOnly: true, opacity: 0.5 });
+
+    expect(context._gameArena.renderSprite).toHaveBeenCalledWith(
+      expect.objectContaining({
+        src: expect.stringContaining("cloud3.png"),
+      }),
+      expect.objectContaining({
+        frameHeight: 16,
+        frameWidth: 46,
+        renderHeight: 32,
+        renderWidth: 92,
+      })
+    );
+
+    vi.mocked(context._gameArena.renderSprite).mockClear();
+
+    context._level = 5;
+    context._props.clearAll();
+    context._props.create(50, 50);
+    context._props.render(2, { flyThroughOnly: true, opacity: 0.5 });
+
+    expect(context._gameArena.renderSprite).not.toHaveBeenCalled();
   });
 
   it("renders level 5 props as asteroids", () => {
@@ -1307,6 +1369,30 @@ describe("context-backed game modules", () => {
     expect(pause).toHaveBeenCalled();
     expect(restart).toHaveBeenCalled();
     expect(context._gameArena.renderText).toHaveBeenCalled();
+  });
+
+  it("opens restart confirmation for alive players and skips it when dead", () => {
+    const context = createContext();
+    const restart = vi.fn();
+    const openMenu = vi.fn(() => {
+      vi.mocked(context._menus.isActive).mockReturnValue(true);
+    });
+    const controls = new ControllerInterface(context, { restart, openMenu });
+
+    controls.requestRestartConfirmation();
+
+    expect(openMenu).toHaveBeenCalled();
+    expect(context._menus.showRestartConfirm).toHaveBeenCalled();
+    expect(restart).not.toHaveBeenCalled();
+
+    vi.mocked(context._menus.showRestartConfirm).mockClear();
+    vi.mocked(context._menus.isActive).mockReturnValue(false);
+    context._player.setData("isAlive", false);
+
+    controls.requestRestartConfirmation();
+
+    expect(restart).toHaveBeenCalled();
+    expect(context._menus.showRestartConfirm).not.toHaveBeenCalled();
   });
 
   it("renders only the active controller overlay", () => {

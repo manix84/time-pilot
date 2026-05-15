@@ -55,17 +55,22 @@ const nl: typeof en = {
   menu: {
     alreadyAssignedTo: (binding: string) => `Al toegewezen aan ${binding}`,
     back: "Terug",
+    cancel: "Annuleren",
+    continues: "Continues",
     continue: "Doorgaan",
     controlType: "Besturingstype",
     current: "Geselecteerd",
     controls: "Besturing",
     customCrtOptions: "Custom CRT Options",
     debug: "Debug",
+    demo: "Demo",
     directional: "Richting",
     effectsVolume: "Effectvolume",
+    exit: "Afsluiten",
     fire: "Vuur",
     filters: "Filters",
     fullScreen: "Volledig scherm",
+    gameOver: "Spel voorbij",
     gameZoom: "Gamezoom",
     levelShowcase: {
       basic: {
@@ -93,6 +98,7 @@ const nl: typeof en = {
     },
     invincibilityShield: "Onkwetsbaar schild",
     language: "Taal",
+    lives: "Levens",
     masterVolume: "Hoofdvolume",
     musicVolume: "Muziekvolume",
     off: "Uit",
@@ -100,6 +106,8 @@ const nl: typeof en = {
     options: "Opties",
     pressAKey: "Druk op een toets",
     remapControls: "Toetsen instellen",
+    restart: "Herstarten",
+    restartConfirmTitle: "Game herstarten?",
     resetFilters: "Reset Filters",
     rotate: "Draaien",
     selectLevel: "Level kiezen",
@@ -112,6 +120,7 @@ const nl: typeof en = {
     start: "Start",
     uiZoom: "UI-zoom",
     videoFilterMode: "Video Filter Mode",
+    watchDemo: "Demo bekijken",
   },
 };
 

@@ -53,17 +53,22 @@ const en = {
   menu: {
     alreadyAssignedTo: (binding: string) => `Already assigned to ${binding}`,
     back: "Back",
+    cancel: "Cancel",
+    continues: "Continues",
     continue: "Continue",
     controlType: "Control Type",
     current: "Selected",
     controls: "Controls",
     customCrtOptions: "Custom CRT Options",
     debug: "Debug",
+    demo: "Demo",
     directional: "Directional",
     effectsVolume: "Effects Volume",
+    exit: "Exit",
     fire: "Fire",
     filters: "Filters",
     fullScreen: "Full Screen",
+    gameOver: "Game Over",
     gameZoom: "Game Zoom",
     levelShowcase: {
       basic: {
@@ -91,6 +96,7 @@ const en = {
     },
     invincibilityShield: "Invincibility Shield",
     language: "Language",
+    lives: "Lives",
     masterVolume: "Master Volume",
     musicVolume: "Music Volume",
     off: "Off",
@@ -98,6 +104,8 @@ const en = {
     options: "Options",
     pressAKey: "Press a key",
     remapControls: "Remap Controls",
+    restart: "Restart",
+    restartConfirmTitle: "Restart Game?",
     resetFilters: "Reset Filters",
     rotate: "Rotate",
     selectLevel: "Select Level",
@@ -110,6 +118,7 @@ const en = {
     start: "Start",
     uiZoom: "UI Zoom",
     videoFilterMode: "Video Filter Mode",
+    watchDemo: "Watch Demo",
   },
 };
 

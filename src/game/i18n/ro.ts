@@ -55,17 +55,22 @@ const ro: typeof en = {
   menu: {
     alreadyAssignedTo: (binding: string) => `Deja atribuit la ${binding}`,
     back: "Inapoi",
+    cancel: "Anuleaza",
+    continues: "Continuari",
     continue: "Continua",
     controlType: "Tip control",
     current: "Selectat",
     controls: "Controale",
     customCrtOptions: "Custom CRT Options",
     debug: "Debug",
+    demo: "Demo",
     directional: "Directional",
     effectsVolume: "Volum efecte",
+    exit: "Iesire",
     fire: "Foc",
     filters: "Filters",
     fullScreen: "Ecran complet",
+    gameOver: "Joc terminat",
     gameZoom: "Zoom joc",
     levelShowcase: {
       basic: {
@@ -93,6 +98,7 @@ const ro: typeof en = {
     },
     invincibilityShield: "Scut invincibil",
     language: "Limba",
+    lives: "Vieti",
     masterVolume: "Volum principal",
     musicVolume: "Volum muzica",
     off: "Oprit",
@@ -100,6 +106,8 @@ const ro: typeof en = {
     options: "Optiuni",
     pressAKey: "Apasa o tasta",
     remapControls: "Reconfigureaza",
+    restart: "Restart",
+    restartConfirmTitle: "Reincepi jocul?",
     resetFilters: "Reset Filters",
     rotate: "Rotire",
     selectLevel: "Alege nivelul",
@@ -112,6 +120,7 @@ const ro: typeof en = {
     start: "Start",
     uiZoom: "Zoom UI",
     videoFilterMode: "Video Filter Mode",
+    watchDemo: "Vezi demo",
   },
 };
 
