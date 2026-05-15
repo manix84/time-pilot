@@ -7,6 +7,7 @@ import helpers from "./engine/helpers";
 import palette from "./palette";
 import { getDespawnRadius } from "./viewport";
 import type {
+  BulletData,
   EnemyConfig,
   EnemyData,
   EnemyInstance,
@@ -14,9 +15,19 @@ import type {
   GameArenaInstance,
   GameDataStore,
   Heading,
+  PlayerData,
   PlayerInstance,
   TickerInstance,
 } from "./types";
+
+const playerAvoidanceRadius = 96;
+const playerAvoidanceStrength = 1.55;
+const projectileAvoidanceRadius = 72;
+const projectileAvoidanceLookAhead = 120;
+const projectileAvoidanceStrength = 1.9;
+const attackPassOffset = 52;
+const attackPassStrength = 0.72;
+const slowEnemyTrailingDistance = 90;
 
 class Enemy implements EnemyInstance {
   private _context: GameDataStore;
@@ -217,13 +228,223 @@ class Enemy implements EnemyInstance {
     }
 
     const player = this._player.getData();
-    const turnTo = helpers.findHeading(this._data, {
-      posX: player.posX + levelData.width / 2,
-      posY: player.posY + levelData.height / 2,
-    });
+    const desiredVector = this._getIntentionalSteeringVector(levelData);
+    const turnTo =
+      Math.abs(desiredVector.x) < 0.001 && Math.abs(desiredVector.y) < 0.001
+        ? helpers.findHeading(this._data, {
+          posX: player.posX + levelData.width / 2,
+          posY: player.posY + levelData.height / 2,
+        })
+        : this._headingFromVector(desiredVector.x, desiredVector.y);
 
     return Math.floor(turnTo / 22.5) * 22.5;
   };
+
+  private _getIntentionalSteeringVector = (
+    levelData: EnemyConfig
+  ): { x: number; y: number } => {
+    const playerData = this._player.getData();
+    const playerVector = this._getPlayerAvoidanceVector(levelData, playerData);
+    const bulletVector = this._getProjectileAvoidanceVector();
+    const slowEnemyBias = this._getSlowEnemyBias(levelData);
+    const pursuitTarget = this._getPursuitTarget(levelData, slowEnemyBias);
+    const targetVector = this._normalizeVector({
+      x: pursuitTarget.posX - this._data.posX,
+      y: pursuitTarget.posY - this._data.posY,
+    });
+    const passVector = this._getAttackPassVector(targetVector, playerVector);
+
+    return {
+      x:
+        targetVector.x +
+        passVector.x * attackPassStrength * (1 - slowEnemyBias) +
+        playerVector.x * playerAvoidanceStrength +
+        bulletVector.x * projectileAvoidanceStrength,
+      y:
+        targetVector.y +
+        passVector.y * attackPassStrength * (1 - slowEnemyBias) +
+        playerVector.y * playerAvoidanceStrength +
+        bulletVector.y * projectileAvoidanceStrength,
+    };
+  };
+
+  private _getPursuitTarget = (
+    levelData: EnemyConfig,
+    slowEnemyBias: number
+  ): { posX: number; posY: number } => {
+    const playerData = this._player.getData();
+
+    if (slowEnemyBias <= 0) {
+      return {
+        posX: playerData.posX,
+        posY: playerData.posY,
+      };
+    }
+
+    const playerDirection = this._vectorFromHeading(playerData.heading);
+    const trailingDistance = slowEnemyTrailingDistance + levelData.hitRadius;
+
+    return {
+      posX:
+        playerData.posX - playerDirection.x * trailingDistance * slowEnemyBias,
+      posY:
+        playerData.posY - playerDirection.y * trailingDistance * slowEnemyBias,
+    };
+  };
+
+  private _getSlowEnemyBias = (levelData: EnemyConfig): number => {
+    const playerVelocity = levels[this._data.level].player.velocity;
+
+    if (playerVelocity <= 0 || levelData.velocity >= playerVelocity) {
+      return 0;
+    }
+
+    return Math.max(
+      0,
+      Math.min(1, (playerVelocity - levelData.velocity) / playerVelocity)
+    );
+  };
+
+  private _getPlayerAvoidanceVector = (
+    levelData: EnemyConfig,
+    playerData: PlayerData
+  ): { x: number; y: number } => {
+    const offset = {
+      x: this._data.posX - playerData.posX,
+      y: this._data.posY - playerData.posY,
+    };
+    const distance = Math.hypot(offset.x, offset.y);
+    const avoidDistance = playerAvoidanceRadius + levelData.hitRadius;
+
+    if (distance >= avoidDistance || distance <= 0.001) {
+      return { x: 0, y: 0 };
+    }
+
+    const strength = 1 - distance / avoidDistance;
+    const away = this._normalizeVector(offset);
+
+    return {
+      x: away.x * strength,
+      y: away.y * strength,
+    };
+  };
+
+  private _getAttackPassVector = (
+    targetVector: { x: number; y: number },
+    playerAvoidanceVector: { x: number; y: number }
+  ): { x: number; y: number } => {
+    const playerData = this._player.getData();
+    const distanceToPlayer = Math.hypot(
+      playerData.posX - this._data.posX,
+      playerData.posY - this._data.posY
+    );
+
+    if (distanceToPlayer > playerAvoidanceRadius + attackPassOffset) {
+      return { x: 0, y: 0 };
+    }
+
+    const side =
+      this._crossProduct(targetVector, playerAvoidanceVector) >= 0 ? 1 : -1;
+
+    return {
+      x: -targetVector.y * side,
+      y: targetVector.x * side,
+    };
+  };
+
+  private _getProjectileAvoidanceVector = (): { x: number; y: number } => {
+    const enemy = this._data;
+    let avoidX = 0;
+    let avoidY = 0;
+
+    this._context._bullets.getEntities().forEach((bullet) => {
+      if (bullet.removeMe) {
+        return;
+      }
+
+      const bulletData = bullet.getData() as BulletData;
+
+      if (bulletData.explosionTick !== false) {
+        return;
+      }
+
+      const bulletPosition = {
+        posX: bulletData.posX + this._player.getData().posX,
+        posY: bulletData.posY + this._player.getData().posY,
+      };
+      const toEnemy = {
+        x: enemy.posX - bulletPosition.posX,
+        y: enemy.posY - bulletPosition.posY,
+      };
+      const bulletDirection = this._vectorFromHeading(bulletData.heading);
+      const alongPath = this._dotProduct(toEnemy, bulletDirection);
+
+      if (alongPath < -16 || alongPath > projectileAvoidanceLookAhead) {
+        return;
+      }
+
+      const closestPoint = {
+        x: bulletPosition.posX + bulletDirection.x * alongPath,
+        y: bulletPosition.posY + bulletDirection.y * alongPath,
+      };
+      const fromPath = {
+        x: enemy.posX - closestPoint.x,
+        y: enemy.posY - closestPoint.y,
+      };
+      const pathDistance = Math.hypot(fromPath.x, fromPath.y);
+
+      if (pathDistance > projectileAvoidanceRadius) {
+        return;
+      }
+
+      const perpendicular =
+        pathDistance <= 0.001
+          ? { x: -bulletDirection.y, y: bulletDirection.x }
+          : this._normalizeVector(fromPath);
+      const strength = 1 - pathDistance / projectileAvoidanceRadius;
+
+      avoidX += perpendicular.x * strength;
+      avoidY += perpendicular.y * strength;
+    });
+
+    return this._normalizeVector({ x: avoidX, y: avoidY });
+  };
+
+  private _headingFromVector = (x: number, y: number): Heading => {
+    return helpers.findHeading({ posX: 0, posY: 0 }, { posX: x, posY: y });
+  };
+
+  private _vectorFromHeading = (heading: Heading): { x: number; y: number } => {
+    const radians = heading * (Math.PI / 180);
+
+    return {
+      x: Math.sin(radians),
+      y: -Math.cos(radians),
+    };
+  };
+
+  private _normalizeVector = (vector: { x: number; y: number }): { x: number; y: number } => {
+    const length = Math.hypot(vector.x, vector.y);
+
+    if (length <= 0.001) {
+      return { x: 0, y: 0 };
+    }
+
+    return {
+      x: vector.x / length,
+      y: vector.y / length,
+    };
+  };
+
+  private _dotProduct = (
+    a: { x: number; y: number },
+    b: { x: number; y: number }
+  ): number => a.x * b.x + a.y * b.y;
+
+  private _crossProduct = (
+    a: { x: number; y: number },
+    b: { x: number; y: number }
+  ): number => a.x * b.y - a.y * b.x;
 
   private _applyFormationWave = (tick: number): void => {
     const amplitude = this._data.formationWaveAmplitude ?? 0;

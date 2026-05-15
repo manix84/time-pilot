@@ -427,6 +427,19 @@ describe("context-backed game modules", () => {
     expect(context._player.getData("isAlive")).toBe(false);
   });
 
+  it("steers slower enemies toward a trailing point behind the player", () => {
+    const context = createContext();
+    vi.mocked(context._gameTicker.getTicks).mockReturnValue(32);
+    context._player.setData("heading", 90);
+    context._enemies.create(0, -100, 180);
+    const enemy = context._enemies.getEntities()[0];
+
+    enemy.setData("tickOffset", 0);
+    enemy.reposition();
+
+    expect(enemy.getData("heading")).toBe(202.5);
+  });
+
   it("leaves final-life game over messaging to the menu system", () => {
     const context = createContext();
     context._player.setData("lives", 1);
