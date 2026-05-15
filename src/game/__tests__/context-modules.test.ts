@@ -390,7 +390,9 @@ describe("context-backed game modules", () => {
 
   it("spends a life and respawns the player at level start after death", () => {
     const context = createContext();
+    const handleRespawn = vi.fn();
     vi.mocked(context._gameTicker.getTicks).mockReturnValue(10);
+    context._player.setRespawnCallback?.(handleRespawn);
     context._player.setData("score", 1200);
     context._player.setData("posX", 50);
     context._player.setData("posY", -30);
@@ -412,6 +414,7 @@ describe("context-backed game modules", () => {
     expect(context._player.getData("posY")).toBe(0);
     expect(context._enemyBullets.getCount()).toBe(0);
     expect(context._gameArena.updatePosition).toHaveBeenCalledWith(0, 0);
+    expect(handleRespawn).toHaveBeenCalledTimes(1);
   });
 
   it("allows the demo player to die even when debug invincibility is enabled", () => {

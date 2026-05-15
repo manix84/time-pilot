@@ -226,6 +226,7 @@ export class TimePilot {
     this.context._player = new Player(this.context);
     this.context._enemies = new EnemyFactory(this.context);
     this.context._props = new PropFactory(this.context);
+    this.context._player.setRespawnCallback?.(this.seedRespawnProps);
     this.context._bonuses = new BonusFactory(this.context);
     this.context._hud = new Hud(this.context);
     this.context._menus = new Menus(this.context._gameArena, {
@@ -548,6 +549,12 @@ export class TimePilot {
     this.spawningSystem.addInitialProps();
     this.hasSeededInitialProps = true;
     this.context._gameTicker.start();
+  };
+
+  private seedRespawnProps = (): void => {
+    this.context._props.clearAll();
+    this.spawningSystem.addInitialProps();
+    this.hasSeededInitialProps = true;
   };
 
   private exitToRootMenu = (): void => {

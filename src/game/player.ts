@@ -29,6 +29,7 @@ class Player implements PlayerInstance {
   private _explosionSound: SoundEngine;
   private _gameArena: GameArenaInstance;
   private _gameTicker: TickerInstance;
+  private _onRespawn?: () => void;
   private _playerDeathSprite: HTMLImageElement;
   private _playerSprite: HTMLImageElement;
   private _rotationStep: number;
@@ -103,6 +104,10 @@ class Player implements PlayerInstance {
     }
 
     return false;
+  };
+
+  setRespawnCallback = (callback: () => void): void => {
+    this._onRespawn = callback;
   };
 
   resetData = (): void => {
@@ -299,6 +304,7 @@ class Player implements PlayerInstance {
     this._bulletFactory.clearAll();
     this._enemyBulletFactory.clearAll();
     this._gameArena.updatePosition(this._data.posX, this._data.posY);
+    this._onRespawn?.();
   };
 }
 

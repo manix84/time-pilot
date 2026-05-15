@@ -251,6 +251,7 @@ export interface PlayerInstance {
   shoot: () => void;
   render: () => void;
   kill: () => void;
+  setRespawnCallback?: (callback: () => void) => void;
 }
 
 export interface EnemyInstance {
