@@ -189,11 +189,13 @@ git config core.hooksPath .githooks
 The hook runs:
 
 ```bash
+npm run precommit:staged
 npm run version:bump
-npm run typecheck
-npm run lint
-npm test
 ```
+
+`precommit:staged` temporarily hides unstaged work, type-checks staged
+TypeScript files from a staged snapshot, and lints only staged lintable files.
+Pull request checks still run the full project scans.
 
 The version bump script inspects staged changes:
 
