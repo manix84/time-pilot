@@ -134,6 +134,13 @@ const createContext = (): GameDataStore => {
   return context;
 };
 
+const getHudLifeIconCalls = (context: GameDataStore) =>
+  vi
+    .mocked(context._gameArena.renderSprite)
+    .mock.calls.filter(([sprite]) =>
+      (sprite as HTMLImageElement).src.includes("/sprites/player/player.png")
+    );
+
 describe("context-backed game modules", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -493,7 +500,7 @@ describe("context-backed game modules", () => {
     context._player.setData("lives", 9);
     context._hud.render();
 
-    expect(context._gameArena.renderSprite).toHaveBeenCalledTimes(1);
+    expect(getHudLifeIconCalls(context)).toHaveLength(1);
     expect(context._gameArena.renderText).toHaveBeenCalledWith(
       "9 x",
       expect.any(Number),
@@ -508,7 +515,7 @@ describe("context-backed game modules", () => {
     context._player.setData("lives", 8);
     context._hud.render();
 
-    expect(context._gameArena.renderSprite).toHaveBeenCalledTimes(8);
+    expect(getHudLifeIconCalls(context)).toHaveLength(8);
     expect(context._gameArena.renderText).not.toHaveBeenCalledWith(
       "8 x",
       expect.any(Number),
@@ -534,7 +541,7 @@ describe("context-backed game modules", () => {
 
     context._hud.render();
 
-    expect(context._gameArena.renderSprite).toHaveBeenCalledTimes(3);
+    expect(getHudLifeIconCalls(context)).toHaveLength(3);
     expect(context._gameArena.renderSprite).toHaveBeenCalledWith(
       expect.any(HTMLImageElement),
       expect.objectContaining({
@@ -562,6 +569,23 @@ describe("context-backed game modules", () => {
       expect.any(Number),
       expect.any(Number),
       expect.any(Object)
+    );
+  });
+
+  it("renders remaining credits in the mirrored bottom HUD position", () => {
+    const context = createContext();
+
+    context._player.setData("continues", 1);
+    context._hud.render();
+
+    expect(context._gameArena.renderText).toHaveBeenCalledWith(
+      "Credits 01",
+      expect.any(Number),
+      expect.any(Number),
+      expect.objectContaining({
+        align: "right",
+        valign: "middle",
+      })
     );
   });
 

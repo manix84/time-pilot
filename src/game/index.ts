@@ -623,6 +623,8 @@ export class TimePilot {
       this.startDemoMode();
     }
 
+    this.context._demoFadeStartedAtTick = 0;
+    this.context._demoFadeUntilTick = 0;
     this.context._player.stopShooting();
   };
 
