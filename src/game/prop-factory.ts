@@ -35,10 +35,23 @@ class PropFactory implements PropFactoryInstance {
     this._props.forEach((prop) => prop.reposition());
   };
 
-  render = (layer: number | false = false): void => {
+  render = (
+    layer: number | false = false,
+    options: {
+      excludeFlyThrough?: boolean;
+      flyThroughOnly?: boolean;
+      opacity?: number;
+    } = {}
+  ): void => {
     this._props.forEach((prop) => {
-      if (!layer || prop.getData().layer === layer) {
-        prop.render();
+      const isFlyThrough = prop.isFlyThrough();
+
+      if (
+        (!layer || prop.getData().layer === layer) &&
+        (!options.flyThroughOnly || isFlyThrough) &&
+        (!options.excludeFlyThrough || !isFlyThrough)
+      ) {
+        prop.render({ opacity: options.opacity });
       }
     });
   };

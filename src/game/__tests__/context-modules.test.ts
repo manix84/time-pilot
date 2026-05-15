@@ -611,6 +611,35 @@ describe("context-backed game modules", () => {
     );
   });
 
+  it("renders the largest cloud as a fly-through overlay only for clouds", () => {
+    const context = createContext();
+    vi.spyOn(Math, "random").mockReturnValue(0.8);
+
+    context._props.create(50, 50);
+    context._props.render(2, { flyThroughOnly: true, opacity: 0.5 });
+
+    expect(context._gameArena.renderSprite).toHaveBeenCalledWith(
+      expect.objectContaining({
+        src: expect.stringContaining("cloud3.png"),
+      }),
+      expect.objectContaining({
+        frameHeight: 16,
+        frameWidth: 46,
+        renderHeight: 32,
+        renderWidth: 92,
+      })
+    );
+
+    vi.mocked(context._gameArena.renderSprite).mockClear();
+
+    context._level = 5;
+    context._props.clearAll();
+    context._props.create(50, 50);
+    context._props.render(2, { flyThroughOnly: true, opacity: 0.5 });
+
+    expect(context._gameArena.renderSprite).not.toHaveBeenCalled();
+  });
+
   it("renders level 5 props as asteroids", () => {
     const context = createContext();
     context._level = 5;

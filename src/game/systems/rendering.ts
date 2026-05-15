@@ -60,12 +60,14 @@ class RenderingSystem implements RenderingSystemInstance {
     );
     context.scale(gameScale, gameScale);
     this._context._props.render(1);
+    this._context._props.render(2, { flyThroughOnly: true });
     this._context._bonuses.render();
     this._context._bullets.render();
     this._context._enemies.render();
     this._context._enemyBullets.render();
     this._context._player.render();
-    this._context._props.render(2);
+    this._context._props.render(2, { excludeFlyThrough: true });
+    this._context._props.render(2, { flyThroughOnly: true, opacity: 0.5 });
     context.restore();
   };
 

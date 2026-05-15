@@ -312,6 +312,7 @@ const levelOneProps: PropConfig[] = [
     height: 16,
     renderWidth: 92,
     renderHeight: 32,
+    foregroundOpacity: 0.5,
     relativeVelocity: 0,
     layer: 2,
     reversed: false,

@@ -324,8 +324,9 @@ export interface PropInstance {
   removeMe: boolean;
   getData(): PropData;
   getData<K extends keyof PropData>(key: K): PropData[K] | undefined;
+  isFlyThrough: () => boolean;
   reposition: () => void;
-  render: () => void;
+  render: (options?: { opacity?: number }) => void;
 }
 
 export interface PropFactoryInstance {
@@ -334,7 +335,10 @@ export interface PropFactoryInstance {
   getData: () => PropData[];
   cleanup: () => void;
   reposition: () => void;
-  render: (layer?: number | false) => void;
+  render: (
+    layer?: number | false,
+    options?: { excludeFlyThrough?: boolean; flyThroughOnly?: boolean; opacity?: number }
+  ) => void;
   clearAll: () => void;
 }
 
@@ -622,6 +626,7 @@ export interface PropConfig {
   height: number;
   renderWidth?: number;
   renderHeight?: number;
+  foregroundOpacity?: number;
   relativeVelocity: number;
   layer: number;
   reversed: boolean;

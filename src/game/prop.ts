@@ -55,6 +55,10 @@ class Prop implements PropInstance {
     return levels[this._data.level].props[this._data.type];
   };
 
+  isFlyThrough = (): boolean => {
+    return this.getLevelData().foregroundOpacity !== undefined;
+  };
+
   private _checkInArena = (): void => {
     const levelData = this.getLevelData();
 
@@ -94,11 +98,14 @@ class Prop implements PropInstance {
     this._checkInArena();
   };
 
-  render = (): void => {
+  render = (options: { opacity?: number } = {}): void => {
     const levelData = this.getLevelData();
     const renderWidth = levelData.renderWidth ?? levelData.width;
     const renderHeight = levelData.renderHeight ?? levelData.height;
+    const context = this._gameArena.getContext() as CanvasRenderingContext2D;
 
+    context.save();
+    context.globalAlpha *= options.opacity ?? 1;
     this._gameArena.renderSprite(this._propSprite, {
       frameWidth: levelData.width,
       frameHeight: levelData.height,
@@ -110,6 +117,7 @@ class Prop implements PropInstance {
       renderWidth,
       renderHeight,
     });
+    context.restore();
   };
 }
 

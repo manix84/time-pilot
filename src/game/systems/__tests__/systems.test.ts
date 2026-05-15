@@ -786,12 +786,21 @@ describe("game systems", () => {
     expect(context._gameArena.clear).toHaveBeenCalled();
     expect(context._gameArena.setBackgroundColor).toHaveBeenCalledWith("#4FC3F7");
     expect(context._props.render).toHaveBeenNthCalledWith(1, 1);
+    expect(context._props.render).toHaveBeenNthCalledWith(2, 2, {
+      flyThroughOnly: true,
+    });
     expect(context._bonuses.render).toHaveBeenCalled();
     expect(context._bullets.render).toHaveBeenCalled();
     expect(context._enemies.render).toHaveBeenCalled();
     expect(context._enemyBullets.render).toHaveBeenCalled();
     expect(context._player.render).toHaveBeenCalled();
-    expect(context._props.render).toHaveBeenNthCalledWith(2, 2);
+    expect(context._props.render).toHaveBeenNthCalledWith(3, 2, {
+      excludeFlyThrough: true,
+    });
+    expect(context._props.render).toHaveBeenNthCalledWith(4, 2, {
+      flyThroughOnly: true,
+      opacity: 0.5,
+    });
     expect(context._hud.render).toHaveBeenCalled();
     expect(context._menus.render).toHaveBeenCalled();
   });
