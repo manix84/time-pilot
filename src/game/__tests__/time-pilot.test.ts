@@ -101,6 +101,13 @@ describe("TimePilot engine", () => {
           right: boolean;
           up: boolean;
         };
+        _demoControlInputState: {
+          down: boolean;
+          fire: boolean;
+          left: boolean;
+          right: boolean;
+          up: boolean;
+        };
       };
     };
 
@@ -109,13 +116,22 @@ describe("TimePilot engine", () => {
     pilot.startDemoMode();
     pilot.updateDemoAutopilot();
 
-    expect(pilot.context._controlInputState.fire).toBe(true);
+    expect(pilot.context._controlInputState.fire).toBe(false);
     expect(
       [
         pilot.context._controlInputState.right,
         pilot.context._controlInputState.left,
         pilot.context._controlInputState.up,
         pilot.context._controlInputState.down,
+      ].some(Boolean)
+    ).toBe(false);
+    expect(pilot.context._demoControlInputState.fire).toBe(true);
+    expect(
+      [
+        pilot.context._demoControlInputState.right,
+        pilot.context._demoControlInputState.left,
+        pilot.context._demoControlInputState.up,
+        pilot.context._demoControlInputState.down,
       ].some(Boolean)
     ).toBe(true);
 
@@ -128,7 +144,7 @@ describe("TimePilot engine", () => {
       startDemoMode: () => void;
       updateDemoAutopilot: () => void;
       context: {
-        _controlInputState: {
+        _demoControlInputState: {
           left: boolean;
           right: boolean;
         };
@@ -167,8 +183,8 @@ describe("TimePilot engine", () => {
     pilot.updateDemoAutopilot();
 
     expect(pilot.context._player.getData("newHeading")).toBe(270);
-    expect(pilot.context._controlInputState.left).toBe(true);
-    expect(pilot.context._controlInputState.right).toBe(false);
+    expect(pilot.context._demoControlInputState.left).toBe(true);
+    expect(pilot.context._demoControlInputState.right).toBe(false);
 
     game.destroyGame();
   });
@@ -233,7 +249,7 @@ describe("TimePilot engine", () => {
       startDemoMode: () => void;
       updateDemoAutopilot: () => void;
       context: {
-        _controlInputState: {
+        _demoControlInputState: {
           fire: boolean;
           right: boolean;
         };
@@ -248,14 +264,14 @@ describe("TimePilot engine", () => {
 
     pilot.startDemoMode();
     pilot.context._player.setData("isAlive", false);
-    pilot.context._controlInputState.fire = true;
-    pilot.context._controlInputState.right = true;
+    pilot.context._demoControlInputState.fire = true;
+    pilot.context._demoControlInputState.right = true;
 
     pilot.updateDemoAutopilot();
 
     expect(pilot.context._player.getData("isAlive")).toBe(false);
-    expect(pilot.context._controlInputState.fire).toBe(false);
-    expect(pilot.context._controlInputState.right).toBe(false);
+    expect(pilot.context._demoControlInputState.fire).toBe(false);
+    expect(pilot.context._demoControlInputState.right).toBe(false);
 
     game.destroyGame();
   });

@@ -29,6 +29,7 @@ import type {
   Controller,
   ControllerType,
   ControlInputSource,
+  ControlInputState,
   EnemyData,
   EnemyInstance,
   GameDataStore,
@@ -84,6 +85,20 @@ export const getDefaultActiveController = (): ControlInputSource => {
 
   return hasTouchPoints || hasCoarsePointer ? "touch" : "keyboard";
 };
+
+const createControlInputState = (
+  activeController: ControlInputSource = getDefaultActiveController()
+): ControlInputState => ({
+  down: false,
+  fire: false,
+  left: false,
+  menu: false,
+  pause: false,
+  restart: false,
+  right: false,
+  up: false,
+  activeController,
+});
 
 export interface TimePilotOptions {
   controllerType?: ControllerType;
@@ -158,6 +173,7 @@ export class TimePilot {
     this.isDemoMode = false;
     this.context._isDemoMode = false;
     this.clearControlInputState();
+    this.clearDemoControlInputState();
     SoundEngine.stopAll();
 
     this.context._gameTicker.stop();
@@ -202,17 +218,10 @@ export class TimePilot {
     userOptions.setOption("controllerType", this.options.controllerType);
     userOptions.setOption("gamepadEnabled", this.options.gamepadEnabled);
 
-    this.context._controlInputState = {
-      down: false,
-      fire: false,
-      left: false,
-      menu: false,
-      pause: false,
-      restart: false,
-      right: false,
-      up: false,
-      activeController: getDefaultActiveController(),
-    };
+    this.context._controlInputState = createControlInputState();
+    this.context._demoControlInputState = createControlInputState(
+      this.context._controlInputState.activeController
+    );
     this.context._formations = {};
     this.context._levelProgress = this.createLevelProgress(1);
     this.context._demoFadeStartedAtTick = 0;
@@ -630,7 +639,7 @@ export class TimePilot {
     const playerData = this.context._player.getData();
 
     if (!playerData.isAlive) {
-      this.clearControlInputState();
+      this.clearDemoControlInputState();
       return;
     }
 
@@ -944,11 +953,12 @@ export class TimePilot {
 
   private updateDemoControlOverlay = (heading: number): void => {
     const radians = heading * (Math.PI / 180);
-    const inputState = this.context._controlInputState;
+    const inputState = this.getDemoControlInputState();
     const axisX = Math.sin(radians);
     const axisY = -Math.cos(radians);
     const threshold = 0.35;
 
+    inputState.activeController = this.context._controlInputState.activeController;
     inputState.left = axisX < -threshold;
     inputState.right = axisX > threshold;
     inputState.up = axisY < -threshold;
@@ -961,9 +971,7 @@ export class TimePilot {
     inputState.rotateRight = false;
   };
 
-  private clearControlInputState = (): void => {
-    const inputState = this.context._controlInputState;
-
+  private clearInputState = (inputState: ControlInputState): void => {
     inputState.down = false;
     inputState.fire = false;
     inputState.left = false;
@@ -974,6 +982,22 @@ export class TimePilot {
     inputState.up = false;
     inputState.rotateLeft = false;
     inputState.rotateRight = false;
+  };
+
+  private clearControlInputState = (): void => {
+    this.clearInputState(this.context._controlInputState);
+  };
+
+  private clearDemoControlInputState = (): void => {
+    this.clearInputState(this.getDemoControlInputState());
+  };
+
+  private getDemoControlInputState = (): ControlInputState => {
+    this.context._demoControlInputState ??= createControlInputState(
+      this.context._controlInputState.activeController
+    );
+
+    return this.context._demoControlInputState;
   };
 
   private advanceDemoLevel = (): void => {
@@ -1023,7 +1047,7 @@ export class TimePilot {
     this.context._player.setData("isAlive", true);
     this.context._player.setData("deathTick", false);
     this.context._player.stopShooting();
-    this.clearControlInputState();
+    this.clearDemoControlInputState();
   };
 
   private getDemoProgressSnapshot = (): DemoProgressSnapshot => ({

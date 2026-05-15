@@ -122,7 +122,10 @@ class Hud implements HudInstance {
 
   private renderControlsOverlay = (): void => {
     const context = this._gameArena.getContext() as CanvasRenderingContext2D;
-    const inputState = this._context._controlInputState;
+    const inputState =
+      this._context._isDemoMode && this._context._demoControlInputState
+        ? this._context._demoControlInputState
+        : this._context._controlInputState;
 
     context.save();
     context.globalAlpha = 0.9;

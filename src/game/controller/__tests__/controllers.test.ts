@@ -138,6 +138,29 @@ describe("controller modules", () => {
     keyboard.disconnect?.();
   });
 
+  it("ignores repeated keyboard menu navigation and activation events", () => {
+    const controls = createControls();
+    vi.mocked(controls.isMenuActive).mockReturnValue(true);
+    const inputState = createInputState();
+    const keyboard = new Keyboard1(controls, inputState);
+
+    document.documentElement.dispatchEvent(new KeyboardEvent("keydown", { keyCode: 40 }));
+    document.documentElement.dispatchEvent(
+      new KeyboardEvent("keydown", { keyCode: 40, repeat: true })
+    );
+    document.documentElement.dispatchEvent(new KeyboardEvent("keydown", { keyCode: 13 }));
+    document.documentElement.dispatchEvent(
+      new KeyboardEvent("keydown", { keyCode: 13, repeat: true })
+    );
+
+    expect(controls.rotateToHeading).toHaveBeenCalledTimes(1);
+    expect(controls.rotateToHeading).toHaveBeenCalledWith(180);
+    expect(controls.startShooting).toHaveBeenCalledTimes(1);
+    expect(inputState.down).toBe(false);
+
+    keyboard.disconnect?.();
+  });
+
   it("maps gamepad menu and back buttons to menu actions", async () => {
     const controls = createControls();
     const inputState = createInputState();
@@ -160,6 +183,49 @@ describe("controller modules", () => {
     expect(controls.openMainMenu).toHaveBeenCalled();
     expect(controls.restart).not.toHaveBeenCalled();
     expect(inputState.menu).toBe(true);
+  });
+
+  it("snaps gamepad menu direction to one cardinal input and waits for release", async () => {
+    const controls = createControls();
+    const inputState = createInputState();
+    vi.mocked(controls.isMenuActive).mockReturnValue(true);
+    const gamepad = {
+      axes: [0.35, 1],
+      buttons: Array.from({ length: 16 }, () => ({ pressed: false })),
+    };
+    vi.spyOn(navigator, "getGamepads").mockReturnValue([
+      gamepad as unknown as globalThis.Gamepad,
+    ]);
+
+    const controller = new Gamepad(controls, inputState);
+    await new Promise((resolve) => window.setTimeout(resolve, 5));
+    controller.disconnect?.();
+
+    expect(controls.rotateToHeading).toHaveBeenCalledTimes(1);
+    expect(controls.rotateToHeading).toHaveBeenCalledWith(180);
+    expect(inputState.down).toBe(true);
+    expect(inputState.right).toBe(false);
+  });
+
+  it("ignores menu gamepad stick drift while another controller is active", async () => {
+    const controls = createControls();
+    const inputState = createInputState();
+    vi.mocked(controls.isMenuActive).mockReturnValue(true);
+    const gamepad = {
+      axes: [0.35, 0.3],
+      buttons: Array.from({ length: 16 }, () => ({ pressed: false })),
+    };
+    vi.spyOn(navigator, "getGamepads").mockReturnValue([
+      gamepad as unknown as globalThis.Gamepad,
+    ]);
+
+    const controller = new Gamepad(controls, inputState);
+    await new Promise((resolve) => window.setTimeout(resolve, 5));
+    controller.disconnect?.();
+
+    expect(controls.rotateToHeading).not.toHaveBeenCalled();
+    expect(inputState.down).toBe(false);
+    expect(inputState.right).toBe(false);
   });
 
   it("maps plus, minus, and zero keys to UI zoom controls", () => {

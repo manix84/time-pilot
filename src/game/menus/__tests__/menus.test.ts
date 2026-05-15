@@ -347,8 +347,11 @@ describe("menu definitions", () => {
     menus.next();
     menus.activate();
 
+    menus.activate();
+    expect(userOptions.masterVolume).toBe(4);
+
     menus.adjust(1);
-    expect(userOptions.masterVolume).toBe(6);
+    expect(userOptions.masterVolume).toBe(5);
 
     menus.render();
     expect(arena.renderText).not.toHaveBeenCalledWith(
@@ -484,8 +487,11 @@ describe("menu definitions", () => {
       expect.objectContaining({ align: "left" })
     );
 
+    menus.activate();
+    expect(userOptions.videoFilterMode).toBe("custom");
+
     menus.adjust(1);
-    expect(userOptions.videoFilterMode).toBe("arcade-crt");
+    expect(userOptions.videoFilterMode).toBe("off");
 
     menus.next();
     menus.activate();
@@ -605,7 +611,7 @@ describe("menu definitions", () => {
     );
   });
 
-  it("sets slider values from pointer clicks at the nearest step", () => {
+  it("steps slider values left from pointer taps and clicks", () => {
     const menus = new Menus(createArena(), { start: vi.fn() });
     userOptions.setOption("masterVolume", 10);
 
@@ -613,28 +619,32 @@ describe("menu definitions", () => {
     menus.next();
     menus.activate();
 
-    const transitionScale = 752 / 828;
-
     menus.handlePointer({
-      posX: -9 * transitionScale,
-      posY: -14 * transitionScale,
+      posX: 0,
+      posY: -14 * (752 / 828),
       type: "click",
     });
-    expect(userOptions.masterVolume).toBe(5);
+    expect(userOptions.masterVolume).toBe(9);
 
     menus.handlePointer({
-      posX: -150 * transitionScale,
-      posY: -14 * transitionScale,
+      posX: 0,
+      posY: -14 * (752 / 828),
+      type: "press",
+    });
+    menus.handlePointer({
+      posX: 0,
+      posY: -14 * (752 / 828),
+      type: "release",
+    });
+    expect(userOptions.masterVolume).toBe(8);
+
+    userOptions.setOption("masterVolume", 0);
+    menus.handlePointer({
+      posX: 0,
+      posY: -14 * (752 / 828),
       type: "click",
     });
     expect(userOptions.masterVolume).toBe(0);
-
-    menus.handlePointer({
-      posX: 150 * transitionScale,
-      posY: -14 * transitionScale,
-      type: "click",
-    });
-    expect(userOptions.masterVolume).toBe(10);
   });
 
   it("drags slider values to the pointer position until release", () => {
@@ -652,7 +662,7 @@ describe("menu definitions", () => {
       posY: -14 * transitionScale,
       type: "press",
     });
-    expect(userOptions.masterVolume).toBe(2);
+    expect(userOptions.masterVolume).toBe(10);
 
     menus.handlePointer({ posX: 0, posY: -14 * transitionScale, type: "drag" });
     expect(userOptions.masterVolume).toBe(5);
@@ -694,6 +704,7 @@ describe("menu definitions", () => {
     }
 
     menus.activate();
+    menus.adjust(1);
 
     for (let i = 0; i < 7; i++) {
       menus.next();
@@ -816,7 +827,7 @@ describe("menu definitions", () => {
       type: "click",
     });
 
-    expect(userOptions.masterVolume).toBe(5);
+    expect(userOptions.masterVolume).toBe(9);
   });
 
   it("animates the title position into and out of submenus", () => {

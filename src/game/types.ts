@@ -408,6 +408,7 @@ export interface GameDataStore {
   _timeWarpTransition?: TimeWarpTransitionState;
   _nextParachuteScore?: number;
   _controlInputState: ControlInputState;
+  _demoControlInputState?: ControlInputState;
   _gameArena: GameArenaInstance;
   _renderTicker: TickerInstance;
   _gameTicker: TickerInstance;

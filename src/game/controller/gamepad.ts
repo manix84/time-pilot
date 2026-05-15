@@ -10,6 +10,7 @@ import type {
 type NavigatorWithGamepads = Navigator & {
   webkitGetGamepads?: () => (globalThis.Gamepad | null)[];
 };
+type MenuDirection = "down" | "left" | "right" | "up";
 
 class Gamepad implements Controller {
   private _animationFrame: number | null = null;
@@ -20,6 +21,9 @@ class Gamepad implements Controller {
   private _isFireButtonPressed = false;
   private _isMenuButtonPressed = false;
   private _isRestartButtonPressed = false;
+  private _menuDirection: MenuDirection | null = null;
+  private _isRotateLeftButtonPressed = false;
+  private _isRotateRightButtonPressed = false;
 
   constructor(
     controllerInterface: ControllerInterfaceInstance,
@@ -87,23 +91,45 @@ class Gamepad implements Controller {
         this._setInputState("restart", false);
       }
 
-      if (gamepad.buttons[4]?.pressed) {
+      const menuActive = this._controllerInterface.isMenuActive?.() ?? false;
+
+      if (gamepad.buttons[4]?.pressed && (!menuActive || !this._isRotateLeftButtonPressed)) {
+        this._isRotateLeftButtonPressed = true;
         this._setActiveController();
         this._setRotationState("rotateLeft", true);
         this._controllerInterface.rotateAntiClockwise();
       } else {
+        if (!gamepad.buttons[4]?.pressed) {
+          this._isRotateLeftButtonPressed = false;
+        }
         this._setRotationState("rotateLeft", false);
       }
 
-      if (gamepad.buttons[5]?.pressed) {
+      if (gamepad.buttons[5]?.pressed && (!menuActive || !this._isRotateRightButtonPressed)) {
+        this._isRotateRightButtonPressed = true;
         this._setActiveController();
         this._setRotationState("rotateRight", true);
         this._controllerInterface.rotateClockwise();
       } else {
+        if (!gamepad.buttons[5]?.pressed) {
+          this._isRotateRightButtonPressed = false;
+        }
         this._setRotationState("rotateRight", false);
       }
 
       const directionalInput = this._getDirectionalInput(gamepad);
+
+      if (menuActive) {
+        if (!this._isMenuGamepadInputEngaged(gamepad, directionalInput)) {
+          this._handleMenuDirection({ axisX: 0, axisY: 0 });
+          continue;
+        }
+
+        this._handleMenuDirection(directionalInput);
+        continue;
+      }
+
+      this._menuDirection = null;
 
       if (directionalInput.axisX || directionalInput.axisY) {
         this._setAxisState(directionalInput.axisX, directionalInput.axisY);
@@ -169,6 +195,80 @@ class Gamepad implements Controller {
 
   private _isFaceButtonPressed = (gamepad: globalThis.Gamepad): boolean => {
     return [0, 1, 2, 3].some((buttonIndex) => gamepad.buttons[buttonIndex]?.pressed);
+  };
+
+  private _isMenuGamepadInputEngaged = (
+    gamepad: globalThis.Gamepad,
+    directionalInput: { axisX: number; axisY: number }
+  ): boolean => {
+    if (this._inputState?.activeController === "gamepad") {
+      return true;
+    }
+
+    if (
+      this._isFaceButtonPressed(gamepad) ||
+      gamepad.buttons[4]?.pressed ||
+      gamepad.buttons[5]?.pressed ||
+      gamepad.buttons[8]?.pressed ||
+      gamepad.buttons[9]?.pressed ||
+      [12, 13, 14, 15].some((buttonIndex) => gamepad.buttons[buttonIndex]?.pressed)
+    ) {
+      return true;
+    }
+
+    return (
+      Math.abs(directionalInput.axisX) >= 0.75 ||
+      Math.abs(directionalInput.axisY) >= 0.75
+    );
+  };
+
+  private _handleMenuDirection = (directionalInput: {
+    axisX: number;
+    axisY: number;
+  }): void => {
+    const direction = this._getMenuDirection(directionalInput);
+
+    this._setAxisState(
+      direction === "left" ? -1 : direction === "right" ? 1 : 0,
+      direction === "up" ? -1 : direction === "down" ? 1 : 0
+    );
+
+    if (!direction) {
+      this._menuDirection = null;
+      return;
+    }
+
+    if (direction === this._menuDirection) {
+      return;
+    }
+
+    this._menuDirection = direction;
+    const headingByDirection: Record<MenuDirection, number> = {
+      down: 180,
+      left: 270,
+      right: 90,
+      up: 0,
+    };
+
+    this._controllerInterface.rotateToHeading(headingByDirection[direction]);
+  };
+
+  private _getMenuDirection = (directionalInput: {
+    axisX: number;
+    axisY: number;
+  }): MenuDirection | null => {
+    const absX = Math.abs(directionalInput.axisX);
+    const absY = Math.abs(directionalInput.axisY);
+
+    if (absX < 0.2 && absY < 0.2) {
+      return null;
+    }
+
+    if (absX > absY) {
+      return directionalInput.axisX < 0 ? "left" : "right";
+    }
+
+    return directionalInput.axisY < 0 ? "up" : "down";
   };
 
   private _setAxisState = (axisX: number, axisY: number): void => {
