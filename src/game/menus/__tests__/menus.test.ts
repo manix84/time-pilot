@@ -123,6 +123,7 @@ describe("menu definitions", () => {
   });
 
   it("shows watch demo during demo mode and exits it on input", () => {
+    const performanceNow = vi.spyOn(performance, "now").mockReturnValue(0);
     const watchDemo = vi.fn();
     const arena = createArena();
     userOptions.setOption("enableDebug", true);
@@ -150,6 +151,15 @@ describe("menu definitions", () => {
 
     expect(watchDemo).toHaveBeenCalled();
     expect(menus.isWatchingDemo()).toBe(true);
+    expect(arena.renderText).not.toHaveBeenCalledWith(
+      "Demo",
+      expect.any(Number),
+      expect.any(Number),
+      expect.any(Object)
+    );
+
+    performanceNow.mockReturnValue(750);
+    menus.render();
     expect(arena.renderText).toHaveBeenCalledWith(
       "Demo",
       expect.any(Number),
@@ -163,10 +173,28 @@ describe("menu definitions", () => {
       expect.any(Object)
     );
 
+    vi.mocked(arena.renderText).mockClear();
+    performanceNow.mockReturnValue(800);
     menus.activate();
 
     expect(menus.isWatchingDemo()).toBe(false);
     menus.render();
+    expect(arena.renderText).toHaveBeenCalledWith(
+      "Demo",
+      expect.any(Number),
+      expect.any(Number),
+      expect.objectContaining({ align: "center" })
+    );
+
+    vi.mocked(arena.renderText).mockClear();
+    performanceNow.mockReturnValue(901);
+    menus.render();
+    expect(arena.renderText).not.toHaveBeenCalledWith(
+      "Demo",
+      expect.any(Number),
+      expect.any(Number),
+      expect.any(Object)
+    );
     expect(arena.renderText).toHaveBeenCalledWith(
       "Watch Demo",
       expect.any(Number),

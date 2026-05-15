@@ -149,6 +149,8 @@ const menuDesignHeight = 500;
 const menuDesignWidth = 660;
 const submenuItemOffsetY = 22;
 const menuTransitionDuration = 500;
+const demoSubtitleFadeDuration = 250;
+const demoSubtitleExitFadeDuration = 100;
 const startLogoScale = 2;
 const submenuLogoScale = 0.78;
 const logoBottomWidth = 390;
@@ -179,6 +181,7 @@ class Menus implements MenuSystemInstance {
   private _bindingWarning = "";
   private _commands: MenuSystemCommands;
   private _debugUnlocked = false;
+  private _demoWatchStartedAt = 0;
   private _gameArena: GameArenaInstance;
   private _items: MenuItem[] = [];
   private _konamiIndex = 0;
@@ -249,6 +252,8 @@ class Menus implements MenuSystemInstance {
   };
 
   showDemoWatch = (): void => {
+    const previousScreen = this._screen;
+
     this._active = true;
     this._awaitingBinding = null;
     this._bindingWarning = "";
@@ -262,8 +267,9 @@ class Menus implements MenuSystemInstance {
     this._levelPreviewedLevel = undefined;
     this._resetLevelMenuIdleState();
     this._scrollY = 0;
-    this._transition = null;
     this._buildItems();
+    this._demoWatchStartedAt = performance.now();
+    this._startTransition(previousScreen, "demo-watch");
   };
 
   showGameOver = (): void => {
@@ -610,13 +616,19 @@ class Menus implements MenuSystemInstance {
     context.scale(menuScale, menuScale);
     this._renderLogo(context, layout.logoY, layout.logoScale);
 
-    if (this._screen !== "start") {
-      this._gameArena.renderText(this._getScreenTitle(), 0, layout.titleY, {
-        size: 18,
-        align: "center",
-        valign: "middle",
-        color: palette.menu.mutedText,
-      });
+    if (this._shouldRenderScreenTitle()) {
+      const titleOpacity = this._getScreenTitleOpacity();
+      context.save();
+      context.globalAlpha *= titleOpacity;
+      if (titleOpacity > 0.01) {
+        this._gameArena.renderText(this._getRenderedScreenTitle(), 0, layout.titleY, {
+          size: 18,
+          align: "center",
+          valign: "middle",
+          color: palette.menu.mutedText,
+        });
+      }
+      context.restore();
     } else if (this._isPausedRootMenu()) {
       this._gameArena.renderText(i18n.hud.paused, 0, -42, {
         size: 18,
@@ -2575,6 +2587,40 @@ class Menus implements MenuSystemInstance {
     return this._getLogoY(screen) + 42;
   };
 
+  private _getScreenTitleOpacity = (): number => {
+    if (this._isExitingDemoWatch()) {
+      const elapsed = performance.now() - (this._transition?.startedAt ?? 0);
+
+      return Math.max(0, Math.min(1, 1 - elapsed / demoSubtitleExitFadeDuration));
+    }
+
+    if (this._screen !== "demo-watch") {
+      return 1;
+    }
+
+    const elapsed = performance.now() - this._demoWatchStartedAt;
+    const progress =
+      (elapsed - menuTransitionDuration) / demoSubtitleFadeDuration;
+
+    return Math.max(0, Math.min(1, progress));
+  };
+
+  private _shouldRenderScreenTitle = (): boolean => {
+    return this._screen !== "start" || this._isExitingDemoWatch();
+  };
+
+  private _getRenderedScreenTitle = (): string => {
+    if (this._isExitingDemoWatch()) {
+      return i18n.menu.demo;
+    }
+
+    return this._getScreenTitle();
+  };
+
+  private _isExitingDemoWatch = (): boolean => {
+    return this._transition?.from === "demo-watch" && this._transition.to === "start";
+  };
+
   private _getItemTransitionOffset = (): number => {
     if (!this._transition) {
       return 0;
@@ -2686,7 +2732,24 @@ class Menus implements MenuSystemInstance {
   };
 
   private _exitDemoWatch = (): void => {
-    this.showStart({ startLabel: i18n.menu.start });
+    const previousScreen = this._screen;
+
+    this._active = true;
+    this._awaitingBinding = null;
+    this._bindingWarning = "";
+    this._startLabel = i18n.menu.start;
+    this._screen = "start";
+    this._screenHistory = [];
+    this._pressedItemIndex = null;
+    this._scrollBarDrag = null;
+    this._sliderDragIndex = null;
+    this._selectedIndex = 0;
+    this._shouldRevealSelected = true;
+    this._levelPreviewedLevel = undefined;
+    this._resetLevelMenuIdleState();
+    this._scrollY = 0;
+    this._buildItems();
+    this._startTransition(previousScreen, "start");
   };
 
   private _goToScreen = (screen: MenuScreen): void => {
