@@ -21,6 +21,7 @@ const playerSpriteArcDegrees = 360;
 
 class Player implements PlayerInstance {
   private _bulletFactory: BulletFactoryInstance;
+  private _context: GameDataStore;
   private _data: PlayerData;
   private _dataDefaults: PlayerData;
   private _enemyBulletFactory: BulletFactoryInstance;
@@ -33,6 +34,7 @@ class Player implements PlayerInstance {
   private _rotationStep: number;
 
   constructor(context: GameDataStore) {
+    this._context = context;
     this._gameArena = context._gameArena;
     this._gameTicker = context._gameTicker;
     this._bulletFactory = context._bullets;
@@ -236,9 +238,9 @@ class Player implements PlayerInstance {
 
     if (
       userOptions.enableDebug &&
-      (userOptions.debug.invincible || userOptions.debug.showHitboxes)
+      (this._isDebugInvincibleActive() || userOptions.debug.showHitboxes)
     ) {
-      if (userOptions.debug.invincible) {
+      if (this._isDebugInvincibleActive()) {
         color = helpers.getRandomColor();
         playerConst.hitRadius = (playerConst.width + playerConst.height) / 4;
       }
@@ -260,7 +262,7 @@ class Player implements PlayerInstance {
   };
 
   kill = (): void => {
-    if (userOptions.enableDebug && userOptions.debug.invincible) {
+    if (this._isDebugInvincibleActive()) {
       return;
     }
 
@@ -275,6 +277,14 @@ class Player implements PlayerInstance {
     this._data.deathTick = this._gameTicker.getTicks();
     this._explosionSound.stop();
     this._explosionSound.play();
+  };
+
+  private _isDebugInvincibleActive = (): boolean => {
+    return (
+      userOptions.enableDebug &&
+      userOptions.debug.invincible &&
+      !this._context._isDemoMode
+    );
   };
 
   private _respawnAtLevelStart = (): void => {

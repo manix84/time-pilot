@@ -414,6 +414,19 @@ describe("context-backed game modules", () => {
     expect(context._gameArena.updatePosition).toHaveBeenCalledWith(0, 0);
   });
 
+  it("allows the demo player to die even when debug invincibility is enabled", () => {
+    const context = createContext();
+    context._isDemoMode = true;
+    userOptions.setOption("enableDebug", true);
+    userOptions.setDebugOption("invincible", true);
+    context._player.setData("lives", 3);
+
+    context._player.kill();
+
+    expect(context._player.getData("lives")).toBe(2);
+    expect(context._player.getData("isAlive")).toBe(false);
+  });
+
   it("leaves final-life game over messaging to the menu system", () => {
     const context = createContext();
     context._player.setData("lives", 1);
