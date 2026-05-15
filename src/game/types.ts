@@ -108,6 +108,7 @@ import type {
   FilterSettingKey,
   FilterSettings,
 } from "./filter-settings";
+import type AchievementSystem from "./achievements";
 export type GameLanguage = "de" | "en" | "es" | "fr" | "it" | "nl" | "ro";
 export type ControlInputName =
   | "down"
@@ -422,6 +423,7 @@ export interface GameDataStore {
   _hud: HudInstance;
   _menus: MenuSystemInstance;
   _currentController: Controller[];
+  _achievements?: AchievementSystem;
 }
 
 export interface CollisionSystemInstance {

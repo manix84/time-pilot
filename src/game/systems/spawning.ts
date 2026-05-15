@@ -206,6 +206,7 @@ class SpawningSystem implements SpawningSystemInstance {
       remaining: formation.slots.length,
       total: formation.slots.length,
     };
+    this._context._achievements?.onWaveStarted(formationId);
 
     this._waveStartSound.stop();
     this._waveStartSound.play();
@@ -323,6 +324,9 @@ class SpawningSystem implements SpawningSystemInstance {
       levelData.projectile.flightSound,
       levelData.projectile.explosionSound
     );
+    this._context._achievements?.onEnemyProjectileSpawned(
+      levelData.projectile
+    );
   };
 
   private _spawnSpecialBomberBomb = (): void => {
@@ -375,6 +379,9 @@ class SpawningSystem implements SpawningSystemInstance {
       levelData.projectile.sound,
       levelData.projectile.flightSound,
       levelData.projectile.explosionSound
+    );
+    this._context._achievements?.onEnemyProjectileSpawned(
+      levelData.projectile
     );
   };
 

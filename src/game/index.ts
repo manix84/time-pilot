@@ -1,4 +1,5 @@
 import { assetPath } from "./asset-path";
+import AchievementSystem from "./achievements";
 import BonusFactory from "./bonus-factory";
 import BulletFactory from "./bullet-factory";
 import { levels, limits, player, scoring, sounds } from "./constants";
@@ -244,6 +245,7 @@ export class TimePilot {
     this.context._props = new PropFactory(this.context);
     this.context._player.setRespawnCallback?.(this.seedRespawnProps);
     this.context._bonuses = new BonusFactory(this.context);
+    this.context._achievements = new AchievementSystem(this.context);
     this.context._hud = new Hud(this.context);
     this.context._menus = new Menus(this.context._gameArena, {
       applyUpdate: () => {
@@ -498,6 +500,10 @@ export class TimePilot {
       this.context._props.cleanup();
       this.context._bonuses.cleanup();
 
+      if (!this.isDemoMode) {
+        this.context._achievements?.update();
+      }
+
       if (this.context._levelProgress.bossDefeated) {
         this.beginTimeWarpTransition();
       }
@@ -528,6 +534,8 @@ export class TimePilot {
       this.resetWorld(this.selectedStartLevel, { skipIntro: false });
       this.hasStartedGame = true;
       this.hasShownGameOver = false;
+      this.context._achievements?.onRunStarted(this.context._player.getData());
+      this.context._achievements?.onLevelStarted(this.context._level);
     }
 
     this.context._menus.hide();
@@ -566,6 +574,8 @@ export class TimePilot {
     this.context._player.setData("score", score, true);
     this.context._player.setData("lives", continueLives, true);
     this.context._player.setData("continues", continues - 1, true);
+    this.context._achievements?.onContinueUsed(continues - 1);
+    this.context._achievements?.onLevelStarted(this.context._level);
     this.context._menus.hide();
     this.spawningSystem.addInitialProps();
     this.hasSeededInitialProps = true;
@@ -576,6 +586,10 @@ export class TimePilot {
     this.context._props.clearAll();
     this.spawningSystem.addInitialProps();
     this.hasSeededInitialProps = true;
+
+    if (!this.isDemoMode) {
+      this.context._achievements?.onRespawn();
+    }
   };
 
   private exitToRootMenu = (): void => {
@@ -1113,6 +1127,7 @@ export class TimePilot {
     }
 
     this.hasShownGameOver = true;
+    this.context._achievements?.onGameOver();
     this.context._player.stopShooting();
     this.context._gameTicker.stop();
     this.playMenuMusic();
@@ -1132,6 +1147,11 @@ export class TimePilot {
 
     this.timeWarpSound.stop();
     this.timeWarpSound.play();
+    this.context._achievements?.onLevelCompleted(
+      this.context._level,
+      nextLevel,
+      this.context._player.getData()
+    );
 
     this.context._timeWarpTransition = {
       effectStartedAtTick,
@@ -1199,6 +1219,7 @@ export class TimePilot {
     this.context._player.setData("score", transition.score, true);
     this.context._player.setData("lives", transition.lives);
     this.context._player.setData("lives", transition.lives, true);
+    this.context._achievements?.onLevelStarted(transition.nextLevel);
     this.spawningSystem.addInitialProps();
     this.hasSeededInitialProps = true;
   };

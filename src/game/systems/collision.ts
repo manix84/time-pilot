@@ -4,6 +4,7 @@ import type {
   BulletData,
   BulletInstance,
   CollisionSystemInstance,
+  EnemyData,
   GameDataStore,
 } from "../types";
 
@@ -58,8 +59,16 @@ class CollisionSystem implements CollisionSystemInstance {
             }
           )
         ) {
+          const wasAlive = playerData.isAlive;
           bullet.explode();
           this._context._player.kill();
+
+          if (wasAlive && !this._context._player.getData("isAlive")) {
+            this._context._achievements?.onPlayerHit(
+              "projectile",
+              this._context._player.getData()
+            );
+          }
         }
       });
 
@@ -96,8 +105,25 @@ class CollisionSystem implements CollisionSystemInstance {
           player.hitRadius
         )
       ) {
+        const enemyData = enemy.getData() as EnemyData;
+        const wasPlayerAlive = playerData.isAlive;
         enemy.kill();
         this._context._player.kill();
+
+        if (!enemy.isAlive) {
+          this._context._achievements?.onEnemyDestroyed({
+            enemyData,
+            playerData,
+            source: "collision",
+          });
+        }
+
+        if (wasPlayerAlive && !this._context._player.getData("isAlive")) {
+          this._context._achievements?.onPlayerHit(
+            "enemy",
+            this._context._player.getData()
+          );
+        }
       }
 
       bullets.forEach((bullet) => {
@@ -118,8 +144,17 @@ class CollisionSystem implements CollisionSystemInstance {
             bulletData.size
           )
         ) {
+          const enemyData = enemy.getData() as EnemyData;
           bullet.removeMe = true;
           enemy.kill();
+
+          if (!enemy.isAlive) {
+            this._context._achievements?.onEnemyDestroyed({
+              enemyData,
+              playerData: this._context._player.getData(),
+              source: "playerBullet",
+            });
+          }
         }
       });
     });
@@ -181,6 +216,7 @@ class CollisionSystem implements CollisionSystemInstance {
         ) {
           bullet.removeMe = true;
           enemyBullet.explode();
+          this._context._achievements?.onShootableProjectileDestroyed();
         }
       });
     });
