@@ -122,6 +122,32 @@ describe("menu definitions", () => {
     );
   });
 
+  it("shows the update action on the non-playing root menu when an update is waiting", () => {
+    const applyUpdate = vi.fn();
+    const arena = createArena();
+    const menus = new Menus(arena, {
+      applyUpdate,
+      canApplyUpdate: () => true,
+      start: vi.fn(),
+    });
+
+    menus.showStart();
+    menus.render();
+
+    expect(arena.renderText).toHaveBeenCalledWith(
+      "Update",
+      expect.any(Number),
+      expect.any(Number),
+      expect.objectContaining({ align: "left" })
+    );
+
+    menus.next();
+    menus.next();
+    menus.activate();
+
+    expect(applyUpdate).toHaveBeenCalled();
+  });
+
   it("shows watch demo during demo mode and exits it on input", () => {
     const performanceNow = vi.spyOn(performance, "now").mockReturnValue(0);
     const watchDemo = vi.fn();

@@ -438,7 +438,9 @@ export interface RenderingSystemInstance {
 }
 
 export interface MenuSystemCommands {
+  applyUpdate?: () => void;
   canWatchDemo?: () => boolean;
+  canApplyUpdate?: () => boolean;
   clearLevelPreview?: () => void;
   continueGame?: () => void;
   exitToRoot?: () => void;

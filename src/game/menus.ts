@@ -877,6 +877,7 @@ class Menus implements MenuSystemInstance {
   };
 
   private _createStartItems = (): MenuItem[] => {
+    let itemY = -22;
     const items = [
       this._createItem(this._startLabel, "action", -22, {
         action: this._commands.start,
@@ -884,19 +885,33 @@ class Menus implements MenuSystemInstance {
     ];
 
     const showWatchDemo = this._commands.canWatchDemo?.() ?? false;
+    const showUpdate =
+      !this._isPausedRootMenu() && (this._commands.canApplyUpdate?.() ?? false);
+    itemY += 50;
 
     items.push(
-      this._createItem(i18n.menu.options, "action", 28, {
+      this._createItem(i18n.menu.options, "action", itemY, {
         action: () => this._goToScreen("options"),
       })
     );
+    itemY += 50;
+
+    if (showUpdate) {
+      items.push(
+        this._createItem(i18n.menu.update, "action", itemY, {
+          action: () => this._commands.applyUpdate?.(),
+        })
+      );
+      itemY += 50;
+    }
 
     if (this._debugUnlocked) {
       items.push(
-        this._createItem(i18n.menu.debug, "action", 78, {
+        this._createItem(i18n.menu.debug, "action", itemY, {
           action: () => this._goToScreen("debug"),
         })
       );
+      itemY += 50;
     }
 
     if (showWatchDemo) {
@@ -904,7 +919,7 @@ class Menus implements MenuSystemInstance {
         this._createItem(
           i18n.menu.watchDemo,
           "action",
-          this._debugUnlocked ? 128 : 78,
+          itemY,
           {
             action: () => {
               this._commands.watchDemo?.();

@@ -119,6 +119,7 @@ const nl: typeof en = {
     soon: "Binnenkort",
     start: "Start",
     uiZoom: "UI-zoom",
+    update: "Bijwerken",
     videoFilterMode: "Video Filter Mode",
     watchDemo: "Demo bekijken",
   },

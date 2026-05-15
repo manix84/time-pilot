@@ -117,6 +117,7 @@ const en = {
     soon: "Soon",
     start: "Start",
     uiZoom: "UI Zoom",
+    update: "Update",
     videoFilterMode: "Video Filter Mode",
     watchDemo: "Watch Demo",
   },

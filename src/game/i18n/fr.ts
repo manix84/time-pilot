@@ -107,6 +107,7 @@ const fr: typeof en = {
     soon: "Bientot",
     start: "Demarrer",
     uiZoom: "Zoom UI",
+    update: "Mettre a jour",
     videoFilterMode: "Video Filter Mode",
     watchDemo: "Voir demo",
   },

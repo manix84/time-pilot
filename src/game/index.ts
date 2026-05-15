@@ -101,6 +101,8 @@ const createControlInputState = (
 });
 
 export interface TimePilotOptions {
+  applyUpdate?: () => void;
+  canApplyUpdate?: () => boolean;
   controllerType?: ControllerType;
   debug?: boolean;
   gamepadEnabled?: boolean;
@@ -128,6 +130,8 @@ export class TimePilot {
   constructor(element: HTMLElement, options: TimePilotOptions = {}) {
     this.container = element;
     this.options = {
+      applyUpdate: options.applyUpdate ?? (() => {}),
+      canApplyUpdate: options.canApplyUpdate ?? (() => false),
       controllerType: options.controllerType ?? userOptions.controllerType,
       debug: options.debug ?? userOptions.enableDebug,
       gamepadEnabled: options.gamepadEnabled ?? userOptions.gamepadEnabled,
@@ -242,6 +246,10 @@ export class TimePilot {
     this.context._bonuses = new BonusFactory(this.context);
     this.context._hud = new Hud(this.context);
     this.context._menus = new Menus(this.context._gameArena, {
+      applyUpdate: () => {
+        this.options.applyUpdate();
+      },
+      canApplyUpdate: () => this.options.canApplyUpdate(),
       canWatchDemo: () => this.isDemoMode,
       clearLevelPreview: () => {
         this.clearDebugLevelPreview();
