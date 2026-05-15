@@ -1,4 +1,6 @@
 /* Converted from engine/GameArena.js (AMD) to ESM TypeScript. */
+import { assetPath } from "../asset-path";
+import palette from "../palette";
 import type {
   AssetProgress,
   CircleOptions,
@@ -6,8 +8,6 @@ import type {
   RenderTextOptions,
   SpriteFrame,
 } from "../types";
-import { assetPath } from "../asset-path";
-import palette from "../palette";
 
 type CanvasContext = CanvasRenderingContext2D | WebGLRenderingContext;
 type CanvasWithDebugGrid = HTMLCanvasElement & {
@@ -32,6 +32,9 @@ type FullscreenDocument = Document & {
   webkitFullscreenElement?: Element | null;
   webkitFullscreenEnabled?: boolean;
 };
+type TextAlign = CanvasRenderingContext2D["textAlign"];
+
+const spaceAdvanceMultiplier = 2;
 
 class GameArena implements GameArenaInstance {
   private _assets: string[] = [];
@@ -78,9 +81,18 @@ class GameArena implements GameArenaInstance {
     this._oldHeight = this._containerElement.clientHeight;
 
     document.addEventListener("fullscreenchange", this._handleFullscreenChange);
-    document.addEventListener("webkitfullscreenchange", this._handleFullscreenChange);
-    document.addEventListener("mozfullscreenchange", this._handleFullscreenChange);
-    document.addEventListener("msfullscreenchange", this._handleFullscreenChange);
+    document.addEventListener(
+      "webkitfullscreenchange",
+      this._handleFullscreenChange
+    );
+    document.addEventListener(
+      "mozfullscreenchange",
+      this._handleFullscreenChange
+    );
+    document.addEventListener(
+      "msfullscreenchange",
+      this._handleFullscreenChange
+    );
     window.addEventListener("resize", this._handleResize);
 
     this._init();
@@ -122,13 +134,17 @@ class GameArena implements GameArenaInstance {
     this.height = nextHeight;
   };
 
-  getContext = (dimensions?: "2D" | "2d" | "3D" | "3d" | 2 | 3): CanvasContext => {
+  getContext = (
+    dimensions?: "2D" | "2d" | "3D" | "3d" | 2 | 3
+  ): CanvasContext => {
     if (!this._context) {
       switch (dimensions) {
         case "3D":
         case "3d":
         case 3:
-          this._context = this._canvas.getContext("webgl") as CanvasContext | null;
+          this._context = this._canvas.getContext(
+            "webgl"
+          ) as CanvasContext | null;
           break;
         default:
           this._context = this._canvas.getContext("2d") as CanvasContext | null;
@@ -174,13 +190,15 @@ class GameArena implements GameArenaInstance {
 
     return Boolean(
       doc.fullscreenElement ||
-        doc.webkitFullscreenElement ||
-        doc.mozFullScreenElement
+      doc.webkitFullscreenElement ||
+      doc.mozFullScreenElement
     );
   };
 
   isFullScreenLocked = (): boolean => {
-    const standaloneNavigator = navigator as Navigator & { standalone?: boolean };
+    const standaloneNavigator = navigator as Navigator & {
+      standalone?: boolean;
+    };
 
     return (
       standaloneNavigator.standalone === true ||
@@ -193,9 +211,9 @@ class GameArena implements GameArenaInstance {
     const element = this._containerElement as FullscreenElement;
     const canExitFullScreen = Boolean(
       doc.exitFullscreen ||
-        doc.cancelFullScreen ||
-        doc.mozCancelFullScreen ||
-        doc.webkitCancelFullScreen
+      doc.cancelFullScreen ||
+      doc.mozCancelFullScreen ||
+      doc.webkitCancelFullScreen
     );
     const fullscreenEnabled =
       doc.fullscreenEnabled ??
@@ -212,8 +230,8 @@ class GameArena implements GameArenaInstance {
       fullscreenEnabled !== false &&
       Boolean(
         element.requestFullscreen ||
-          element.mozRequestFullScreen ||
-          element.webkitRequestFullscreen
+        element.mozRequestFullScreen ||
+        element.webkitRequestFullscreen
       )
     );
   };
@@ -248,7 +266,9 @@ class GameArena implements GameArenaInstance {
     );
   };
 
-  preloadAssets = (callback: (progress: AssetProgress) => void = () => {}): void => {
+  preloadAssets = (
+    callback: (progress: AssetProgress) => void = () => {}
+  ): void => {
     let loadedCount = 0;
     let remainingCount = this._assets.length;
     const images: HTMLImageElement[] = [];
@@ -273,7 +293,12 @@ class GameArena implements GameArenaInstance {
     }
   };
 
-  renderText = (message: string | number, startPosX = 0, startPosY = 0, newOptions: RenderTextOptions = {}): void => {
+  renderText = (
+    message: string | number,
+    startPosX = 0,
+    startPosY = 0,
+    newOptions: RenderTextOptions = {}
+  ): void => {
     const options: Required<RenderTextOptions> = {
       size: newOptions.size || 12,
       align: newOptions.align || "left",
@@ -289,13 +314,81 @@ class GameArena implements GameArenaInstance {
     context.font = `${options.size}px ${options.font}`;
     context.textAlign = options.align;
     context.textBaseline = options.valign;
-    context.fillText(String(message), startPosX, startPosY);
 
-    if (options.stroke) {
-      context.lineWidth = options.strokeWidth;
-      context.strokeStyle = options.stroke;
-      context.strokeText(String(message), startPosX, startPosY);
+    this.renderTextWithExpandedSpaces(
+      context,
+      String(message),
+      startPosX,
+      startPosY,
+      options
+    );
+  };
+
+  private renderTextWithExpandedSpaces = (
+    context: CanvasRenderingContext2D,
+    message: string,
+    startPosX: number,
+    startPosY: number,
+    options: Required<RenderTextOptions>
+  ): void => {
+    if (!message.includes(" ")) {
+      context.fillText(message, startPosX, startPosY);
+
+      if (options.stroke) {
+        context.lineWidth = options.strokeWidth;
+        context.strokeStyle = options.stroke;
+        context.strokeText(message, startPosX, startPosY);
+      }
+      return;
     }
+
+    const runs = message.split(/(\s+)/).filter((run) => run.length > 0);
+    const totalWidth = runs.reduce(
+      (width, run) => width + this.getTextRunWidth(context, run),
+      0
+    );
+    const originalAlign = context.textAlign;
+    let cursorX =
+      startPosX - this.getTextAlignOffset(totalWidth, originalAlign);
+
+    context.textAlign = "left";
+
+    for (const run of runs) {
+      if (!/^\s+$/.test(run)) {
+        context.fillText(run, cursorX, startPosY);
+
+        if (options.stroke) {
+          context.lineWidth = options.strokeWidth;
+          context.strokeStyle = options.stroke;
+          context.strokeText(run, cursorX, startPosY);
+        }
+      }
+
+      cursorX += this.getTextRunWidth(context, run);
+    }
+
+    context.textAlign = originalAlign;
+  };
+
+  private getTextRunWidth = (
+    context: CanvasRenderingContext2D,
+    run: string
+  ): number => {
+    const width = context.measureText(run).width;
+
+    return /^\s+$/.test(run) ? width * spaceAdvanceMultiplier : width;
+  };
+
+  private getTextAlignOffset = (width: number, align: TextAlign): number => {
+    if (align === "center") {
+      return width / 2;
+    }
+
+    if (align === "right" || align === "end") {
+      return width;
+    }
+
+    return 0;
   };
 
   renderSprite = (sprite: CanvasImageSource, spriteData: SpriteFrame): void => {
@@ -330,7 +423,12 @@ class GameArena implements GameArenaInstance {
     }
   };
 
-  drawCircle = (posX = 0, posY = 0, radius: number, options: CircleOptions = {}): void => {
+  drawCircle = (
+    posX = 0,
+    posY = 0,
+    radius: number,
+    options: CircleOptions = {}
+  ): void => {
     const circleOptions: {
       backgroundColor: string;
       borderColor: string | false;
@@ -376,10 +474,22 @@ class GameArena implements GameArenaInstance {
   };
 
   destroy = (): void => {
-    document.removeEventListener("fullscreenchange", this._handleFullscreenChange);
-    document.removeEventListener("webkitfullscreenchange", this._handleFullscreenChange);
-    document.removeEventListener("mozfullscreenchange", this._handleFullscreenChange);
-    document.removeEventListener("msfullscreenchange", this._handleFullscreenChange);
+    document.removeEventListener(
+      "fullscreenchange",
+      this._handleFullscreenChange
+    );
+    document.removeEventListener(
+      "webkitfullscreenchange",
+      this._handleFullscreenChange
+    );
+    document.removeEventListener(
+      "mozfullscreenchange",
+      this._handleFullscreenChange
+    );
+    document.removeEventListener(
+      "msfullscreenchange",
+      this._handleFullscreenChange
+    );
     window.removeEventListener("resize", this._handleResize);
     this._canvas.remove();
     this._styles?.remove();
