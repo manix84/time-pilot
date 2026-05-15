@@ -929,15 +929,6 @@ class Menus implements MenuSystemInstance {
     );
     itemY += 50;
 
-    if (showUpdate) {
-      items.push(
-        this._createItem(i18n.menu.update, "action", itemY, {
-          action: () => this._commands.applyUpdate?.(),
-        })
-      );
-      itemY += 50;
-    }
-
     if (this._debugUnlocked) {
       items.push(
         this._createItem(i18n.menu.debug, "action", itemY, {
@@ -960,6 +951,15 @@ class Menus implements MenuSystemInstance {
             },
           }
         )
+      );
+      itemY += 50;
+    }
+
+    if (showUpdate) {
+      items.push(
+        this._createItem(i18n.menu.update, "action", itemY, {
+          action: () => this._commands.applyUpdate?.(),
+        })
       );
     }
 
