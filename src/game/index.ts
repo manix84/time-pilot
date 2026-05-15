@@ -67,6 +67,11 @@ const demoProjectileAvoidanceRadius = 82;
 const demoProjectileAvoidanceStrength = 3.2;
 const playerRotationStep = 360 / player.rotationFrameCount;
 
+type DemoProgressSnapshot = {
+  nextExtraLifeScore: number;
+  score: number;
+};
+
 export const getDefaultActiveController = (): ControlInputSource => {
   const hasTouchPoints =
     typeof navigator !== "undefined" && navigator.maxTouchPoints > 0;
@@ -830,9 +835,12 @@ export class TimePilot {
       return;
     }
 
+    const progress = this.getDemoProgressSnapshot();
+
     this.startDemoLevelFade();
     this.resetWorld(this.getRandomDemoLevel(), { skipIntro: true });
     this.configureDemoPlayerData();
+    this.restoreDemoProgress(progress);
     this.spawningSystem.addInitialProps();
     this.hasSeededInitialProps = true;
   };
@@ -872,6 +880,21 @@ export class TimePilot {
     this.clearControlInputState();
   };
 
+  private getDemoProgressSnapshot = (): DemoProgressSnapshot => ({
+    nextExtraLifeScore:
+      this.context._player.getData("nextExtraLifeScore") ??
+      scoring.extraLife.first,
+    score: this.context._player.getData("score") ?? 0,
+  });
+
+  private restoreDemoProgress = (progress: DemoProgressSnapshot): void => {
+    this.context._player.setData(
+      "nextExtraLifeScore",
+      progress.nextExtraLifeScore
+    );
+    this.context._player.setData("score", progress.score);
+  };
+
   private continueDemoIfNeeded = (): void => {
     const playerData = this.context._player.getData();
 
@@ -885,9 +908,11 @@ export class TimePilot {
     }
 
     const level = this.context._level;
+    const progress = this.getDemoProgressSnapshot();
 
     this.resetWorld(level, { skipIntro: true });
     this.configureDemoPlayerData();
+    this.restoreDemoProgress(progress);
     this.spawningSystem.addInitialProps();
     this.hasSeededInitialProps = true;
   };

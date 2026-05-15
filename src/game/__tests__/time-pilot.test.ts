@@ -222,6 +222,8 @@ describe("TimePilot engine", () => {
     await new Promise((resolve) => window.setTimeout(resolve, 5));
 
     pilot.startDemoMode();
+    pilot.context._player.setData("score", 1200);
+    pilot.context._player.setData("nextExtraLifeScore", 10000);
     pilot.context._player.setData("lives", 0);
     pilot.context._player.setData("isAlive", false);
     pilot.context._player.getData().removeMe = true;
@@ -230,8 +232,37 @@ describe("TimePilot engine", () => {
 
     expect(pilot.context._player.getData("lives")).toBe(3);
     expect(pilot.context._player.getData("continues")).toBe(99);
+    expect(pilot.context._player.getData("score")).toBe(1200);
+    expect(pilot.context._player.getData("nextExtraLifeScore")).toBe(10000);
     expect(pilot.context._player.getData("isAlive")).toBe(true);
     expect(pilot.context._player.getData("removeMe")).toBeUndefined();
+
+    game.destroyGame();
+  });
+
+  it("keeps demo score when cycling demo levels", async () => {
+    const game = new TimePilot(host, { debug: true, gamepadEnabled: false });
+    const pilot = game as unknown as {
+      advanceDemoLevel: () => void;
+      startDemoMode: () => void;
+      context: {
+        _player: {
+          getData: (key?: string) => Record<string, unknown> | number;
+          setData: (key: string, value: unknown) => void;
+        };
+      };
+    };
+
+    await new Promise((resolve) => window.setTimeout(resolve, 5));
+
+    pilot.startDemoMode();
+    pilot.context._player.setData("score", 2500);
+    pilot.context._player.setData("nextExtraLifeScore", 10000);
+
+    pilot.advanceDemoLevel();
+
+    expect(pilot.context._player.getData("score")).toBe(2500);
+    expect(pilot.context._player.getData("nextExtraLifeScore")).toBe(10000);
 
     game.destroyGame();
   });
