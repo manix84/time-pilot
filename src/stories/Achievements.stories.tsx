@@ -15,6 +15,11 @@ type TransitionInspectableMenu = {
   _transition: null;
 };
 
+const achievementsPageCanvasWidth = 1100;
+const achievementsPageCanvasHeight = 760;
+const achievementPopupCanvasWidth = 1000;
+const achievementPopupCanvasHeight = 560;
+
 const getAchievementStatuses = (): AchievementStatus[] =>
   achievementDefinitions.map((achievement, index) => ({
     ...achievement,
@@ -117,9 +122,9 @@ const AchievementPopupDemo = () => {
   return (
     <canvas
       className={"storybook-canvas"}
-      height={420}
+      height={achievementPopupCanvasHeight}
       ref={canvasRef}
-      width={760}
+      width={achievementPopupCanvasWidth}
     />
   );
 };
@@ -134,13 +139,17 @@ const AchievementsDemo = () => {
 
   return (
     <main className={"storybook-surface"}>
-      <section className={"storybook-section"}>
+      <section className={"storybook-section storybook-achievements-section"}>
         <p className={"storybook-eyebrow"}>Game UI</p>
         <h1 className={"storybook-title"}>Achievements</h1>
-        <div className={"storybook-demo-grid"}>
+        <div className={"storybook-demo-grid storybook-achievements-grid"}>
           <article className={"storybook-card"}>
             <h2>Achievement Page</h2>
-            <CanvasDemo draw={drawAchievements} height={620} width={900} />
+            <CanvasDemo
+              draw={drawAchievements}
+              height={achievementsPageCanvasHeight}
+              width={achievementsPageCanvasWidth}
+            />
           </article>
           <article className={"storybook-card"}>
             <h2>Unlock Popup</h2>
