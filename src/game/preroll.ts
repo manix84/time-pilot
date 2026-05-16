@@ -13,7 +13,7 @@ type PrerollOptions = {
 
 const authorLogoFadeMs = 800;
 const authorLogoHoldMs = 1500;
-const authorLogoSize = 512;
+const authorLogoViewportRatio = 0.5;
 const logoFadeMs = 800;
 const shipFlyDurationMs = 1500;
 const postFlyoutHoldMs = 1000;
@@ -28,7 +28,6 @@ const logoSourceWidth = 420;
 const logoSourceHeight = 96;
 const logoPerspectiveHeight = 86;
 const logoPerspectiveBottomWidth = 390;
-const shipRenderSize = player.width * 3;
 const timePilotStartMs = authorLogoFadeMs + authorLogoHoldMs + authorLogoFadeMs;
 
 class Preroll {
@@ -148,7 +147,8 @@ class Preroll {
         : elapsed >= fadeOutStartMs
           ? 1 - (elapsed - fadeOutStartMs) / authorLogoFadeMs
           : 1;
-    const size = Math.min(authorLogoSize, this.arena.width * 0.9, this.arena.height * 0.9);
+    const size =
+      Math.min(this.arena.width, this.arena.height) * authorLogoViewportRatio;
 
     context.save();
     context.globalAlpha *= Math.max(0, Math.min(1, alpha));
@@ -187,6 +187,7 @@ class Preroll {
     flyElapsedMs: number
   ): void => {
     const progress = Math.max(0, Math.min(1, flyElapsedMs / shipFlyDurationMs));
+    const shipRenderSize = this.getFlybyShipRenderSize();
     const startX = -this.arena.width / 2 - shipRenderSize / 2;
     const endX = this.arena.width / 2 + shipRenderSize / 2;
     const x = this.lerp(startX, endX, progress);
@@ -227,6 +228,9 @@ class Preroll {
       (this.arena.width * 0.8) / logoPerspectiveBottomWidth,
       (this.arena.height * 0.9) / logoPerspectiveHeight
     );
+
+  private getFlybyShipRenderSize = (): number =>
+    (logoPerspectiveHeight * this.getInitialLogoScale()) / 2;
 
   private getMenuScale = (): number => {
     const availableWidth = Math.max(1, this.arena.width - menuEdgePadding * 2);
