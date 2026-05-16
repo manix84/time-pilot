@@ -438,8 +438,13 @@ export interface SpawningSystemInstance {
   spawnEntities: () => void;
 }
 
+export interface RenderFrameOptions {
+  menuRenderOptions?: MenuRenderOptions;
+  renderMenus?: boolean;
+}
+
 export interface RenderingSystemInstance {
-  renderFrame: () => void;
+  renderFrame: (options?: RenderFrameOptions) => void;
   destroy?: () => void;
 }
 
@@ -467,6 +472,10 @@ export interface ShowStartMenuOptions {
   startLabel?: string;
 }
 
+export interface MenuRenderOptions {
+  renderLogo?: boolean;
+}
+
 export interface MenuSystemInstance {
   adjustUiZoom: (direction: -1 | 1) => void;
   resetUiZoom: () => void;
@@ -479,7 +488,7 @@ export interface MenuSystemInstance {
   showGameOver: () => void;
   showRestartConfirm: () => void;
   hide: () => void;
-  render: () => void;
+  render: (options?: MenuRenderOptions) => void;
   next: () => void;
   previous: () => void;
   goBack: () => void;

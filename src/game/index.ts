@@ -475,7 +475,14 @@ export class TimePilot {
       }
 
       if (this.preroll) {
-        this.context._gameArena.clear();
+        if (this.preroll.isSettling()) {
+          this.startPrerollBackground();
+          this.renderingSystem.renderFrame({
+            menuRenderOptions: { renderLogo: false },
+          });
+        } else {
+          this.context._gameArena.clear();
+        }
         this.preroll.render();
         return;
       }
@@ -545,6 +552,7 @@ export class TimePilot {
 
     this.preroll = new Preroll(this.context._gameArena, {
       onComplete: () => this.finishPreroll(),
+      onSettleStart: () => this.startPrerollBackground(),
       playBulletSound: () => {
         const sound = new SoundEngine(player.projectile.sound.src, {
           instantDestroy: true,
@@ -561,9 +569,7 @@ export class TimePilot {
 
   private finishPreroll = (): void => {
     this.preroll = undefined;
-    this.isDemoMode = false;
-    this.context._isDemoMode = false;
-    this.context._menus.showStart({ startLabel: i18n.menu.start });
+    this.startPrerollBackground();
   };
 
   private skipPreroll = (): void => {
@@ -572,6 +578,14 @@ export class TimePilot {
 
   private isPrerollActive = (): boolean => {
     return !!this.preroll;
+  };
+
+  private startPrerollBackground = (): void => {
+    if (this.isDemoMode && this.context._menus.isActive()) {
+      return;
+    }
+
+    this.startDemoMode();
   };
 
   private beginGame = (): void => {

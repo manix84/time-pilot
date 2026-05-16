@@ -12,7 +12,11 @@ import {
   type TimeWarpPlayerMode,
 } from "../time-warp";
 import { getGameScale } from "../ui-scale";
-import type { GameDataStore, RenderingSystemInstance } from "../types";
+import type {
+  GameDataStore,
+  RenderFrameOptions,
+  RenderingSystemInstance,
+} from "../types";
 
 const playerRotationStep = 360 / player.rotationFrameCount;
 
@@ -35,12 +39,16 @@ class RenderingSystem implements RenderingSystemInstance {
     this._achievementNotifications.destroy();
   };
 
-  renderFrame = (): void => {
+  renderFrame = (options: RenderFrameOptions = {}): void => {
+    const renderMenus = options.renderMenus ?? true;
+
     this._context._gameArena.clear();
 
     if (this.isTimeWarpEffectActive()) {
       this.renderTimeWarpTransition();
-      this._context._menus.render();
+      if (renderMenus) {
+        this._context._menus.render(options.menuRenderOptions);
+      }
       return;
     }
 
@@ -55,7 +63,9 @@ class RenderingSystem implements RenderingSystemInstance {
 
     this.renderLevelIntroText();
     this.renderDemoLevelFade();
-    this._context._menus.render();
+    if (renderMenus) {
+      this._context._menus.render(options.menuRenderOptions);
+    }
     this._achievementNotifications.render();
   };
 

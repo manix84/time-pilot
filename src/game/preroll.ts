@@ -2,11 +2,12 @@ import { assetPath } from "./asset-path";
 import i18n from "./i18n";
 import palette from "./palette";
 import { player } from "./constants";
-import { getViewportUiScale } from "./ui-scale";
+import { getUiScale } from "./ui-scale";
 import type { GameArenaInstance } from "./types";
 
 type PrerollOptions = {
   onComplete: () => void;
+  onSettleStart: () => void;
   playBulletSound: () => void;
 };
 
@@ -34,17 +35,20 @@ class Preroll {
   private readonly arena: GameArenaInstance;
   private readonly authorLogo = new Image();
   private readonly onComplete: () => void;
+  private readonly onSettleStart: () => void;
   private readonly playBulletSound: () => void;
   private readonly playerSprite = new Image();
   private logoCanvas?: HTMLCanvasElement;
   private startedAt = 0;
   private playedFirstShot = false;
   private playedSecondShot = false;
+  private startedSettle = false;
   private completed = false;
 
   constructor(arena: GameArenaInstance, options: PrerollOptions) {
     this.arena = arena;
     this.onComplete = options.onComplete;
+    this.onSettleStart = options.onSettleStart;
     this.playBulletSound = options.playBulletSound;
     this.authorLogo.src = assetPath("logos/author.png");
     this.playerSprite.src = player.sprite.src;
@@ -55,6 +59,7 @@ class Preroll {
     this.startedAt = performance.now();
     this.playedFirstShot = false;
     this.playedSecondShot = false;
+    this.startedSettle = false;
     this.completed = false;
   };
 
@@ -67,19 +72,27 @@ class Preroll {
     this.onComplete();
   };
 
+  isSettling = (): boolean => this.getTimePilotElapsed() >= this.getSettleStartMs();
+
   render = (): void => {
     if (this.completed) {
       return;
     }
 
-    const elapsed = performance.now() - this.startedAt;
-    const timePilotElapsed = elapsed - timePilotStartMs;
-    const flyEndMs = logoFadeMs + shipFlyDurationMs;
-    const settleStartMs = flyEndMs + postFlyoutHoldMs;
+    const elapsed = this.getElapsed();
+    const timePilotElapsed = this.getTimePilotElapsed();
+    const flyEndMs = this.getFlyEndMs();
+    const settleStartMs = this.getSettleStartMs();
     const settleProgress = Math.max(
       0,
       Math.min(1, (timePilotElapsed - settleStartMs) / logoSettleMs)
     );
+    const isSettling = timePilotElapsed >= settleStartMs;
+
+    if (isSettling && !this.startedSettle) {
+      this.startedSettle = true;
+      this.onSettleStart();
+    }
 
     if (settleProgress >= 1) {
       this.completed = true;
@@ -90,13 +103,7 @@ class Preroll {
     const context = this.arena.getContext() as CanvasRenderingContext2D;
 
     context.save();
-    context.fillStyle = "#000";
-    context.fillRect(
-      -(this.arena.width / 2),
-      -(this.arena.height / 2),
-      this.arena.width,
-      this.arena.height
-    );
+    this.renderBlackOverlay(context, isSettling ? 1 - settleProgress : 1);
 
     if (elapsed < timePilotStartMs) {
       this.renderAuthorLogo(context, elapsed);
@@ -111,6 +118,22 @@ class Preroll {
     }
 
     this.playShotCues(timePilotElapsed);
+    context.restore();
+  };
+
+  private renderBlackOverlay = (
+    context: CanvasRenderingContext2D,
+    opacity: number
+  ): void => {
+    context.save();
+    context.globalAlpha *= Math.max(0, Math.min(1, opacity));
+    context.fillStyle = "#000";
+    context.fillRect(
+      -(this.arena.width / 2),
+      -(this.arena.height / 2),
+      this.arena.width,
+      this.arena.height
+    );
     context.restore();
   };
 
@@ -214,9 +237,18 @@ class Preroll {
         1,
         availableWidth / menuDesignWidth,
         availableHeight / menuDesignHeight
-      ) * getViewportUiScale(this.arena.width, this.arena.height)
+      ) * getUiScale(this.arena.width, this.arena.height)
     );
   };
+
+  private getElapsed = (): number => performance.now() - this.startedAt;
+
+  private getTimePilotElapsed = (): number => this.getElapsed() - timePilotStartMs;
+
+  private getFlyEndMs = (): number => logoFadeMs + shipFlyDurationMs;
+
+  private getSettleStartMs = (): number =>
+    this.getFlyEndMs() + postFlyoutHoldMs;
 
   private getLogoCanvas = (): HTMLCanvasElement => {
     if (this.logoCanvas) {
