@@ -168,6 +168,45 @@ describe("menu definitions", () => {
     expect(applyUpdate).toHaveBeenCalled();
   });
 
+  it("renders submenu and back chevrons", () => {
+    const arena = createArena();
+    const menus = new Menus(arena, { start: vi.fn() });
+
+    menus.showStart();
+    menus.render();
+
+    let contexts = vi
+      .mocked(arena.getContext)
+      .mock.results.map((result) => result.value as CanvasRenderingContext2D);
+    let fillRectCalls = contexts.flatMap((context) =>
+      vi.mocked(context.fillRect).mock.calls
+    );
+
+    expect(fillRectCalls).toEqual(
+      expect.arrayContaining([
+        [136, 45, 3, 3],
+      ])
+    );
+
+    vi.mocked(arena.getContext).mockClear();
+    menus.next();
+    menus.activate();
+    menus.render();
+
+    contexts = vi
+      .mocked(arena.getContext)
+      .mock.results.map((result) => result.value as CanvasRenderingContext2D);
+    fillRectCalls = contexts.flatMap((context) =>
+      vi.mocked(context.fillRect).mock.calls
+    );
+
+    expect(fillRectCalls).toEqual(
+      expect.arrayContaining([
+        [-137, 391, 3, 3],
+      ])
+    );
+  });
+
   it("shows watch demo during demo mode and exits it on input", () => {
     const performanceNow = vi.spyOn(performance, "now").mockReturnValue(0);
     const watchDemo = vi.fn();

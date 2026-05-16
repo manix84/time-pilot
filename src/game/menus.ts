@@ -88,6 +88,7 @@ interface MenuItem {
   levelIcon?: number;
   onAdjust?: (direction: -1 | 1) => void;
   onSetValue?: (value: number) => void;
+  opensSubmenu?: boolean;
   rect: {
     height: number;
     width: number;
@@ -976,6 +977,7 @@ class Menus implements MenuSystemInstance {
     items.push(
       this._createItem(i18n.menu.options, "action", itemY, {
         action: () => this._goToScreen("options"),
+        opensSubmenu: true,
       })
     );
     itemY += 50;
@@ -983,6 +985,7 @@ class Menus implements MenuSystemInstance {
     items.push(
       this._createItem(i18n.menu.achievements, "action", itemY, {
         action: () => this._goToScreen("achievements"),
+        opensSubmenu: true,
       })
     );
     itemY += 50;
@@ -991,6 +994,7 @@ class Menus implements MenuSystemInstance {
       items.push(
         this._createItem(i18n.menu.debug, "action", itemY, {
           action: () => this._goToScreen("debug"),
+          opensSubmenu: true,
         })
       );
       itemY += 50;
@@ -1092,6 +1096,7 @@ class Menus implements MenuSystemInstance {
       this._createItem(i18n.menu.filters, "action", 156, {
         getValue: () => filterModeLabels[userOptions.videoFilterMode],
         action: () => this._goToScreen("filters"),
+        opensSubmenu: true,
       }),
       this._createItem(i18n.menu.fullScreen, "toggle", 198, {
         disabled:
@@ -1110,6 +1115,7 @@ class Menus implements MenuSystemInstance {
         getValue: () => getLanguageName(userOptions.language),
         languageFlag: userOptions.language,
         action: () => this._goToScreen("language"),
+        opensSubmenu: true,
       }),
     ];
 
@@ -1128,6 +1134,7 @@ class Menus implements MenuSystemInstance {
     items.push(
       this._createItem(i18n.menu.remapControls, "action", remapControlsY, {
         action: () => this._goToScreen("controls"),
+        opensSubmenu: true,
       }),
       this._createItem(i18n.menu.back, "action", backY, {
         action: () => this._goBack(),
@@ -1151,6 +1158,7 @@ class Menus implements MenuSystemInstance {
       }),
       this._createItem(i18n.menu.customCrtOptions, "action", -12, {
         action: () => this._goToScreen("filter-custom"),
+        opensSubmenu: true,
       }),
       this._createItem(i18n.menu.resetFilters, "action", 30, {
         action: () => this._resetFilters(),
@@ -1360,12 +1368,14 @@ class Menus implements MenuSystemInstance {
       this._createItem(i18n.menu.selectLevel, "action", 240, {
         action: () => this._goToScreen("level"),
         getValue: () => this._getSelectedLevelLabel(),
+        opensSubmenu: true,
       }),
       this._createItem(i18n.menu.playPreroll, "action", 290, {
         action: () => this._commands.playPreroll?.(),
       }),
       this._createItem(i18n.menu.resetData, "action", 340, {
         action: () => this._goToScreen("debug-reset"),
+        opensSubmenu: true,
       }),
       this._createItem(i18n.menu.back, "action", 390, {
         action: () => this._goBack(),
@@ -1377,15 +1387,19 @@ class Menus implements MenuSystemInstance {
     return [
       this._createItem(i18n.menu.resetPreferences, "action", -54, {
         action: () => this._showResetConfirm("preferences"),
+        opensSubmenu: true,
       }),
       this._createItem(i18n.menu.resetScores, "action", -12, {
         action: () => this._showResetConfirm("scores"),
+        opensSubmenu: true,
       }),
       this._createItem(i18n.menu.resetAchievements, "action", 30, {
         action: () => this._showResetConfirm("achievements"),
+        opensSubmenu: true,
       }),
       this._createItem(i18n.menu.resetAllStoredData, "action", 72, {
         action: () => this._showResetConfirm("all"),
+        opensSubmenu: true,
       }),
       this._createItem(i18n.menu.back, "action", 122, {
         action: () => this._goBack(),
@@ -1513,9 +1527,12 @@ class Menus implements MenuSystemInstance {
   };
 
   private _renderItemText = (item: MenuItem, color: string): void => {
+    const isBackItem = item.label === i18n.menu.back;
+    const labelInset = isBackItem ? 30 : 14;
+
     this._gameArena.renderText(
       item.label,
-      item.rect.x + 14,
+      item.rect.x + labelInset,
       item.rect.y + item.rect.height / 2,
       {
         size: item.kind === "key" ? 13 : 16,
@@ -1538,7 +1555,11 @@ class Menus implements MenuSystemInstance {
         item.getValue(),
         item.rect.x +
           item.rect.width -
-          (item.languageFlag || item.levelIcon ? 48 : 14),
+          (item.opensSubmenu
+            ? 34
+            : item.languageFlag || item.levelIcon
+              ? 48
+              : 14),
         item.rect.y + item.rect.height / 2,
         {
           size: item.kind === "key" ? 13 : 16,
@@ -1548,6 +1569,43 @@ class Menus implements MenuSystemInstance {
         }
       );
     }
+
+    this._renderItemChevron(item, color);
+  };
+
+  private _renderItemChevron = (item: MenuItem, color: string): void => {
+    const isBackItem = item.label === i18n.menu.back;
+
+    if (!item.opensSubmenu && !isBackItem) {
+      return;
+    }
+
+    const context = this._gameArena.getContext() as CanvasRenderingContext2D;
+    const centerY = item.rect.y + item.rect.height / 2;
+    const chevronX = isBackItem
+      ? item.rect.x + 15
+      : item.rect.x + item.rect.width - 16;
+    const direction = isBackItem ? -1 : 1;
+    const pixelSize = 3;
+    const blocks = [
+      { x: -4, y: -7 },
+      { x: -1, y: -4 },
+      { x: 2, y: -1 },
+      { x: -1, y: 2 },
+      { x: -4, y: 5 },
+    ];
+
+    context.save();
+    context.fillStyle = color;
+    blocks.forEach((block) => {
+      context.fillRect(
+        chevronX + block.x * direction,
+        centerY + block.y,
+        pixelSize,
+        pixelSize
+      );
+    });
+    context.restore();
   };
 
   private _renderAchievementItem = (
