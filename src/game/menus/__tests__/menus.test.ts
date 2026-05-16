@@ -1610,7 +1610,7 @@ describe("menu definitions", () => {
     );
   });
 
-  it("opens reset data debug submenu and dispatches grouped reset actions", () => {
+  it("confirms grouped reset actions from the debug reset submenu", () => {
     const arena = createArena();
     const resetStoredData = vi.fn();
     const menus = new Menus(arena, {
@@ -1667,16 +1667,36 @@ describe("menu definitions", () => {
     );
 
     menus.activate();
-    menus.next();
-    menus.activate();
-    menus.next();
-    menus.activate();
+    menus.render();
+
+    expect(arena.renderText).toHaveBeenCalledWith(
+      "Confirm Reset?",
+      0,
+      -200,
+      expect.objectContaining({ align: "center" })
+    );
+    expect(arena.renderText).toHaveBeenCalledWith(
+      "preferences. This cannot be undone.",
+      0,
+      expect.any(Number),
+      expect.objectContaining({ align: "center" })
+    );
+    expect(arena.renderText).toHaveBeenCalledWith(
+      "Confirm Reset",
+      expect.any(Number),
+      expect.any(Number),
+      expect.objectContaining({ align: "left" })
+    );
+
     menus.next();
     menus.activate();
 
-    expect(resetStoredData).toHaveBeenNthCalledWith(1, "preferences");
-    expect(resetStoredData).toHaveBeenNthCalledWith(2, "scores");
-    expect(resetStoredData).toHaveBeenNthCalledWith(3, "achievements");
-    expect(resetStoredData).toHaveBeenNthCalledWith(4, "all");
+    expect(resetStoredData).not.toHaveBeenCalled();
+
+    menus.activate();
+    menus.activate();
+
+    expect(resetStoredData).toHaveBeenCalledOnce();
+    expect(resetStoredData).toHaveBeenCalledWith("preferences");
   });
 });
