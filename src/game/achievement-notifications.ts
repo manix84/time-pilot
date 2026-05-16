@@ -1,5 +1,10 @@
 import palette from "./palette";
 import { getUiScale } from "./ui-scale";
+import {
+  achievementNotificationHeight,
+  achievementNotificationIconSize,
+  achievementNotificationWidth,
+} from "./achievement-layout";
 import type { AchievementDefinition, AchievementStatus } from "./achievements";
 import type { GameArenaInstance } from "./types";
 
@@ -8,15 +13,16 @@ type AchievementNotification = {
   startedAt: number;
 };
 
-const popupWidth = 300;
-const popupHeight = 64;
-const popupMargin = 10;
-const popupBottomOffset = 54;
+const popupWidth = achievementNotificationWidth;
+const popupHeight = achievementNotificationHeight;
+const popupMargin = 6;
+const popupCreditsLineBottomOffset = 21;
+const popupCreditsGap = 16;
 const popupSlideDistance = 28;
 const popupSlideMs = 260;
 const popupHoldMs = 2600;
 const popupExitMs = 220;
-const popupIconSize = 48;
+const popupIconSize = achievementNotificationIconSize;
 
 class AchievementNotifications {
   private readonly arena: GameArenaInstance;
@@ -73,10 +79,10 @@ class AchievementNotifications {
     const uiHeight = this.arena.height / uiScale;
     const progress = this.getAnimationProgress(elapsed);
     const eased = this.easeOutCubic(progress);
-    const hiddenX = uiWidth / 2 + popupMargin;
+    const hiddenX = uiWidth / 2 + popupSlideDistance;
     const visibleX = uiWidth / 2 - popupMargin - popupWidth;
-    const x = hiddenX - (popupWidth + popupSlideDistance) * eased;
-    const y = uiHeight / 2 - popupBottomOffset - popupHeight;
+    const x = visibleX + (hiddenX - visibleX) * (1 - eased);
+    const y = uiHeight / 2 - popupCreditsLineBottomOffset - popupCreditsGap - popupHeight;
 
     context.save();
     context.scale(uiScale, uiScale);
@@ -91,9 +97,10 @@ class AchievementNotifications {
     x: number,
     y: number
   ): void => {
-    const iconX = x + 8;
-    const iconY = y + (popupHeight - popupIconSize) / 2;
-    const textX = iconX + popupIconSize + 10;
+    const iconPadding = (popupHeight - popupIconSize) / 2;
+    const iconX = x + iconPadding;
+    const iconY = y + iconPadding;
+    const textX = iconX + popupIconSize + 8;
     const textWidth = popupWidth - (textX - x) - 10;
 
     context.fillStyle = palette.menu.itemBackground;
@@ -104,18 +111,18 @@ class AchievementNotifications {
 
     this.renderIcon(context, achievement, iconX, iconY);
 
-    this.arena.renderText(achievement.name, textX, y + 10, {
-      size: 11,
+    this.arena.renderText(achievement.name, textX, y + 6, {
+      size: 8,
       align: "left",
       valign: "top",
       color: palette.menu.selectedBackground,
     });
 
-    this.wrapText(achievement.description, Math.max(20, Math.floor(textWidth / 6)))
+    this.wrapText(achievement.description, Math.max(12, Math.floor(textWidth / 5)))
       .slice(0, 2)
       .forEach((line, index) => {
-        this.arena.renderText(line, textX, y + 30 + index * 12, {
-          size: 8,
+        this.arena.renderText(line, textX, y + 19 + index * 8, {
+          size: 6,
           align: "left",
           valign: "top",
           color: palette.menu.itemText,

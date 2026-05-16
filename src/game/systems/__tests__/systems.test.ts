@@ -843,7 +843,7 @@ describe("game systems", () => {
       expect.any(Number),
       expect.objectContaining({
         align: "left",
-        size: 11,
+        size: 8,
       })
     );
 

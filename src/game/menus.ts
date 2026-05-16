@@ -15,6 +15,11 @@ import i18n, {
   getCurrentLanguage,
   getLanguageName,
 } from "./i18n";
+import {
+  achievementCardHeight,
+  achievementCardIconSize,
+  achievementCardWidth,
+} from "./achievement-layout";
 import palette from "./palette";
 import type { AchievementStatus } from "./achievements";
 import type {
@@ -171,10 +176,7 @@ const povPreviewFrameDuration = 180;
 const submenuHeaderTopGap = 34;
 const touchScrollDragThreshold = 8;
 const achievementCardGap = 12;
-const achievementCardHeight = 112;
-const achievementCardMinWidthForThreeColumns = 620;
-const achievementCardMinWidthForTwoColumns = 420;
-const achievementIconRenderSize = 48;
+const achievementIconRenderSize = achievementCardIconSize;
 const timePilotVersion =
   typeof __TIME_PILOT_VERSION__ === "undefined"
     ? "dev"
@@ -1506,12 +1508,12 @@ class Menus implements MenuSystemInstance {
     }
 
     const context = this._gameArena.getContext() as CanvasRenderingContext2D;
-    const padding = 10;
+    const padding = 8;
     const iconX = item.rect.x + padding;
-    const iconY = item.rect.y + padding;
-    const textX = iconX + achievementIconRenderSize + 10;
+    const iconY = item.rect.y + (item.rect.height - achievementIconRenderSize) / 2;
+    const textX = iconX + achievementIconRenderSize + 8;
     const textWidth =
-      item.rect.width - padding * 2 - achievementIconRenderSize - 10;
+      item.rect.width - padding * 2 - achievementIconRenderSize - 8;
     const progress = achievement.progress
       ? Math.max(
         0,
@@ -1545,7 +1547,7 @@ class Menus implements MenuSystemInstance {
     this._renderAchievementIcon(achievement, iconX, iconY);
 
     this._gameArena.renderText(achievement.name, textX, item.rect.y + 10, {
-      size: 11,
+      size: 9,
       align: "left",
       valign: "top",
       color: achievement.unlocked
@@ -1555,10 +1557,10 @@ class Menus implements MenuSystemInstance {
 
     this._wrapText(
       achievement.description,
-      Math.max(14, Math.floor(textWidth / 6))
-    ).slice(0, 3).forEach((line, index) => {
-      this._gameArena.renderText(line, textX, item.rect.y + 30 + index * 12, {
-        size: 8,
+      Math.max(12, Math.floor(textWidth / 5))
+    ).slice(0, 2).forEach((line, index) => {
+      this._gameArena.renderText(line, textX, item.rect.y + 28 + index * 10, {
+        size: 7,
         align: "left",
         valign: "top",
         color: achievement.unlocked
@@ -1572,23 +1574,23 @@ class Menus implements MenuSystemInstance {
     }
 
     const barX = textX;
-    const barY = item.rect.y + item.rect.height - 22;
+    const barY = item.rect.y + item.rect.height - 11;
     const label = `${achievement.progress.current}/${achievement.progress.goal}`;
-    const labelWidth = 56;
-    const barWidth = Math.max(30, textWidth - labelWidth - 8);
+    const labelWidth = 42;
+    const barWidth = Math.max(24, textWidth - labelWidth - 6);
 
     context.fillStyle = palette.menu.disabledBackground;
-    context.fillRect(barX, barY, barWidth, 7);
+    context.fillRect(barX, barY, barWidth, 5);
     context.fillStyle = achievement.unlocked
       ? palette.menu.selectedBackground
       : palette.menu.progressFill;
-    context.fillRect(barX, barY, barWidth * progress, 7);
+    context.fillRect(barX, barY, barWidth * progress, 5);
     context.strokeStyle = palette.menu.itemBorder;
     context.lineWidth = 1;
-    context.strokeRect(barX, barY, barWidth, 7);
+    context.strokeRect(barX, barY, barWidth, 5);
 
-    this._gameArena.renderText(label, barX + barWidth + 8, barY + 3, {
-      size: 8,
+    this._gameArena.renderText(label, barX + barWidth + 6, barY + 2, {
+      size: 7,
       align: "left",
       valign: "middle",
       color: achievement.unlocked
@@ -2645,15 +2647,18 @@ class Menus implements MenuSystemInstance {
     startY: number;
   } => {
     const viewport = this._getItemsViewport();
-    const columns =
-      this._gameArena.width >= achievementCardMinWidthForThreeColumns
-        ? 3
-        : this._gameArena.width >= achievementCardMinWidthForTwoColumns
-          ? 2
-          : 1;
-    const availableWidth = Math.max(240, viewport.width - 14);
-    const cardWidth =
-      (availableWidth - achievementCardGap * (columns - 1)) / columns;
+    const availableWidth = Math.max(160, viewport.width - 14);
+    const columns = Math.max(
+      1,
+      Math.min(
+        3,
+        Math.floor(
+          (availableWidth + achievementCardGap) /
+            (achievementCardWidth + achievementCardGap)
+        )
+      )
+    );
+    const cardWidth = Math.min(achievementCardWidth, availableWidth);
     const totalWidth = cardWidth * columns + achievementCardGap * (columns - 1);
 
     return {
