@@ -13,6 +13,7 @@ import EnemyFactory from "./enemy-factory";
 import GameArena from "./engine/arena";
 import SoundEngine from "./engine/Sound";
 import Ticker from "./engine/Ticker";
+import { gameFps } from "./game-timing";
 import Hud from "./hud";
 import i18n from "./i18n";
 import Menus from "./menus";
@@ -43,7 +44,6 @@ export const DEMO_LEVEL_DURATION_MS = 30000;
 export const DEMO_LEVEL_FADE_MS = 1000;
 export const LEVEL_INTRO_DURATION_MS = 5000;
 export const TIME_WARP_DELAY_MS = timeWarpDelayMs;
-const gameFps = 50;
 const demoLevelDurationFrames = Math.max(
   1,
   Math.round((DEMO_LEVEL_DURATION_MS / 1000) * gameFps)
@@ -1149,11 +1149,13 @@ export class TimePilot {
 
     this.timeWarpSound.stop();
     this.timeWarpSound.play();
-    this.context._achievements?.onLevelCompleted(
-      this.context._level,
-      nextLevel,
-      this.context._player.getData()
-    );
+    if (!this.isDemoMode) {
+      this.context._achievements?.onLevelCompleted(
+        this.context._level,
+        nextLevel,
+        this.context._player.getData()
+      );
+    }
 
     this.context._timeWarpTransition = {
       effectStartedAtTick,
@@ -1221,7 +1223,9 @@ export class TimePilot {
     this.context._player.setData("score", transition.score, true);
     this.context._player.setData("lives", transition.lives);
     this.context._player.setData("lives", transition.lives, true);
-    this.context._achievements?.onLevelStarted(transition.nextLevel);
+    if (!this.isDemoMode) {
+      this.context._achievements?.onLevelStarted(transition.nextLevel);
+    }
     this.spawningSystem.addInitialProps();
     this.hasSeededInitialProps = true;
   };

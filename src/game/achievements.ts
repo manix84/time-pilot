@@ -1,4 +1,5 @@
 import { assetPath } from "./asset-path";
+import { gameFps } from "./game-timing";
 import type {
   BulletData,
   EnemyData,
@@ -249,12 +250,11 @@ interface WaveState {
 }
 
 const achievementStorageKey = "timePilot.achievements";
-const frameRate = 50;
-const thisIsFineTicks = 30 * frameRate;
-const notAgainTicks = 3 * frameRate;
-const threeStrikesTicks = 60 * frameRate;
-const oneHourTicks = 60 * 60 * frameRate;
-const immediateBossTicks = 10 * frameRate;
+const thisIsFineTicks = 30 * gameFps;
+const notAgainTicks = 3 * gameFps;
+const threeStrikesTicks = 60 * gameFps;
+const oneHourTicks = 60 * 60 * gameFps;
+const immediateBossTicks = 10 * gameFps;
 const nearCollisionDistance = 72;
 const chaoticEntityThreshold = 8;
 const chaoticProjectileThreshold = 3;
