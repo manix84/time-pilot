@@ -31,6 +31,7 @@ class ControllerInterface implements ControllerInterfaceInstance {
     this._menus = context._menus;
 
     this._commands = {
+      isPrerollActive: commands.isPrerollActive || (() => false),
       openMenu:
         commands.openMenu ||
         (() => {
@@ -44,12 +45,17 @@ class ControllerInterface implements ControllerInterfaceInstance {
         }),
       restart: commands.restart || (() => {}),
       pause: commands.pause || (() => {}),
+      skipPreroll: commands.skipPreroll || (() => {}),
     };
 
     this._rotationStep = 360 / player.rotationFrameCount;
   }
 
   rotateToHeading = (desiredHeading: Heading): void => {
+    if (this.skipPrerollIfActive()) {
+      return;
+    }
+
     if (this._menus.isActive()) {
       if (this._menus.isWatchingDemo()) {
         this._menus.showStart({ startLabel: i18n.menu.start });
@@ -72,6 +78,10 @@ class ControllerInterface implements ControllerInterfaceInstance {
   };
 
   rotateClockwise = (): void => {
+    if (this.skipPrerollIfActive()) {
+      return;
+    }
+
     if (this._menus.isActive()) {
       if (this._menus.isWatchingDemo()) {
         this._menus.showStart({ startLabel: i18n.menu.start });
@@ -89,6 +99,10 @@ class ControllerInterface implements ControllerInterfaceInstance {
   };
 
   rotateAntiClockwise = (): void => {
+    if (this.skipPrerollIfActive()) {
+      return;
+    }
+
     if (this._menus.isActive()) {
       if (this._menus.isWatchingDemo()) {
         this._menus.showStart({ startLabel: i18n.menu.start });
@@ -112,6 +126,10 @@ class ControllerInterface implements ControllerInterfaceInstance {
   };
 
   toggleMenu = (): void => {
+    if (this.skipPrerollIfActive()) {
+      return;
+    }
+
     if (this._menus.isActive()) {
       this._menus.hide();
     } else {
@@ -120,10 +138,18 @@ class ControllerInterface implements ControllerInterfaceInstance {
   };
 
   openMenu = (): void => {
+    if (this.skipPrerollIfActive()) {
+      return;
+    }
+
     this._commands.openMenu();
   };
 
   openMainMenu = (): void => {
+    if (this.skipPrerollIfActive()) {
+      return;
+    }
+
     if (this._menus.isActive()) {
       this._menus.goToRoot();
       return;
@@ -133,6 +159,10 @@ class ControllerInterface implements ControllerInterfaceInstance {
   };
 
   startShooting = (): void => {
+    if (this.skipPrerollIfActive()) {
+      return;
+    }
+
     if (this._menus.isActive()) {
       if (this._menus.isWatchingDemo()) {
         this._menus.showStart({ startLabel: i18n.menu.start });
@@ -155,6 +185,10 @@ class ControllerInterface implements ControllerInterfaceInstance {
   };
 
   togglePause = (): void => {
+    if (this.skipPrerollIfActive()) {
+      return;
+    }
+
     if (this._menus.isActive()) {
       if (this._menus.isWatchingDemo()) {
         this._menus.showStart({ startLabel: i18n.menu.start });
@@ -169,6 +203,10 @@ class ControllerInterface implements ControllerInterfaceInstance {
   };
 
   restart = (): void => {
+    if (this.skipPrerollIfActive()) {
+      return;
+    }
+
     if (this._menus.isActive()) {
       if (this._menus.isWatchingDemo()) {
         this._menus.showStart({ startLabel: i18n.menu.start });
@@ -183,6 +221,10 @@ class ControllerInterface implements ControllerInterfaceInstance {
   };
 
   requestRestartConfirmation = (): void => {
+    if (this.skipPrerollIfActive()) {
+      return;
+    }
+
     if (this._menus.isWatchingDemo()) {
       this._menus.showStart({ startLabel: i18n.menu.start });
       return;
@@ -215,14 +257,26 @@ class ControllerInterface implements ControllerInterfaceInstance {
   };
 
   handlePointer = (pointer: MenuPointerData): void => {
+    if (pointer.type === "press" && this.skipPrerollIfActive()) {
+      return;
+    }
+
     this._menus.handlePointer(pointer);
   };
 
   captureKey = (keyCode: number): boolean => {
+    if (this.skipPrerollIfActive()) {
+      return true;
+    }
+
     return this._menus.captureKey(keyCode);
   };
 
   goBack = (): void => {
+    if (this.skipPrerollIfActive()) {
+      return;
+    }
+
     this._menus.goBack();
   };
 
@@ -243,6 +297,15 @@ class ControllerInterface implements ControllerInterfaceInstance {
       Math.round(heading / this._rotationStep) * this._rotationStep;
 
     return (quantized + 360) % 360;
+  };
+
+  private skipPrerollIfActive = (): boolean => {
+    if (!this._commands.isPrerollActive()) {
+      return false;
+    }
+
+    this._commands.skipPreroll();
+    return true;
   };
 }
 

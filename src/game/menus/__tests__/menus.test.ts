@@ -1182,6 +1182,41 @@ describe("menu definitions", () => {
     );
   });
 
+  it("can replay the preroll from the debug menu", () => {
+    const arena = createArena();
+    const playPreroll = vi.fn();
+    const menus = new Menus(arena, {
+      playPreroll,
+      start: vi.fn(),
+    });
+
+    menus.showStart();
+    for (const keyCode of [38, 38, 40, 40, 37, 39, 37, 39, 66, 65]) {
+      menus.captureKey(keyCode);
+    }
+
+    menus.next();
+    menus.next();
+    menus.next();
+    menus.activate();
+
+    for (let i = 0; i < 8; i++) {
+      menus.next();
+    }
+
+    menus.render();
+    expect(arena.renderText).toHaveBeenCalledWith(
+      "Play Preroll",
+      expect.any(Number),
+      expect.any(Number),
+      expect.objectContaining({ align: "left" })
+    );
+
+    menus.activate();
+
+    expect(playPreroll).toHaveBeenCalledOnce();
+  });
+
   it("unlocks the debug menu with touch Konami gestures", () => {
     const arena = createArena();
     const menus = new Menus(arena, { start: vi.fn() });
@@ -1304,7 +1339,7 @@ describe("menu definitions", () => {
       '"debugContinues":4'
     );
 
-    for (let i = 0; i < 2; i++) {
+    for (let i = 0; i < 3; i++) {
       menus.next();
     }
 

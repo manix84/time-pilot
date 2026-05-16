@@ -106,6 +106,7 @@ const ro: typeof en = {
     off: "Oprit",
     on: "Pornit",
     options: "Optiuni",
+    playPreroll: "Reda preroll",
     pressAKey: "Apasa o tasta",
     remapControls: "Reconfigureaza",
     restart: "Restart",

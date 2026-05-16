@@ -18,6 +18,7 @@ import Hud from "./hud";
 import i18n from "./i18n";
 import Menus from "./menus";
 import Player from "./player";
+import Preroll from "./preroll";
 import PropFactory from "./prop-factory";
 import CollisionSystem from "./systems/collision";
 import RenderingSystem from "./systems/rendering";
@@ -124,6 +125,7 @@ export class TimePilot {
   private readonly coinDropSound = new SoundEngine(sounds.coinDrop.src);
   private readonly gameStartSound = new SoundEngine(sounds.gameStart.src);
   private readonly nextLevelSound = new SoundEngine(sounds.nextLevel.src);
+  private preroll?: Preroll;
   private renderingSystem!: RenderingSystemInstance;
   private spawningSystem!: SpawningSystemInstance;
   private readonly timeWarpSound = new SoundEngine(sounds.timeWarp.src);
@@ -269,6 +271,9 @@ export class TimePilot {
       previewLevel: (level) => {
         this.previewDebugLevel(level);
       },
+      playPreroll: () => {
+        this.playPreroll();
+      },
       restart: () => {
         this.restartGame();
       },
@@ -294,6 +299,7 @@ export class TimePilot {
     this.spawningSystem = new SpawningSystem(this.context);
 
     const controllerInterface = new ControllerInterface(this.context, {
+      isPrerollActive: () => this.isPrerollActive(),
       restart: () => {
         this.restartGame();
       },
@@ -302,6 +308,9 @@ export class TimePilot {
       },
       pause: () => {
         this.pauseGame();
+      },
+      skipPreroll: () => {
+        this.skipPreroll();
       },
     });
 
@@ -326,6 +335,7 @@ export class TimePilot {
 
     this.context._gameArena.registerAssets([
       assetPath("fonts/font.ttf"),
+      assetPath("logos/author.png"),
       assetPath("sprites/player/player.png"),
       assetPath("sprites/player/timewarp.png"),
       assetPath("sounds/player/bullet.mp3"),
@@ -366,7 +376,7 @@ export class TimePilot {
 
       if (!progress.remaining) {
         this.configureGameLoop();
-        this.startDemoMode();
+        this.startPreroll();
         this.context._renderTicker.start();
       }
     });
@@ -464,6 +474,19 @@ export class TimePilot {
         return;
       }
 
+      if (this.preroll) {
+        if (this.preroll.isSettling()) {
+          this.startPrerollBackground();
+          this.renderingSystem.renderFrame({
+            menuRenderOptions: { renderLogo: false },
+          });
+        } else {
+          this.context._gameArena.clear();
+        }
+        this.preroll.render();
+        return;
+      }
+
       this.renderingSystem.renderFrame();
     }, 1);
 
@@ -513,6 +536,56 @@ export class TimePilot {
       this.continueDemoIfNeeded();
       this.showGameOverIfNeeded();
     }, 1);
+  };
+
+  private startPreroll = (): void => {
+    if (this.isDestroyed) {
+      return;
+    }
+
+    this.context._gameTicker.stop();
+    this.context._menus.hide();
+    this.isDemoMode = false;
+    this.context._isDemoMode = false;
+    SoundEngine.stopAll();
+    SoundEngine.setMuted(false);
+
+    this.preroll = new Preroll(this.context._gameArena, {
+      onComplete: () => this.finishPreroll(),
+      onSettleStart: () => this.startPrerollBackground(),
+      playBulletSound: () => {
+        const sound = new SoundEngine(player.projectile.sound.src, {
+          instantDestroy: true,
+        });
+        sound.play();
+      },
+    });
+  };
+
+  private playPreroll = (): void => {
+    this.clearDebugLevelPreview();
+    this.startPreroll();
+  };
+
+  private finishPreroll = (): void => {
+    this.preroll = undefined;
+    this.startPrerollBackground();
+  };
+
+  private skipPreroll = (): void => {
+    this.preroll?.skip();
+  };
+
+  private isPrerollActive = (): boolean => {
+    return !!this.preroll;
+  };
+
+  private startPrerollBackground = (): void => {
+    if (this.isDemoMode && this.context._menus.isActive()) {
+      return;
+    }
+
+    this.startDemoMode();
   };
 
   private beginGame = (): void => {

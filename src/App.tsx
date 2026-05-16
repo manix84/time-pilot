@@ -38,9 +38,14 @@ const featureHighlights = [
       "New builds wait in the background and surface an Update button on the root menu instead of interrupting play.",
   },
   {
-    title: "Touch ready",
+    title: "Startup preroll",
     details:
-      "Thumb-relative steering, pinch zoom, touch menu scrolling, and multi-touch shortcuts keep phone play practical.",
+      "Author logo, Time Pilot flyby, double-shot cue, and animated handoff into the root menu.",
+  },
+  {
+    title: "Achievements",
+    details:
+      "Track skill shots, comeback runs, continue use, clean waves, era clears, and long-session milestones.",
   },
   {
     title: "Arcade tuning",
@@ -48,14 +53,9 @@ const featureHighlights = [
       "Era-specific enemy speeds, rockets, bombs, plasma shots, specials, bosses, extra lives, and continues.",
   },
   {
-    title: "Visual options",
-    details:
-      "UI zoom, game POV zoom, fullscreen controls, and CRT/VHS-style filter presets with custom sliders.",
-  },
-  {
     title: "Debug tools",
     details:
-      "Level previews, hitboxes, vectors, steering arcs, sprite showcases, and Storybook views for hard-to-see systems.",
+      "Level previews, hitboxes, vectors, steering arcs, preroll replay, sprite showcases, and Storybook views.",
   },
 ];
 
@@ -68,6 +68,8 @@ const goals = [
 const systemUpdates = [
   "50fps simulation with separate animation-frame rendering.",
   "Spatial entity audio for bosses, rockets, bullets, bombs, and explosions.",
+  "Skippable author and Time Pilot preroll before cold-start root-menu entry.",
+  "Achievement subsystem with page rendering, counter progress, and unlock popups.",
   "Watch Demo mode with a mortal autopilot that scores, dodges, shoots, continues, and collects bonuses.",
   "Staged-only local pre-commit checks with full-project pull request scans.",
 ];
@@ -76,6 +78,8 @@ const progress = [
   "React + TypeScript host",
   "Canvas game loop",
   "Scrollable localized menus",
+  "Startup preroll",
+  "Achievement tracking",
   "Keyboard, gamepad, mouse, and touch input",
   "Offline installable PWA",
   "Manual update flow",
@@ -117,14 +121,15 @@ function App() {
             <p className={"hero-summary"}>
               A modern React + TypeScript port of a canvas arcade game, packaged
               as a playable browser demo and installable offline PWA with typed
-              engine modules, configurable controls, and automated release
-              checks.
+              engine modules, achievements, skippable startup preroll,
+              configurable controls, and automated release checks.
             </p>
             <div className={"hero-status"} aria-label={"Current build features"}>
               <span>Offline PWA</span>
               <span>Touch controls</span>
+              <span>Achievements</span>
+              <span>Preroll</span>
               <span>Manual updates</span>
-              <span>CRT filters</span>
             </div>
             <div className={"hero-actions"}>
               <a href={"#play"}>Play now</a>
@@ -155,8 +160,9 @@ function App() {
           <p>
             Time Pilot is currently focused on the essentials: fast movement,
             readable waves, canvas-rendered menus, touch-friendly controls, and
-            a codebase that is easy to keep improving. The demo above is the
-            project as it stands now, not a mockup.
+            a codebase that is easy to keep improving. The build now includes a
+            skippable startup preroll, an achievements page, and unlock
+            notifications alongside the playable demo.
           </p>
         </div>
       </section>

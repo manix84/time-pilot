@@ -32,6 +32,12 @@
 
 ## 🎮 Gameplay Tuning
 
+- Added achievement tracking for run starts, continues, low-life survival,
+  collision deaths, clean waves, era clears, long sessions, and comeback cases.
+- Added an achievements page with locked/unlocked icon frames, responsive
+  achievement cards, and persistent progress bars for cumulative counters.
+- Added sliding achievement unlock notifications above the credits line.
+- Added storybook coverage for the achievements page and unlock popup.
 - Rebalanced enemy speeds by era so biplanes, WWII fighters, helicopters, jets, and UFOs escalate more like Time Pilot.
 - Tuned enemy bullets, bombs, and missiles around simple readable projectiles instead of dense bullet patterns.
 - Added rocket sprites for level 3 and level 4 enemy missiles, with very slow level 3 homing, limited level 4 homing, and rockets that can be shot down.
@@ -65,6 +71,14 @@
 
 ## 🧭 Menu, Zoom, and Debug UX
 
+- Added the cold-start preroll flow: the author logo fades in first, the Time
+  Pilot logo follows with a player flyby and double-shot cue, then the logo
+  animates into the root-menu position while the attract demo begins behind it.
+- Added instant preroll skipping from keyboard, pointer, touch, and controller
+  input.
+- Added a debug-menu Play Preroll action for replaying the startup sequence.
+- Added a Storybook preroll preview for the author card, flyby, and menu
+  handoff.
 - Added localized era blurbs to the debug level select screen.
 - Added Spanish to the supported menu languages.
 - Added animated level select previews for basic enemies, special enemies, bosses, and bonuses.

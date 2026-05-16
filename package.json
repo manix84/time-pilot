@@ -1,7 +1,7 @@
 {
   "name": "time-pilot",
   "private": true,
-  "version": "18.56.0",
+  "version": "18.60.0",
   "type": "module",
   "scripts": {
     "dev": "vite",

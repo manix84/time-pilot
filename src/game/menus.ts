@@ -29,6 +29,7 @@ import type {
   GameArenaInstance,
   GameLanguage,
   KeyboardBindings,
+  MenuRenderOptions,
   MenuPointerData,
   MenuSystemCommands,
   MenuSystemInstance,
@@ -673,11 +674,12 @@ class Menus implements MenuSystemInstance {
     }
   };
 
-  render = (): void => {
+  render = (options: MenuRenderOptions = {}): void => {
     if (!this._active) {
       return;
     }
 
+    const renderLogo = options.renderLogo ?? true;
     const context = this._gameArena.getContext() as CanvasRenderingContext2D;
     const menuScale = this._getMenuScale();
     const levelMenuIdleProgress = this._getLevelMenuIdleProgress();
@@ -703,7 +705,9 @@ class Menus implements MenuSystemInstance {
     context.save();
     context.globalAlpha *= levelMenuOpacity;
     context.scale(menuScale, menuScale);
-    this._renderLogo(context, layout.logoY, layout.logoScale);
+    if (renderLogo) {
+      this._renderLogo(context, layout.logoY, layout.logoScale);
+    }
 
     if (this._shouldRenderScreenTitle()) {
       const titleOpacity = this._getScreenTitleOpacity();
@@ -1345,7 +1349,10 @@ class Menus implements MenuSystemInstance {
         action: () => this._goToScreen("level"),
         getValue: () => this._getSelectedLevelLabel(),
       }),
-      this._createItem(i18n.menu.back, "action", 290, {
+      this._createItem(i18n.menu.playPreroll, "action", 290, {
+        action: () => this._commands.playPreroll?.(),
+      }),
+      this._createItem(i18n.menu.back, "action", 340, {
         action: () => this._goBack(),
       }),
     ];

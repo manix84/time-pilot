@@ -91,9 +91,11 @@ export interface SpriteImage extends HTMLImageElement {
 }
 
 export interface ControllerCommands {
+  isPrerollActive?: () => boolean;
   openMenu?: () => void;
   restart?: () => void;
   pause?: () => void;
+  skipPreroll?: () => void;
 }
 
 export type ControllerType = "keyboard1" | "keyboard2";
@@ -436,8 +438,13 @@ export interface SpawningSystemInstance {
   spawnEntities: () => void;
 }
 
+export interface RenderFrameOptions {
+  menuRenderOptions?: MenuRenderOptions;
+  renderMenus?: boolean;
+}
+
 export interface RenderingSystemInstance {
-  renderFrame: () => void;
+  renderFrame: (options?: RenderFrameOptions) => void;
   destroy?: () => void;
 }
 
@@ -452,6 +459,7 @@ export interface MenuSystemCommands {
   getAchievements?: () => AchievementStatus[];
   getLevel?: () => number;
   previewLevel?: (level: number) => void;
+  playPreroll?: () => void;
   restart?: () => void;
   selectLevel?: (level: number) => void;
   setDebugContinues?: (continues: number) => void;
@@ -462,6 +470,10 @@ export interface MenuSystemCommands {
 
 export interface ShowStartMenuOptions {
   startLabel?: string;
+}
+
+export interface MenuRenderOptions {
+  renderLogo?: boolean;
 }
 
 export interface MenuSystemInstance {
@@ -476,7 +488,7 @@ export interface MenuSystemInstance {
   showGameOver: () => void;
   showRestartConfirm: () => void;
   hide: () => void;
-  render: () => void;
+  render: (options?: MenuRenderOptions) => void;
   next: () => void;
   previous: () => void;
   goBack: () => void;
