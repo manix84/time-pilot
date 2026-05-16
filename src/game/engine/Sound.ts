@@ -20,6 +20,9 @@ type SpatialAudioNodeSet = {
   source: MediaElementAudioSourceNode;
 };
 
+/**
+ * HTML audio wrapper with global mute/pause handling and optional spatial panning.
+ */
 class Sound {
   private static _instances = new Set<Sound>();
   private static _isMuted = false;
@@ -100,7 +103,6 @@ class Sound {
     this._instantDestroy = options.instantDestroy;
 
     for (const url of soundUrls) {
-      window.console.log("Adding source:", url);
       const source = document.createElement("source");
       source.src = url;
 

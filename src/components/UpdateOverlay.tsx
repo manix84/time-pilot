@@ -9,8 +9,21 @@ import {
   timeWarpFrameWidth,
 } from "../game/time-warp";
 
+/**
+ * Props for the update overlay animation.
+ */
 type UpdateOverlayProps = {
+  /**
+   * Called after the time-warp completion animation has reached its final tick.
+   */
   onWarpComplete: () => void;
+
+  /**
+   * Current update sequence state.
+   *
+   * `"updating"` shows the waiting animation while the service worker activates.
+   * `"warping"` plays the final transition before the app reloads.
+   */
   state: "updating" | "warping";
 };
 
@@ -21,6 +34,13 @@ const statusTextOffsetY = 96;
 const warpRenderScale = 4;
 const playerRotationStep = 360 / player.rotationFrameCount;
 
+/**
+ * Full-screen canvas overlay shown while a PWA update is being applied.
+ *
+ * The overlay keeps accessible status text in the DOM while the decorative
+ * canvas animation mirrors the game's time-warp language. Once the warp
+ * finishes, the parent can reload into the updated app shell.
+ */
 function UpdateOverlay({ onWarpComplete, state }: UpdateOverlayProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const statusLabel = state === "warping" ? "Complete" : "Updating...";
@@ -53,6 +73,10 @@ function UpdateOverlay({ onWarpComplete, state }: UpdateOverlayProps) {
     timeWarpSprite.src = assetPath("sprites/player/timewarp.png");
     void document.fonts?.load("18px theFont");
 
+    /**
+     * Keeps the canvas backing store aligned with the current viewport and
+     * device pixel ratio.
+     */
     const resizeCanvas = (): void => {
       const deviceScale = window.devicePixelRatio || 1;
       canvas.width = Math.ceil(window.innerWidth * deviceScale);
@@ -61,6 +85,12 @@ function UpdateOverlay({ onWarpComplete, state }: UpdateOverlayProps) {
       canvas.style.height = `${window.innerHeight}px`;
     };
 
+    /**
+     * Draws the player sprite in one of its normal or silhouette layers.
+     *
+     * @param mode - Sprite layer to draw.
+     * @param heading - Aircraft heading in degrees.
+     */
     const drawPlayer = (
       mode: "black" | "normal" | "white",
       heading: number
@@ -92,6 +122,12 @@ function UpdateOverlay({ onWarpComplete, state }: UpdateOverlayProps) {
       );
     };
 
+    /**
+     * Draws one time-warp sprite frame at the requested screen-space x position.
+     *
+     * @param frame - Source frame index within the time-warp sprite sheet.
+     * @param posX - Canvas x position relative to the screen center.
+     */
     const drawWarpFrame = (frame: number, posX: number): void => {
       if (!context || !timeWarpSprite.complete) {
         return;
@@ -113,6 +149,12 @@ function UpdateOverlay({ onWarpComplete, state }: UpdateOverlayProps) {
       );
     };
 
+    /**
+     * Draws the mirrored strip of time-warp frames around the player.
+     *
+     * @param halfCells - Number of repeated cells to draw on each side.
+     * @param layers - Ordered frame layers for the current warp state.
+     */
     const drawWarpStrip = (halfCells: number, layers: readonly number[]): void => {
       const renderWidth = timeWarpFrameWidth * warpRenderScale;
 
@@ -131,6 +173,11 @@ function UpdateOverlay({ onWarpComplete, state }: UpdateOverlayProps) {
       }
     };
 
+    /**
+     * Draws the visible update status label inside the canvas animation.
+     *
+     * @param label - Text to draw beneath the player.
+     */
     const drawStatusText = (label: string): void => {
       if (!context) {
         return;
@@ -148,6 +195,11 @@ function UpdateOverlay({ onWarpComplete, state }: UpdateOverlayProps) {
       context.restore();
     };
 
+    /**
+     * Renders one animation frame for the active update state.
+     *
+     * @param now - High-resolution timestamp supplied by requestAnimationFrame.
+     */
     const render = (now: number): void => {
       if (!context) {
         return;

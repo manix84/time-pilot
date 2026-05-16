@@ -1,5 +1,8 @@
 import type { Controller, ControllerInterfaceInstance } from "../types";
 
+/**
+ * Mouse pointer adapter for menu interaction.
+ */
 class Mouse implements Controller {
   private _canvas: HTMLCanvasElement;
   private _controllerInterface: ControllerInterfaceInstance;

@@ -30,6 +30,9 @@ const logoPerspectiveHeight = 86;
 const logoPerspectiveBottomWidth = 390;
 const timePilotStartMs = authorLogoFadeMs + authorLogoHoldMs + authorLogoFadeMs;
 
+/**
+ * Startup preroll animation shown before the root menu.
+ */
 class Preroll {
   private readonly arena: GameArenaInstance;
   private readonly authorLogo = new Image();

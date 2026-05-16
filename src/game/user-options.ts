@@ -13,6 +13,7 @@ import {
   normalizeFilterIntensity,
   normalizeFilterSettings,
 } from "./filter-settings";
+import { isLogLevel } from "./log-levels";
 
 const supportedLanguages: GameLanguage[] = [
   "en",
@@ -42,13 +43,21 @@ type PersistedUserOptions = Pick<
   | "filterSettings"
   | "keyboardBindings"
   | "language"
+  | "logLevel"
   | "masterVolume"
   | "musicVolume"
   | "uiZoom"
   | "videoFilterMode"
 >;
 
+/**
+ * Local storage key for persisted user options.
+ */
 export const userOptionsStorageKey = "timePilot.userOptions";
+
+/**
+ * Legacy local storage key used by older debug-option persistence.
+ */
 export const legacyDebugStorageKey = "timePilot.debugOptions";
 
 const defaultKeyboardBindings: KeyboardBindings = {
@@ -83,6 +92,7 @@ const defaultPersistedOptions: PersistedUserOptions = {
   filterSettings: defaultCustomFilterSettings,
   keyboardBindings: defaultKeyboardBindings,
   language: "en",
+  logLevel: "off",
   masterVolume: 10,
   musicVolume: 8,
   effectsVolume: 8,
@@ -206,6 +216,9 @@ const storedLanguage = supportedLanguages.includes(storedOptions.language as Gam
 const storedFilterMode = filterModes.includes(storedOptions.videoFilterMode as FilterMode)
   ? storedOptions.videoFilterMode as FilterMode
   : defaultPersistedOptions.videoFilterMode;
+const storedLogLevel = isLogLevel(storedOptions.logLevel)
+  ? storedOptions.logLevel
+  : defaultPersistedOptions.logLevel;
 
 const dispatchUserOptionsChanged = (): void => {
   window.dispatchEvent(new CustomEvent("timePilot:userOptionsChanged"));
@@ -234,6 +247,7 @@ const writeUserOptions = (): void => {
         filterSettings: userOptions.filterSettings,
         keyboardBindings: userOptions.keyboardBindings,
         language: userOptions.language,
+        logLevel: userOptions.logLevel,
         masterVolume: userOptions.masterVolume,
         musicVolume: userOptions.musicVolume,
         uiZoom: userOptions.uiZoom,
@@ -352,6 +366,7 @@ var userOptions: UserOptions = {
   keyboardBindings: normalizeKeyboardBindings(storedOptions.keyboardBindings),
 
   language: storedLanguage,
+  logLevel: storedLogLevel,
   masterVolume: storedOptions.masterVolume ?? defaultPersistedOptions.masterVolume,
   musicVolume: storedOptions.musicVolume ?? defaultPersistedOptions.musicVolume,
   effectsVolume: storedOptions.effectsVolume ?? defaultPersistedOptions.effectsVolume,
@@ -384,6 +399,9 @@ var userOptions: UserOptions = {
   },
 };
 
+/**
+ * Restores runtime user options to defaults and removes persisted preferences.
+ */
 export const resetUserOptions = (): void => {
   const defaults = cloneDefaultPersistedOptions();
   const storage = getOptionsStorage();
@@ -398,6 +416,7 @@ export const resetUserOptions = (): void => {
   userOptions.filterSettings = defaults.filterSettings;
   userOptions.keyboardBindings = defaults.keyboardBindings;
   userOptions.language = defaults.language;
+  userOptions.logLevel = defaults.logLevel;
   userOptions.masterVolume = defaults.masterVolume;
   userOptions.musicVolume = defaults.musicVolume;
   userOptions.effectsVolume = defaults.effectsVolume;

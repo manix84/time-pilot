@@ -12,6 +12,9 @@ type NavigatorWithGamepads = Navigator & {
 };
 type MenuDirection = "down" | "left" | "right" | "up";
 
+/**
+ * Browser Gamepad API controller adapter.
+ */
 class Gamepad implements Controller {
   private _animationFrame: number | null = null;
   private _controllerInterface: ControllerInterfaceInstance;
@@ -54,6 +57,8 @@ class Gamepad implements Controller {
       const menuActive = this._controllerInterface.isMenuActive?.() ?? false;
       const isFaceBackButtonPressed =
         menuActive && this._isFaceBackButtonPressed(gamepad);
+      const isBackInputPressed =
+        gamepad.buttons[8]?.pressed === true || isFaceBackButtonPressed;
       const isFaceButtonPressed = menuActive
         ? this._isMenuActivationButtonPressed(gamepad)
         : this._isFaceButtonPressed(gamepad);
@@ -68,28 +73,32 @@ class Gamepad implements Controller {
         this._controllerInterface.stopShooting();
       }
 
-      if (gamepad.buttons[9].pressed && !this._isMenuButtonPressed) {
+      if (gamepad.buttons[9]?.pressed && !this._isMenuButtonPressed) {
         this._isMenuButtonPressed = true;
         this._setInputState("menu", true);
         this._controllerInterface.openMainMenu?.();
-      } else if (!gamepad.buttons[9].pressed) {
+      } else if (gamepad.buttons[9]?.pressed) {
+        this._setInputState("menu", true);
+      } else if (!isBackInputPressed) {
         this._isMenuButtonPressed = false;
         this._setInputState("menu", false);
       }
 
       if (
         menuActive &&
-        (gamepad.buttons[8].pressed || isFaceBackButtonPressed) &&
+        isBackInputPressed &&
         !this._isBackButtonPressed
       ) {
         this._isBackButtonPressed = true;
         this._setInputState("menu", true);
         this._controllerInterface.goBack?.();
-      } else if (!menuActive && gamepad.buttons[8].pressed && !this._isRestartButtonPressed) {
+      } else if (menuActive && isBackInputPressed) {
+        this._setInputState("menu", true);
+      } else if (!menuActive && gamepad.buttons[8]?.pressed && !this._isRestartButtonPressed) {
         this._isRestartButtonPressed = true;
         this._setInputState("restart", true);
         this._controllerInterface.restart();
-      } else if (!gamepad.buttons[8].pressed && !isFaceBackButtonPressed) {
+      } else if (!isBackInputPressed) {
         this._isBackButtonPressed = false;
         this._isRestartButtonPressed = false;
         this._setInputState("menu", false);

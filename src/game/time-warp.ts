@@ -1,7 +1,26 @@
+/**
+ * Number of frames in the time-warp sprite strip.
+ */
 export const timeWarpFrameCount = 4;
+
+/**
+ * Source frame height for the time-warp sprite.
+ */
 export const timeWarpFrameHeight = 16;
+
+/**
+ * Source frame width for the time-warp sprite.
+ */
 export const timeWarpFrameWidth = 16;
+
+/**
+ * Default render multiplier used by gameplay time-warp effects.
+ */
 export const timeWarpRenderScale = 2;
+
+/**
+ * Delay before the visible time-warp effect begins.
+ */
 export const timeWarpDelayMs = 3500;
 
 const introFlashTicks = 18;
@@ -10,16 +29,40 @@ const centerHoldTicks = 10;
 const vanishHoldTicks = 0;
 const contractTicks = 38;
 
+/**
+ * Player sprite layer used during a time-warp frame.
+ */
 export type TimeWarpPlayerMode = "normal" | "white" | "black";
 
+/**
+ * Render instructions for one time-warp animation tick.
+ */
 export type TimeWarpRenderState = {
+  /**
+   * Optional frame drawn at the center of the warp.
+   */
   centerFrame?: number;
+  /**
+   * Number of repeated cells to draw on either side of center.
+   */
   halfCells: number;
+  /**
+   * Distance thresholds that map cells to sprite frames.
+   */
   layers: readonly number[];
+  /**
+   * Player sprite layer for this tick.
+   */
   playerMode: TimeWarpPlayerMode;
+  /**
+   * Whether warp graphics should be visible on this tick.
+   */
   warpVisible: boolean;
 };
 
+/**
+ * Total number of simulation ticks in the visible time-warp animation.
+ */
 export const timeWarpAnimationTicks =
   introFlashTicks +
   expandFrameTicks * 3 +
@@ -39,6 +82,13 @@ const createThreeLayerStrip = (halfCells: number): readonly number[] => [
   Math.ceil(halfCells / 3),
 ];
 
+/**
+ * Selects a time-warp sprite frame for a cell's distance from center.
+ *
+ * @param distanceFromCenter - One-based cell distance from the center.
+ * @param layers - Distance thresholds for each frame layer.
+ * @returns Source frame index.
+ */
 export const getTimeWarpFrameForDistance = (
   distanceFromCenter: number,
   layers: readonly number[]
@@ -52,6 +102,13 @@ export const getTimeWarpFrameForDistance = (
   return 0;
 };
 
+/**
+ * Gets the render state for a time-warp animation tick.
+ *
+ * @param elapsedTicks - Number of ticks since the visible effect started.
+ * @param halfCellCount - Number of cells needed to fill half the viewport.
+ * @returns Render instructions, or undefined when the animation is inactive.
+ */
 export const getTimeWarpRenderState = (
   elapsedTicks: number,
   halfCellCount: number

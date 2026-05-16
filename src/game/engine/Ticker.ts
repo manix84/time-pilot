@@ -26,6 +26,9 @@ const requestAnimationFrame =
   animationWindow.webkitRequestAnimationFrame ||
   animationWindow.msRequestAnimationFrame;
 
+/**
+ * requestAnimationFrame-backed scheduler used by simulation and rendering loops.
+ */
 class Ticker implements TickerInstance {
   private _frame = 0;
   private readonly _frameInterval?: number;

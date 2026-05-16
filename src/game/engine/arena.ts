@@ -36,6 +36,9 @@ type TextAlign = CanvasRenderingContext2D["textAlign"];
 
 const spaceAdvanceMultiplier = 2;
 
+/**
+ * Canvas arena wrapper responsible for sizing, assets, text, sprites, and fullscreen.
+ */
 class GameArena implements GameArenaInstance {
   private _assets: string[] = [];
   private _canvas: CanvasWithDebugGrid;
@@ -49,10 +52,8 @@ class GameArena implements GameArenaInstance {
     this._isInFullScreen = this.isFullScreen();
     if (this._isInFullScreen) {
       this.resize(screen.width, screen.height);
-      window.console.log("Entered Full-Screen");
     } else {
       this.resize(this._oldWidth, this._oldHeight);
-      window.console.log("Exited Full-Screen");
     }
   };
   private readonly _handleResize = (): void => {

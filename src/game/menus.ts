@@ -20,6 +20,7 @@ import {
   achievementCardIconSize,
   achievementCardWidth,
 } from "./achievement-layout";
+import { getNextLogLevel } from "./log-levels";
 import palette from "./palette";
 import type { AchievementStatus } from "./achievements";
 import type {
@@ -195,7 +196,18 @@ const keyBindingRows: Array<{ binding: BindingAction; label: string }> = [
 ];
 const konamiCode = [38, 38, 40, 40, 37, 39, 37, 39, 66, 65];
 const touchKonamiSwipeThreshold = 36;
+const menuChevronPixelSize = 3;
+const menuChevronBlocks = [
+  { x: -4, y: -7 },
+  { x: -1, y: -4 },
+  { x: 2, y: -1 },
+  { x: -1, y: 2 },
+  { x: -4, y: 5 },
+];
 
+/**
+ * Canvas-rendered menu system for root, options, debug, achievements, and pause flows.
+ */
 class Menus implements MenuSystemInstance {
   private _active = false;
   private _awaitingBinding: BindingAction | null = null;
@@ -1349,7 +1361,11 @@ class Menus implements MenuSystemInstance {
         "showSteeringArc",
         114
       ),
-      this._createItem(i18n.menu.lives, "slider", 156, {
+      this._createItem(i18n.menu.logLevel, "enum", 156, {
+        getValue: () => i18n.menu.logLevels[userOptions.logLevel],
+        onAdjust: (direction) => this._adjustLogLevel(direction),
+      }),
+      this._createItem(i18n.menu.lives, "slider", 198, {
         getValue: () => `${userOptions.debugLives}`,
         onAdjust: (direction) =>
           this._setDebugLives(userOptions.debugLives + direction),
@@ -1357,7 +1373,7 @@ class Menus implements MenuSystemInstance {
         sliderMin: 1,
         sliderSteps: 99,
       }),
-      this._createItem(i18n.menu.continues, "slider", 198, {
+      this._createItem(i18n.menu.continues, "slider", 240, {
         getValue: () => `${userOptions.debugContinues}`,
         onAdjust: (direction) =>
           this._setDebugContinues(userOptions.debugContinues + direction),
@@ -1365,19 +1381,19 @@ class Menus implements MenuSystemInstance {
         sliderMin: 0,
         sliderSteps: 99,
       }),
-      this._createItem(i18n.menu.selectLevel, "action", 240, {
+      this._createItem(i18n.menu.selectLevel, "action", 282, {
         action: () => this._goToScreen("level"),
         getValue: () => this._getSelectedLevelLabel(),
         opensSubmenu: true,
       }),
-      this._createItem(i18n.menu.playPreroll, "action", 290, {
+      this._createItem(i18n.menu.playPreroll, "action", 332, {
         action: () => this._commands.playPreroll?.(),
       }),
-      this._createItem(i18n.menu.resetData, "action", 340, {
+      this._createItem(i18n.menu.resetData, "action", 382, {
         action: () => this._goToScreen("debug-reset"),
         opensSubmenu: true,
       }),
-      this._createItem(i18n.menu.back, "action", 390, {
+      this._createItem(i18n.menu.back, "action", 432, {
         action: () => this._goBack(),
       }),
     ];
@@ -1586,23 +1602,15 @@ class Menus implements MenuSystemInstance {
       ? item.rect.x + 15
       : item.rect.x + item.rect.width - 16;
     const direction = isBackItem ? -1 : 1;
-    const pixelSize = 3;
-    const blocks = [
-      { x: -4, y: -7 },
-      { x: -1, y: -4 },
-      { x: 2, y: -1 },
-      { x: -1, y: 2 },
-      { x: -4, y: 5 },
-    ];
 
     context.save();
     context.fillStyle = color;
-    blocks.forEach((block) => {
+    menuChevronBlocks.forEach((block) => {
       context.fillRect(
         chevronX + block.x * direction,
         centerY + block.y,
-        pixelSize,
-        pixelSize
+        menuChevronPixelSize,
+        menuChevronPixelSize
       );
     });
     context.restore();
@@ -3472,6 +3480,18 @@ class Menus implements MenuSystemInstance {
       (currentIndex + direction + filterModes.length) % filterModes.length;
 
     userOptions.setOption("videoFilterMode", filterModes[nextIndex]);
+  };
+
+  /**
+   * Cycles the debug logging threshold from the debug menu.
+   *
+   * @param direction - `1` selects the next level; `-1` selects the previous one.
+   */
+  private _adjustLogLevel = (direction: -1 | 1): void => {
+    userOptions.setOption(
+      "logLevel",
+      getNextLogLevel(userOptions.logLevel, direction)
+    );
   };
 
   private _setFilterSetting = (

@@ -49,6 +49,16 @@ const drawVectorLine = (
   context.stroke();
 };
 
+/**
+ * Draws heading and steering vectors for debug overlays.
+ *
+ * @param context - Canvas context to draw into.
+ * @param posX - Entity x position.
+ * @param posY - Entity y position.
+ * @param heading - Current entity heading.
+ * @param steeringHeading - Desired steering heading.
+ * @param options - Optional rendering settings.
+ */
 export const drawDebugVectors = (
   context: CanvasRenderingContext2D,
   posX: number,

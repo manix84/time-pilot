@@ -24,6 +24,7 @@ describe("TimePilot engine", () => {
     userOptions.setOption("gameZoom", 100);
     userOptions.setOption("gamepadEnabled", true);
     userOptions.setOption("language", "en");
+    userOptions.setOption("logLevel", "off");
     userOptions.setOption("uiZoom", 100);
     Object.defineProperty(navigator, "maxTouchPoints", {
       configurable: true,
@@ -33,6 +34,7 @@ describe("TimePilot engine", () => {
   });
 
   it("mounts into a container and can pause, resume, restart, and destroy", async () => {
+    userOptions.setOption("logLevel", "info");
     const game = new TimePilot(host, { debug: true });
 
     await new Promise((resolve) => window.setTimeout(resolve, 5));
@@ -361,7 +363,7 @@ describe("TimePilot engine", () => {
       pilot.context._menus.next();
     }
     pilot.context._menus.activate();
-    for (let i = 0; i < 7; i++) {
+    for (let i = 0; i < 8; i++) {
       pilot.context._menus.next();
     }
     pilot.context._menus.activate();
@@ -420,10 +422,9 @@ describe("TimePilot engine", () => {
     pilot.context._levelProgress.bossDefeated = true;
 
     const schedules = Object.values(pilot.context._gameTicker._schedule);
-    const movement = schedules[3];
-    const rotation = schedules[4];
-    const shooting = schedules[5];
-    const cleanup = schedules[7];
+    const gameplaySchedules = schedules.slice(-5);
+    const [movement, rotation, shooting] = gameplaySchedules;
+    const cleanup = gameplaySchedules[4];
 
     cleanup.callback();
     expect(pilot.context._levelProgress.bossDefeated).toBe(false);

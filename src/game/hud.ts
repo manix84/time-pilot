@@ -23,6 +23,9 @@ const bossProgressFrameDuration = 140;
 const bossProgressEnemyScale = 0.5;
 const directionalEnemyVisibleHeight = 8;
 
+/**
+ * Heads-up display renderer for score, lives, boss progress, credits, and overlays.
+ */
 class Hud implements HudInstance {
   private _context: GameDataStore;
   private _enemySprites: Partial<Record<number, SpriteImage>> = {};

@@ -1,5 +1,6 @@
 import { assetPath } from "./asset-path";
 import { gameFps } from "./game-timing";
+import { logger } from "./logger";
 import type {
   BulletData,
   EnemyData,
@@ -7,6 +8,9 @@ import type {
   PlayerData,
 } from "./types";
 
+/**
+ * Stable identifier for an achievement definition.
+ */
 export type AchievementId =
   | "this-is-fine"
   | "i-meant-to-do-that"
@@ -33,10 +37,25 @@ export type AchievementId =
   | "no-safety-net"
   | "quarter-master";
 
+/**
+ * Static achievement metadata.
+ */
 export interface AchievementDefinition {
+  /**
+   * Stable achievement identifier used for persistence.
+   */
   id: AchievementId;
+  /**
+   * Player-facing title.
+   */
   name: string;
+  /**
+   * Player-facing unlock criteria.
+   */
   description: string;
+  /**
+   * Sprite sheet metadata for the locked and unlocked icon frames.
+   */
   icon: {
     frameHeight: number;
     frameWidth: number;
@@ -44,14 +63,26 @@ export interface AchievementDefinition {
     unlockedFrameX: number;
     src: string;
   };
+  /**
+   * Optional target for achievements that expose persistent progress.
+   */
   progressGoal?: number;
 }
 
+/**
+ * Achievement metadata combined with current player progress.
+ */
 export interface AchievementStatus extends AchievementDefinition {
+  /**
+   * Optional counter state for achievements with visible progress.
+   */
   progress?: {
     current: number;
     goal: number;
   };
+  /**
+   * Whether this achievement has been unlocked.
+   */
   unlocked: boolean;
 }
 
@@ -63,6 +94,9 @@ const achievementIcon = (fileName: string): AchievementDefinition["icon"] => ({
   src: assetPath(`sprites/achievements/${fileName}`),
 });
 
+/**
+ * Ordered list of all achievements shown on the achievements page.
+ */
 export const achievementDefinitions: AchievementDefinition[] = [
   {
     id: "this-is-fine",
@@ -249,6 +283,9 @@ interface WaveState {
   projectileCount: number;
 }
 
+/**
+ * Local storage key for persisted achievement state.
+ */
 export const achievementStorageKey = "timePilot.achievements";
 const thisIsFineTicks = 30 * gameFps;
 const notAgainTicks = 3 * gameFps;
@@ -309,6 +346,9 @@ const createDefaultRunState = (): RunState => ({
   usedEveryContinue: false,
 });
 
+/**
+ * Tracks achievement criteria and persistence for real player runs.
+ */
 class AchievementSystem {
   private readonly context: GameDataStore;
   private counters: Record<"continuesUsed", number>;
@@ -638,6 +678,7 @@ class AchievementSystem {
   };
 
   reset = (): void => {
+    logger.warning("Resetting achievements");
     this.counters = {
       continuesUsed: 0,
     };
@@ -713,6 +754,7 @@ class AchievementSystem {
     }
 
     this.unlocked.add(id);
+    logger.info("Achievement unlocked", { id });
     this.persist();
     window.dispatchEvent(
       new CustomEvent("timePilot:achievementUnlocked", {

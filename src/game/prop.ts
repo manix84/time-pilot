@@ -11,6 +11,9 @@ import type {
   PropInstance,
 } from "./types";
 
+/**
+ * Background prop entity that moves relative to the player and despawns off-screen.
+ */
 class Prop implements PropInstance {
   private _data: PropData;
   private _gameArena: GameArenaInstance;

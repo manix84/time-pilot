@@ -21,6 +21,9 @@ const specialBomberSpawnIntervalRangeTicks = 900;
 const enemyFireIntervalTicks = 20;
 let nextFormationId = 1;
 
+/**
+ * Spawns enemies, formations, projectiles, bonuses, and initial scenery.
+ */
 class SpawningSystem implements SpawningSystemInstance {
   private _context: GameDataStore;
   private _waveStartSound = new SoundEngine(sounds.waveStart.src);

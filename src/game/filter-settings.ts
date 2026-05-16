@@ -1,3 +1,6 @@
+/**
+ * Available video filter presets.
+ */
 export type FilterMode =
   | "off"
   | "arcade-crt"
@@ -6,6 +9,9 @@ export type FilterMode =
   | "vhs"
   | "custom";
 
+/**
+ * Individual filter controls used by presets and custom settings.
+ */
 export type FilterSettingKey =
   | "scanlines"
   | "crtMask"
@@ -23,8 +29,14 @@ export type FilterSettingKey =
   | "explosionBloomBoost"
   | "timeWarpDistortionBoost";
 
+/**
+ * Filter intensity map. Values are normalized to the 0-100 range.
+ */
 export type FilterSettings = Record<FilterSettingKey, number>;
 
+/**
+ * Temporary filter boosts layered on top of the selected preset during gameplay.
+ */
 export type FilterRuntimeBoosts = {
   explosionBloomBoost: number;
   timeWarpDistortionBoost: number;
@@ -32,8 +44,14 @@ export type FilterRuntimeBoosts = {
   lowHealthInstabilityBoost: number;
 };
 
+/**
+ * Default video filter mode.
+ */
 export const defaultFilterMode: FilterMode = "off";
 
+/**
+ * Ordered filter setting keys used by the custom filter menu.
+ */
 export const filterSettingKeys: FilterSettingKey[] = [
   "scanlines",
   "crtMask",
@@ -52,6 +70,9 @@ export const filterSettingKeys: FilterSettingKey[] = [
   "timeWarpDistortionBoost",
 ];
 
+/**
+ * Ordered filter modes used by the filter mode menu.
+ */
 export const filterModes: FilterMode[] = [
   "off",
   "arcade-crt",
@@ -61,6 +82,9 @@ export const filterModes: FilterMode[] = [
   "custom",
 ];
 
+/**
+ * Display labels for video filter modes.
+ */
 export const filterModeLabels: Record<FilterMode, string> = {
   off: "Off",
   "arcade-crt": "Arcade CRT",
@@ -70,6 +94,9 @@ export const filterModeLabels: Record<FilterMode, string> = {
   custom: "Custom",
 };
 
+/**
+ * Display labels for individual filter settings.
+ */
 export const filterSettingLabels: Record<FilterSettingKey, string> = {
   scanlines: "Scanlines",
   crtMask: "Aperture Grille",
@@ -88,6 +115,9 @@ export const filterSettingLabels: Record<FilterSettingKey, string> = {
   timeWarpDistortionBoost: "Time Warp Distortion",
 };
 
+/**
+ * Short descriptions shown for custom filter settings.
+ */
 export const filterSettingDescriptions: Record<FilterSettingKey, string> = {
   scanlines: "Dark horizontal lines between rows of pixels, like a low-resolution CRT.",
   crtMask: "A coloured aperture grille pattern that breaks the image into red, green, and blue phosphor stripes.",
@@ -106,6 +136,9 @@ export const filterSettingDescriptions: Record<FilterSettingKey, string> = {
   timeWarpDistortionBoost: "Extra curvature and interference intended for time-warp style distortion.",
 };
 
+/**
+ * Built-in video filter presets.
+ */
 export const filterPresets: Record<Exclude<FilterMode, "custom">, FilterSettings> = {
   off: {
     scanlines: 0,
@@ -194,10 +227,16 @@ export const filterPresets: Record<Exclude<FilterMode, "custom">, FilterSettings
   },
 };
 
+/**
+ * Default custom-filter settings used when no custom values have been saved.
+ */
 export const defaultCustomFilterSettings: FilterSettings = {
   ...filterPresets[defaultFilterMode],
 };
 
+/**
+ * Default runtime boost values.
+ */
 export const defaultRuntimeBoosts: FilterRuntimeBoosts = {
   explosionBloomBoost: 0,
   timeWarpDistortionBoost: 0,
@@ -205,6 +244,12 @@ export const defaultRuntimeBoosts: FilterRuntimeBoosts = {
   lowHealthInstabilityBoost: 0,
 };
 
+/**
+ * Normalizes an arbitrary value into a filter intensity.
+ *
+ * @param value - Raw intensity value.
+ * @returns Integer clamped to 0-100.
+ */
 export const normalizeFilterIntensity = (value: unknown): number => {
   if (typeof value !== "number" || !Number.isFinite(value)) {
     return 0;
@@ -213,6 +258,12 @@ export const normalizeFilterIntensity = (value: unknown): number => {
   return Math.max(0, Math.min(100, Math.round(value)));
 };
 
+/**
+ * Normalizes a partial or untrusted filter settings object.
+ *
+ * @param value - Raw settings object.
+ * @returns Complete filter settings with every key normalized.
+ */
 export const normalizeFilterSettings = (value: unknown): FilterSettings => {
   const normalized = { ...defaultCustomFilterSettings };
 
@@ -229,6 +280,14 @@ export const normalizeFilterSettings = (value: unknown): FilterSettings => {
   return normalized;
 };
 
+/**
+ * Resolves the active filter settings for a preset or custom mode.
+ *
+ * @param mode - Selected filter mode.
+ * @param customSettings - Custom settings used when `mode` is `"custom"`.
+ * @param boosts - Temporary gameplay boosts layered onto the base settings.
+ * @returns Effective filter settings.
+ */
 export const getFilterSettingsForMode = (
   mode: FilterMode,
   customSettings: FilterSettings,

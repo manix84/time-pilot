@@ -7,6 +7,9 @@ import type {
   PropInstance,
 } from "./types";
 
+/**
+ * Owns active background prop entities.
+ */
 class PropFactory implements PropFactoryInstance {
   private _context: GameDataStore;
   private _props: PropInstance[] = [];
