@@ -3,9 +3,6 @@ import { filterPresets } from "../../filter-settings";
 import Menus from "../../menus";
 import type { GameArenaInstance } from "../../types";
 import userOptions from "../../user-options";
-import debugMenu from "../debug";
-import mainMenu from "../main";
-import pauseMenu from "../pause";
 
 const createArena = (): GameArenaInstance => ({
   width: 800,
@@ -55,22 +52,6 @@ describe("menu definitions", () => {
     userOptions.setOption("videoFilterMode", "off");
     userOptions.setKeyboardBinding("up", [38, 87]);
     window.history.replaceState(null, "", "/");
-  });
-
-  it("defines the main menu controls", () => {
-    expect(mainMenu.name).toBe("Welcome");
-    expect(mainMenu.buttons.start.callback?.()).toBeUndefined();
-  });
-
-  it("defines debug toggles", () => {
-    expect(Object.values(debugMenu.buttons).every((button) => button.type === "toggle")).toBe(
-      true
-    );
-  });
-
-  it("defines pause settings", () => {
-    expect(pauseMenu.buttons.musicVolume.options).toContain(11);
-    expect(pauseMenu.buttons.controllerType.type).toBe("enum");
   });
 
   it("renders and activates the start menu", () => {

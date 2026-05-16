@@ -13,8 +13,6 @@
 - Reorganized dotted legacy modules into logical folders, such as:
   - `controller/gamepad.ts`
   - `controller/keyboard1.ts`
-  - `menus/main.ts`
-  - `menus/pause.ts`
 - Added shared `types.ts` contracts for game data, controllers, assets, and engine APIs.
 
 ## 🧠 Engine Architecture
