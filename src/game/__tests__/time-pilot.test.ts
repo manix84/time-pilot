@@ -357,7 +357,7 @@ describe("TimePilot engine", () => {
     await new Promise((resolve) => window.setTimeout(resolve, 5));
 
     pilot.context._menus.showStart();
-    for (let i = 0; i < 2; i++) {
+    for (let i = 0; i < 3; i++) {
       pilot.context._menus.next();
     }
     pilot.context._menus.activate();
@@ -447,6 +447,59 @@ describe("TimePilot engine", () => {
     expect(pilot.context._enemyBullets.cleanup).not.toHaveBeenCalled();
     expect(pilot.context._props.cleanup).not.toHaveBeenCalled();
 
+    game.destroyGame();
+  });
+
+  it("does not report demo time-warp progression to achievements", () => {
+    const game = new TimePilot(host, { debug: true, gamepadEnabled: false });
+    const pilot = game as unknown as {
+      beginTimeWarpTransition: () => void;
+      completeTimeWarpTransition: () => void;
+      context: {
+        _achievements: {
+          onLevelCompleted: (
+            level: number,
+            nextLevel: number,
+            playerData: unknown
+          ) => void;
+          onLevelStarted: (level: number) => void;
+        };
+        _gameTicker: {
+          getTicks: () => number;
+        };
+        _isDemoMode: boolean;
+        _level: number;
+        _timeWarpTransition?: {
+          endsAtTick: number;
+        };
+      };
+      isDemoMode: boolean;
+    };
+    let ticks = 1000;
+    const getTicks = vi
+      .spyOn(pilot.context._gameTicker, "getTicks")
+      .mockImplementation(() => ticks);
+    const onLevelCompleted = vi.spyOn(
+      pilot.context._achievements,
+      "onLevelCompleted"
+    );
+    const onLevelStarted = vi.spyOn(
+      pilot.context._achievements,
+      "onLevelStarted"
+    );
+
+    pilot.isDemoMode = true;
+    pilot.context._isDemoMode = true;
+    pilot.context._level = 4;
+
+    pilot.beginTimeWarpTransition();
+    ticks = pilot.context._timeWarpTransition?.endsAtTick ?? ticks;
+    pilot.completeTimeWarpTransition();
+
+    expect(onLevelCompleted).not.toHaveBeenCalled();
+    expect(onLevelStarted).not.toHaveBeenCalled();
+
+    getTicks.mockRestore();
     game.destroyGame();
   });
 

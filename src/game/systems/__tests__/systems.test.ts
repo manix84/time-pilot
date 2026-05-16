@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { achievementDefinitions } from "../../achievements";
 import CollisionSystem from "../collision";
 import RenderingSystem from "../rendering";
 import SpawningSystem from "../spawning";
@@ -819,6 +820,43 @@ describe("game systems", () => {
     });
     expect(context._hud.render).toHaveBeenCalled();
     expect(context._menus.render).toHaveBeenCalled();
+  });
+
+  it("renders achievement unlock popups above the bottom-right HUD line", () => {
+    const context = createContext();
+    const system = new RenderingSystem(context);
+    const performanceNow = vi.spyOn(performance, "now").mockReturnValue(1000);
+    const achievement = achievementDefinitions.find(
+      (definition) => definition.id === "last-chance"
+    )!;
+
+    window.dispatchEvent(
+      new CustomEvent("timePilot:achievementUnlocked", {
+        detail: achievement,
+      })
+    );
+    system.renderFrame();
+
+    expect(context._gameArena.renderText).toHaveBeenCalledWith(
+      "Last Chance",
+      expect.any(Number),
+      expect.any(Number),
+      expect.objectContaining({
+        align: "left",
+        size: 8,
+      })
+    );
+
+    const titleCall = vi
+      .mocked(context._gameArena.renderText)
+      .mock.calls.find((call) => call[0] === "Last Chance");
+    const titleY = titleCall?.[2];
+
+    expect(typeof titleY === "number" ? titleY : Number.NaN).toBeGreaterThan(180);
+    expect(typeof titleY === "number" ? titleY : Number.NaN).toBeLessThan(250);
+
+    performanceNow.mockRestore();
+    system.destroy();
   });
 
   it("renders level intro text above gameplay and below menus while intro is active", () => {

@@ -108,6 +108,8 @@ import type {
   FilterSettingKey,
   FilterSettings,
 } from "./filter-settings";
+import type AchievementSystem from "./achievements";
+import type { AchievementStatus } from "./achievements";
 export type GameLanguage = "de" | "en" | "es" | "fr" | "it" | "nl" | "ro";
 export type ControlInputName =
   | "down"
@@ -422,6 +424,7 @@ export interface GameDataStore {
   _hud: HudInstance;
   _menus: MenuSystemInstance;
   _currentController: Controller[];
+  _achievements?: AchievementSystem;
 }
 
 export interface CollisionSystemInstance {
@@ -435,6 +438,7 @@ export interface SpawningSystemInstance {
 
 export interface RenderingSystemInstance {
   renderFrame: () => void;
+  destroy?: () => void;
 }
 
 export interface MenuSystemCommands {
@@ -445,6 +449,7 @@ export interface MenuSystemCommands {
   continueGame?: () => void;
   exitToRoot?: () => void;
   getContinues?: () => number;
+  getAchievements?: () => AchievementStatus[];
   getLevel?: () => number;
   previewLevel?: (level: number) => void;
   restart?: () => void;

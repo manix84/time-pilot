@@ -54,6 +54,7 @@ const nl: typeof en = {
     },
   },
   menu: {
+    achievements: "Achievements",
     alreadyAssignedTo: (binding: string) => `Al toegewezen aan ${binding}`,
     back: "Terug",
     cancel: "Annuleren",

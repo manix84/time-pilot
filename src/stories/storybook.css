@@ -88,11 +88,31 @@
   margin-top: 1.2rem;
 }
 
+.storybook-menu-section {
+  width: min(1500px, 100%);
+}
+
+.storybook-menu-grid {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 34rem), 1fr));
+}
+
+.storybook-achievements-section {
+  width: min(1500px, 100%);
+}
+
+.storybook-achievements-grid {
+  grid-template-columns: minmax(0, 1fr);
+}
+
 .storybook-card {
   border: 1px solid rgba(126, 219, 211, 0.22);
   border-radius: 8px;
   padding: 1rem;
   background: rgba(5, 12, 22, 0.72);
+}
+
+.storybook-wide-card {
+  grid-column: 1 / -1;
 }
 
 .storybook-card h2 {

@@ -314,7 +314,7 @@ type Story = StoryObj<typeof meta>;
 
 export const AnimatedSequence: Story = {
   args: {
-    showPlayer: false,
+    showPlayer: true,
     warpScale: 1
   }
 };

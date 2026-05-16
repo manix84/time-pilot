@@ -54,6 +54,7 @@ const it: typeof en = {
     },
   },
   menu: {
+    achievements: "Achievements",
     alreadyAssignedTo: (binding: string) => `Gia assegnato a ${binding}`,
     back: "Indietro",
     cancel: "Annulla",

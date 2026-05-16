@@ -54,6 +54,7 @@ const ro: typeof en = {
     },
   },
   menu: {
+    achievements: "Achievements",
     alreadyAssignedTo: (binding: string) => `Deja atribuit la ${binding}`,
     back: "Inapoi",
     cancel: "Anuleaza",

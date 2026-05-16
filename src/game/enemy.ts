@@ -747,6 +747,7 @@ class Enemy implements EnemyInstance {
     }
 
     formation.awarded = true;
+    this._context._achievements?.onWaveCompleted(formationId);
     this._player.setData(
       "score",
       this._player.getData("score") + scoring.formationBonus

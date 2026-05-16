@@ -15,7 +15,13 @@ import i18n, {
   getCurrentLanguage,
   getLanguageName,
 } from "./i18n";
+import {
+  achievementCardHeight,
+  achievementCardIconSize,
+  achievementCardWidth,
+} from "./achievement-layout";
 import palette from "./palette";
+import type { AchievementStatus } from "./achievements";
 import type {
   BonusConfig,
   ControllerType,
@@ -43,6 +49,7 @@ import userOptions from "./user-options";
 
 type MenuScreen =
   | "start"
+  | "achievements"
   | "options"
   | "controls"
   | "filters"
@@ -73,6 +80,7 @@ interface MenuItem {
   label: string;
   languageFlag?: GameLanguage;
   isCurrent?: () => boolean;
+  achievement?: AchievementStatus;
   levelIcon?: number;
   onAdjust?: (direction: -1 | 1) => void;
   onSetValue?: (value: number) => void;
@@ -167,6 +175,12 @@ const povPreviewFadeDuration = 250;
 const povPreviewFrameDuration = 180;
 const submenuHeaderTopGap = 34;
 const touchScrollDragThreshold = 8;
+const achievementCardGap = 12;
+const achievementIconRenderSize = achievementCardIconSize;
+const timePilotVersion =
+  typeof __TIME_PILOT_VERSION__ === "undefined"
+    ? "dev"
+    : __TIME_PILOT_VERSION__;
 const keyBindingRows: Array<{ binding: BindingAction; label: string }> = [
   { binding: "up", label: i18n.keys.up },
   { binding: "left", label: i18n.keys.left },
@@ -187,6 +201,8 @@ class Menus implements MenuSystemInstance {
   private _gameArena: GameArenaInstance;
   private _items: MenuItem[] = [];
   private _konamiIndex = 0;
+  private _achievementIconSprites: Partial<Record<string, HTMLImageElement>> = {};
+  private _achievementLayoutSignature = "";
   private _levelIconSprites: Partial<Record<number, HTMLImageElement>> = {};
   private _levelMenuLastInteractionAt = 0;
   private _levelPreviewedLevel?: number;
@@ -364,6 +380,10 @@ class Menus implements MenuSystemInstance {
       return;
     }
 
+    if (this._screen === "achievements") {
+      this._refreshAchievementItems();
+    }
+
     const item = this._items[this._selectedIndex];
 
     if (item?.disabled) {
@@ -519,6 +539,10 @@ class Menus implements MenuSystemInstance {
     this._resetLevelMenuIdleState();
 
     const menuPointer = this._getScaledPointer(pointer);
+
+    if (this._screen === "achievements") {
+      this._refreshAchievementItems();
+    }
 
     if (
       pointer.type === "release" &&
@@ -703,6 +727,10 @@ class Menus implements MenuSystemInstance {
       });
     }
 
+    if (this._screen === "achievements") {
+      this._refreshAchievementItems();
+    }
+
     this._scrollY = this._getMenuScrollY(this._shouldRevealSelected);
     if (transition.progress >= 1) {
       this._shouldRevealSelected = false;
@@ -727,7 +755,7 @@ class Menus implements MenuSystemInstance {
 
   private _renderBuildNumber = (menuScale: number): void => {
     this._gameArena.renderText(
-      `v${__TIME_PILOT_VERSION__}`,
+      `v${timePilotVersion}`,
       this._gameArena.width / (2 * menuScale) - 12 / menuScale,
       this._gameArena.height / (2 * menuScale) - 10 / menuScale,
       {
@@ -775,6 +803,11 @@ class Menus implements MenuSystemInstance {
     context.translate(0, this._scrollY + transitionOffset + screenOffset);
 
     this._items.forEach((item, index) => {
+      if (this._screen === "achievements" && item.achievement) {
+        this._renderAchievementItem(item, index === this._selectedIndex);
+        return;
+      }
+
       this._renderItem(item, index === this._selectedIndex);
     });
 
@@ -890,6 +923,8 @@ class Menus implements MenuSystemInstance {
       this._items = [];
     } else if (this._screen === "options") {
       this._items = this._createOptionsItems();
+    } else if (this._screen === "achievements") {
+      this._items = this._createAchievementItems();
     } else if (this._screen === "filters") {
       this._items = this._createFilterItems();
     } else if (this._screen === "filter-custom") {
@@ -929,6 +964,13 @@ class Menus implements MenuSystemInstance {
     );
     itemY += 50;
 
+    items.push(
+      this._createItem(i18n.menu.achievements, "action", itemY, {
+        action: () => this._goToScreen("achievements"),
+      })
+    );
+    itemY += 50;
+
     if (this._debugUnlocked) {
       items.push(
         this._createItem(i18n.menu.debug, "action", itemY, {
@@ -964,6 +1006,39 @@ class Menus implements MenuSystemInstance {
     }
 
     return items;
+  };
+
+  private _createAchievementItems = (): MenuItem[] => {
+    const achievements = this._commands.getAchievements?.() ?? [];
+    const layout = this._getAchievementGridLayout();
+    const rows = Math.ceil(achievements.length / layout.columns);
+
+    return [
+      ...achievements.map((achievement, index) => {
+        const column = index % layout.columns;
+        const row = Math.floor(index / layout.columns);
+        const x = layout.startX + column * (layout.cardWidth + achievementCardGap);
+        const y = layout.startY + row * (achievementCardHeight + achievementCardGap);
+
+        return this._createItem(achievement.name, "action", y, {
+          achievement,
+          rect: {
+            x,
+            y,
+            width: layout.cardWidth,
+            height: achievementCardHeight,
+          },
+        });
+      }),
+      this._createItem(
+        i18n.menu.back,
+        "action",
+        layout.startY + rows * (achievementCardHeight + achievementCardGap) + 10,
+        {
+          action: () => this._goBack(),
+        }
+      ),
+    ];
   };
 
   private _createOptionsItems = (): MenuItem[] => {
@@ -1420,6 +1495,183 @@ class Menus implements MenuSystemInstance {
         }
       );
     }
+  };
+
+  private _renderAchievementItem = (
+    item: MenuItem,
+    isSelected: boolean
+  ): void => {
+    const achievement = item.achievement;
+
+    if (!achievement) {
+      return;
+    }
+
+    const context = this._gameArena.getContext() as CanvasRenderingContext2D;
+    const padding = 8;
+    const iconX = item.rect.x + padding;
+    const iconY = item.rect.y + (item.rect.height - achievementIconRenderSize) / 2;
+    const textX = iconX + achievementIconRenderSize + 8;
+    const textWidth =
+      item.rect.width - padding * 2 - achievementIconRenderSize - 8;
+    const progress = achievement.progress
+      ? Math.max(
+        0,
+        Math.min(1, achievement.progress.current / achievement.progress.goal)
+      )
+      : null;
+
+    context.fillStyle = achievement.unlocked
+      ? palette.menu.itemBackground
+      : palette.menu.disabledBackground;
+    context.fillRect(
+      item.rect.x,
+      item.rect.y,
+      item.rect.width,
+      item.rect.height
+    );
+
+    context.strokeStyle = isSelected
+      ? palette.menu.selectedBorder
+      : achievement.unlocked
+        ? palette.menu.itemBorder
+        : palette.menu.disabledBorder;
+    context.lineWidth = 2;
+    context.strokeRect(
+      item.rect.x,
+      item.rect.y,
+      item.rect.width,
+      item.rect.height
+    );
+
+    this._renderAchievementIcon(achievement, iconX, iconY);
+
+    this._gameArena.renderText(achievement.name, textX, item.rect.y + 10, {
+      size: 9,
+      align: "left",
+      valign: "top",
+      color: achievement.unlocked
+        ? palette.menu.selectedBackground
+        : palette.menu.disabledText,
+    });
+
+    this._wrapText(
+      achievement.description,
+      Math.max(12, Math.floor(textWidth / 5))
+    ).slice(0, 2).forEach((line, index) => {
+      this._gameArena.renderText(line, textX, item.rect.y + 28 + index * 10, {
+        size: 7,
+        align: "left",
+        valign: "top",
+        color: achievement.unlocked
+          ? palette.menu.itemText
+          : palette.menu.disabledText,
+      });
+    });
+
+    if (!achievement.progress || progress === null) {
+      return;
+    }
+
+    const barX = textX;
+    const barY = item.rect.y + item.rect.height - 11;
+    const label = `${achievement.progress.current}/${achievement.progress.goal}`;
+    const labelWidth = 42;
+    const barWidth = Math.max(24, textWidth - labelWidth - 6);
+
+    context.fillStyle = palette.menu.disabledBackground;
+    context.fillRect(barX, barY, barWidth, 5);
+    context.fillStyle = achievement.unlocked
+      ? palette.menu.selectedBackground
+      : palette.menu.progressFill;
+    context.fillRect(barX, barY, barWidth * progress, 5);
+    context.strokeStyle = palette.menu.itemBorder;
+    context.lineWidth = 1;
+    context.strokeRect(barX, barY, barWidth, 5);
+
+    this._gameArena.renderText(label, barX + barWidth + 6, barY + 2, {
+      size: 7,
+      align: "left",
+      valign: "middle",
+      color: achievement.unlocked
+        ? palette.menu.itemText
+        : palette.menu.disabledText,
+    });
+  };
+
+  private _renderAchievementIcon = (
+    achievement: AchievementStatus,
+    x: number,
+    y: number
+  ): void => {
+    const context = this._gameArena.getContext() as CanvasRenderingContext2D;
+    const sprite = this._getAchievementIconSprite(achievement);
+    const frameX = achievement.unlocked
+      ? achievement.icon.unlockedFrameX
+      : achievement.icon.lockedFrameX;
+
+    context.imageSmoothingEnabled = false;
+
+    if (!sprite.complete || sprite.naturalWidth <= 0 || sprite.naturalHeight <= 0) {
+      this._renderAchievementIconPlaceholder(achievement, x, y);
+      return;
+    }
+
+    try {
+      context.drawImage(
+        sprite,
+        frameX * achievement.icon.frameWidth,
+        0,
+        achievement.icon.frameWidth,
+        achievement.icon.frameHeight,
+        x,
+        y,
+        achievementIconRenderSize,
+        achievementIconRenderSize
+      );
+    } catch {
+      this._renderAchievementIconPlaceholder(achievement, x, y);
+    }
+  };
+
+  private _renderAchievementIconPlaceholder = (
+    achievement: AchievementStatus,
+    x: number,
+    y: number
+  ): void => {
+    const context = this._gameArena.getContext() as CanvasRenderingContext2D;
+    const centerX = x + achievementIconRenderSize / 2;
+    const centerY = y + achievementIconRenderSize / 2;
+    const radius = achievementIconRenderSize / 2 - 5;
+
+    context.fillStyle = achievement.unlocked
+      ? palette.menu.progressFill
+      : palette.menu.disabledBackground;
+    context.fillRect(x, y, achievementIconRenderSize, achievementIconRenderSize);
+    context.strokeStyle = achievement.unlocked
+      ? palette.menu.selectedBorder
+      : palette.menu.disabledBorder;
+    context.lineWidth = 2;
+    context.strokeRect(x, y, achievementIconRenderSize, achievementIconRenderSize);
+    context.beginPath();
+    context.arc(centerX, centerY, radius, 0, Math.PI * 2);
+    context.stroke();
+  };
+
+  private _getAchievementIconSprite = (
+    achievement: AchievementStatus
+  ): HTMLImageElement => {
+    const cachedSprite = this._achievementIconSprites[achievement.icon.src];
+
+    if (cachedSprite) {
+      return cachedSprite;
+    }
+
+    const sprite = new Image();
+    sprite.src = achievement.icon.src;
+    this._achievementIconSprites[achievement.icon.src] = sprite;
+
+    return sprite;
   };
 
   private _renderLevelBlurb = (): void => {
@@ -2387,6 +2639,62 @@ class Menus implements MenuSystemInstance {
     };
   };
 
+  private _getAchievementGridLayout = (): {
+    cardWidth: number;
+    columns: number;
+    signature: string;
+    startX: number;
+    startY: number;
+  } => {
+    const viewport = this._getItemsViewport();
+    const availableWidth = Math.max(160, viewport.width - 14);
+    const columns = Math.max(
+      1,
+      Math.min(
+        3,
+        Math.floor(
+          (availableWidth + achievementCardGap) /
+            (achievementCardWidth + achievementCardGap)
+        )
+      )
+    );
+    const cardWidth = Math.min(achievementCardWidth, availableWidth);
+    const totalWidth = cardWidth * columns + achievementCardGap * (columns - 1);
+
+    return {
+      cardWidth,
+      columns,
+      signature: `${columns}:${Math.round(cardWidth)}:${Math.round(viewport.width)}`,
+      startX: -totalWidth / 2,
+      startY: -54,
+    };
+  };
+
+  private _refreshAchievementItems = (): void => {
+    const layout = this._getAchievementGridLayout();
+    const achievements = this._commands.getAchievements?.() ?? [];
+    const achievementSignature = achievements
+      .map((achievement) =>
+        [
+          achievement.id,
+          achievement.unlocked ? "1" : "0",
+          achievement.progress?.current ?? "",
+          achievement.progress?.goal ?? "",
+        ].join(":")
+      )
+      .join("|");
+    const signature = `${layout.signature}:${achievementSignature}`;
+
+    if (signature === this._achievementLayoutSignature) {
+      return;
+    }
+
+    this._achievementLayoutSignature = signature;
+    this._items = this._createAchievementItems();
+    this._selectedIndex = Math.min(this._selectedIndex, this._items.length - 1);
+    this._scrollY = this._clampScrollY(this._scrollY);
+  };
+
   private _getHeaderBottomY = (): number => {
     const logoBottom =
       this._getLogoY(this._screen) + (86 * this._getLogoScale(this._screen)) / 2;
@@ -2846,6 +3154,10 @@ class Menus implements MenuSystemInstance {
   private _getScreenTitle = (): string => {
     if (this._screen === "options") {
       return i18n.menu.options;
+    }
+
+    if (this._screen === "achievements") {
+      return i18n.menu.achievements;
     }
 
     if (this._screen === "controls") {

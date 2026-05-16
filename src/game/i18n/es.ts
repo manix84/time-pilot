@@ -54,6 +54,7 @@ const es: typeof en = {
     },
   },
   menu: {
+    achievements: "Achievements",
     alreadyAssignedTo: (binding: string) => `Ya asignado a ${binding}`,
     back: "Volver",
     cancel: "Cancelar",

@@ -52,6 +52,7 @@ const en = {
     },
   },
   menu: {
+    achievements: "Achievements",
     alreadyAssignedTo: (binding: string) => `Already assigned to ${binding}`,
     back: "Back",
     cancel: "Cancel",
