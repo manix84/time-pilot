@@ -14,6 +14,7 @@
 - 🔎 UI zoom and game POV zoom with automatic viewport scaling.
 - 🏆 Achievement tracking with an achievements page, progress counters, and unlock popups.
 - 🎬 Startup preroll with the author logo, Time Pilot flyby, menu-logo handoff, and instant skip input.
+- 🛠️ Debug tools for level select, preroll replay, runtime logging, and stored-data resets.
 - 📱 Installable offline PWA mode that launches straight into the game canvas in fullscreen display mode.
 - 🔁 Root-menu update flow that applies waiting PWA updates without interrupting play.
 - 📺 Optional CRT/VHS filter presets with custom sliders.
@@ -58,10 +59,10 @@ app behaves like a dedicated game rather than a web page.
 
 The service worker caches the app shell plus core game sprites, fonts, and
 sounds so the installed game can continue to run offline after it has been
-installed or loaded. When the browser is online, the app checks for a new
-service worker on load, reconnect, and tab focus. Updates wait in the
-background and are applied only from the non-playing root menu through the
-`Update` button, followed by the player time-warp animation and a reload.
+installed or loaded. On the `/pwa/` game route, the app checks for a new service
+worker on load, reconnect, and tab focus. Updates wait in the background and
+are applied only from the non-playing root menu through the `Update` button,
+followed by the player time-warp animation and a reload.
 
 The showcase/landing page remains the default browser view.
 
@@ -157,7 +158,14 @@ boss, and bonus previews on the right. Focusing a level also pins the background
 demo preview to that era until the level select screen is closed. Debug overlays
 can also show hitboxes, heading and steering vectors, and an optional turn-arc
 fill for intentional moving entities. The debug menu can also replay the
-startup preroll.
+startup preroll, change the runtime log level, and open reset tools for stored
+preferences, scores, achievements, or all Time Pilot data. Destructive reset
+actions require confirmation and name the exact data group being cleared.
+
+Runtime logging is disabled by default. When enabled from the debug menu, the
+logger supports `debug`, `info`, `warning`, `error`, and `fatal` thresholds and
+uses structured console details for lifecycle events such as preroll, game
+start, continues, resets, achievements, game over, and time warp.
 
 Gameplay now includes score-based extra lives at 10,000 points and every
 50,000 points after, compact HUD life counts once they reach nine lives,
@@ -178,6 +186,7 @@ src/
     types.ts                Shared game contracts
     constants.ts            Game tuning and asset constants
     game-timing.ts          Shared simulation tick rate
+    logger.ts               Debug-menu-controlled runtime logger
     achievements.ts         Achievement definitions and tracking subsystem
     achievement-notifications.ts
                             Canvas unlock popup renderer
@@ -187,6 +196,7 @@ src/
     engine/                 Canvas arena, ticker, sound, helpers
     menus/                  Menu definitions
     systems/                Collision, spawning, and rendering systems
+    storage-reset.ts        Debug reset helpers for persisted data
     ui-scale.ts             UI and game zoom helpers
     time-warp.ts            Player time-warp sequence timing
     *.ts                    Entities, factories, HUD, options
@@ -208,6 +218,9 @@ The current design keeps React out of the game loop. This is deliberate.
 - Rendering uses a separate animation-frame ticker to paint the latest entity locations and orientations as often as the browser can display them.
 - Game rendering applies pixelated POV scaling separately from HUD and menu UI scaling.
 - Rendering stays canvas-based for predictable paint ordering and frame-by-frame control.
+- Public game utilities, engine entry points, systems, controllers, and React
+  bridge components include JSDoc comments for generated API documentation and
+  easier maintenance.
 
 ## 🔁 CI/CD
 

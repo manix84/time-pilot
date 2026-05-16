@@ -13,7 +13,11 @@
 - Reorganized dotted legacy modules into logical folders, such as:
   - `controller/gamepad.ts`
   - `controller/keyboard1.ts`
+- Removed the unused legacy menu definition modules now that the canvas menu
+  system owns root, pause, options, achievements, and debug flows directly.
 - Added shared `types.ts` contracts for game data, controllers, assets, and engine APIs.
+- Added JSDoc coverage across public game utilities, engine entry points,
+  systems, controllers, React bridge components, and maintenance helpers.
 
 ## 🧠 Engine Architecture
 
@@ -24,6 +28,8 @@
 - Converted the remaining prototype-style runtime modules into class-based entities, factories, controllers, engine wrappers, HUD, and menu systems.
 - Split collision handling, entity spawning, and frame rendering into dedicated systems.
 - Separated simulation ticking from rendering: game-state calculations run at 50fps, while canvas rendering runs every animation frame.
+- Removed the old 50,000-tick gameplay pause failsafe so long sessions can keep
+  running normally.
 - Added an in-app controller configuration UI for keyboard layout selection and gamepad polling.
 - Added canvas-rendered start and options menus with volume controls, controller style selection, custom keyboard bindings, and keyboard/gamepad/mouse interaction.
 - Fixed gamepad cleanup so animation frames are cancelled on disconnect.
@@ -36,6 +42,7 @@
   achievement cards, and persistent progress bars for cumulative counters.
 - Added sliding achievement unlock notifications above the credits line.
 - Added storybook coverage for the achievements page and unlock popup.
+- Prevented attract-mode demo play from unlocking player achievements.
 - Rebalanced enemy speeds by era so biplanes, WWII fighters, helicopters, jets, and UFOs escalate more like Time Pilot.
 - Tuned enemy bullets, bombs, and missiles around simple readable projectiles instead of dense bullet patterns.
 - Added rocket sprites for level 3 and level 4 enemy missiles, with very slow level 3 homing, limited level 4 homing, and rockets that can be shot down.
@@ -75,6 +82,11 @@
 - Added instant preroll skipping from keyboard, pointer, touch, and controller
   input.
 - Added a debug-menu Play Preroll action for replaying the startup sequence.
+- Added a debug-menu Log Level control with off, debug, info, warning, error,
+  and fatal thresholds.
+- Added a debug-menu Reset Data submenu for preferences, scores, achievements,
+  and all stored Time Pilot data, with confirmation warnings that name the data
+  being cleared.
 - Added a Storybook preroll preview for the author card, flyby, and menu
   handoff.
 - Added localized era blurbs to the debug level select screen.
@@ -91,6 +103,7 @@
 - Added keyboard shortcuts for UI zoom with `+`/`=` and `-`.
 - Added `M` and the gamepad menu button as root-menu shortcuts.
 - Added Escape, Backspace, and gamepad back navigation for submenus.
+- Added pixel-art chevrons to submenu and back menu items.
 - Added a paused subtitle to the root menu during gameplay.
 - Made Escape on the paused root menu resume gameplay, matching the Continue button.
 - Added the root-menu Watch Demo flow, including animated logo movement into
@@ -108,6 +121,8 @@
 - Added root-menu update availability. When a PWA update is waiting, the
   non-playing root menu shows Update, applies the waiting worker, plays a
   no-delay player time-warp overlay, and reloads into the updated files.
+- Limited the PWA update overlay/update flow to the dedicated `/pwa/` game
+  route.
 - Added video filter settings under Options, including Off, CRT/VHS presets,
   custom sliders, descriptions, and CSS-based RGB split/filter overlays.
 - Added alternating UK/US and Spain/Mexico flag fades for English and Spanish.
@@ -125,6 +140,9 @@
 - Added installable PWA support with a dedicated `/pwa/` canvas-only endpoint,
   offline app-shell/game-asset caching, and non-interrupting service worker
   update detection.
+- Added debug-menu-controlled runtime logging for key lifecycle events such as
+  preroll, game starts, continues, resets, achievements, game over, and time
+  warp.
 
 ## 🧪 Test Coverage
 
@@ -135,6 +153,8 @@
 - Added coverage for touch menu routing and scrolling, staged-only hook logic,
   update menu availability, filter editing baselines, time-warp previews, and
   debug overlay stories.
+- Added coverage for achievement persistence/progress, reset actions, logging,
+  preroll, and the PWA update overlay.
 - Replaced the previous placeholder test script with a real `npm test` suite.
 
 ## 🔜 Next Milestones
