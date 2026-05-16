@@ -14,6 +14,9 @@ import type {
   PlayerInstance,
 } from "./types";
 
+/**
+ * Player or enemy projectile with movement, rendering, collision state, and sounds.
+ */
 class Bullet implements BulletInstance {
   private _data: BulletData;
   private _explosionSprite?: HTMLImageElement;

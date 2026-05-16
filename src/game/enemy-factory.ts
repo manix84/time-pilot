@@ -12,6 +12,9 @@ import type {
   Heading,
 } from "./types";
 
+/**
+ * Owns active enemy instances and exposes level-specific enemy data.
+ */
 class EnemyFactory implements EnemyFactoryInstance {
   private _context: GameDataStore;
   private _enemies: EnemyInstance[] = [];

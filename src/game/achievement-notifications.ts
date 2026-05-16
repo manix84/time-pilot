@@ -24,6 +24,9 @@ const popupHoldMs = 2600;
 const popupExitMs = 220;
 const popupIconSize = achievementNotificationIconSize;
 
+/**
+ * Renders queued achievement unlock popups over the game canvas.
+ */
 class AchievementNotifications {
   private readonly arena: GameArenaInstance;
   private readonly iconSprites: Partial<Record<string, HTMLImageElement>> = {};

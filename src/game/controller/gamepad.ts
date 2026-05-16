@@ -12,6 +12,9 @@ type NavigatorWithGamepads = Navigator & {
 };
 type MenuDirection = "down" | "left" | "right" | "up";
 
+/**
+ * Browser Gamepad API controller adapter.
+ */
 class Gamepad implements Controller {
   private _animationFrame: number | null = null;
   private _controllerInterface: ControllerInterfaceInstance;

@@ -8,6 +8,9 @@ import type {
   ControllerInterfaceInstance,
 } from "../types";
 
+/**
+ * Primary keyboard controller adapter.
+ */
 class Keyboard1 implements Controller {
   private _controllerInterface: ControllerInterfaceInstance;
   private _inputState?: ControlInputState;

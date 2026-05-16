@@ -11,6 +11,9 @@ import userOptions from "../user-options";
 
 type TouchGestureMode = "multi" | "single" | null;
 
+/**
+ * Touch input adapter for menus, movement, firing, and pinch zoom.
+ */
 class TouchController implements Controller {
   private readonly _canvas: HTMLCanvasElement;
   private readonly _controllerInterface: ControllerInterfaceInstance;

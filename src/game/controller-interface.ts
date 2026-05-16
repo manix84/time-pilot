@@ -14,6 +14,9 @@ import type {
   TickerInstance,
 } from "./types";
 
+/**
+ * Translates controller input into gameplay, menu, pause, and preroll commands.
+ */
 class ControllerInterface implements ControllerInterfaceInstance {
   private _commands: Required<ControllerCommands>;
   private _gameArena: GameArenaInstance;

@@ -20,6 +20,9 @@ import type {
 
 const playerRotationStep = 360 / player.rotationFrameCount;
 
+/**
+ * Coordinates all canvas rendering for gameplay, HUD, menus, and transitions.
+ */
 class RenderingSystem implements RenderingSystemInstance {
   private _context: GameDataStore;
   private _achievementNotifications: AchievementNotifications;

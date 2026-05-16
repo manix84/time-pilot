@@ -19,6 +19,9 @@ import type {
 const playerConst = player;
 const playerSpriteArcDegrees = 360;
 
+/**
+ * Player aircraft entity responsible for movement, shooting, lives, and scoring.
+ */
 class Player implements PlayerInstance {
   private _bulletFactory: BulletFactoryInstance;
   private _context: GameDataStore;

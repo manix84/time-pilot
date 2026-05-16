@@ -16,6 +16,9 @@ import type {
 
 const collectedScorePopupDurationTicks = 60;
 
+/**
+ * Collectable bonus entity that awards score and renders collection feedback.
+ */
 class Bonus implements BonusInstance {
   private _bonusSprite: HTMLImageElement;
   private _canvas: GameArenaInstance;

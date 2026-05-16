@@ -1,6 +1,9 @@
 /* Converted from TimePilot.Menu.pause.js (AMD) to ESM TypeScript. */
 import type { MenuDefinition } from "../types";
 
+/**
+ * Legacy pause-menu definition kept for module compatibility tests.
+ */
 var pause: MenuDefinition = {
   name: "Paused",
   buttons: {

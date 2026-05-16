@@ -47,9 +47,24 @@ import type {
 } from "./types";
 import userOptions, { resetUserOptions } from "./user-options";
 
+/**
+ * Time each attract-mode demo level runs before changing era.
+ */
 export const DEMO_LEVEL_DURATION_MS = 30000;
+
+/**
+ * Duration of the fade between attract-mode demo levels.
+ */
 export const DEMO_LEVEL_FADE_MS = 1000;
+
+/**
+ * Duration of the playable level intro lockout.
+ */
 export const LEVEL_INTRO_DURATION_MS = 5000;
+
+/**
+ * Delay before the time-warp visual effect starts.
+ */
 export const TIME_WARP_DELAY_MS = timeWarpDelayMs;
 const demoLevelDurationFrames = Math.max(
   1,
@@ -84,6 +99,11 @@ type DemoProgressSnapshot = {
   score: number;
 };
 
+/**
+ * Chooses the initial controller source from the current device capabilities.
+ *
+ * @returns `"touch"` for touch/coarse-pointer devices, otherwise `"keyboard"`.
+ */
 export const getDefaultActiveController = (): ControlInputSource => {
   const hasTouchPoints =
     typeof navigator !== "undefined" && navigator.maxTouchPoints > 0;
@@ -108,14 +128,38 @@ const createControlInputState = (
   activeController,
 });
 
+/**
+ * Options accepted by the TimePilot engine constructor.
+ */
 export interface TimePilotOptions {
+  /**
+   * Applies a pending PWA/service-worker update.
+   */
   applyUpdate?: () => void;
+  /**
+   * Returns whether an update can currently be applied.
+   */
   canApplyUpdate?: () => boolean;
+  /**
+   * Keyboard layout used by the controller interface.
+   */
   controllerType?: ControllerType;
+  /**
+   * Enables debug menus and debug helpers.
+   */
   debug?: boolean;
+  /**
+   * Enables polling of the browser Gamepad API.
+   */
   gamepadEnabled?: boolean;
 }
 
+/**
+ * Main Time Pilot game engine.
+ *
+ * This class owns the canvas arena, simulation/render tickers, gameplay
+ * systems, menu system, controllers, audio, achievements, and preroll flow.
+ */
 export class TimePilot {
   private readonly container: HTMLElement;
   private readonly options: Required<TimePilotOptions>;

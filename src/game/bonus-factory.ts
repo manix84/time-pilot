@@ -7,6 +7,9 @@ import type {
   GameDataStore,
 } from "./types";
 
+/**
+ * Owns active bonus entities.
+ */
 class BonusFactory implements BonusFactoryInstance {
   private _bonuses: BonusInstance[] = [];
   private _context: GameDataStore;

@@ -1,3 +1,6 @@
+/**
+ * Shared canvas color palette.
+ */
 const palette = {
   aircraft: {
     bullet: "#FFF",

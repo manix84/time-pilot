@@ -10,6 +10,9 @@ import type {
   TimePilotConstants,
 } from "./types";
 
+/**
+ * Score awards and extra-life thresholds.
+ */
 const scoring = {
   regularEnemy: 100,
   missile: 100,
@@ -658,6 +661,9 @@ const futureLevelFormations: Record<number, EnemyFormationConfig[]> = {
   ],
 };
 
+/**
+ * Complete gameplay constants bundle.
+ */
 const timePilotConstants: TimePilotConstants = {
   player: {
     sprite: {
@@ -1011,6 +1017,17 @@ const timePilotConstants: TimePilotConstants = {
   },
 };
 
+/**
+ * Frequently used constants re-exported for convenient imports.
+ */
 export const { player, sounds, limits, levels } = timePilotConstants;
+
+/**
+ * Score awards and extra-life thresholds.
+ */
 export { scoring };
+
+/**
+ * Complete gameplay constants bundle.
+ */
 export default timePilotConstants;

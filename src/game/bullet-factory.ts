@@ -10,6 +10,9 @@ import type {
   Heading,
 } from "./types";
 
+/**
+ * Owns active projectile instances for one projectile layer.
+ */
 class BulletFactory implements BulletFactoryInstance {
   private _bulletSound: SoundEngine;
   private _bullets: BulletInstance[] = [];

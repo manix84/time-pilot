@@ -36,6 +36,9 @@ type TextAlign = CanvasRenderingContext2D["textAlign"];
 
 const spaceAdvanceMultiplier = 2;
 
+/**
+ * Canvas arena wrapper responsible for sizing, assets, text, sprites, and fullscreen.
+ */
 class GameArena implements GameArenaInstance {
   private _assets: string[] = [];
   private _canvas: CanvasWithDebugGrid;

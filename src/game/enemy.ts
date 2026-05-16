@@ -29,6 +29,9 @@ const attackPassOffset = 52;
 const attackPassStrength = 0.72;
 const slowEnemyTrailingDistance = 90;
 
+/**
+ * Enemy aircraft entity with steering, attack behaviour, damage, and rendering.
+ */
 class Enemy implements EnemyInstance {
   private _context: GameDataStore;
   private _data: EnemyData;

@@ -8,6 +8,9 @@ import type {
   GameDataStore,
 } from "../types";
 
+/**
+ * Detects collisions between player, enemies, bullets, and bonuses.
+ */
 class CollisionSystem implements CollisionSystemInstance {
   private _context: GameDataStore;
 

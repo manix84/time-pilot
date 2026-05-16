@@ -1,14 +1,26 @@
+/**
+ * Heading in degrees, where 0 points up the screen.
+ */
 export type Heading = number;
 
+/**
+ * Two-dimensional position in game coordinates.
+ */
 export interface Coordinates {
   posX: number;
   posY: number;
 }
 
+/**
+ * Position plus collision/render radius.
+ */
 export interface PositionedRadius extends Coordinates {
   radius: number;
 }
 
+/**
+ * Source and destination data for rendering a sprite frame.
+ */
 export interface SpriteFrame extends Coordinates {
   flipY?: boolean;
   frameWidth: number;
@@ -19,6 +31,9 @@ export interface SpriteFrame extends Coordinates {
   renderWidth?: number;
 }
 
+/**
+ * Options for canvas-rendered text.
+ */
 export interface RenderTextOptions {
   align?: CanvasTextAlign;
   valign?: CanvasTextBaseline;
@@ -29,17 +44,26 @@ export interface RenderTextOptions {
   strokeWidth?: number;
 }
 
+/**
+ * Options for drawing debug or gameplay circles.
+ */
 export interface CircleOptions {
   backgroundColor?: string;
   borderColor?: string | false;
   borderWidth?: number;
 }
 
+/**
+ * Asset preload progress counts.
+ */
 export interface AssetProgress {
   loaded: number;
   remaining: number;
 }
 
+/**
+ * Mutable player state stored in the game data context.
+ */
 export interface PlayerData extends Coordinates {
   isAlive: boolean;
   deathTick: number | false;
@@ -56,6 +80,9 @@ export interface PlayerData extends Coordinates {
   removeMe?: boolean;
 }
 
+/**
+ * Mutable enemy state stored in enemy instances.
+ */
 export interface EnemyData extends Coordinates {
   heading: Heading;
   hitPoints: number;
@@ -70,12 +97,18 @@ export interface EnemyData extends Coordinates {
   formationWavePhase?: number;
 }
 
+/**
+ * Background prop state.
+ */
 export interface PropData extends Coordinates {
   level: number;
   type: number;
   layer: number;
 }
 
+/**
+ * Bonus pickup state.
+ */
 export interface BonusData extends Coordinates {
   level: number;
   layer: number;
@@ -83,6 +116,9 @@ export interface BonusData extends Coordinates {
   type: "parachute";
 }
 
+/**
+ * Image element with optional sprite metadata attached.
+ */
 export interface SpriteImage extends HTMLImageElement {
   frameWidth?: number;
   frameHeight?: number;
@@ -90,6 +126,9 @@ export interface SpriteImage extends HTMLImageElement {
   frameY?: number;
 }
 
+/**
+ * Commands exposed from the game shell to controller adapters.
+ */
 export interface ControllerCommands {
   isPrerollActive?: () => boolean;
   openMenu?: () => void;
@@ -98,6 +137,9 @@ export interface ControllerCommands {
   skipPreroll?: () => void;
 }
 
+/**
+ * Supported keyboard controller layouts.
+ */
 export type ControllerType = "keyboard1" | "keyboard2";
 export type {
   FilterMode,

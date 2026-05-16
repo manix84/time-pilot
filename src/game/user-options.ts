@@ -50,7 +50,14 @@ type PersistedUserOptions = Pick<
   | "videoFilterMode"
 >;
 
+/**
+ * Local storage key for persisted user options.
+ */
 export const userOptionsStorageKey = "timePilot.userOptions";
+
+/**
+ * Legacy local storage key used by older debug-option persistence.
+ */
 export const legacyDebugStorageKey = "timePilot.debugOptions";
 
 const defaultKeyboardBindings: KeyboardBindings = {
@@ -392,6 +399,9 @@ var userOptions: UserOptions = {
   },
 };
 
+/**
+ * Restores runtime user options to defaults and removes persisted preferences.
+ */
 export const resetUserOptions = (): void => {
   const defaults = cloneDefaultPersistedOptions();
   const storage = getOptionsStorage();

@@ -205,6 +205,9 @@ const menuChevronBlocks = [
   { x: -4, y: 5 },
 ];
 
+/**
+ * Canvas-rendered menu system for root, options, debug, achievements, and pause flows.
+ */
 class Menus implements MenuSystemInstance {
   private _active = false;
   private _awaitingBinding: BindingAction | null = null;
