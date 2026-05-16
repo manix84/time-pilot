@@ -195,6 +195,14 @@ const keyBindingRows: Array<{ binding: BindingAction; label: string }> = [
 ];
 const konamiCode = [38, 38, 40, 40, 37, 39, 37, 39, 66, 65];
 const touchKonamiSwipeThreshold = 36;
+const menuChevronPixelSize = 3;
+const menuChevronBlocks = [
+  { x: -4, y: -7 },
+  { x: -1, y: -4 },
+  { x: 2, y: -1 },
+  { x: -1, y: 2 },
+  { x: -4, y: 5 },
+];
 
 class Menus implements MenuSystemInstance {
   private _active = false;
@@ -1586,23 +1594,15 @@ class Menus implements MenuSystemInstance {
       ? item.rect.x + 15
       : item.rect.x + item.rect.width - 16;
     const direction = isBackItem ? -1 : 1;
-    const pixelSize = 3;
-    const blocks = [
-      { x: -4, y: -7 },
-      { x: -1, y: -4 },
-      { x: 2, y: -1 },
-      { x: -1, y: 2 },
-      { x: -4, y: 5 },
-    ];
 
     context.save();
     context.fillStyle = color;
-    blocks.forEach((block) => {
+    menuChevronBlocks.forEach((block) => {
       context.fillRect(
         chevronX + block.x * direction,
         centerY + block.y,
-        pixelSize,
-        pixelSize
+        menuChevronPixelSize,
+        menuChevronPixelSize
       );
     });
     context.restore();

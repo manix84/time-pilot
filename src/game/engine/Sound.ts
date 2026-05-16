@@ -100,7 +100,6 @@ class Sound {
     this._instantDestroy = options.instantDestroy;
 
     for (const url of soundUrls) {
-      window.console.log("Adding source:", url);
       const source = document.createElement("source");
       source.src = url;
 

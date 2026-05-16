@@ -49,10 +49,8 @@ class GameArena implements GameArenaInstance {
     this._isInFullScreen = this.isFullScreen();
     if (this._isInFullScreen) {
       this.resize(screen.width, screen.height);
-      window.console.log("Entered Full-Screen");
     } else {
       this.resize(this._oldWidth, this._oldHeight);
-      window.console.log("Exited Full-Screen");
     }
   };
   private readonly _handleResize = (): void => {

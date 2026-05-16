@@ -204,6 +204,7 @@ describe("controller modules", () => {
 
     expect(controls.goBack).toHaveBeenCalled();
     expect(controls.startShooting).not.toHaveBeenCalled();
+    expect(inputState.menu).toBe(true);
     expect(inputState.fire).toBe(false);
   });
 
