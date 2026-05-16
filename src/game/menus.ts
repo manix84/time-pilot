@@ -36,6 +36,7 @@ import type {
   ProjectileConfig,
   ShowStartMenuOptions,
 } from "./types";
+import type { StoredDataResetScope } from "./storage-reset";
 import {
   formatGameZoom,
   formatUiZoom,
@@ -56,6 +57,8 @@ type MenuScreen =
   | "filters"
   | "filter-custom"
   | "debug"
+  | "debug-reset"
+  | "debug-reset-confirm"
   | "demo-watch"
   | "game-over"
   | "language"
@@ -85,6 +88,7 @@ interface MenuItem {
   levelIcon?: number;
   onAdjust?: (direction: -1 | 1) => void;
   onSetValue?: (value: number) => void;
+  opensSubmenu?: boolean;
   rect: {
     height: number;
     width: number;
@@ -218,6 +222,7 @@ class Menus implements MenuSystemInstance {
   private _screen: MenuScreen = "start";
   private _screenHistory: MenuScreen[] = [];
   private _pressedItemIndex: number | null = null;
+  private _pendingResetScope: StoredDataResetScope | null = null;
   private _pressedItemDragged = false;
   private _pressStartPointer: MenuPointerData | null = null;
   private _touchScrollDrag:
@@ -831,6 +836,10 @@ class Menus implements MenuSystemInstance {
     if (this._screen === "filter-custom") {
       this._renderCustomFilterDescription();
     }
+
+    if (this._screen === "debug-reset-confirm") {
+      this._renderResetWarning();
+    }
   };
 
   private _getLogoCanvas = (): HTMLCanvasElement => {
@@ -943,6 +952,10 @@ class Menus implements MenuSystemInstance {
       this._items = this._createRestartConfirmItems();
     } else if (this._screen === "debug") {
       this._items = this._createDebugItems();
+    } else if (this._screen === "debug-reset") {
+      this._items = this._createDebugResetItems();
+    } else if (this._screen === "debug-reset-confirm") {
+      this._items = this._createDebugResetConfirmItems();
     } else {
       this._items = this._createLevelItems();
     }
@@ -964,6 +977,7 @@ class Menus implements MenuSystemInstance {
     items.push(
       this._createItem(i18n.menu.options, "action", itemY, {
         action: () => this._goToScreen("options"),
+        opensSubmenu: true,
       })
     );
     itemY += 50;
@@ -971,6 +985,7 @@ class Menus implements MenuSystemInstance {
     items.push(
       this._createItem(i18n.menu.achievements, "action", itemY, {
         action: () => this._goToScreen("achievements"),
+        opensSubmenu: true,
       })
     );
     itemY += 50;
@@ -979,6 +994,7 @@ class Menus implements MenuSystemInstance {
       items.push(
         this._createItem(i18n.menu.debug, "action", itemY, {
           action: () => this._goToScreen("debug"),
+          opensSubmenu: true,
         })
       );
       itemY += 50;
@@ -1080,6 +1096,7 @@ class Menus implements MenuSystemInstance {
       this._createItem(i18n.menu.filters, "action", 156, {
         getValue: () => filterModeLabels[userOptions.videoFilterMode],
         action: () => this._goToScreen("filters"),
+        opensSubmenu: true,
       }),
       this._createItem(i18n.menu.fullScreen, "toggle", 198, {
         disabled:
@@ -1098,6 +1115,7 @@ class Menus implements MenuSystemInstance {
         getValue: () => getLanguageName(userOptions.language),
         languageFlag: userOptions.language,
         action: () => this._goToScreen("language"),
+        opensSubmenu: true,
       }),
     ];
 
@@ -1116,6 +1134,7 @@ class Menus implements MenuSystemInstance {
     items.push(
       this._createItem(i18n.menu.remapControls, "action", remapControlsY, {
         action: () => this._goToScreen("controls"),
+        opensSubmenu: true,
       }),
       this._createItem(i18n.menu.back, "action", backY, {
         action: () => this._goBack(),
@@ -1139,6 +1158,7 @@ class Menus implements MenuSystemInstance {
       }),
       this._createItem(i18n.menu.customCrtOptions, "action", -12, {
         action: () => this._goToScreen("filter-custom"),
+        opensSubmenu: true,
       }),
       this._createItem(i18n.menu.resetFilters, "action", 30, {
         action: () => this._resetFilters(),
@@ -1348,12 +1368,52 @@ class Menus implements MenuSystemInstance {
       this._createItem(i18n.menu.selectLevel, "action", 240, {
         action: () => this._goToScreen("level"),
         getValue: () => this._getSelectedLevelLabel(),
+        opensSubmenu: true,
       }),
       this._createItem(i18n.menu.playPreroll, "action", 290, {
         action: () => this._commands.playPreroll?.(),
       }),
-      this._createItem(i18n.menu.back, "action", 340, {
+      this._createItem(i18n.menu.resetData, "action", 340, {
+        action: () => this._goToScreen("debug-reset"),
+        opensSubmenu: true,
+      }),
+      this._createItem(i18n.menu.back, "action", 390, {
         action: () => this._goBack(),
+      }),
+    ];
+  };
+
+  private _createDebugResetItems = (): MenuItem[] => {
+    return [
+      this._createItem(i18n.menu.resetPreferences, "action", -54, {
+        action: () => this._showResetConfirm("preferences"),
+        opensSubmenu: true,
+      }),
+      this._createItem(i18n.menu.resetScores, "action", -12, {
+        action: () => this._showResetConfirm("scores"),
+        opensSubmenu: true,
+      }),
+      this._createItem(i18n.menu.resetAchievements, "action", 30, {
+        action: () => this._showResetConfirm("achievements"),
+        opensSubmenu: true,
+      }),
+      this._createItem(i18n.menu.resetAllStoredData, "action", 72, {
+        action: () => this._showResetConfirm("all"),
+        opensSubmenu: true,
+      }),
+      this._createItem(i18n.menu.back, "action", 122, {
+        action: () => this._goBack(),
+      }),
+    ];
+  };
+
+  private _createDebugResetConfirmItems = (): MenuItem[] => {
+    return [
+      this._createItem(i18n.menu.confirmReset, "action", 38, {
+        action: () => this._confirmReset(),
+      }),
+      this._createItem(i18n.menu.cancel, "action", 88, {
+        action: () => this._cancelReset(),
       }),
     ];
   };
@@ -1467,9 +1527,12 @@ class Menus implements MenuSystemInstance {
   };
 
   private _renderItemText = (item: MenuItem, color: string): void => {
+    const isBackItem = item.label === i18n.menu.back;
+    const labelInset = isBackItem ? 30 : 14;
+
     this._gameArena.renderText(
       item.label,
-      item.rect.x + 14,
+      item.rect.x + labelInset,
       item.rect.y + item.rect.height / 2,
       {
         size: item.kind === "key" ? 13 : 16,
@@ -1492,7 +1555,11 @@ class Menus implements MenuSystemInstance {
         item.getValue(),
         item.rect.x +
           item.rect.width -
-          (item.languageFlag || item.levelIcon ? 48 : 14),
+          (item.opensSubmenu
+            ? 34
+            : item.languageFlag || item.levelIcon
+              ? 48
+              : 14),
         item.rect.y + item.rect.height / 2,
         {
           size: item.kind === "key" ? 13 : 16,
@@ -1502,6 +1569,43 @@ class Menus implements MenuSystemInstance {
         }
       );
     }
+
+    this._renderItemChevron(item, color);
+  };
+
+  private _renderItemChevron = (item: MenuItem, color: string): void => {
+    const isBackItem = item.label === i18n.menu.back;
+
+    if (!item.opensSubmenu && !isBackItem) {
+      return;
+    }
+
+    const context = this._gameArena.getContext() as CanvasRenderingContext2D;
+    const centerY = item.rect.y + item.rect.height / 2;
+    const chevronX = isBackItem
+      ? item.rect.x + 15
+      : item.rect.x + item.rect.width - 16;
+    const direction = isBackItem ? -1 : 1;
+    const pixelSize = 3;
+    const blocks = [
+      { x: -4, y: -7 },
+      { x: -1, y: -4 },
+      { x: 2, y: -1 },
+      { x: -1, y: 2 },
+      { x: -4, y: 5 },
+    ];
+
+    context.save();
+    context.fillStyle = color;
+    blocks.forEach((block) => {
+      context.fillRect(
+        chevronX + block.x * direction,
+        centerY + block.y,
+        pixelSize,
+        pixelSize
+      );
+    });
+    context.restore();
   };
 
   private _renderAchievementItem = (
@@ -1896,6 +2000,38 @@ class Menus implements MenuSystemInstance {
         color: palette.menu.itemText,
       });
     });
+  };
+
+  private _renderResetWarning = (): void => {
+    const lines = this._wrapText(
+      i18n.menu.resetWarning(this._getResetWarningScopeLabel()),
+      36
+    );
+
+    lines.forEach((line, index) => {
+      this._gameArena.renderText(line, 0, -74 + index * 18, {
+        size: index === 0 ? 15 : 13,
+        align: "center",
+        valign: "middle",
+        color: index === 0 ? palette.menu.waitingText : palette.menu.mutedText,
+      });
+    });
+  };
+
+  private _getResetWarningScopeLabel = (): string => {
+    if (this._pendingResetScope === "preferences") {
+      return i18n.menu.resetWarningPreferences;
+    }
+
+    if (this._pendingResetScope === "scores") {
+      return i18n.menu.resetWarningScores;
+    }
+
+    if (this._pendingResetScope === "achievements") {
+      return i18n.menu.resetWarningAchievements;
+    }
+
+    return i18n.menu.resetWarningAllStoredData;
   };
 
   private _isGameZoomSelected = (): boolean => {
@@ -3183,6 +3319,14 @@ class Menus implements MenuSystemInstance {
       return i18n.menu.debug;
     }
 
+    if (this._screen === "debug-reset") {
+      return i18n.menu.resetData;
+    }
+
+    if (this._screen === "debug-reset-confirm") {
+      return i18n.menu.resetConfirmTitle;
+    }
+
     if (this._screen === "demo-watch") {
       return i18n.menu.demo;
     }
@@ -3285,9 +3429,32 @@ class Menus implements MenuSystemInstance {
     this._shouldRevealSelected = true;
     this._buildItems();
     this._startTransition(previousScreen, nextScreen);
+    this._pendingResetScope =
+      previousScreen === "debug-reset-confirm" ? null : this._pendingResetScope;
     this._levelPreviewedLevel = undefined;
     this._resetLevelMenuIdleState();
     this._previewFocusedLevel();
+  };
+
+  private _showResetConfirm = (scope: StoredDataResetScope): void => {
+    this._pendingResetScope = scope;
+    this._goToScreen("debug-reset-confirm");
+  };
+
+  private _confirmReset = (): void => {
+    if (!this._pendingResetScope) {
+      this._goBack();
+      return;
+    }
+
+    this._commands.resetStoredData?.(this._pendingResetScope);
+    this._pendingResetScope = null;
+    this._goBack();
+  };
+
+  private _cancelReset = (): void => {
+    this._pendingResetScope = null;
+    this._goBack();
   };
 
   private _adjustControllerType = (direction: -1 | 1): void => {

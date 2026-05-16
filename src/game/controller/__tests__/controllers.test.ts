@@ -185,6 +185,28 @@ describe("controller modules", () => {
     expect(inputState.menu).toBe(true);
   });
 
+  it("maps the gamepad east face button to back while menus are active", async () => {
+    const controls = createControls();
+    const inputState = createInputState();
+    vi.mocked(controls.isMenuActive).mockReturnValue(true);
+    const gamepad = {
+      axes: [0, 0],
+      buttons: Array.from({ length: 16 }, () => ({ pressed: false })),
+    };
+    gamepad.buttons[1].pressed = true;
+    vi.spyOn(navigator, "getGamepads").mockReturnValue([
+      gamepad as unknown as globalThis.Gamepad,
+    ]);
+
+    const controller = new Gamepad(controls, inputState);
+    await new Promise((resolve) => window.setTimeout(resolve, 5));
+    controller.disconnect?.();
+
+    expect(controls.goBack).toHaveBeenCalled();
+    expect(controls.startShooting).not.toHaveBeenCalled();
+    expect(inputState.fire).toBe(false);
+  });
+
   it("snaps gamepad menu direction to one cardinal input and waits for release", async () => {
     const controls = createControls();
     const inputState = createInputState();

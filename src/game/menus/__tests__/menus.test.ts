@@ -168,6 +168,45 @@ describe("menu definitions", () => {
     expect(applyUpdate).toHaveBeenCalled();
   });
 
+  it("renders submenu and back chevrons", () => {
+    const arena = createArena();
+    const menus = new Menus(arena, { start: vi.fn() });
+
+    menus.showStart();
+    menus.render();
+
+    let contexts = vi
+      .mocked(arena.getContext)
+      .mock.results.map((result) => result.value as CanvasRenderingContext2D);
+    let fillRectCalls = contexts.flatMap((context) =>
+      vi.mocked(context.fillRect).mock.calls
+    );
+
+    expect(fillRectCalls).toEqual(
+      expect.arrayContaining([
+        [136, 45, 3, 3],
+      ])
+    );
+
+    vi.mocked(arena.getContext).mockClear();
+    menus.next();
+    menus.activate();
+    menus.render();
+
+    contexts = vi
+      .mocked(arena.getContext)
+      .mock.results.map((result) => result.value as CanvasRenderingContext2D);
+    fillRectCalls = contexts.flatMap((context) =>
+      vi.mocked(context.fillRect).mock.calls
+    );
+
+    expect(fillRectCalls).toEqual(
+      expect.arrayContaining([
+        [-137, 391, 3, 3],
+      ])
+    );
+  });
+
   it("shows watch demo during demo mode and exits it on input", () => {
     const performanceNow = vi.spyOn(performance, "now").mockReturnValue(0);
     const watchDemo = vi.fn();
@@ -1339,7 +1378,7 @@ describe("menu definitions", () => {
       '"debugContinues":4'
     );
 
-    for (let i = 0; i < 3; i++) {
+    for (let i = 0; i < 4; i++) {
       menus.next();
     }
 
@@ -1608,5 +1647,95 @@ describe("menu definitions", () => {
       172,
       expect.objectContaining({ align: "center" })
     );
+  });
+
+  it("confirms grouped reset actions from the debug reset submenu", () => {
+    const arena = createArena();
+    const resetStoredData = vi.fn();
+    const menus = new Menus(arena, {
+      resetStoredData,
+      start: vi.fn(),
+    });
+
+    menus.showStart();
+    for (const keyCode of [38, 38, 40, 40, 37, 39, 37, 39, 66, 65]) {
+      menus.captureKey(keyCode);
+    }
+
+    menus.next();
+    menus.next();
+    menus.next();
+    menus.activate();
+
+    for (let i = 0; i < 9; i++) {
+      menus.next();
+    }
+
+    menus.activate();
+    menus.render();
+
+    expect(arena.renderText).toHaveBeenCalledWith(
+      "Reset Data",
+      0,
+      -200,
+      expect.objectContaining({ align: "center" })
+    );
+    expect(arena.renderText).toHaveBeenCalledWith(
+      "Reset Preferences",
+      expect.any(Number),
+      expect.any(Number),
+      expect.objectContaining({ align: "left" })
+    );
+    expect(arena.renderText).toHaveBeenCalledWith(
+      "Reset Scores",
+      expect.any(Number),
+      expect.any(Number),
+      expect.objectContaining({ align: "left" })
+    );
+    expect(arena.renderText).toHaveBeenCalledWith(
+      "Reset Achievements",
+      expect.any(Number),
+      expect.any(Number),
+      expect.objectContaining({ align: "left" })
+    );
+    expect(arena.renderText).toHaveBeenCalledWith(
+      "Reset All Stored Data",
+      expect.any(Number),
+      expect.any(Number),
+      expect.objectContaining({ align: "left" })
+    );
+
+    menus.activate();
+    menus.render();
+
+    expect(arena.renderText).toHaveBeenCalledWith(
+      "Confirm Reset?",
+      0,
+      -200,
+      expect.objectContaining({ align: "center" })
+    );
+    expect(arena.renderText).toHaveBeenCalledWith(
+      "preferences. This cannot be undone.",
+      0,
+      expect.any(Number),
+      expect.objectContaining({ align: "center" })
+    );
+    expect(arena.renderText).toHaveBeenCalledWith(
+      "Confirm Reset",
+      expect.any(Number),
+      expect.any(Number),
+      expect.objectContaining({ align: "left" })
+    );
+
+    menus.next();
+    menus.activate();
+
+    expect(resetStoredData).not.toHaveBeenCalled();
+
+    menus.activate();
+    menus.activate();
+
+    expect(resetStoredData).toHaveBeenCalledOnce();
+    expect(resetStoredData).toHaveBeenCalledWith("preferences");
   });
 });

@@ -51,7 +51,12 @@ class Gamepad implements Controller {
         continue;
       }
 
-      const isFaceButtonPressed = this._isFaceButtonPressed(gamepad);
+      const menuActive = this._controllerInterface.isMenuActive?.() ?? false;
+      const isFaceBackButtonPressed =
+        menuActive && this._isFaceBackButtonPressed(gamepad);
+      const isFaceButtonPressed = menuActive
+        ? this._isMenuActivationButtonPressed(gamepad)
+        : this._isFaceButtonPressed(gamepad);
 
       if (isFaceButtonPressed && !this._isFireButtonPressed) {
         this._isFireButtonPressed = true;
@@ -73,25 +78,23 @@ class Gamepad implements Controller {
       }
 
       if (
-        this._controllerInterface.isMenuActive?.() &&
-        gamepad.buttons[8].pressed &&
+        menuActive &&
+        (gamepad.buttons[8].pressed || isFaceBackButtonPressed) &&
         !this._isBackButtonPressed
       ) {
         this._isBackButtonPressed = true;
         this._setInputState("menu", true);
         this._controllerInterface.goBack?.();
-      } else if (!this._controllerInterface.isMenuActive?.() && gamepad.buttons[8].pressed && !this._isRestartButtonPressed) {
+      } else if (!menuActive && gamepad.buttons[8].pressed && !this._isRestartButtonPressed) {
         this._isRestartButtonPressed = true;
         this._setInputState("restart", true);
         this._controllerInterface.restart();
-      } else if (!gamepad.buttons[8].pressed) {
+      } else if (!gamepad.buttons[8].pressed && !isFaceBackButtonPressed) {
         this._isBackButtonPressed = false;
         this._isRestartButtonPressed = false;
         this._setInputState("menu", false);
         this._setInputState("restart", false);
       }
-
-      const menuActive = this._controllerInterface.isMenuActive?.() ?? false;
 
       if (gamepad.buttons[4]?.pressed && (!menuActive || !this._isRotateLeftButtonPressed)) {
         this._isRotateLeftButtonPressed = true;
@@ -195,6 +198,16 @@ class Gamepad implements Controller {
 
   private _isFaceButtonPressed = (gamepad: globalThis.Gamepad): boolean => {
     return [0, 1, 2, 3].some((buttonIndex) => gamepad.buttons[buttonIndex]?.pressed);
+  };
+
+  private _isFaceBackButtonPressed = (gamepad: globalThis.Gamepad): boolean => {
+    return gamepad.buttons[1]?.pressed === true;
+  };
+
+  private _isMenuActivationButtonPressed = (
+    gamepad: globalThis.Gamepad
+  ): boolean => {
+    return [0, 2, 3].some((buttonIndex) => gamepad.buttons[buttonIndex]?.pressed);
   };
 
   private _isMenuGamepadInputEngaged = (

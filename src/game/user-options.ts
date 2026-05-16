@@ -48,8 +48,8 @@ type PersistedUserOptions = Pick<
   | "videoFilterMode"
 >;
 
-const userOptionsStorageKey = "timePilot.userOptions";
-const legacyDebugStorageKey = "timePilot.debugOptions";
+export const userOptionsStorageKey = "timePilot.userOptions";
+export const legacyDebugStorageKey = "timePilot.debugOptions";
 
 const defaultKeyboardBindings: KeyboardBindings = {
   left: [37, 65],
@@ -89,6 +89,23 @@ const defaultPersistedOptions: PersistedUserOptions = {
   uiZoom: zoomDefaultPercent,
   videoFilterMode: defaultFilterMode,
 };
+
+const cloneDefaultPersistedOptions = (): PersistedUserOptions => ({
+  ...defaultPersistedOptions,
+  debug: { ...defaultPersistedOptions.debug },
+  filterSettings: { ...defaultPersistedOptions.filterSettings },
+  keyboardBindings: {
+    down: [...defaultPersistedOptions.keyboardBindings.down],
+    fire: [...defaultPersistedOptions.keyboardBindings.fire],
+    fullscreen: [...defaultPersistedOptions.keyboardBindings.fullscreen],
+    left: [...defaultPersistedOptions.keyboardBindings.left],
+    menu: [...defaultPersistedOptions.keyboardBindings.menu],
+    pause: [...defaultPersistedOptions.keyboardBindings.pause],
+    restart: [...defaultPersistedOptions.keyboardBindings.restart],
+    right: [...defaultPersistedOptions.keyboardBindings.right],
+    up: [...defaultPersistedOptions.keyboardBindings.up],
+  },
+});
 
 const normalizeZoomOption = (value: unknown): number => {
   if (typeof value !== "number" || !Number.isFinite(value)) {
@@ -365,6 +382,36 @@ var userOptions: UserOptions = {
     userOptions.videoFilterMode = "custom";
     writeUserOptions();
   },
+};
+
+export const resetUserOptions = (): void => {
+  const defaults = cloneDefaultPersistedOptions();
+  const storage = getOptionsStorage();
+
+  userOptions.debug = defaults.debug;
+  userOptions.debugContinues = defaults.debugContinues;
+  userOptions.debugLives = defaults.debugLives;
+  userOptions.enableDebug = defaults.enableDebug;
+  userOptions.controllerType = defaults.controllerType;
+  userOptions.gameZoom = defaults.gameZoom;
+  userOptions.gamepadEnabled = defaults.gamepadEnabled;
+  userOptions.filterSettings = defaults.filterSettings;
+  userOptions.keyboardBindings = defaults.keyboardBindings;
+  userOptions.language = defaults.language;
+  userOptions.masterVolume = defaults.masterVolume;
+  userOptions.musicVolume = defaults.musicVolume;
+  userOptions.effectsVolume = defaults.effectsVolume;
+  userOptions.uiZoom = defaults.uiZoom;
+  userOptions.videoFilterMode = defaults.videoFilterMode;
+
+  try {
+    storage?.removeItem(userOptionsStorageKey);
+    storage?.removeItem(legacyDebugStorageKey);
+  } catch {
+    // Resetting preferences should remain best-effort like normal persistence.
+  }
+
+  dispatchUserOptionsChanged();
 };
 
 export default userOptions;
