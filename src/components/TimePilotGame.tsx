@@ -12,11 +12,31 @@ import { useTimePilot } from "../game/use-time-pilot";
 import userOptions from "../game/user-options";
 import UpdateOverlay from "./UpdateOverlay";
 
+/**
+ * Props for the Time Pilot canvas host.
+ */
 type TimePilotGameProps = {
+  /**
+   * Enables the game's debug menu and debug-only behaviours when true.
+   */
   debug?: boolean;
+
+  /**
+   * Enables the PWA update overlay and service worker update hooks.
+   *
+   * This should only be enabled on the PWA route, where applying an update from
+   * inside the game is expected.
+   */
   enableUpdates?: boolean;
 };
 
+/**
+ * React host for the Time Pilot canvas game.
+ *
+ * The component bridges React to the canvas engine through {@link useTimePilot},
+ * mirrors user-selected video filter options into CSS custom properties, and
+ * optionally renders the update overlay used by the PWA flow.
+ */
 function TimePilotGame({ debug, enableUpdates = false }: TimePilotGameProps) {
   const [filterVersion, setFilterVersion] = useState(0);
   const [isUpdateAvailable, setIsUpdateAvailable] = useState(false);
