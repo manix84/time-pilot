@@ -14,9 +14,10 @@ import UpdateOverlay from "./UpdateOverlay";
 
 type TimePilotGameProps = {
   debug?: boolean;
+  enableUpdates?: boolean;
 };
 
-function TimePilotGame({ debug }: TimePilotGameProps) {
+function TimePilotGame({ debug, enableUpdates = false }: TimePilotGameProps) {
   const [filterVersion, setFilterVersion] = useState(0);
   const [isUpdateAvailable, setIsUpdateAvailable] = useState(false);
   const [updateOverlayState, setUpdateOverlayState] = useState<
@@ -27,21 +28,27 @@ function TimePilotGame({ debug }: TimePilotGameProps) {
   const updateOverlayStateRef = useRef(updateOverlayState);
   const rgbSplitFilterId = useId().replace(/:/g, "");
   const applyUpdate = useCallback(() => {
-    if (!isUpdateAvailableRef.current || updateOverlayStateRef.current !== "idle") {
+    if (
+      !enableUpdates ||
+      !isUpdateAvailableRef.current ||
+      updateOverlayStateRef.current !== "idle"
+    ) {
       return;
     }
 
     setUpdateOverlayState("updating");
     applyUpdateRef.current();
-  }, []);
+  }, [enableUpdates]);
   const options = useMemo(
     () => ({
       applyUpdate,
       canApplyUpdate: () =>
-        isUpdateAvailableRef.current && updateOverlayStateRef.current === "idle",
+        enableUpdates &&
+        isUpdateAvailableRef.current &&
+        updateOverlayStateRef.current === "idle",
       debug,
     }),
-    [applyUpdate, debug]
+    [applyUpdate, debug, enableUpdates]
   );
   const { setContainerElement } = useTimePilot(options);
   const activeFilterSettings = getFilterSettingsForMode(
@@ -95,6 +102,10 @@ function TimePilotGame({ debug }: TimePilotGameProps) {
   }, []);
 
   useEffect(() => {
+    if (!enableUpdates) {
+      return;
+    }
+
     const handleUpdateAvailable = (event: Event): void => {
       const updateEvent = event as CustomEvent<{ apply?: () => void }>;
 
@@ -114,7 +125,7 @@ function TimePilotGame({ debug }: TimePilotGameProps) {
       window.removeEventListener("timePilot:updateAvailable", handleUpdateAvailable);
       window.removeEventListener("timePilot:updateActivated", handleUpdateActivated);
     };
-  }, []);
+  }, [enableUpdates]);
 
   const handleUpdateWarpComplete = useCallback(() => {
     window.location.reload();
@@ -172,7 +183,7 @@ function TimePilotGame({ debug }: TimePilotGameProps) {
         <span className={"time-pilot-filter-distortion"} aria-hidden={"true"} />
         <span className={"time-pilot-filter-flicker"} aria-hidden={"true"} />
       </div>
-      {updateOverlayState !== "idle" ? (
+      {enableUpdates && updateOverlayState !== "idle" ? (
         <UpdateOverlay
           onWarpComplete={handleUpdateWarpComplete}
           state={updateOverlayState}

@@ -100,4 +100,25 @@ describe("TimePilotGame", () => {
       "true"
     );
   });
+
+  it("ignores service worker update events unless updates are enabled", async () => {
+    await act(async () => {
+      root.render(<TimePilotGame debug />);
+      await new Promise((resolve) => window.setTimeout(resolve, 5));
+    });
+
+    await act(async () => {
+      window.dispatchEvent(
+        new CustomEvent("timePilot:updateAvailable", {
+          detail: {
+            apply: vi.fn(),
+          },
+        })
+      );
+      window.dispatchEvent(new CustomEvent("timePilot:updateActivated"));
+      await Promise.resolve();
+    });
+
+    expect(container.querySelector(".time-pilot-update-overlay")).toBeNull();
+  });
 });

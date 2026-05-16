@@ -1,6 +1,6 @@
 import type { CSSProperties } from "react";
 import coverArt from "../art/cover.png";
-import { isPwaRoute, isShowcaseMode } from "./app-routing";
+import { isPwaMode, isPwaRoute, isShowcaseMode } from "./app-routing";
 import titleBanner from "../art/titleBanner.png";
 import TimePilotGame from "./components/TimePilotGame";
 
@@ -92,7 +92,7 @@ function App() {
   if (!isShowcaseMode() && isPwaRoute()) {
     return (
       <main className={"app-shell app-shell--pwa"} aria-label={"Time Pilot"}>
-        <TimePilotGame />
+        <TimePilotGame enableUpdates={isPwaMode()} />
       </main>
     );
   }

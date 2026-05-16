@@ -9,3 +9,16 @@ export const isPwaRoute = (): boolean => {
 
   return /\/pwa(?:\/index\.html|\/)?$/.test(url.pathname);
 };
+
+export const isPwaMode = (): boolean => {
+  const standaloneNavigator = navigator as Navigator & {
+    standalone?: boolean;
+  };
+
+  return (
+    standaloneNavigator.standalone === true ||
+    window.matchMedia?.("(display-mode: fullscreen)").matches === true ||
+    window.matchMedia?.("(display-mode: standalone)").matches === true ||
+    window.matchMedia?.("(display-mode: minimal-ui)").matches === true
+  );
+};
