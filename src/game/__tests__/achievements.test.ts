@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import AchievementSystem, { achievementDefinitions } from "../achievements";
+import { gameFps } from "../game-timing";
 import type {
   BonusFactoryInstance,
   BulletFactoryInstance,
@@ -409,5 +410,60 @@ describe("AchievementSystem", () => {
         "you-can-do-that",
       ])
     );
+  });
+
+  it("ignores achievement criteria while demo mode is active", () => {
+    let ticks = 0;
+    const context = createContext({ continues: 0, level: 5, lives: 1 }, () => ticks);
+    context._isDemoMode = true;
+    const achievements = new AchievementSystem(context);
+    const enemies = Array.from({ length: 5 }, createEnemy);
+    const bullets = Array.from({ length: 3 }, createBullet);
+
+    vi.mocked(context._enemies.getEntities).mockReturnValue(enemies);
+    vi.mocked(context._enemyBullets.getEntities).mockReturnValue(bullets);
+
+    achievements.onRunStarted(context._player.getData());
+    achievements.onContinueUsed(0);
+    achievements.onWaveStarted("demo-wave");
+    achievements.onEnemyProjectileSpawned({
+      tracksPlayer: true,
+      sprite: {
+        sprite: { src: "/sprites/enemies/projectiles/rocket.png" },
+        width: 12,
+        height: 9,
+      },
+    });
+    achievements.onWaveCompleted("demo-wave");
+    achievements.onRespawn();
+    achievements.onPlayerHit("enemy", context._player.getData());
+    achievements.onEnemyDestroyed({
+      enemyData: {
+        deathTick: false,
+        heading: 180,
+        hitPoints: 0,
+        level: 5,
+        posX: 10,
+        posY: 0,
+        tickOffset: 0,
+        type: "boss",
+      },
+      playerData: context._player.getData(),
+      source: "playerBullet",
+    });
+    achievements.onShootableProjectileDestroyed();
+    achievements.onLevelCompleted(5, 1, context._player.getData());
+    achievements.onLevelStarted(5);
+    ticks = 60 * 60 * gameFps;
+    achievements.update();
+
+    expect(achievements.getUnlocked()).toEqual([]);
+    expect(
+      achievements.getStatuses().find((achievement) => achievement.id === "quarter-master")
+        ?.progress
+    ).toEqual({
+      current: 0,
+      goal: 25,
+    });
   });
 });

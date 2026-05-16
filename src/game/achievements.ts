@@ -249,7 +249,7 @@ interface WaveState {
   projectileCount: number;
 }
 
-const achievementStorageKey = "timePilot.achievements";
+export const achievementStorageKey = "timePilot.achievements";
 const thisIsFineTicks = 30 * gameFps;
 const notAgainTicks = 3 * gameFps;
 const threeStrikesTicks = 60 * gameFps;
@@ -349,6 +349,10 @@ class AchievementSystem {
     });
 
   onRunStarted = (playerData: PlayerData): void => {
+    if (!this.canTrackAchievements()) {
+      return;
+    }
+
     const tick = this.getTicks();
     const previousRun = this.run;
     const startedAfterGameOver = previousRun.gameOverSeen;
@@ -375,6 +379,10 @@ class AchievementSystem {
   };
 
   onContinueUsed = (remainingContinues: number): void => {
+    if (!this.canTrackAchievements()) {
+      return;
+    }
+
     this.run.usedContinue = true;
     this.run.continuesUsed += 1;
     this.run.bossDefeatedAfterContinueUntilTick = this.getTicks() + immediateBossTicks;
@@ -396,14 +404,26 @@ class AchievementSystem {
   };
 
   onGameOver = (): void => {
+    if (!this.canTrackAchievements()) {
+      return;
+    }
+
     this.run.gameOverSeen = true;
   };
 
   onRespawn = (): void => {
+    if (!this.canTrackAchievements()) {
+      return;
+    }
+
     this.run.lastRespawnTick = this.getTicks();
   };
 
   onPlayerHit = (cause: PlayerHitCause, playerData: PlayerData): void => {
+    if (!this.canTrackAchievements()) {
+      return;
+    }
+
     const tick = this.getTicks();
 
     this.run.deathTicks = [...this.run.deathTicks, tick].filter(
@@ -452,6 +472,10 @@ class AchievementSystem {
     playerData: PlayerData;
     source: "collision" | "playerBullet";
   }): void => {
+    if (!this.canTrackAchievements()) {
+      return;
+    }
+
     if (details.enemyData.type === "boss") {
       this.onBossDefeated();
     }
@@ -471,10 +495,18 @@ class AchievementSystem {
   };
 
   onShootableProjectileDestroyed = (): void => {
+    if (!this.canTrackAchievements()) {
+      return;
+    }
+
     this.unlock("you-can-do-that");
   };
 
   onWaveStarted = (formationId: string): void => {
+    if (!this.canTrackAchievements()) {
+      return;
+    }
+
     this.waves.set(formationId, {
       hitByProjectile: false,
       missileProjectiles: 0,
@@ -484,6 +516,10 @@ class AchievementSystem {
   };
 
   onEnemyProjectileSpawned = (bulletData: Partial<BulletData>): void => {
+    if (!this.canTrackAchievements()) {
+      return;
+    }
+
     this.waves.forEach((wave) => {
       wave.projectileCount += 1;
 
@@ -497,6 +533,10 @@ class AchievementSystem {
   };
 
   onWaveCompleted = (formationId: string): void => {
+    if (!this.canTrackAchievements()) {
+      return;
+    }
+
     const wave = this.waves.get(formationId);
 
     if (!wave) {
@@ -519,6 +559,10 @@ class AchievementSystem {
   };
 
   onLevelCompleted = (level: number, nextLevel: number, playerData: PlayerData): void => {
+    if (!this.canTrackAchievements()) {
+      return;
+    }
+
     const finalLife = playerData.lives === 1;
     const wrappedToFirstLevel = nextLevel <= level;
 
@@ -550,12 +594,20 @@ class AchievementSystem {
   };
 
   onLevelStarted = (level: number): void => {
+    if (!this.canTrackAchievements()) {
+      return;
+    }
+
     if (level >= futureLevel && this.run.initialContinues <= 0) {
       this.unlock("no-safety-net");
     }
   };
 
   update = (): void => {
+    if (!this.canTrackAchievements()) {
+      return;
+    }
+
     const playerData = this.context._player.getData();
     const tick = this.getTicks();
 
@@ -582,6 +634,22 @@ class AchievementSystem {
 
     if (playerData.lives === 1 && this.isScreenChaotic()) {
       this.unlock("still-alive-somehow");
+    }
+  };
+
+  reset = (): void => {
+    this.counters = {
+      continuesUsed: 0,
+    };
+    this.era = undefined;
+    this.run = createDefaultRunState();
+    this.unlocked.clear();
+    this.waves.clear();
+
+    try {
+      getStorage()?.removeItem(achievementStorageKey);
+    } catch {
+      // Achievement persistence should never interrupt gameplay.
     }
   };
 
@@ -636,6 +704,8 @@ class AchievementSystem {
   };
 
   private getTicks = (): number => this.context._gameTicker.getTicks();
+
+  private canTrackAchievements = (): boolean => !this.context._isDemoMode;
 
   private unlock = (id: AchievementId): void => {
     if (this.unlocked.has(id)) {
