@@ -1345,7 +1345,10 @@ class Menus implements MenuSystemInstance {
         action: () => this._goToScreen("level"),
         getValue: () => this._getSelectedLevelLabel(),
       }),
-      this._createItem(i18n.menu.back, "action", 290, {
+      this._createItem(i18n.menu.playPreroll, "action", 290, {
+        action: () => this._commands.playPreroll?.(),
+      }),
+      this._createItem(i18n.menu.back, "action", 340, {
         action: () => this._goBack(),
       }),
     ];

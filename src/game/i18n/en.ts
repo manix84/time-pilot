@@ -104,6 +104,7 @@ const en = {
     off: "Off",
     on: "On",
     options: "Options",
+    playPreroll: "Play Preroll",
     pressAKey: "Press a key",
     remapControls: "Remap Controls",
     restart: "Restart",

@@ -18,6 +18,7 @@ import Hud from "./hud";
 import i18n from "./i18n";
 import Menus from "./menus";
 import Player from "./player";
+import Preroll from "./preroll";
 import PropFactory from "./prop-factory";
 import CollisionSystem from "./systems/collision";
 import RenderingSystem from "./systems/rendering";
@@ -124,6 +125,7 @@ export class TimePilot {
   private readonly coinDropSound = new SoundEngine(sounds.coinDrop.src);
   private readonly gameStartSound = new SoundEngine(sounds.gameStart.src);
   private readonly nextLevelSound = new SoundEngine(sounds.nextLevel.src);
+  private preroll?: Preroll;
   private renderingSystem!: RenderingSystemInstance;
   private spawningSystem!: SpawningSystemInstance;
   private readonly timeWarpSound = new SoundEngine(sounds.timeWarp.src);
@@ -269,6 +271,9 @@ export class TimePilot {
       previewLevel: (level) => {
         this.previewDebugLevel(level);
       },
+      playPreroll: () => {
+        this.playPreroll();
+      },
       restart: () => {
         this.restartGame();
       },
@@ -294,6 +299,7 @@ export class TimePilot {
     this.spawningSystem = new SpawningSystem(this.context);
 
     const controllerInterface = new ControllerInterface(this.context, {
+      isPrerollActive: () => this.isPrerollActive(),
       restart: () => {
         this.restartGame();
       },
@@ -302,6 +308,9 @@ export class TimePilot {
       },
       pause: () => {
         this.pauseGame();
+      },
+      skipPreroll: () => {
+        this.skipPreroll();
       },
     });
 
@@ -366,7 +375,7 @@ export class TimePilot {
 
       if (!progress.remaining) {
         this.configureGameLoop();
-        this.startDemoMode();
+        this.startPreroll();
         this.context._renderTicker.start();
       }
     });
@@ -464,6 +473,12 @@ export class TimePilot {
         return;
       }
 
+      if (this.preroll) {
+        this.context._gameArena.clear();
+        this.preroll.render();
+        return;
+      }
+
       this.renderingSystem.renderFrame();
     }, 1);
 
@@ -513,6 +528,49 @@ export class TimePilot {
       this.continueDemoIfNeeded();
       this.showGameOverIfNeeded();
     }, 1);
+  };
+
+  private startPreroll = (): void => {
+    if (this.isDestroyed) {
+      return;
+    }
+
+    this.context._gameTicker.stop();
+    this.context._menus.hide();
+    this.isDemoMode = false;
+    this.context._isDemoMode = false;
+    SoundEngine.stopAll();
+    SoundEngine.setMuted(false);
+
+    this.preroll = new Preroll(this.context._gameArena, {
+      onComplete: () => this.finishPreroll(),
+      playBulletSound: () => {
+        const sound = new SoundEngine(player.projectile.sound.src, {
+          instantDestroy: true,
+        });
+        sound.play();
+      },
+    });
+  };
+
+  private playPreroll = (): void => {
+    this.clearDebugLevelPreview();
+    this.startPreroll();
+  };
+
+  private finishPreroll = (): void => {
+    this.preroll = undefined;
+    this.isDemoMode = false;
+    this.context._isDemoMode = false;
+    this.context._menus.showStart({ startLabel: i18n.menu.start });
+  };
+
+  private skipPreroll = (): void => {
+    this.preroll?.skip();
+  };
+
+  private isPrerollActive = (): boolean => {
+    return !!this.preroll;
   };
 
   private beginGame = (): void => {

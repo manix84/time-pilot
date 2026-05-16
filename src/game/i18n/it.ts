@@ -106,6 +106,7 @@ const it: typeof en = {
     off: "No",
     on: "Si",
     options: "Opzioni",
+    playPreroll: "Riproduci preroll",
     pressAKey: "Premi un tasto",
     remapControls: "Rimappa controlli",
     restart: "Riavvia",

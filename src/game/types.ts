@@ -91,9 +91,11 @@ export interface SpriteImage extends HTMLImageElement {
 }
 
 export interface ControllerCommands {
+  isPrerollActive?: () => boolean;
   openMenu?: () => void;
   restart?: () => void;
   pause?: () => void;
+  skipPreroll?: () => void;
 }
 
 export type ControllerType = "keyboard1" | "keyboard2";
@@ -452,6 +454,7 @@ export interface MenuSystemCommands {
   getAchievements?: () => AchievementStatus[];
   getLevel?: () => number;
   previewLevel?: (level: number) => void;
+  playPreroll?: () => void;
   restart?: () => void;
   selectLevel?: (level: number) => void;
   setDebugContinues?: (continues: number) => void;

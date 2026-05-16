@@ -94,6 +94,7 @@ const fr: typeof en = {
     off: "Non",
     on: "Oui",
     options: "Options",
+    playPreroll: "Lire preroll",
     pressAKey: "Appuyez sur une touche",
     remapControls: "Reconfigurer",
     restart: "Redemarrer",

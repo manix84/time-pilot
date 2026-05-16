@@ -106,6 +106,7 @@ const nl: typeof en = {
     off: "Uit",
     on: "Aan",
     options: "Opties",
+    playPreroll: "Preroll afspelen",
     pressAKey: "Druk op een toets",
     remapControls: "Toetsen instellen",
     restart: "Herstarten",
