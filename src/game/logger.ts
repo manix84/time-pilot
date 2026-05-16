@@ -1,8 +1,20 @@
 import { type LogLevel } from "./log-levels";
 import userOptions from "./user-options";
 
+/**
+ * Active severities accepted by the logger.
+ *
+ * The persisted `"off"` option is excluded because it is a configuration
+ * state, not a log event severity.
+ */
 type ActiveLogLevel = Exclude<LogLevel, "off">;
 
+/**
+ * Numeric severity threshold for each log level.
+ *
+ * Higher values are more severe. `"off"` is set above every active severity so
+ * no event can pass the threshold while logging is disabled.
+ */
 const logPriority: Record<LogLevel, number> = {
   off: Number.POSITIVE_INFINITY,
   debug: 10,
@@ -12,6 +24,9 @@ const logPriority: Record<LogLevel, number> = {
   fatal: 50,
 };
 
+/**
+ * Browser console method used for each active severity.
+ */
 const consoleMethod: Record<ActiveLogLevel, "debug" | "info" | "warn" | "error"> = {
   debug: "debug",
   info: "info",
@@ -20,9 +35,22 @@ const consoleMethod: Record<ActiveLogLevel, "debug" | "info" | "warn" | "error">
   fatal: "error",
 };
 
+/**
+ * Checks whether a severity should be emitted for the current user option.
+ *
+ * @param level - Active severity to test.
+ * @returns Whether the event meets the configured log threshold.
+ */
 const shouldLog = (level: ActiveLogLevel): boolean =>
   logPriority[level] >= logPriority[userOptions.logLevel];
 
+/**
+ * Writes a formatted log line if the active threshold allows it.
+ *
+ * @param level - Severity for the event.
+ * @param message - Short human-readable event message.
+ * @param details - Optional structured data to pass through to the console.
+ */
 const writeLog = (
   level: ActiveLogLevel,
   message: string,
@@ -42,6 +70,13 @@ const writeLog = (
   );
 };
 
+/**
+ * Runtime logger controlled by the debug menu's Log Level setting.
+ *
+ * Logging is disabled by default for players. When enabled, messages are
+ * prefixed consistently and optional details are forwarded as structured
+ * console arguments.
+ */
 export const logger = {
   shouldLog,
   debug: (message: string, ...details: unknown[]) =>

@@ -3479,6 +3479,11 @@ class Menus implements MenuSystemInstance {
     userOptions.setOption("videoFilterMode", filterModes[nextIndex]);
   };
 
+  /**
+   * Cycles the debug logging threshold from the debug menu.
+   *
+   * @param direction - `1` selects the next level; `-1` selects the previous one.
+   */
   private _adjustLogLevel = (direction: -1 | 1): void => {
     userOptions.setOption(
       "logLevel",
