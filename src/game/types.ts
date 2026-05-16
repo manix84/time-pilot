@@ -112,6 +112,7 @@ import type {
 } from "./filter-settings";
 import type AchievementSystem from "./achievements";
 import type { AchievementStatus } from "./achievements";
+import type { StoredDataResetScope } from "./storage-reset";
 export type GameLanguage = "de" | "en" | "es" | "fr" | "it" | "nl" | "ro";
 export type ControlInputName =
   | "down"
@@ -460,6 +461,7 @@ export interface MenuSystemCommands {
   getLevel?: () => number;
   previewLevel?: (level: number) => void;
   playPreroll?: () => void;
+  resetStoredData?: (scope: StoredDataResetScope) => void;
   restart?: () => void;
   selectLevel?: (level: number) => void;
   setDebugContinues?: (continues: number) => void;

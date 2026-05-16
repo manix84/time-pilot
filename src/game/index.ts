@@ -20,6 +20,11 @@ import Menus from "./menus";
 import Player from "./player";
 import Preroll from "./preroll";
 import PropFactory from "./prop-factory";
+import {
+  resetAllStoredTimePilotData,
+  resetStoredScores,
+  type StoredDataResetScope,
+} from "./storage-reset";
 import CollisionSystem from "./systems/collision";
 import RenderingSystem from "./systems/rendering";
 import SpawningSystem from "./systems/spawning";
@@ -39,7 +44,7 @@ import type {
   RenderingSystemInstance,
   SpawningSystemInstance,
 } from "./types";
-import userOptions from "./user-options";
+import userOptions, { resetUserOptions } from "./user-options";
 
 export const DEMO_LEVEL_DURATION_MS = 30000;
 export const DEMO_LEVEL_FADE_MS = 1000;
@@ -273,6 +278,9 @@ export class TimePilot {
       },
       playPreroll: () => {
         this.playPreroll();
+      },
+      resetStoredData: (scope) => {
+        this.resetStoredData(scope);
       },
       restart: () => {
         this.restartGame();
@@ -565,6 +573,27 @@ export class TimePilot {
   private playPreroll = (): void => {
     this.clearDebugLevelPreview();
     this.startPreroll();
+  };
+
+  private resetStoredData = (scope: StoredDataResetScope): void => {
+    if (scope === "all") {
+      resetAllStoredTimePilotData();
+      resetUserOptions();
+      this.context._achievements?.reset();
+      return;
+    }
+
+    if (scope === "preferences") {
+      resetUserOptions();
+      return;
+    }
+
+    if (scope === "achievements") {
+      this.context._achievements?.reset();
+      return;
+    }
+
+    resetStoredScores();
   };
 
   private finishPreroll = (): void => {

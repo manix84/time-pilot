@@ -288,6 +288,25 @@ describe("AchievementSystem", () => {
     });
   });
 
+  it("resets runtime achievement status and persisted achievement storage", () => {
+    const context = createContext();
+    const achievements = new AchievementSystem(context);
+
+    achievements.onRunStarted(context._player.getData());
+    achievements.onContinueUsed(2);
+    achievements.reset();
+
+    expect(achievements.getUnlocked()).toEqual([]);
+    expect(
+      achievements.getStatuses().find((achievement) => achievement.id === "quarter-master")
+        ?.progress
+    ).toEqual({
+      current: 0,
+      goal: 25,
+    });
+    expect(localStorage.getItem("timePilot.achievements")).toBeNull();
+  });
+
   it("tracks clean missile-heavy waves", () => {
     const context = createContext();
     const achievements = new AchievementSystem(context);

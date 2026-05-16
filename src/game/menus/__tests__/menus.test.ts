@@ -1339,7 +1339,7 @@ describe("menu definitions", () => {
       '"debugContinues":4'
     );
 
-    for (let i = 0; i < 3; i++) {
+    for (let i = 0; i < 4; i++) {
       menus.next();
     }
 
@@ -1608,5 +1608,75 @@ describe("menu definitions", () => {
       172,
       expect.objectContaining({ align: "center" })
     );
+  });
+
+  it("opens reset data debug submenu and dispatches grouped reset actions", () => {
+    const arena = createArena();
+    const resetStoredData = vi.fn();
+    const menus = new Menus(arena, {
+      resetStoredData,
+      start: vi.fn(),
+    });
+
+    menus.showStart();
+    for (const keyCode of [38, 38, 40, 40, 37, 39, 37, 39, 66, 65]) {
+      menus.captureKey(keyCode);
+    }
+
+    menus.next();
+    menus.next();
+    menus.next();
+    menus.activate();
+
+    for (let i = 0; i < 9; i++) {
+      menus.next();
+    }
+
+    menus.activate();
+    menus.render();
+
+    expect(arena.renderText).toHaveBeenCalledWith(
+      "Reset Data",
+      0,
+      -200,
+      expect.objectContaining({ align: "center" })
+    );
+    expect(arena.renderText).toHaveBeenCalledWith(
+      "Reset Preferences",
+      expect.any(Number),
+      expect.any(Number),
+      expect.objectContaining({ align: "left" })
+    );
+    expect(arena.renderText).toHaveBeenCalledWith(
+      "Reset Scores",
+      expect.any(Number),
+      expect.any(Number),
+      expect.objectContaining({ align: "left" })
+    );
+    expect(arena.renderText).toHaveBeenCalledWith(
+      "Reset Achievements",
+      expect.any(Number),
+      expect.any(Number),
+      expect.objectContaining({ align: "left" })
+    );
+    expect(arena.renderText).toHaveBeenCalledWith(
+      "Reset All Stored Data",
+      expect.any(Number),
+      expect.any(Number),
+      expect.objectContaining({ align: "left" })
+    );
+
+    menus.activate();
+    menus.next();
+    menus.activate();
+    menus.next();
+    menus.activate();
+    menus.next();
+    menus.activate();
+
+    expect(resetStoredData).toHaveBeenNthCalledWith(1, "preferences");
+    expect(resetStoredData).toHaveBeenNthCalledWith(2, "scores");
+    expect(resetStoredData).toHaveBeenNthCalledWith(3, "achievements");
+    expect(resetStoredData).toHaveBeenNthCalledWith(4, "all");
   });
 });

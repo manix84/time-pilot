@@ -56,6 +56,7 @@ type MenuScreen =
   | "filters"
   | "filter-custom"
   | "debug"
+  | "debug-reset"
   | "demo-watch"
   | "game-over"
   | "language"
@@ -943,6 +944,8 @@ class Menus implements MenuSystemInstance {
       this._items = this._createRestartConfirmItems();
     } else if (this._screen === "debug") {
       this._items = this._createDebugItems();
+    } else if (this._screen === "debug-reset") {
+      this._items = this._createDebugResetItems();
     } else {
       this._items = this._createLevelItems();
     }
@@ -1352,7 +1355,30 @@ class Menus implements MenuSystemInstance {
       this._createItem(i18n.menu.playPreroll, "action", 290, {
         action: () => this._commands.playPreroll?.(),
       }),
-      this._createItem(i18n.menu.back, "action", 340, {
+      this._createItem(i18n.menu.resetData, "action", 340, {
+        action: () => this._goToScreen("debug-reset"),
+      }),
+      this._createItem(i18n.menu.back, "action", 390, {
+        action: () => this._goBack(),
+      }),
+    ];
+  };
+
+  private _createDebugResetItems = (): MenuItem[] => {
+    return [
+      this._createItem(i18n.menu.resetPreferences, "action", -54, {
+        action: () => this._commands.resetStoredData?.("preferences"),
+      }),
+      this._createItem(i18n.menu.resetScores, "action", -12, {
+        action: () => this._commands.resetStoredData?.("scores"),
+      }),
+      this._createItem(i18n.menu.resetAchievements, "action", 30, {
+        action: () => this._commands.resetStoredData?.("achievements"),
+      }),
+      this._createItem(i18n.menu.resetAllStoredData, "action", 72, {
+        action: () => this._commands.resetStoredData?.("all"),
+      }),
+      this._createItem(i18n.menu.back, "action", 122, {
         action: () => this._goBack(),
       }),
     ];
@@ -3181,6 +3207,10 @@ class Menus implements MenuSystemInstance {
 
     if (this._screen === "debug") {
       return i18n.menu.debug;
+    }
+
+    if (this._screen === "debug-reset") {
+      return i18n.menu.resetData;
     }
 
     if (this._screen === "demo-watch") {
