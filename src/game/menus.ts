@@ -20,7 +20,7 @@ import {
   achievementCardIconSize,
   achievementCardWidth,
 } from "./achievement-layout";
-import { logLevels, type LogLevel } from "./log-levels";
+import { getNextLogLevel } from "./log-levels";
 import palette from "./palette";
 import type { AchievementStatus } from "./achievements";
 import type {
@@ -3480,11 +3480,10 @@ class Menus implements MenuSystemInstance {
   };
 
   private _adjustLogLevel = (direction: -1 | 1): void => {
-    const currentIndex = logLevels.indexOf(userOptions.logLevel);
-    const nextIndex =
-      (currentIndex + direction + logLevels.length) % logLevels.length;
-
-    userOptions.setOption("logLevel", logLevels[nextIndex] as LogLevel);
+    userOptions.setOption(
+      "logLevel",
+      getNextLogLevel(userOptions.logLevel, direction)
+    );
   };
 
   private _setFilterSetting = (

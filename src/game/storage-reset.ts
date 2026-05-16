@@ -40,8 +40,8 @@ const removeMatchingKeys = (matches: (key: string) => boolean): void => {
     ).filter((key): key is string => !!key && matches(key));
 
     keys.forEach((key) => storage.removeItem(key));
-  } catch {
-    logger.error("Failed to remove stored data keys");
+  } catch (error) {
+    logger.error("Failed to remove stored data keys", { error });
     // Debug reset tools should never interrupt the running game.
   }
 };

@@ -422,10 +422,9 @@ describe("TimePilot engine", () => {
     pilot.context._levelProgress.bossDefeated = true;
 
     const schedules = Object.values(pilot.context._gameTicker._schedule);
-    const movement = schedules[2];
-    const rotation = schedules[3];
-    const shooting = schedules[4];
-    const cleanup = schedules[6];
+    const gameplaySchedules = schedules.slice(-5);
+    const [movement, rotation, shooting] = gameplaySchedules;
+    const cleanup = gameplaySchedules[4];
 
     cleanup.callback();
     expect(pilot.context._levelProgress.bossDefeated).toBe(false);
