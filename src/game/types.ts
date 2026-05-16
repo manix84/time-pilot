@@ -112,6 +112,7 @@ import type {
 } from "./filter-settings";
 import type AchievementSystem from "./achievements";
 import type { AchievementStatus } from "./achievements";
+import type { LogLevel } from "./log-levels";
 import type { StoredDataResetScope } from "./storage-reset";
 export type GameLanguage = "de" | "en" | "es" | "fr" | "it" | "nl" | "ro";
 export type ControlInputName =
@@ -748,6 +749,7 @@ export interface UserOptions {
   filterSettings: FilterSettings;
   keyboardBindings: KeyboardBindings;
   language: GameLanguage;
+  logLevel: LogLevel;
   masterVolume: number;
   musicVolume: number;
   effectsVolume: number;

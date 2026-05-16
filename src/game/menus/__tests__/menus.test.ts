@@ -47,6 +47,7 @@ describe("menu definitions", () => {
     userOptions.setOption("debugContinues", 3);
     userOptions.setOption("debugLives", 3);
     userOptions.setOption("language", "en");
+    userOptions.setOption("logLevel", "off");
     userOptions.setOption("gameZoom", 100);
     userOptions.setOption("masterVolume", 10);
     userOptions.setOption("uiZoom", 100);
@@ -1239,7 +1240,7 @@ describe("menu definitions", () => {
     menus.next();
     menus.activate();
 
-    for (let i = 0; i < 8; i++) {
+    for (let i = 0; i < 9; i++) {
       menus.next();
     }
 
@@ -1366,6 +1367,13 @@ describe("menu definitions", () => {
 
     menus.next();
     menus.adjust(1);
+    expect(userOptions.logLevel).toBe("debug");
+    expect(localStorage.getItem("timePilot.userOptions")).toContain(
+      '"logLevel":"debug"'
+    );
+
+    menus.next();
+    menus.adjust(1);
     expect(userOptions.debugLives).toBe(4);
     expect(localStorage.getItem("timePilot.userOptions")).toContain(
       '"debugLives":4'
@@ -1419,7 +1427,7 @@ describe("menu definitions", () => {
     menus.next();
     menus.activate();
 
-    for (let i = 0; i < 7; i++) {
+    for (let i = 0; i < 8; i++) {
       menus.next();
     }
 
@@ -1529,7 +1537,7 @@ describe("menu definitions", () => {
     menus.next();
     menus.next();
     menus.activate();
-    for (let i = 0; i < 7; i++) {
+    for (let i = 0; i < 8; i++) {
       menus.next();
     }
     menus.activate();
@@ -1667,7 +1675,7 @@ describe("menu definitions", () => {
     menus.next();
     menus.activate();
 
-    for (let i = 0; i < 9; i++) {
+    for (let i = 0; i < 10; i++) {
       menus.next();
     }
 

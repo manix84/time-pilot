@@ -43,6 +43,39 @@ describe("user options persistence", () => {
 
     expect(userOptions.keyboardBindings.up).toEqual([38, 87]);
     expect(userOptions.language).toBe("en");
+    expect(userOptions.logLevel).toBe("off");
+  });
+
+  it("normalizes persisted log levels", async () => {
+    vi.resetModules();
+    Object.defineProperty(globalThis, "localStorage", {
+      configurable: true,
+      value: createStorageMock({
+        "timePilot.userOptions": JSON.stringify({
+          logLevel: "warning",
+        }),
+      }),
+    });
+
+    const { default: userOptions } = await import("../user-options");
+
+    expect(userOptions.logLevel).toBe("warning");
+  });
+
+  it("ignores unknown persisted log levels", async () => {
+    vi.resetModules();
+    Object.defineProperty(globalThis, "localStorage", {
+      configurable: true,
+      value: createStorageMock({
+        "timePilot.userOptions": JSON.stringify({
+          logLevel: "verbose",
+        }),
+      }),
+    });
+
+    const { default: userOptions } = await import("../user-options");
+
+    expect(userOptions.logLevel).toBe("off");
   });
 
   it("ignores corrupted persisted keyboard bindings", async () => {
@@ -78,12 +111,14 @@ describe("user options persistence", () => {
 
     userOptions.setOption("uiZoom", 150);
     userOptions.setOption("language", "es");
+    userOptions.setOption("logLevel", "error");
     userOptions.setKeyboardBinding("fire", [13]);
 
     resetUserOptions();
 
     expect(userOptions.uiZoom).toBe(100);
     expect(userOptions.language).toBe("en");
+    expect(userOptions.logLevel).toBe("off");
     expect(userOptions.keyboardBindings.fire).toEqual([32]);
     expect(localStorage.getItem("timePilot.userOptions")).toBeNull();
     expect(localStorage.getItem("timePilot.debugOptions")).toBeNull();

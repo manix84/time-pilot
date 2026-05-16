@@ -16,6 +16,7 @@ import Ticker from "./engine/Ticker";
 import { gameFps } from "./game-timing";
 import Hud from "./hud";
 import i18n from "./i18n";
+import { logger } from "./logger";
 import Menus from "./menus";
 import Player from "./player";
 import Preroll from "./preroll";
@@ -150,7 +151,7 @@ export class TimePilot {
   }
 
   restartGame = (): void => {
-    window.console.info("Restarting");
+    logger.info("Restarting game");
     SoundEngine.destroyAll();
     const reset = () => {
       this.context._hud.restart();
@@ -208,11 +209,11 @@ export class TimePilot {
 
   pauseGame = (forcePause?: boolean): void => {
     if (this.context._gameTicker.isRunning || !!forcePause) {
-      window.console.info("Pausing");
+      logger.debug("Pausing game");
       this.context._gameTicker.stop();
       SoundEngine.pauseAll();
     } else {
-      window.console.info("Unpausing");
+      logger.debug("Resuming game");
       this.context._gameTicker.start();
       SoundEngine.resumePaused();
     }
@@ -220,7 +221,7 @@ export class TimePilot {
 
   resumeGame = (): void => {
     if (!this.context._gameTicker.isRunning) {
-      window.console.info("Unpausing");
+      logger.debug("Resuming game");
       this.context._gameTicker.start();
       SoundEngine.resumePaused();
     }
@@ -396,19 +397,6 @@ export class TimePilot {
         return;
       }
 
-      if (this.isDemoMode) {
-        return;
-      }
-
-      this.pauseGame();
-      window.console.warn("Stopping: 50,000 ticks");
-    }, 50000);
-
-    this.context._gameTicker.addSchedule(() => {
-      if (this.isDestroyed) {
-        return;
-      }
-
       this.updateDemoAutopilot();
     }, 1);
 
@@ -551,6 +539,7 @@ export class TimePilot {
       return;
     }
 
+    logger.info("Starting preroll");
     this.context._gameTicker.stop();
     this.context._menus.hide();
     this.isDemoMode = false;
@@ -571,11 +560,14 @@ export class TimePilot {
   };
 
   private playPreroll = (): void => {
+    logger.debug("Replaying preroll from debug menu");
     this.clearDebugLevelPreview();
     this.startPreroll();
   };
 
   private resetStoredData = (scope: StoredDataResetScope): void => {
+    logger.warning("Resetting stored data", { scope });
+
     if (scope === "all") {
       resetAllStoredTimePilotData();
       resetUserOptions();
@@ -597,11 +589,16 @@ export class TimePilot {
   };
 
   private finishPreroll = (): void => {
+    logger.info("Preroll complete");
     this.preroll = undefined;
     this.startPrerollBackground();
   };
 
   private skipPreroll = (): void => {
+    if (this.preroll) {
+      logger.info("Preroll skipped");
+    }
+
     this.preroll?.skip();
   };
 
@@ -624,6 +621,10 @@ export class TimePilot {
 
     const shouldStartFreshGame = this.isDemoMode || !this.hasStartedGame;
 
+    logger.info("Beginning game", {
+      fresh: shouldStartFreshGame,
+      level: this.selectedStartLevel,
+    });
     this.stopMenuMusic();
     SoundEngine.resumePaused();
     SoundEngine.setMuted(false);
@@ -665,6 +666,11 @@ export class TimePilot {
       this.context._player.getData("nextExtraLifeScore") ??
       scoring.extraLife.first;
 
+    logger.info("Continuing game", {
+      level,
+      remainingContinues: continues - 1,
+      score,
+    });
     this.stopMenuMusic();
     SoundEngine.resumePaused();
     SoundEngine.setMuted(false);
@@ -697,6 +703,7 @@ export class TimePilot {
   };
 
   private exitToRootMenu = (): void => {
+    logger.info("Exiting to root menu");
     SoundEngine.stopAll();
     this.context._gameTicker.stop();
     this.context._gameTicker.clearTicks();
@@ -722,6 +729,7 @@ export class TimePilot {
       return;
     }
 
+    logger.debug("Starting demo mode");
     this.stopMenuMusic();
     SoundEngine.stopAll();
     this.isDemoMode = true;
@@ -1231,6 +1239,10 @@ export class TimePilot {
     }
 
     this.hasShownGameOver = true;
+    logger.info("Showing game over", {
+      level: this.context._level,
+      score: playerData.score,
+    });
     this.context._achievements?.onGameOver();
     this.context._player.stopShooting();
     this.context._gameTicker.stop();
@@ -1249,6 +1261,10 @@ export class TimePilot {
     const startedAtTick = this.context._gameTicker.getTicks();
     const effectStartedAtTick = startedAtTick + timeWarpDelayFrames;
 
+    logger.info("Beginning time warp transition", {
+      fromLevel: this.context._level,
+      toLevel: nextLevel,
+    });
     this.timeWarpSound.stop();
     this.timeWarpSound.play();
     if (!this.isDemoMode) {
@@ -1320,6 +1336,9 @@ export class TimePilot {
       this.nextLevelSound.play();
     }
 
+    logger.info("Completing time warp transition", {
+      nextLevel: transition.nextLevel,
+    });
     this.resetWorld(transition.nextLevel, { skipIntro: false });
     this.context._player.setData("score", transition.score);
     this.context._player.setData("score", transition.score, true);

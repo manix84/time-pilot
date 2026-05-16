@@ -1,5 +1,6 @@
 import { assetPath } from "./asset-path";
 import { gameFps } from "./game-timing";
+import { logger } from "./logger";
 import type {
   BulletData,
   EnemyData,
@@ -638,6 +639,7 @@ class AchievementSystem {
   };
 
   reset = (): void => {
+    logger.warning("Resetting achievements");
     this.counters = {
       continuesUsed: 0,
     };
@@ -713,6 +715,7 @@ class AchievementSystem {
     }
 
     this.unlocked.add(id);
+    logger.info("Achievement unlocked", { id });
     this.persist();
     window.dispatchEvent(
       new CustomEvent("timePilot:achievementUnlocked", {

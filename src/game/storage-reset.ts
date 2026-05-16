@@ -1,3 +1,5 @@
+import { logger } from "./logger";
+
 export type StoredDataResetScope =
   | "achievements"
   | "all"
@@ -39,14 +41,17 @@ const removeMatchingKeys = (matches: (key: string) => boolean): void => {
 
     keys.forEach((key) => storage.removeItem(key));
   } catch {
+    logger.error("Failed to remove stored data keys");
     // Debug reset tools should never interrupt the running game.
   }
 };
 
 export const resetStoredScores = (): void => {
+  logger.warning("Resetting stored scores");
   removeMatchingKeys((key) => scoreStorageKeyPattern.test(key));
 };
 
 export const resetAllStoredTimePilotData = (): void => {
+  logger.warning("Resetting all stored Time Pilot data");
   removeMatchingKeys((key) => key.startsWith(timePilotStoragePrefix));
 };

@@ -20,6 +20,7 @@ import {
   achievementCardIconSize,
   achievementCardWidth,
 } from "./achievement-layout";
+import { logLevels, type LogLevel } from "./log-levels";
 import palette from "./palette";
 import type { AchievementStatus } from "./achievements";
 import type {
@@ -1357,7 +1358,11 @@ class Menus implements MenuSystemInstance {
         "showSteeringArc",
         114
       ),
-      this._createItem(i18n.menu.lives, "slider", 156, {
+      this._createItem(i18n.menu.logLevel, "enum", 156, {
+        getValue: () => i18n.menu.logLevels[userOptions.logLevel],
+        onAdjust: (direction) => this._adjustLogLevel(direction),
+      }),
+      this._createItem(i18n.menu.lives, "slider", 198, {
         getValue: () => `${userOptions.debugLives}`,
         onAdjust: (direction) =>
           this._setDebugLives(userOptions.debugLives + direction),
@@ -1365,7 +1370,7 @@ class Menus implements MenuSystemInstance {
         sliderMin: 1,
         sliderSteps: 99,
       }),
-      this._createItem(i18n.menu.continues, "slider", 198, {
+      this._createItem(i18n.menu.continues, "slider", 240, {
         getValue: () => `${userOptions.debugContinues}`,
         onAdjust: (direction) =>
           this._setDebugContinues(userOptions.debugContinues + direction),
@@ -1373,19 +1378,19 @@ class Menus implements MenuSystemInstance {
         sliderMin: 0,
         sliderSteps: 99,
       }),
-      this._createItem(i18n.menu.selectLevel, "action", 240, {
+      this._createItem(i18n.menu.selectLevel, "action", 282, {
         action: () => this._goToScreen("level"),
         getValue: () => this._getSelectedLevelLabel(),
         opensSubmenu: true,
       }),
-      this._createItem(i18n.menu.playPreroll, "action", 290, {
+      this._createItem(i18n.menu.playPreroll, "action", 332, {
         action: () => this._commands.playPreroll?.(),
       }),
-      this._createItem(i18n.menu.resetData, "action", 340, {
+      this._createItem(i18n.menu.resetData, "action", 382, {
         action: () => this._goToScreen("debug-reset"),
         opensSubmenu: true,
       }),
-      this._createItem(i18n.menu.back, "action", 390, {
+      this._createItem(i18n.menu.back, "action", 432, {
         action: () => this._goBack(),
       }),
     ];
@@ -3472,6 +3477,14 @@ class Menus implements MenuSystemInstance {
       (currentIndex + direction + filterModes.length) % filterModes.length;
 
     userOptions.setOption("videoFilterMode", filterModes[nextIndex]);
+  };
+
+  private _adjustLogLevel = (direction: -1 | 1): void => {
+    const currentIndex = logLevels.indexOf(userOptions.logLevel);
+    const nextIndex =
+      (currentIndex + direction + logLevels.length) % logLevels.length;
+
+    userOptions.setOption("logLevel", logLevels[nextIndex] as LogLevel);
   };
 
   private _setFilterSetting = (
