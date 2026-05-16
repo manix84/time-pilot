@@ -12,6 +12,8 @@
 - 🎛️ In-app keyboard layout and gamepad configuration.
 - 🧭 Canvas-rendered start/options/debug menus with keyboard, gamepad, mouse, and touch interaction.
 - 🔎 UI zoom and game POV zoom with automatic viewport scaling.
+- 🏆 Achievement tracking with an achievements page, progress counters, and unlock popups.
+- 🎬 Startup preroll with the author logo, Time Pilot flyby, menu-logo handoff, and instant skip input.
 - 📱 Installable offline PWA mode that launches straight into the game canvas in fullscreen display mode.
 - 🔁 Root-menu update flow that applies waiting PWA updates without interrupting play.
 - 📺 Optional CRT/VHS filter presets with custom sliders.
@@ -62,6 +64,10 @@ background and are applied only from the non-playing root menu through the
 `Update` button, followed by the player time-warp animation and a reload.
 
 The showcase/landing page remains the default browser view.
+
+Cold PWA/game starts now begin with a skippable preroll. The author logo fades
+in from black, the Time Pilot logo and player flyby play next, then the logo
+animates into the root-menu position while the attract demo starts behind it.
 
 ## 🧪 Quality Checks
 
@@ -120,10 +126,10 @@ and gamepad commands move, adjust, and activate menu items through the same
 controller interface used for gameplay. Mouse and touch input support pointer
 selection, scroll wheel or drag scrolling on overflowing menus, and scrollbar
 dragging. Options currently include volume levels, fullscreen, controls overlay,
-UI zoom, game POV zoom, video filters, language, and custom keyboard bindings.
-UI zoom can also be adjusted from the keyboard with `+`/`=` and `-`, and reset
-with `0`. Both zoom options default to 100% and range from 25% to 250% in 5%
-steps.
+UI zoom, game POV zoom, video filters, achievements, language, and custom
+keyboard bindings. UI zoom can also be adjusted from the keyboard with `+`/`=`
+and `-`, and reset with `0`. Both zoom options default to 100% and range from
+25% to 250% in 5% steps.
 
 During play, `P` pauses the game and `Escape` opens the root menu with a
 `Paused` subtitle and a `Continue` action. Pressing `Escape` again from that
@@ -137,6 +143,11 @@ visible, and any player input returns to the root menu. The demo player is not
 invincible: it can die, auto-continue, score points, dodge threats, shoot
 enemies/projectiles/bosses, and collect parachute bonuses.
 
+The root menu also includes an achievements page. It lays out achievement cards
+responsively, shows locked or unlocked sprite frames where icons exist, and
+renders persistent counter progress for achievements such as `Quarter Master`.
+Unlock notifications slide in above the credits line during play.
+
 Game over now uses a canvas dialogue. If continues remain, the primary action
 is `Continue`; otherwise it becomes `Restart`. `Exit` returns to the root menu.
 
@@ -145,7 +156,8 @@ blurbs on the left, level buttons in the centre, and animated enemy, special,
 boss, and bonus previews on the right. Focusing a level also pins the background
 demo preview to that era until the level select screen is closed. Debug overlays
 can also show hitboxes, heading and steering vectors, and an optional turn-arc
-fill for intentional moving entities.
+fill for intentional moving entities. The debug menu can also replay the
+startup preroll.
 
 Gameplay now includes score-based extra lives at 10,000 points and every
 50,000 points after, compact HUD life counts once they reach nine lives,
@@ -165,6 +177,11 @@ src/
     use-time-pilot.ts       React bridge hook
     types.ts                Shared game contracts
     constants.ts            Game tuning and asset constants
+    game-timing.ts          Shared simulation tick rate
+    achievements.ts         Achievement definitions and tracking subsystem
+    achievement-notifications.ts
+                            Canvas unlock popup renderer
+    preroll.ts              Startup author logo, flyby, and menu handoff
     __tests__/              Game module test coverage
     controller/             Keyboard and gamepad input adapters
     engine/                 Canvas arena, ticker, sound, helpers

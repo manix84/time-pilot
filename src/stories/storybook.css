@@ -100,6 +100,10 @@
   width: min(1500px, 100%);
 }
 
+.storybook-preroll-section {
+  width: min(1200px, 100%);
+}
+
 .storybook-achievements-grid {
   grid-template-columns: minmax(0, 1fr);
 }
