@@ -1,3 +1,4 @@
+import { assetPath } from "./asset-path";
 import i18n from "./i18n";
 import palette from "./palette";
 import { player } from "./constants";
@@ -9,6 +10,9 @@ type PrerollOptions = {
   playBulletSound: () => void;
 };
 
+const authorLogoFadeMs = 800;
+const authorLogoHoldMs = 1500;
+const authorLogoSize = 512;
 const logoFadeMs = 800;
 const shipFlyDurationMs = 1500;
 const postFlyoutHoldMs = 1000;
@@ -24,9 +28,11 @@ const logoSourceHeight = 96;
 const logoPerspectiveHeight = 86;
 const logoPerspectiveBottomWidth = 390;
 const shipRenderSize = player.width * 3;
+const timePilotStartMs = authorLogoFadeMs + authorLogoHoldMs + authorLogoFadeMs;
 
 class Preroll {
   private readonly arena: GameArenaInstance;
+  private readonly authorLogo = new Image();
   private readonly onComplete: () => void;
   private readonly playBulletSound: () => void;
   private readonly playerSprite = new Image();
@@ -40,6 +46,7 @@ class Preroll {
     this.arena = arena;
     this.onComplete = options.onComplete;
     this.playBulletSound = options.playBulletSound;
+    this.authorLogo.src = assetPath("logos/author.png");
     this.playerSprite.src = player.sprite.src;
     this.restart();
   }
@@ -66,11 +73,12 @@ class Preroll {
     }
 
     const elapsed = performance.now() - this.startedAt;
+    const timePilotElapsed = elapsed - timePilotStartMs;
     const flyEndMs = logoFadeMs + shipFlyDurationMs;
     const settleStartMs = flyEndMs + postFlyoutHoldMs;
     const settleProgress = Math.max(
       0,
-      Math.min(1, (elapsed - settleStartMs) / logoSettleMs)
+      Math.min(1, (timePilotElapsed - settleStartMs) / logoSettleMs)
     );
 
     if (settleProgress >= 1) {
@@ -90,13 +98,44 @@ class Preroll {
       this.arena.height
     );
 
-    this.renderLogo(context, elapsed, settleProgress);
-
-    if (elapsed >= logoFadeMs && elapsed <= flyEndMs) {
-      this.renderShip(context, elapsed - logoFadeMs);
+    if (elapsed < timePilotStartMs) {
+      this.renderAuthorLogo(context, elapsed);
+      context.restore();
+      return;
     }
 
-    this.playShotCues(elapsed);
+    this.renderLogo(context, timePilotElapsed, settleProgress);
+
+    if (timePilotElapsed >= logoFadeMs && timePilotElapsed <= flyEndMs) {
+      this.renderShip(context, timePilotElapsed - logoFadeMs);
+    }
+
+    this.playShotCues(timePilotElapsed);
+    context.restore();
+  };
+
+  private renderAuthorLogo = (
+    context: CanvasRenderingContext2D,
+    elapsed: number
+  ): void => {
+    const fadeOutStartMs = authorLogoFadeMs + authorLogoHoldMs;
+    const alpha =
+      elapsed < authorLogoFadeMs
+        ? elapsed / authorLogoFadeMs
+        : elapsed >= fadeOutStartMs
+          ? 1 - (elapsed - fadeOutStartMs) / authorLogoFadeMs
+          : 1;
+    const size = Math.min(authorLogoSize, this.arena.width * 0.9, this.arena.height * 0.9);
+
+    context.save();
+    context.globalAlpha *= Math.max(0, Math.min(1, alpha));
+    context.drawImage(
+      this.authorLogo,
+      -size / 2,
+      -size / 2,
+      size,
+      size
+    );
     context.restore();
   };
 
