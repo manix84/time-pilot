@@ -24,6 +24,7 @@ describe("TimePilotGame", () => {
     });
     container.remove();
     userOptions.setOption("enableDebug", false);
+    userOptions.setOption("keepScreenAwake", true);
     userOptions.setOption("videoFilterMode", "off");
     localStorage.clear();
     vi.restoreAllMocks();

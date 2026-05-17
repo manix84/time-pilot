@@ -74,6 +74,7 @@ const ro: typeof en = {
     fullScreen: "Ecran complet",
     gameOver: "Joc terminat",
     gameZoom: "Zoom joc",
+    keepScreenAwake: "Tine ecranul activ",
     levelShowcase: {
       basic: {
         label: "Inamici",

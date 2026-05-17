@@ -74,6 +74,7 @@ const it: typeof en = {
     fullScreen: "Schermo intero",
     gameOver: "Fine partita",
     gameZoom: "Zoom gioco",
+    keepScreenAwake: "Schermo sempre attivo",
     levelShowcase: {
       basic: {
         label: "Nemici",

@@ -42,6 +42,7 @@ type PersistedUserOptions = Pick<
   | "gameZoom"
   | "filterSettings"
   | "keyboardBindings"
+  | "keepScreenAwake"
   | "language"
   | "logLevel"
   | "masterVolume"
@@ -91,6 +92,7 @@ const defaultPersistedOptions: PersistedUserOptions = {
   gamepadEnabled: true,
   filterSettings: defaultCustomFilterSettings,
   keyboardBindings: defaultKeyboardBindings,
+  keepScreenAwake: true,
   language: "en",
   logLevel: "off",
   masterVolume: 10,
@@ -246,6 +248,7 @@ const writeUserOptions = (): void => {
         gameZoom: userOptions.gameZoom,
         filterSettings: userOptions.filterSettings,
         keyboardBindings: userOptions.keyboardBindings,
+        keepScreenAwake: userOptions.keepScreenAwake,
         language: userOptions.language,
         logLevel: userOptions.logLevel,
         masterVolume: userOptions.masterVolume,
@@ -365,6 +368,12 @@ var userOptions: UserOptions = {
 
   keyboardBindings: normalizeKeyboardBindings(storedOptions.keyboardBindings),
 
+  /**
+   * Keep the screen awake during player runs in installed PWA mode.
+   */
+  keepScreenAwake:
+    storedOptions.keepScreenAwake ?? defaultPersistedOptions.keepScreenAwake,
+
   language: storedLanguage,
   logLevel: storedLogLevel,
   masterVolume: storedOptions.masterVolume ?? defaultPersistedOptions.masterVolume,
@@ -415,6 +424,7 @@ export const resetUserOptions = (): void => {
   userOptions.gamepadEnabled = defaults.gamepadEnabled;
   userOptions.filterSettings = defaults.filterSettings;
   userOptions.keyboardBindings = defaults.keyboardBindings;
+  userOptions.keepScreenAwake = defaults.keepScreenAwake;
   userOptions.language = defaults.language;
   userOptions.logLevel = defaults.logLevel;
   userOptions.masterVolume = defaults.masterVolume;

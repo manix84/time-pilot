@@ -72,6 +72,7 @@ const en = {
     fullScreen: "Full Screen",
     gameOver: "Game Over",
     gameZoom: "Game Zoom",
+    keepScreenAwake: "Keep Screen Awake",
     levelShowcase: {
       basic: {
         label: "Enemies",

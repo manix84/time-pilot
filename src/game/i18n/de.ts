@@ -74,6 +74,7 @@ const de: typeof en = {
     fullScreen: "Vollbild",
     gameOver: "Spiel vorbei",
     gameZoom: "Spiel-Zoom",
+    keepScreenAwake: "Bildschirm wach",
     levelShowcase: {
       basic: {
         label: "Feinde",

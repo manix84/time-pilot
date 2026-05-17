@@ -179,6 +179,14 @@ export interface TimePilotOptions {
    * Requests that the installed app window closes.
    */
   exitApp?: () => void;
+  /**
+   * Returns whether screen wake lock controls should be exposed.
+   */
+  canUseScreenWakeLock?: () => boolean;
+  /**
+   * Enables or disables the runtime screen wake lock.
+   */
+  setScreenWakeLock?: (active: boolean) => void;
 }
 
 /**
@@ -223,11 +231,13 @@ export class TimePilot {
     this.options = {
       applyUpdate: options.applyUpdate ?? (() => {}),
       canApplyUpdate: options.canApplyUpdate ?? (() => false),
+      canUseScreenWakeLock: options.canUseScreenWakeLock ?? (() => false),
       controllerType: options.controllerType ?? userOptions.controllerType,
       debug: options.debug ?? userOptions.enableDebug,
       enterImmersiveMode: options.enterImmersiveMode ?? (() => {}),
       exitApp: options.exitApp ?? (() => {}),
       gamepadEnabled: options.gamepadEnabled ?? userOptions.gamepadEnabled,
+      setScreenWakeLock: options.setScreenWakeLock ?? (() => {}),
     };
 
     this.context._level = 1;
@@ -237,6 +247,7 @@ export class TimePilot {
   restartGame = (): void => {
     logger.info("Restarting game");
     this.clearGameSessionSnapshot();
+    this.releaseScreenWakeLock();
     SoundEngine.destroyAll();
     const reset = () => {
       this.context._hud.restart();
@@ -269,6 +280,7 @@ export class TimePilot {
   destroyGame = (): void => {
     this.saveGameSessionSnapshot();
     this.removeSessionSnapshotListeners();
+    this.releaseScreenWakeLock();
     this.isDestroyed = true;
     this.isDemoMode = false;
     this.context._isDemoMode = false;
@@ -299,10 +311,12 @@ export class TimePilot {
       logger.info("Pausing game");
       this.context._gameTicker.stop();
       SoundEngine.pauseAll();
+      this.syncScreenWakeLock();
     } else {
       logger.info("Resuming game");
       this.context._gameTicker.start();
       SoundEngine.resumePaused();
+      this.syncScreenWakeLock();
     }
   };
 
@@ -311,6 +325,7 @@ export class TimePilot {
       logger.info("Resuming game");
       this.context._gameTicker.start();
       SoundEngine.resumePaused();
+      this.syncScreenWakeLock();
     }
   };
 
@@ -348,6 +363,7 @@ export class TimePilot {
         this.options.applyUpdate();
       },
       canApplyUpdate: () => this.options.canApplyUpdate(),
+      canUseScreenWakeLock: () => this.options.canUseScreenWakeLock(),
       canWatchDemo: () => this.isDemoMode,
       clearLevelPreview: () => {
         this.clearDebugLevelPreview();
@@ -386,6 +402,9 @@ export class TimePilot {
       },
       setDebugLives: (lives) => {
         this.context._player.setData("lives", lives, true);
+      },
+      syncScreenWakeLock: () => {
+        this.syncScreenWakeLock();
       },
       start: () => {
         this.beginGame();
@@ -824,6 +843,23 @@ export class TimePilot {
     }
   };
 
+  private syncScreenWakeLock = (): void => {
+    this.options.setScreenWakeLock(
+      userOptions.keepScreenAwake &&
+        this.hasStartedGame &&
+        !this.hasShownGameOver &&
+        !this.isDemoMode &&
+        !this.preroll
+    );
+  };
+
+  /**
+   * Explicitly releases PWA wake lock for demo, game-over, teardown, and reset flows.
+   */
+  private releaseScreenWakeLock = (): void => {
+    this.options.setScreenWakeLock(false);
+  };
+
   private restoreGameSessionSnapshot = (): boolean => {
     const snapshot = this.readGameSessionSnapshot();
 
@@ -865,6 +901,7 @@ export class TimePilot {
       startLabel: i18n.menu.continue,
     });
     this.context._gameTicker.stop();
+    this.syncScreenWakeLock();
 
     return true;
   };
@@ -933,6 +970,7 @@ export class TimePilot {
     }
 
     this.context._gameTicker.start();
+    this.syncScreenWakeLock();
   };
 
   private startNewGame = (): void => {
@@ -983,6 +1021,7 @@ export class TimePilot {
     this.spawningSystem.addInitialProps();
     this.hasSeededInitialProps = true;
     this.context._gameTicker.start();
+    this.syncScreenWakeLock();
   };
 
   private seedRespawnProps = (): void => {
@@ -1015,6 +1054,7 @@ export class TimePilot {
 
     this.configureGameLoop();
     this.startDemoMode();
+    this.releaseScreenWakeLock();
   };
 
   private startDemoMode = (): void => {
@@ -1035,6 +1075,7 @@ export class TimePilot {
     this.hasSeededInitialProps = true;
     this.context._menus.showStart({ startLabel: i18n.menu.start });
     this.context._gameTicker.start();
+    this.releaseScreenWakeLock();
   };
 
   private watchDemo = (): void => {
@@ -1540,6 +1581,7 @@ export class TimePilot {
     this.context._achievements?.onGameOver();
     this.context._player.stopShooting();
     this.context._gameTicker.stop();
+    this.releaseScreenWakeLock();
     this.playMenuMusic();
     this.context._menus.showGameOver();
   };

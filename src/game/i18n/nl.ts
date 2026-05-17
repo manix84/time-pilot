@@ -74,6 +74,7 @@ const nl: typeof en = {
     fullScreen: "Volledig scherm",
     gameOver: "Spel voorbij",
     gameZoom: "Gamezoom",
+    keepScreenAwake: "Scherm wakker houden",
     levelShowcase: {
       basic: {
         label: "Vijanden",

@@ -45,6 +45,7 @@ describe("menu definitions", () => {
     userOptions.setOption("debugLives", 3);
     userOptions.setOption("language", "en");
     userOptions.setOption("logLevel", "off");
+    userOptions.setOption("keepScreenAwake", true);
     userOptions.setOption("gameZoom", 100);
     userOptions.setOption("masterVolume", 10);
     userOptions.setOption("uiZoom", 100);
@@ -716,6 +717,56 @@ describe("menu definitions", () => {
 
     menus.activate();
     expect(userOptions.debug.showControlsOverlay).toBe(true);
+  });
+
+  it("shows the keep-awake option only when screen wake lock is available", () => {
+    const arena = createArena();
+    const syncScreenWakeLock = vi.fn();
+    const browserMenus = new Menus(arena, { start: vi.fn() });
+    const pwaMenus = new Menus(arena, {
+      canUseScreenWakeLock: () => true,
+      start: vi.fn(),
+      syncScreenWakeLock,
+    });
+
+    browserMenus.showStart();
+    browserMenus.next();
+    browserMenus.activate();
+    browserMenus.render();
+
+    expect(arena.renderText).not.toHaveBeenCalledWith(
+      "Keep Screen Awake",
+      expect.any(Number),
+      expect.any(Number),
+      expect.anything()
+    );
+
+    vi.mocked(arena.renderText).mockClear();
+    pwaMenus.showStart();
+    pwaMenus.next();
+    pwaMenus.activate();
+    for (let i = 0; i < 7; i++) {
+      pwaMenus.next();
+    }
+    pwaMenus.render();
+
+    expect(arena.renderText).toHaveBeenCalledWith(
+      "Keep Screen Awake",
+      expect.any(Number),
+      expect.any(Number),
+      expect.objectContaining({ align: "left" })
+    );
+    expect(arena.renderText).toHaveBeenCalledWith(
+      "On",
+      expect.any(Number),
+      expect.any(Number),
+      expect.objectContaining({ align: "right" })
+    );
+
+    pwaMenus.activate();
+
+    expect(userOptions.keepScreenAwake).toBe(false);
+    expect(syncScreenWakeLock).toHaveBeenCalled();
   });
 
   it("opens filters, changes presets, edits custom values, and resets", () => {

@@ -30,7 +30,7 @@ const featureHighlights = [
   {
     title: "Offline PWA",
     details:
-      "Install the canvas-only app, launch standalone, enter fullscreen play, and keep core sprites and sounds cached.",
+      "Install the canvas-only app, launch standalone, enter fullscreen play, and keep the screen awake during runs.",
   },
   {
     title: "Safe updates",
@@ -75,7 +75,7 @@ const systemUpdates = [
   "Spatial entity audio for bosses, rockets, bullets, bombs, and explosions.",
   "Skippable author and Time Pilot preroll before cold-start root-menu entry.",
   "Page-lifecycle session snapshots that restore interrupted player runs without per-frame storage writes.",
-  "Standalone PWA launch with fullscreen, landscape, and installed-app exit requests from player actions.",
+  "Standalone PWA launch with fullscreen, landscape, keep-awake, and installed-app exit requests from player actions.",
   "Achievement subsystem with page rendering, counter progress, and unlock popups.",
   "Watch Demo mode with a mortal autopilot that scores, dodges, shoots, continues, and collects bonuses.",
   "Debug-menu runtime logging and confirmed reset actions for stored preferences, scores, and achievements.",
@@ -104,6 +104,7 @@ function App() {
         <TimePilotGame
           enableAppExit={isPwaMode()}
           enableImmersiveMode
+          enableScreenWakeLock={isPwaMode()}
           enableUpdates={isPwaMode()}
         />
       </main>

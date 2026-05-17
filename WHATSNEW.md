@@ -121,6 +121,8 @@
   Start/Continue action on the `/pwa/` route.
 - Added an installed-PWA-only root-menu Exit action that asks the browser to
   close the app window where the platform allows it.
+- Added an installed-PWA-only Keep Screen Awake option, enabled by default,
+  that uses the Screen Wake Lock API during active or paused player runs.
 - Moved the controls overlay toggle into Options and hid the unfinished Control
   Type row behind an opt-in URL flag.
 - Added touch-friendly menu behavior, including scrollable menu containers,

@@ -17,6 +17,7 @@
 - 💾 Session restore that skips the preroll and returns interrupted runs to a paused Continue menu.
 - 🛠️ Debug tools for level select, preroll replay, runtime logging, and stored-data resets.
 - 📱 Installable offline PWA mode that launches as a standalone app and enters fullscreen play from Start/Continue.
+- 🔆 Optional PWA keep-awake mode, on by default, for active or paused player runs.
 - 🔁 Root-menu update flow that applies waiting PWA updates without interrupting play.
 - 📺 Optional CRT/VHS filter presets with custom sliders.
 - 🌍 Localized menus, level blurbs, and level showcase labels.
@@ -70,6 +71,12 @@ followed by the player time-warp animation and a reload.
 When the game is running as an installed PWA, the root menu also shows an
 `Exit` action. It asks the browser to close the app window; platforms that do
 not allow scripted app closure may ignore the request.
+
+Installed PWA options also include `Keep Screen Awake`. It is enabled by
+default and uses the browser Screen Wake Lock API during active or paused player
+runs so the display does not sleep mid-game. It releases automatically outside
+real gameplay, such as demo, game-over, reset, and teardown states, and silently
+falls back on browsers that do not support wake locks.
 
 The showcase/landing page remains the default browser view.
 
@@ -202,6 +209,7 @@ src/
     constants.ts            Game tuning and asset constants
     game-timing.ts          Shared simulation tick rate
     logger.ts               Debug-menu-controlled runtime logger
+    screen-wake-lock.ts     Installed-PWA keep-awake helper
     storage-reset.ts        Debug reset helpers for persisted data
     achievements.ts         Achievement definitions and tracking subsystem
     achievement-notifications.ts

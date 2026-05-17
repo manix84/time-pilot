@@ -1077,42 +1077,48 @@ class Menus implements MenuSystemInstance {
 
   private _createOptionsItems = (): MenuItem[] => {
     const showControlType = this._shouldShowControlTypeOption();
-    const remapControlsY = showControlType ? 366 : 324;
-    const backY = showControlType ? 416 : 374;
-    const items = [
-      this._createItem(i18n.menu.masterVolume, "slider", -54, {
+    const showWakeLock = this._commands.canUseScreenWakeLock?.() ?? false;
+    let itemY = -54;
+    const nextItemY = (): number => {
+      const y = itemY;
+
+      itemY += 42;
+      return y;
+    };
+    const items: MenuItem[] = [
+      this._createItem(i18n.menu.masterVolume, "slider", nextItemY(), {
         getValue: () => `${userOptions.masterVolume}`,
         onAdjust: (direction) => this._adjustVolume("masterVolume", direction),
         onSetValue: (value) => this._setVolume("masterVolume", value),
       }),
-      this._createItem(i18n.menu.musicVolume, "slider", -12, {
+      this._createItem(i18n.menu.musicVolume, "slider", nextItemY(), {
         getValue: () => `${userOptions.musicVolume}`,
         onAdjust: (direction) => this._adjustVolume("musicVolume", direction),
         onSetValue: (value) => this._setVolume("musicVolume", value),
       }),
-      this._createItem(i18n.menu.effectsVolume, "slider", 30, {
+      this._createItem(i18n.menu.effectsVolume, "slider", nextItemY(), {
         getValue: () => `${userOptions.effectsVolume}`,
         onAdjust: (direction) => this._adjustVolume("effectsVolume", direction),
         onSetValue: (value) => this._setVolume("effectsVolume", value),
       }),
-      this._createItem(i18n.menu.uiZoom, "slider", 72, {
+      this._createItem(i18n.menu.uiZoom, "slider", nextItemY(), {
         getValue: () => formatUiZoom(),
         onAdjust: (direction) => this.adjustUiZoom(direction),
         onSetValue: (value) => this._setUiZoom(this._getZoomValueFromStep(value)),
         sliderSteps: this._getZoomSliderSteps(),
       }),
-      this._createItem(i18n.menu.gameZoom, "slider", 114, {
+      this._createItem(i18n.menu.gameZoom, "slider", nextItemY(), {
         getValue: () => formatGameZoom(),
         onAdjust: (direction) => this._adjustGameZoom(direction),
         onSetValue: (value) => this._setGameZoom(this._getZoomValueFromStep(value)),
         sliderSteps: this._getZoomSliderSteps(),
       }),
-      this._createItem(i18n.menu.filters, "action", 156, {
+      this._createItem(i18n.menu.filters, "action", nextItemY(), {
         getValue: () => filterModeLabels[userOptions.videoFilterMode],
         action: () => this._goToScreen("filters"),
         opensSubmenu: true,
       }),
-      this._createItem(i18n.menu.fullScreen, "toggle", 198, {
+      this._createItem(i18n.menu.fullScreen, "toggle", nextItemY(), {
         disabled:
           this._gameArena.isFullScreenLocked() ||
           !this._gameArena.canToggleFullScreen(),
@@ -1120,22 +1126,35 @@ class Menus implements MenuSystemInstance {
           this._gameArena.isFullScreen() ? i18n.menu.on : i18n.menu.off,
         onAdjust: () => this._gameArena.toggleFullScreen(),
       }),
+    ];
+
+    if (showWakeLock) {
+      items.push(
+        this._createItem(i18n.menu.keepScreenAwake, "toggle", nextItemY(), {
+          getValue: () =>
+            userOptions.keepScreenAwake ? i18n.menu.on : i18n.menu.off,
+          onAdjust: () => this._toggleKeepScreenAwake(),
+        })
+      );
+    }
+
+    items.push(
       this._createToggleItem(
         i18n.menu.showControlsOverlay,
         "showControlsOverlay",
-        240
+        nextItemY()
       ),
-      this._createItem(i18n.menu.language, "action", 282, {
+      this._createItem(i18n.menu.language, "action", nextItemY(), {
         getValue: () => getLanguageName(userOptions.language),
         languageFlag: userOptions.language,
         action: () => this._goToScreen("language"),
         opensSubmenu: true,
-      }),
-    ];
+      })
+    );
 
     if (showControlType) {
       items.push(
-        this._createItem(i18n.menu.controlType, "enum", 324, {
+        this._createItem(i18n.menu.controlType, "enum", nextItemY(), {
           getValue: () =>
             userOptions.controllerType === "keyboard1"
               ? i18n.menu.directional
@@ -1146,11 +1165,11 @@ class Menus implements MenuSystemInstance {
     }
 
     items.push(
-      this._createItem(i18n.menu.remapControls, "action", remapControlsY, {
+      this._createItem(i18n.menu.remapControls, "action", nextItemY(), {
         action: () => this._goToScreen("controls"),
         opensSubmenu: true,
       }),
-      this._createItem(i18n.menu.back, "action", backY, {
+      this._createItem(i18n.menu.back, "action", itemY + 8, {
         action: () => this._goBack(),
       })
     );
@@ -3588,6 +3607,11 @@ class Menus implements MenuSystemInstance {
       "gameZoom",
       Math.max(zoomMinPercent, Math.min(zoomMaxPercent, value))
     );
+  };
+
+  private _toggleKeepScreenAwake = (): void => {
+    userOptions.setOption("keepScreenAwake", !userOptions.keepScreenAwake);
+    this._commands.syncScreenWakeLock?.();
   };
 
   private _getZoomSliderSteps = (): number => {

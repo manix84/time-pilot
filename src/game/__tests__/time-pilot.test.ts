@@ -23,6 +23,7 @@ describe("TimePilot engine", () => {
     userOptions.setOption("controllerType", "keyboard1");
     userOptions.setOption("gameZoom", 100);
     userOptions.setOption("gamepadEnabled", true);
+    userOptions.setOption("keepScreenAwake", true);
     userOptions.setOption("language", "en");
     userOptions.setOption("logLevel", "off");
     userOptions.setOption("uiZoom", 100);
@@ -93,6 +94,33 @@ describe("TimePilot engine", () => {
     expect(enterImmersiveMode).toHaveBeenCalled();
 
     game.destroyGame();
+  });
+
+  it("keeps the screen wake lock active while gameplay is running or paused", async () => {
+    const setScreenWakeLock = vi.fn();
+    const game = new TimePilot(host, {
+      debug: true,
+      gamepadEnabled: false,
+      setScreenWakeLock,
+    });
+    const pilot = game as unknown as {
+      beginGame: () => void;
+    };
+
+    await new Promise((resolve) => window.setTimeout(resolve, 5));
+
+    pilot.beginGame();
+    expect(setScreenWakeLock).toHaveBeenLastCalledWith(true);
+
+    game.pauseGame(true);
+    expect(setScreenWakeLock).toHaveBeenLastCalledWith(true);
+
+    userOptions.setOption("keepScreenAwake", false);
+    game.resumeGame();
+    expect(setScreenWakeLock).toHaveBeenLastCalledWith(false);
+
+    game.destroyGame();
+    expect(setScreenWakeLock).toHaveBeenLastCalledWith(false);
   });
 
   it("defaults the active controls overlay to touch on touch devices", async () => {

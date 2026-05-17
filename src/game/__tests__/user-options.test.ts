@@ -42,6 +42,7 @@ describe("user options persistence", () => {
     const { default: userOptions } = await import("../user-options");
 
     expect(userOptions.keyboardBindings.up).toEqual([38, 87]);
+    expect(userOptions.keepScreenAwake).toBe(true);
     expect(userOptions.language).toBe("en");
     expect(userOptions.logLevel).toBe("off");
   });
@@ -111,12 +112,14 @@ describe("user options persistence", () => {
 
     userOptions.setOption("uiZoom", 150);
     userOptions.setOption("language", "es");
+    userOptions.setOption("keepScreenAwake", false);
     userOptions.setOption("logLevel", "error");
     userOptions.setKeyboardBinding("fire", [13]);
 
     resetUserOptions();
 
     expect(userOptions.uiZoom).toBe(100);
+    expect(userOptions.keepScreenAwake).toBe(true);
     expect(userOptions.language).toBe("en");
     expect(userOptions.logLevel).toBe("off");
     expect(userOptions.keyboardBindings.fire).toEqual([32]);
