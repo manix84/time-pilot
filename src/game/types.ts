@@ -498,6 +498,7 @@ export interface MenuSystemCommands {
   canApplyUpdate?: () => boolean;
   clearLevelPreview?: () => void;
   continueGame?: () => void;
+  exitApp?: () => void;
   exitToRoot?: () => void;
   getContinues?: () => number;
   getAchievements?: () => AchievementStatus[];

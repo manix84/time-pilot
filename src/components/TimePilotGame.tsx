@@ -7,6 +7,7 @@ import {
   useState,
   type CSSProperties,
 } from "react";
+import { exitInstalledApp } from "../game/app-exit";
 import { getFilterSettingsForMode } from "../game/filter-settings";
 import { enterGameFullscreen } from "../game/immersive-mode";
 import { useTimePilot } from "../game/use-time-pilot";
@@ -34,6 +35,11 @@ type TimePilotGameProps = {
    * Requests fullscreen and landscape orientation when play starts.
    */
   enableImmersiveMode?: boolean;
+
+  /**
+   * Shows the root-menu Exit action and requests app closure when used.
+   */
+  enableAppExit?: boolean;
 };
 
 /**
@@ -45,6 +51,7 @@ type TimePilotGameProps = {
  */
 function TimePilotGame({
   debug,
+  enableAppExit = false,
   enableImmersiveMode = false,
   enableUpdates = false,
 }: TimePilotGameProps) {
@@ -80,8 +87,9 @@ function TimePilotGame({
       enterImmersiveMode: enableImmersiveMode
         ? enterGameFullscreen
         : undefined,
+      exitApp: enableAppExit ? exitInstalledApp : undefined,
     }),
-    [applyUpdate, debug, enableImmersiveMode, enableUpdates]
+    [applyUpdate, debug, enableAppExit, enableImmersiveMode, enableUpdates]
   );
   const { setContainerElement } = useTimePilot(options);
   const activeFilterSettings = getFilterSettingsForMode(

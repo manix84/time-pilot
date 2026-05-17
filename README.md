@@ -67,6 +67,10 @@ worker on load, reconnect, and tab focus. Updates wait in the background and
 are applied only from the non-playing root menu through the `Update` button,
 followed by the player time-warp animation and a reload.
 
+When the game is running as an installed PWA, the root menu also shows an
+`Exit` action. It asks the browser to close the app window; platforms that do
+not allow scripted app closure may ignore the request.
+
 The showcase/landing page remains the default browser view.
 
 Cold PWA/game starts now begin with a skippable preroll. The author logo fades

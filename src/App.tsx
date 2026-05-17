@@ -75,7 +75,7 @@ const systemUpdates = [
   "Spatial entity audio for bosses, rockets, bullets, bombs, and explosions.",
   "Skippable author and Time Pilot preroll before cold-start root-menu entry.",
   "Page-lifecycle session snapshots that restore interrupted player runs without per-frame storage writes.",
-  "Standalone PWA launch with fullscreen and landscape requests from player start actions.",
+  "Standalone PWA launch with fullscreen, landscape, and installed-app exit requests from player actions.",
   "Achievement subsystem with page rendering, counter progress, and unlock popups.",
   "Watch Demo mode with a mortal autopilot that scores, dodges, shoots, continues, and collects bonuses.",
   "Debug-menu runtime logging and confirmed reset actions for stored preferences, scores, and achievements.",
@@ -102,6 +102,7 @@ function App() {
     return (
       <main className={"app-shell app-shell--pwa"} aria-label={"Time Pilot"}>
         <TimePilotGame
+          enableAppExit={isPwaMode()}
           enableImmersiveMode
           enableUpdates={isPwaMode()}
         />

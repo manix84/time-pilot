@@ -1028,6 +1028,15 @@ class Menus implements MenuSystemInstance {
           action: () => this._commands.applyUpdate?.(),
         })
       );
+      itemY += 50;
+    }
+
+    if (this._commands.exitApp) {
+      items.push(
+        this._createItem(i18n.menu.exit, "action", itemY, {
+          action: () => this._commands.exitApp?.(),
+        })
+      );
     }
 
     return items;

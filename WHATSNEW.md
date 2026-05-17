@@ -119,6 +119,8 @@
 - Switched the PWA manifest to standalone display mode with fullscreen as an
   override, and request fullscreen/landscape presentation from the player's
   Start/Continue action on the `/pwa/` route.
+- Added an installed-PWA-only root-menu Exit action that asks the browser to
+  close the app window where the platform allows it.
 - Moved the controls overlay toggle into Options and hid the unfinished Control
   Type row behind an opt-in URL flag.
 - Added touch-friendly menu behavior, including scrollable menu containers,

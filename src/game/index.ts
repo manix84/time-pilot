@@ -175,6 +175,10 @@ export interface TimePilotOptions {
    * Requests fullscreen/landscape presentation from a player action.
    */
   enterImmersiveMode?: () => Promise<void> | void;
+  /**
+   * Requests that the installed app window closes.
+   */
+  exitApp?: () => void;
 }
 
 /**
@@ -222,6 +226,7 @@ export class TimePilot {
       controllerType: options.controllerType ?? userOptions.controllerType,
       debug: options.debug ?? userOptions.enableDebug,
       enterImmersiveMode: options.enterImmersiveMode ?? (() => {}),
+      exitApp: options.exitApp ?? (() => {}),
       gamepadEnabled: options.gamepadEnabled ?? userOptions.gamepadEnabled,
     };
 
@@ -352,6 +357,10 @@ export class TimePilot {
       },
       exitToRoot: () => {
         this.exitToRootMenu();
+      },
+      exitApp: () => {
+        this.saveGameSessionSnapshot();
+        this.options.exitApp();
       },
       getContinues: () => this.context._player.getData("continues") ?? 0,
       getAchievements: () => this.context._achievements?.getStatuses() ?? [],

@@ -446,6 +446,60 @@ describe("TimePilot engine", () => {
     game.destroyGame();
   });
 
+  it("saves a playable session snapshot before exiting the installed app", async () => {
+    const exitApp = vi.fn();
+    const game = new TimePilot(host, {
+      exitApp,
+      gamepadEnabled: false,
+    });
+    const pilot = game as unknown as {
+      beginGame: () => void;
+      context: {
+        _menus: {
+          activate: () => void;
+          next: () => void;
+          showStart: (options?: { startLabel?: string }) => void;
+        };
+        _player: {
+          setData: (key: string, value: unknown, isLastKnownGood?: boolean) => void;
+        };
+      };
+    };
+
+    await new Promise((resolve) => window.setTimeout(resolve, 5));
+
+    pilot.beginGame();
+    pilot.context._player.setData("score", 23456, true);
+    pilot.context._player.setData("lives", 2, true);
+    pilot.context._player.setData("continues", 1, true);
+    pilot.context._player.setData("posX", 64);
+    pilot.context._player.setData("posY", -12);
+    pilot.context._menus.showStart({ startLabel: "Continue" });
+    for (let i = 0; i < 3; i++) {
+      pilot.context._menus.next();
+    }
+    pilot.context._menus.activate();
+
+    const snapshot = JSON.parse(
+      localStorage.getItem("timePilot.gameSession") ?? "{}"
+    );
+
+    expect(exitApp).toHaveBeenCalled();
+    expect(snapshot).toMatchObject({
+      level: 1,
+      player: {
+        continues: 1,
+        lives: 2,
+        posX: 64,
+        posY: -12,
+        score: 23456,
+      },
+      version: 1,
+    });
+
+    game.destroyGame();
+  });
+
   it("restores a saved session paused at the root menu", async () => {
     vi.stubGlobal(
       "Image",

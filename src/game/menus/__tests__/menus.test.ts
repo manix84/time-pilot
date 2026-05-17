@@ -90,6 +90,42 @@ describe("menu definitions", () => {
     expect(start).toHaveBeenCalled();
   });
 
+  it("adds root-menu exit only when app exit is available", () => {
+    const arena = createArena();
+    const exitApp = vi.fn();
+    const browserMenus = new Menus(arena, { start: vi.fn() });
+    const pwaMenus = new Menus(arena, {
+      exitApp,
+      start: vi.fn(),
+    });
+
+    browserMenus.showStart();
+    browserMenus.render();
+
+    expect(arena.renderText).not.toHaveBeenCalledWith(
+      "Exit",
+      expect.any(Number),
+      expect.any(Number),
+      expect.anything()
+    );
+
+    vi.mocked(arena.renderText).mockClear();
+    pwaMenus.showStart();
+    for (let i = 0; i < 3; i++) {
+      pwaMenus.next();
+    }
+    pwaMenus.render();
+    pwaMenus.activate();
+
+    expect(arena.renderText).toHaveBeenCalledWith(
+      "Exit",
+      expect.any(Number),
+      expect.any(Number),
+      expect.anything()
+    );
+    expect(exitApp).toHaveBeenCalled();
+  });
+
   it("supports pointer selection and click activation", () => {
     const start = vi.fn();
     const menus = new Menus(createArena(), { start });
