@@ -47,6 +47,7 @@ type PersistedUserOptions = Pick<
   | "logLevel"
   | "masterVolume"
   | "musicVolume"
+  | "touchSteeringOverlay"
   | "uiZoom"
   | "videoFilterMode"
 >;
@@ -98,6 +99,7 @@ const defaultPersistedOptions: PersistedUserOptions = {
   masterVolume: 10,
   musicVolume: 8,
   effectsVolume: 8,
+  touchSteeringOverlay: true,
   uiZoom: zoomDefaultPercent,
   videoFilterMode: defaultFilterMode,
 };
@@ -253,6 +255,7 @@ const writeUserOptions = (): void => {
         logLevel: userOptions.logLevel,
         masterVolume: userOptions.masterVolume,
         musicVolume: userOptions.musicVolume,
+        touchSteeringOverlay: userOptions.touchSteeringOverlay,
         uiZoom: userOptions.uiZoom,
         videoFilterMode: userOptions.videoFilterMode,
       } satisfies PersistedUserOptions)
@@ -379,6 +382,12 @@ var userOptions: UserOptions = {
   masterVolume: storedOptions.masterVolume ?? defaultPersistedOptions.masterVolume,
   musicVolume: storedOptions.musicVolume ?? defaultPersistedOptions.musicVolume,
   effectsVolume: storedOptions.effectsVolume ?? defaultPersistedOptions.effectsVolume,
+  /**
+   * Display a live touch steering guide during gameplay.
+   */
+  touchSteeringOverlay:
+    storedOptions.touchSteeringOverlay ??
+    defaultPersistedOptions.touchSteeringOverlay,
   uiZoom: normalizeZoomOption(storedOptions.uiZoom),
   videoFilterMode: storedFilterMode,
 
@@ -430,6 +439,7 @@ export const resetUserOptions = (): void => {
   userOptions.masterVolume = defaults.masterVolume;
   userOptions.musicVolume = defaults.musicVolume;
   userOptions.effectsVolume = defaults.effectsVolume;
+  userOptions.touchSteeringOverlay = defaults.touchSteeringOverlay;
   userOptions.uiZoom = defaults.uiZoom;
   userOptions.videoFilterMode = defaults.videoFilterMode;
 

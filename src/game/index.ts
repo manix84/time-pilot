@@ -144,6 +144,8 @@ const createControlInputState = (
   restart: false,
   right: false,
   up: false,
+  touchCurrent: null,
+  touchOrigin: null,
   activeController,
 });
 
@@ -1439,6 +1441,8 @@ export class TimePilot {
     inputState.restart = false;
     inputState.rotateLeft = false;
     inputState.rotateRight = false;
+    inputState.touchCurrent = null;
+    inputState.touchOrigin = null;
   };
 
   private clearInputState = (inputState: ControlInputState): void => {

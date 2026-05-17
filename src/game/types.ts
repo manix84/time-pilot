@@ -173,6 +173,8 @@ export type ControlInputState = Record<ControlInputName, boolean> & {
   activeController: ControlInputSource;
   rotateLeft?: boolean;
   rotateRight?: boolean;
+  touchCurrent?: Coordinates | null;
+  touchOrigin?: Coordinates | null;
 };
 
 export interface KeyboardBindings {
@@ -803,6 +805,10 @@ export interface UserOptions {
    * Keeps the screen awake during active or paused player runs when supported.
    */
   keepScreenAwake: boolean;
+  /**
+   * Shows the live touch steering guide during gameplay.
+   */
+  touchSteeringOverlay: boolean;
   filterSettings: FilterSettings;
   keyboardBindings: KeyboardBindings;
   language: GameLanguage;

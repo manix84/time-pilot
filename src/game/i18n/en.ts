@@ -73,6 +73,7 @@ const en = {
     gameOver: "Game Over",
     gameZoom: "Game Zoom",
     keepScreenAwake: "Keep Screen Awake",
+    touchSteeringOverlay: "Touch Steering Guide",
     levelShowcase: {
       basic: {
         label: "Enemies",

@@ -75,6 +75,7 @@ const ro: typeof en = {
     gameOver: "Joc terminat",
     gameZoom: "Zoom joc",
     keepScreenAwake: "Tine ecranul activ",
+    touchSteeringOverlay: "Ghid tactil",
     levelShowcase: {
       basic: {
         label: "Inamici",

@@ -1138,6 +1138,20 @@ class Menus implements MenuSystemInstance {
       );
     }
 
+    if (this._shouldShowTouchSteeringOverlayOption()) {
+      items.push(
+        this._createItem(i18n.menu.touchSteeringOverlay, "toggle", nextItemY(), {
+          getValue: () =>
+            userOptions.touchSteeringOverlay ? i18n.menu.on : i18n.menu.off,
+          onAdjust: () =>
+            userOptions.setOption(
+              "touchSteeringOverlay",
+              !userOptions.touchSteeringOverlay
+            ),
+        })
+      );
+    }
+
     items.push(
       this._createToggleItem(
         i18n.menu.showControlsOverlay,
@@ -1181,6 +1195,13 @@ class Menus implements MenuSystemInstance {
     const url = new URL(window.location.href);
 
     return url.searchParams.get("showControlType") === "true";
+  };
+
+  private _shouldShowTouchSteeringOverlayOption = (): boolean => {
+    return (
+      navigator.maxTouchPoints > 0 ||
+      window.matchMedia?.("(pointer: coarse)").matches === true
+    );
   };
 
   private _createFilterItems = (): MenuItem[] => {

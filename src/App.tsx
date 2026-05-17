@@ -22,7 +22,7 @@ const controlGroups = [
   {
     title: "Touch",
     details:
-      "Touch and drag from where your thumb lands to steer and fire. Pinch adjusts UI and game zoom together.",
+      "Touch and drag from where your thumb lands to steer and fire, with an optional live steering guide. Pinch adjusts UI and game zoom together.",
   },
 ];
 
@@ -76,6 +76,7 @@ const systemUpdates = [
   "Skippable author and Time Pilot preroll before cold-start root-menu entry.",
   "Page-lifecycle session snapshots that restore interrupted player runs without per-frame storage writes.",
   "Standalone PWA launch with fullscreen, landscape, keep-awake, and installed-app exit requests from player actions.",
+  "Touch steering guide that follows the active fire thumb from its initial touch point.",
   "Achievement subsystem with page rendering, counter progress, and unlock popups.",
   "Watch Demo mode with a mortal autopilot that scores, dodges, shoots, continues, and collects bonuses.",
   "Debug-menu runtime logging and confirmed reset actions for stored preferences, scores, and achievements.",

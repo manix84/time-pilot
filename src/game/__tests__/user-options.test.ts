@@ -114,6 +114,7 @@ describe("user options persistence", () => {
     userOptions.setOption("language", "es");
     userOptions.setOption("keepScreenAwake", false);
     userOptions.setOption("logLevel", "error");
+    userOptions.setOption("touchSteeringOverlay", false);
     userOptions.setKeyboardBinding("fire", [13]);
 
     resetUserOptions();
@@ -122,6 +123,7 @@ describe("user options persistence", () => {
     expect(userOptions.keepScreenAwake).toBe(true);
     expect(userOptions.language).toBe("en");
     expect(userOptions.logLevel).toBe("off");
+    expect(userOptions.touchSteeringOverlay).toBe(true);
     expect(userOptions.keyboardBindings.fire).toEqual([32]);
     expect(localStorage.getItem("timePilot.userOptions")).toBeNull();
     expect(localStorage.getItem("timePilot.debugOptions")).toBeNull();

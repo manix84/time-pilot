@@ -75,6 +75,7 @@ const it: typeof en = {
     gameOver: "Fine partita",
     gameZoom: "Zoom gioco",
     keepScreenAwake: "Schermo sempre attivo",
+    touchSteeringOverlay: "Guida touch",
     levelShowcase: {
       basic: {
         label: "Nemici",

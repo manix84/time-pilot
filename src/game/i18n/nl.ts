@@ -75,6 +75,7 @@ const nl: typeof en = {
     gameOver: "Spel voorbij",
     gameZoom: "Gamezoom",
     keepScreenAwake: "Scherm wakker houden",
+    touchSteeringOverlay: "Touch-stuurhulp",
     levelShowcase: {
       basic: {
         label: "Vijanden",

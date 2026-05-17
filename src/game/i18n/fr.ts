@@ -75,6 +75,7 @@ const fr: typeof en = {
     gameOver: "Partie terminee",
     gameZoom: "Zoom jeu",
     keepScreenAwake: "Garder l'ecran actif",
+    touchSteeringOverlay: "Guide tactile",
     levelShowcase: {
       basic: { label: "Ennemis", description: "Appareil principal de cette ere." },
       special: { label: "Special", description: "Menace rare aux attaques etranges." },

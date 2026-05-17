@@ -131,6 +131,9 @@
 - Added touch gameplay affordances: two-finger menu access, three-finger
   restart confirmation, pinch zoom for UI and game scale together, and
   touch-relative steering.
+- Added a touch-screen-only Touch Steering Guide option that draws a live line
+  from the initial gameplay touch to the thumb-controlled fire button until
+  that touch is released.
 - Added root-menu update availability. When a PWA update is waiting, the
   non-playing root menu shows Update, applies the waiting worker, plays a
   no-delay player time-warp overlay, and reloads into the updated files.

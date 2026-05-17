@@ -621,11 +621,14 @@ describe("controller modules", () => {
     expect(controls.rotateToHeading).not.toHaveBeenCalled();
     expect(controls.startShooting).toHaveBeenCalled();
     expect(inputState.fire).toBe(true);
+    expect(inputState.touchOrigin).toEqual({ posX: 200, posY: 100 });
+    expect(inputState.touchCurrent).toEqual({ posX: 200, posY: 100 });
 
     dispatchTouch(canvas, "touchmove", { clientX: 300, clientY: 120 });
     expect(controls.rotateToHeading).toHaveBeenCalledWith(0);
     expect(inputState.up).toBe(true);
     expect(inputState.activeController).toBe("touch");
+    expect(inputState.touchCurrent).toEqual({ posX: 200, posY: -60 });
 
     dispatchTouch(canvas, "touchmove", { clientX: 380, clientY: 200 });
     expect(controls.rotateToHeading).toHaveBeenCalledWith(90);
@@ -635,6 +638,8 @@ describe("controller modules", () => {
     expect(controls.stopShooting).toHaveBeenCalled();
     expect(inputState.fire).toBe(false);
     expect(inputState.right).toBe(false);
+    expect(inputState.touchOrigin).toBeNull();
+    expect(inputState.touchCurrent).toBeNull();
     expect(controls.stop).not.toHaveBeenCalled();
 
     touch.disconnect?.();

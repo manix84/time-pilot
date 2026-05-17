@@ -46,12 +46,17 @@ describe("menu definitions", () => {
     userOptions.setOption("language", "en");
     userOptions.setOption("logLevel", "off");
     userOptions.setOption("keepScreenAwake", true);
+    userOptions.setOption("touchSteeringOverlay", true);
     userOptions.setOption("gameZoom", 100);
     userOptions.setOption("masterVolume", 10);
     userOptions.setOption("uiZoom", 100);
     userOptions.setOption("filterSettings", { ...filterPresets.off });
     userOptions.setOption("videoFilterMode", "off");
     userOptions.setKeyboardBinding("up", [38, 87]);
+    Object.defineProperty(navigator, "maxTouchPoints", {
+      configurable: true,
+      value: 0,
+    });
     window.history.replaceState(null, "", "/");
   });
 
@@ -767,6 +772,40 @@ describe("menu definitions", () => {
 
     expect(userOptions.keepScreenAwake).toBe(false);
     expect(syncScreenWakeLock).toHaveBeenCalled();
+  });
+
+  it("shows the touch steering guide option on touch devices", () => {
+    Object.defineProperty(navigator, "maxTouchPoints", {
+      configurable: true,
+      value: 1,
+    });
+    const arena = createArena();
+    const menus = new Menus(arena, { start: vi.fn() });
+
+    menus.showStart();
+    menus.next();
+    menus.activate();
+    for (let i = 0; i < 7; i++) {
+      menus.next();
+    }
+    menus.render();
+
+    expect(arena.renderText).toHaveBeenCalledWith(
+      "Touch Steering Guide",
+      expect.any(Number),
+      expect.any(Number),
+      expect.objectContaining({ align: "left" })
+    );
+    expect(arena.renderText).toHaveBeenCalledWith(
+      "On",
+      expect.any(Number),
+      expect.any(Number),
+      expect.objectContaining({ align: "right" })
+    );
+
+    menus.activate();
+
+    expect(userOptions.touchSteeringOverlay).toBe(false);
   });
 
   it("opens filters, changes presets, edits custom values, and resets", () => {

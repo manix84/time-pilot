@@ -18,6 +18,7 @@
 - 🛠️ Debug tools for level select, preroll replay, runtime logging, and stored-data resets.
 - 📱 Installable offline PWA mode that launches as a standalone app and enters fullscreen play from Start/Continue.
 - 🔆 Optional PWA keep-awake mode, on by default, for active or paused player runs.
+- 👆 Optional touch steering guide that appears only while the active gameplay touch is held.
 - 🔁 Root-menu update flow that applies waiting PWA updates without interrupting play.
 - 📺 Optional CRT/VHS filter presets with custom sliders.
 - 🌍 Localized menus, level blurbs, and level showcase labels.
@@ -143,6 +144,10 @@ React owns mounting and cleanup. The game engine owns simulation, rendering, inp
 - **Touch**: steering is relative to where the thumb first touches the screen,
   firing happens while touching, two-finger taps open the menu, three-finger
   taps request restart, and pinch gestures adjust UI and game zoom together.
+  On touch-capable devices, Options includes a `Touch Steering Guide` toggle.
+  When enabled, gameplay draws a guide from the initial touch point to the
+  player thumb's current fire button position, and it disappears as soon as
+  that touch is released.
 
 The game also renders its start and options menus inside the canvas. Keyboard
 and gamepad commands move, adjust, and activate menu items through the same

@@ -94,7 +94,10 @@ class TouchController implements Controller {
 
     this._controllerInterface.startShooting();
     if (this._inputState) {
+      this._inputState.activeController = "touch";
       this._inputState.fire = true;
+      this._inputState.touchOrigin = point;
+      this._inputState.touchCurrent = point;
     }
     this.updateHeadingFromPoint(this.getRelativePoint(point));
   };
@@ -123,6 +126,9 @@ class TouchController implements Controller {
       return;
     }
 
+    if (this._inputState) {
+      this._inputState.touchCurrent = point;
+    }
     this.updateHeadingFromPoint(this.getRelativePoint(point));
   };
 
@@ -154,6 +160,8 @@ class TouchController implements Controller {
     this._controllerInterface.stopShooting();
     if (this._inputState) {
       this._inputState.fire = false;
+      this._inputState.touchOrigin = null;
+      this._inputState.touchCurrent = null;
     }
     this._activeTouchId = null;
     this._gestureMode = null;
@@ -174,6 +182,8 @@ class TouchController implements Controller {
 
     if (this._inputState) {
       this._inputState.activeController = "touch";
+      this._inputState.touchOrigin = null;
+      this._inputState.touchCurrent = null;
     }
   };
 
@@ -233,6 +243,8 @@ class TouchController implements Controller {
     this._controllerInterface.stopShooting();
     if (this._inputState) {
       this._inputState.fire = false;
+      this._inputState.touchOrigin = null;
+      this._inputState.touchCurrent = null;
     }
     this._activeTouchId = null;
     this._touchOrigin = null;
