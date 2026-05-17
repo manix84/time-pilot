@@ -6,10 +6,16 @@ const APP_SHELL = [
   "./pwa/index.html",
   "./assets/app.css",
   "./assets/main.js",
+  "./pwa-apple-touch-180.png",
+  "./pwa-icon-192.png",
   "./pwa-icon-512.png",
   "./pwa-icon.svg",
+  "./pwa-maskable-192.png",
   "./pwa-maskable-512.png",
   "./pwa-maskable.svg",
+  "./screenshots/time-pilot-gameplay-achievement.png",
+  "./screenshots/time-pilot-preroll-flyby.png",
+  "./screenshots/time-pilot-root-menu.png",
 ];
 const GAME_ASSETS = [
   "./fonts/font.ttf",

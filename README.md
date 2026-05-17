@@ -28,6 +28,13 @@
 - 🏷️ Automatic GitHub Release creation from the current package version.
 - 🔢 Local pre-commit version bumping based on staged changes.
 
+## 📸 Screenshots
+
+| Preroll flyby | Achievement unlock | Root menu |
+| :---: | :---: | :---: |
+| [<img src="public/screenshots/time-pilot-preroll-flyby.png" alt="Time Pilot preroll flyby" width="260" />](public/screenshots/time-pilot-preroll-flyby.png) | [<img src="public/screenshots/time-pilot-gameplay-achievement.png" alt="Time Pilot gameplay with achievement popup" width="260" />](public/screenshots/time-pilot-gameplay-achievement.png) | [<img src="public/screenshots/time-pilot-root-menu.png" alt="Time Pilot root menu over attract demo" width="260" />](public/screenshots/time-pilot-root-menu.png) |
+| The skippable preroll brings in the logo with a player flyby. | Arcade play with HUD details, credits, and achievement unlocks. | The root menu sits over the attract demo with submenu chevrons. |
+
 ## 🚀 Quick Start
 
 Install dependencies:

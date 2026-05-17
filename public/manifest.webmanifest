@@ -3,6 +3,8 @@
   "name": "Time Pilot",
   "short_name": "Time Pilot",
   "description": "A full-screen pixel-art arcade game rebuilt for the web.",
+  "lang": "en-GB",
+  "dir": "ltr",
   "start_url": "./pwa/",
   "scope": "./",
   "display": "standalone",
@@ -11,12 +13,79 @@
   "background_color": "#000000",
   "theme_color": "#000000",
   "categories": ["games"],
+  "prefer_related_applications": false,
+  "launch_handler": {
+    "client_mode": ["navigate-existing", "auto"]
+  },
+  "shortcuts": [
+    {
+      "name": "Play Time Pilot",
+      "short_name": "Play",
+      "description": "Open Time Pilot directly in the installed game view.",
+      "url": "./pwa/",
+      "icons": [
+        {
+          "src": "pwa-icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "About Time Pilot",
+      "short_name": "About",
+      "description": "View the game, author, privacy, source, and sponsorship details.",
+      "url": "./about/",
+      "icons": [
+        {
+          "src": "pwa-icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "screenshots/time-pilot-gameplay-achievement.png",
+      "sizes": "1456x790",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Time Pilot gameplay with an achievement unlock notification."
+    },
+    {
+      "src": "screenshots/time-pilot-root-menu.png",
+      "sizes": "1456x790",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "The Time Pilot root menu over the animated attract demo."
+    },
+    {
+      "src": "screenshots/time-pilot-preroll-flyby.png",
+      "sizes": "1535x790",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "The startup preroll with the Time Pilot logo and player flyby."
+    }
+  ],
   "icons": [
+    {
+      "src": "pwa-icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
     {
       "src": "pwa-icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
+    },
+    {
+      "src": "pwa-maskable-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
     },
     {
       "src": "pwa-maskable-512.png",
