@@ -6,8 +6,11 @@ const APP_SHELL = [
   "./pwa/index.html",
   "./assets/app.css",
   "./assets/main.js",
+  "./pwa-apple-touch-180.png",
+  "./pwa-icon-192.png",
   "./pwa-icon-512.png",
   "./pwa-icon.svg",
+  "./pwa-maskable-192.png",
   "./pwa-maskable-512.png",
   "./pwa-maskable.svg",
 ];
