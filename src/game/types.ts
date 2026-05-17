@@ -510,10 +510,12 @@ export interface MenuSystemCommands {
   setDebugContinues?: (continues: number) => void;
   setDebugLives?: (lives: number) => void;
   start: () => void;
+  startNewGame?: () => void;
   watchDemo?: () => void;
 }
 
 export interface ShowStartMenuOptions {
+  showRestart?: boolean;
   startLabel?: string;
 }
 

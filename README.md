@@ -14,6 +14,7 @@
 - 🔎 UI zoom and game POV zoom with automatic viewport scaling.
 - 🏆 Achievement tracking with an achievements page, progress counters, and unlock popups.
 - 🎬 Startup preroll with the author logo, Time Pilot flyby, menu-logo handoff, and instant skip input.
+- 💾 Session restore that skips the preroll and returns interrupted runs to a paused Continue menu.
 - 🛠️ Debug tools for level select, preroll replay, runtime logging, and stored-data resets.
 - 📱 Installable offline PWA mode that launches straight into the game canvas in fullscreen display mode.
 - 🔁 Root-menu update flow that applies waiting PWA updates without interrupting play.
@@ -69,6 +70,14 @@ The showcase/landing page remains the default browser view.
 Cold PWA/game starts now begin with a skippable preroll. The author logo fades
 in from black, the Time Pilot logo and player flyby play next, then the logo
 animates into the root-menu position while the attract demo starts behind it.
+
+If a real player run is interrupted by closing or backgrounding the page, the
+game stores a small session snapshot during page lifecycle events. On the next
+launch it skips the preroll, restores the run into the same era, and opens the
+root menu paused on `Continue`. A `Restart` action appears directly beneath it
+for players who want to discard the restored run and begin again. The snapshot
+is not written every frame, and demo, preroll, game-over, and time-warp states
+are ignored.
 
 ## 🧪 Quality Checks
 
@@ -187,6 +196,7 @@ src/
     constants.ts            Game tuning and asset constants
     game-timing.ts          Shared simulation tick rate
     logger.ts               Debug-menu-controlled runtime logger
+    storage-reset.ts        Debug reset helpers for persisted data
     achievements.ts         Achievement definitions and tracking subsystem
     achievement-notifications.ts
                             Canvas unlock popup renderer
@@ -196,7 +206,6 @@ src/
     engine/                 Canvas arena, ticker, sound, helpers
     menus/                  Menu definitions
     systems/                Collision, spawning, and rendering systems
-    storage-reset.ts        Debug reset helpers for persisted data
     ui-scale.ts             UI and game zoom helpers
     time-warp.ts            Player time-warp sequence timing
     *.ts                    Entities, factories, HUD, options

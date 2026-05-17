@@ -42,6 +42,7 @@ import type {
   EnemyData,
   EnemyInstance,
   GameDataStore,
+  PlayerData,
   RenderingSystemInstance,
   SpawningSystemInstance,
 } from "./types";
@@ -93,10 +94,28 @@ const demoProjectileAvoidanceLookAhead = 170;
 const demoProjectileAvoidanceRadius = 82;
 const demoProjectileAvoidanceStrength = 3.2;
 const playerRotationStep = 360 / player.rotationFrameCount;
+const gameSessionStorageKey = "timePilot.gameSession";
+const gameSessionSnapshotVersion = 1;
 
 type DemoProgressSnapshot = {
   nextExtraLifeScore: number;
   score: number;
+};
+
+type GameSessionSnapshot = {
+  level: number;
+  player: Pick<
+    PlayerData,
+    | "continues"
+    | "heading"
+    | "lives"
+    | "nextExtraLifeScore"
+    | "posX"
+    | "posY"
+    | "score"
+  >;
+  savedAt: number;
+  version: typeof gameSessionSnapshotVersion;
 };
 
 /**
@@ -178,6 +197,17 @@ export class TimePilot {
   private preroll?: Preroll;
   private renderingSystem!: RenderingSystemInstance;
   private spawningSystem!: SpawningSystemInstance;
+  private readonly handleBeforeUnload = (): void => {
+    this.saveGameSessionSnapshot();
+  };
+  private readonly handlePageHide = (): void => {
+    this.saveGameSessionSnapshot();
+  };
+  private readonly handleVisibilityChange = (): void => {
+    if (document.visibilityState === "hidden") {
+      this.saveGameSessionSnapshot();
+    }
+  };
   private readonly timeWarpSound = new SoundEngine(sounds.timeWarp.src);
 
   constructor(element: HTMLElement, options: TimePilotOptions = {}) {
@@ -196,6 +226,7 @@ export class TimePilot {
 
   restartGame = (): void => {
     logger.info("Restarting game");
+    this.clearGameSessionSnapshot();
     SoundEngine.destroyAll();
     const reset = () => {
       this.context._hud.restart();
@@ -226,6 +257,8 @@ export class TimePilot {
   };
 
   destroyGame = (): void => {
+    this.saveGameSessionSnapshot();
+    this.removeSessionSnapshotListeners();
     this.isDestroyed = true;
     this.isDemoMode = false;
     this.context._isDemoMode = false;
@@ -343,6 +376,9 @@ export class TimePilot {
       start: () => {
         this.beginGame();
       },
+      startNewGame: () => {
+        this.startNewGame();
+      },
       watchDemo: () => {
         this.watchDemo();
       },
@@ -383,6 +419,7 @@ export class TimePilot {
       );
     }
 
+    this.addSessionSnapshotListeners();
     this.context._player.setData("level", 1);
     this.context._gameArena.renderText("Loading", 20, 10, { size: 30 });
 
@@ -429,7 +466,9 @@ export class TimePilot {
 
       if (!progress.remaining) {
         this.configureGameLoop();
-        this.startPreroll();
+        if (!this.restoreGameSessionSnapshot()) {
+          this.startPreroll();
+        }
         this.context._renderTicker.start();
       }
     });
@@ -632,6 +671,186 @@ export class TimePilot {
     resetStoredScores();
   };
 
+  private addSessionSnapshotListeners = (): void => {
+    window.addEventListener("beforeunload", this.handleBeforeUnload);
+    window.addEventListener("pagehide", this.handlePageHide);
+    document.addEventListener("visibilitychange", this.handleVisibilityChange);
+  };
+
+  private removeSessionSnapshotListeners = (): void => {
+    window.removeEventListener("beforeunload", this.handleBeforeUnload);
+    window.removeEventListener("pagehide", this.handlePageHide);
+    document.removeEventListener(
+      "visibilitychange",
+      this.handleVisibilityChange
+    );
+  };
+
+  private getGameSessionStorage = (): Storage | null => {
+    try {
+      if (
+        typeof localStorage === "undefined" ||
+        typeof localStorage.getItem !== "function" ||
+        typeof localStorage.setItem !== "function" ||
+        typeof localStorage.removeItem !== "function"
+      ) {
+        return null;
+      }
+
+      return localStorage;
+    } catch {
+      return null;
+    }
+  };
+
+  private clearGameSessionSnapshot = (): void => {
+    try {
+      this.getGameSessionStorage()?.removeItem(gameSessionStorageKey);
+    } catch {
+      // Session snapshots are best-effort and should not affect gameplay.
+    }
+  };
+
+  private readGameSessionSnapshot = (): GameSessionSnapshot | null => {
+    const storage = this.getGameSessionStorage();
+
+    if (!storage) {
+      return null;
+    }
+
+    try {
+      const snapshot = JSON.parse(
+        storage.getItem(gameSessionStorageKey) ?? "null"
+      ) as Partial<GameSessionSnapshot> | null;
+
+      if (
+        !snapshot ||
+        snapshot.version !== gameSessionSnapshotVersion ||
+        typeof snapshot.level !== "number" ||
+        !levels[snapshot.level]?.enabled ||
+        !snapshot.player ||
+        typeof snapshot.player.score !== "number" ||
+        typeof snapshot.player.lives !== "number" ||
+        typeof snapshot.player.continues !== "number" ||
+        typeof snapshot.player.nextExtraLifeScore !== "number" ||
+        typeof snapshot.player.posX !== "number" ||
+        typeof snapshot.player.posY !== "number" ||
+        typeof snapshot.player.heading !== "number"
+      ) {
+        return null;
+      }
+
+      return snapshot as GameSessionSnapshot;
+    } catch {
+      return null;
+    }
+  };
+
+  private shouldSaveGameSessionSnapshot = (): boolean => {
+    if (
+      this.isDestroyed ||
+      this.isDemoMode ||
+      this.preroll ||
+      this.hasShownGameOver ||
+      !this.hasStartedGame ||
+      this.isTimeWarpTransitionActive()
+    ) {
+      return false;
+    }
+
+    const playerData = this.context._player.getData();
+
+    return (
+      playerData.isAlive &&
+      !playerData.removeMe &&
+      playerData.lives > 0 &&
+      Number.isFinite(playerData.continues)
+    );
+  };
+
+  private saveGameSessionSnapshot = (): void => {
+    if (!this.shouldSaveGameSessionSnapshot()) {
+      return;
+    }
+
+    const storage = this.getGameSessionStorage();
+
+    if (!storage) {
+      return;
+    }
+
+    const playerData = this.context._player.getData();
+    const snapshot: GameSessionSnapshot = {
+      level: this.context._level,
+      player: {
+        continues: playerData.continues,
+        heading: playerData.heading,
+        lives: playerData.lives,
+        nextExtraLifeScore: playerData.nextExtraLifeScore,
+        posX: playerData.posX,
+        posY: playerData.posY,
+        score: playerData.score,
+      },
+      savedAt: Date.now(),
+      version: gameSessionSnapshotVersion,
+    };
+
+    try {
+      storage.setItem(gameSessionStorageKey, JSON.stringify(snapshot));
+      logger.debug("Saved game session snapshot", {
+        level: snapshot.level,
+        savedAt: snapshot.savedAt,
+      });
+    } catch (error) {
+      logger.error("Failed to save game session snapshot", { error });
+    }
+  };
+
+  private restoreGameSessionSnapshot = (): boolean => {
+    const snapshot = this.readGameSessionSnapshot();
+
+    if (!snapshot) {
+      return false;
+    }
+
+    logger.info("Restoring game session snapshot", {
+      level: snapshot.level,
+      savedAt: snapshot.savedAt,
+    });
+    SoundEngine.stopAll();
+    SoundEngine.setMuted(false);
+    this.isDemoMode = false;
+    this.context._isDemoMode = false;
+    this.hasStartedGame = true;
+    this.hasShownGameOver = false;
+    this.selectedStartLevel = snapshot.level;
+    this.resetWorld(snapshot.level, { skipIntro: true });
+    this.context._player.setData("score", snapshot.player.score, true);
+    this.context._player.setData("lives", snapshot.player.lives, true);
+    this.context._player.setData("continues", snapshot.player.continues, true);
+    this.context._player.setData(
+      "nextExtraLifeScore",
+      snapshot.player.nextExtraLifeScore,
+      true
+    );
+    this.context._player.setData("posX", snapshot.player.posX);
+    this.context._player.setData("posY", snapshot.player.posY);
+    this.context._player.setData("heading", snapshot.player.heading);
+    this.context._player.setData("newHeading", false);
+    this.context._player.setData("isAlive", true);
+    this.context._player.setData("deathTick", false);
+    this.context._player.stopShooting();
+    this.spawningSystem.addInitialProps();
+    this.hasSeededInitialProps = true;
+    this.context._menus.showStart({
+      showRestart: true,
+      startLabel: i18n.menu.continue,
+    });
+    this.context._gameTicker.stop();
+
+    return true;
+  };
+
   private finishPreroll = (): void => {
     logger.info("Preroll complete");
     this.preroll = undefined;
@@ -695,6 +914,16 @@ export class TimePilot {
     }
 
     this.context._gameTicker.start();
+  };
+
+  private startNewGame = (): void => {
+    this.clearGameSessionSnapshot();
+    this.selectedStartLevel = 1;
+    this.hasStartedGame = false;
+    this.hasShownGameOver = false;
+    this.isDemoMode = true;
+    this.context._isDemoMode = true;
+    this.beginGame();
   };
 
   private continueGame = (): void => {
@@ -1283,6 +1512,7 @@ export class TimePilot {
     }
 
     this.hasShownGameOver = true;
+    this.clearGameSessionSnapshot();
     logger.info("Showing game over", {
       level: this.context._level,
       score: playerData.score,

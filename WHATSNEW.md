@@ -30,6 +30,8 @@
 - Separated simulation ticking from rendering: game-state calculations run at 50fps, while canvas rendering runs every animation frame.
 - Removed the old 50,000-tick gameplay pause failsafe so long sessions can keep
   running normally.
+- Added a page-lifecycle session snapshot so interrupted player runs can be
+  restored without writing state every frame.
 - Added an in-app controller configuration UI for keyboard layout selection and gamepad polling.
 - Added canvas-rendered start and options menus with volume controls, controller style selection, custom keyboard bindings, and keyboard/gamepad/mouse interaction.
 - Fixed gamepad cleanup so animation frames are cancelled on disconnect.
@@ -79,6 +81,8 @@
 - Added the cold-start preroll flow: the author logo fades in first, the Time
   Pilot logo follows with a player flyby and double-shot cue, then the logo
   animates into the root-menu position while the attract demo begins behind it.
+- Added session restore on launch: saved player runs skip the preroll and reopen
+  paused at the root menu with Continue and Restart actions.
 - Added instant preroll skipping from keyboard, pointer, touch, and controller
   input.
 - Added a debug-menu Play Preroll action for replaying the startup sequence.
@@ -154,7 +158,7 @@
   update menu availability, filter editing baselines, time-warp previews, and
   debug overlay stories.
 - Added coverage for achievement persistence/progress, reset actions, logging,
-  preroll, and the PWA update overlay.
+  preroll, session restore, and the PWA update overlay.
 - Replaced the previous placeholder test script with a real `npm test` suite.
 
 ## 🔜 Next Milestones

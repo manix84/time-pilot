@@ -43,6 +43,11 @@ const featureHighlights = [
       "Author logo, Time Pilot flyby, double-shot cue, and animated handoff into the root menu.",
   },
   {
+    title: "Session restore",
+    details:
+      "Interrupted runs skip the intro on the next launch and reopen paused, with Continue and Restart ready.",
+  },
+  {
     title: "Achievements",
     details:
       "Track skill shots, comeback runs, continue use, clean waves, era clears, and long-session milestones.",
@@ -55,7 +60,7 @@ const featureHighlights = [
   {
     title: "Debug tools",
     details:
-      "Level previews, hitboxes, vectors, steering arcs, preroll replay, sprite showcases, and Storybook views.",
+      "Level previews, hitboxes, vectors, steering arcs, preroll replay, runtime logs, reset tools, and Storybook views.",
   },
 ];
 
@@ -69,8 +74,10 @@ const systemUpdates = [
   "50fps simulation with separate animation-frame rendering.",
   "Spatial entity audio for bosses, rockets, bullets, bombs, and explosions.",
   "Skippable author and Time Pilot preroll before cold-start root-menu entry.",
+  "Page-lifecycle session snapshots that restore interrupted player runs without per-frame storage writes.",
   "Achievement subsystem with page rendering, counter progress, and unlock popups.",
   "Watch Demo mode with a mortal autopilot that scores, dodges, shoots, continues, and collects bonuses.",
+  "Debug-menu runtime logging and confirmed reset actions for stored preferences, scores, and achievements.",
   "Staged-only local pre-commit checks with full-project pull request scans.",
 ];
 
@@ -79,6 +86,7 @@ const progress = [
   "Canvas game loop",
   "Scrollable localized menus",
   "Startup preroll",
+  "Session restore",
   "Achievement tracking",
   "Keyboard, gamepad, mouse, and touch input",
   "Offline installable PWA",
@@ -122,13 +130,15 @@ function App() {
               A modern React + TypeScript port of a canvas arcade game, packaged
               as a playable browser demo and installable offline PWA with typed
               engine modules, achievements, skippable startup preroll,
-              configurable controls, and automated release checks.
+              paused session restore, configurable controls, and automated
+              release checks.
             </p>
             <div className={"hero-status"} aria-label={"Current build features"}>
               <span>Offline PWA</span>
               <span>Touch controls</span>
               <span>Achievements</span>
               <span>Preroll</span>
+              <span>Session restore</span>
               <span>Manual updates</span>
             </div>
             <div className={"hero-actions"}>
@@ -162,7 +172,7 @@ function App() {
             readable waves, canvas-rendered menus, touch-friendly controls, and
             a codebase that is easy to keep improving. The build now includes a
             skippable startup preroll, an achievements page, and unlock
-            notifications alongside the playable demo.
+            notifications alongside session restore for interrupted runs.
           </p>
         </div>
       </section>

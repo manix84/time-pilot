@@ -31,13 +31,14 @@ describe("TimePilot engine", () => {
       value: 0,
     });
     vi.restoreAllMocks();
+    vi.unstubAllGlobals();
   });
 
   it("mounts into a container and can pause, resume, restart, and destroy", async () => {
     userOptions.setOption("logLevel", "info");
     const game = new TimePilot(host, { debug: true });
 
-    await new Promise((resolve) => window.setTimeout(resolve, 5));
+    await new Promise((resolve) => window.setTimeout(resolve, 20));
 
     expect(host.querySelector("canvas")).toBeInstanceOf(HTMLCanvasElement);
 
@@ -375,6 +376,115 @@ describe("TimePilot engine", () => {
     expect(pilot.context._isDemoMode).toBe(false);
     expect(pilot.context._level).toBe(3);
     expect(pilot.context._player.getData("level")).toBe(3);
+
+    game.destroyGame();
+  });
+
+  it("saves a playable session snapshot when the page is hidden", async () => {
+    const game = new TimePilot(host, { debug: true });
+    const pilot = game as unknown as {
+      beginGame: () => void;
+      context: {
+        _player: {
+          setData: (key: string, value: unknown, isLastKnownGood?: boolean) => void;
+        };
+      };
+    };
+
+    await new Promise((resolve) => window.setTimeout(resolve, 5));
+
+    pilot.beginGame();
+    pilot.context._player.setData("score", 12345, true);
+    pilot.context._player.setData("lives", 2, true);
+    pilot.context._player.setData("continues", 1, true);
+    pilot.context._player.setData("posX", 42);
+    pilot.context._player.setData("posY", -24);
+    window.dispatchEvent(new Event("pagehide"));
+
+    const snapshot = JSON.parse(
+      localStorage.getItem("timePilot.gameSession") ?? "{}"
+    );
+
+    expect(snapshot).toMatchObject({
+      level: 1,
+      player: {
+        continues: 1,
+        lives: 2,
+        posX: 42,
+        posY: -24,
+        score: 12345,
+      },
+      version: 1,
+    });
+
+    game.destroyGame();
+  });
+
+  it("restores a saved session paused at the root menu", async () => {
+    vi.stubGlobal(
+      "Image",
+      class {
+        complete = true;
+        onerror: (() => void) | null = null;
+        onload: (() => void) | null = null;
+
+        set src(_value: string) {
+          window.setTimeout(() => this.onload?.(), 0);
+        }
+      }
+    );
+    localStorage.setItem(
+      "timePilot.gameSession",
+      JSON.stringify({
+        level: 3,
+        player: {
+          continues: 2,
+          heading: 90,
+          lives: 1,
+          nextExtraLifeScore: 50000,
+          posX: 120,
+          posY: -80,
+          score: 34567,
+        },
+        savedAt: Date.now(),
+        version: 1,
+      })
+    );
+    const game = new TimePilot(host, { debug: true });
+    const pilot = game as unknown as {
+      context: {
+        _gameTicker: { isRunning: boolean };
+        _level: number;
+        _menus: { next: () => void; activate: () => void; render: () => void };
+        _player: {
+          getData: (
+            key: "continues" | "heading" | "lives" | "posX" | "posY" | "score"
+          ) => number | undefined;
+        };
+      };
+    };
+
+    await new Promise((resolve) => window.setTimeout(resolve, 5));
+
+    const renderText = vi.spyOn(pilot.context._menus, "render");
+    pilot.context._menus.render();
+
+    expect(pilot.context._gameTicker.isRunning).toBe(false);
+    expect(pilot.context._level).toBe(3);
+    expect(pilot.context._player.getData("score")).toBe(34567);
+    expect(pilot.context._player.getData("lives")).toBe(1);
+    expect(pilot.context._player.getData("continues")).toBe(2);
+    expect(pilot.context._player.getData("heading")).toBe(90);
+    expect(pilot.context._player.getData("posX")).toBe(120);
+    expect(pilot.context._player.getData("posY")).toBe(-80);
+    expect(renderText).toHaveBeenCalled();
+
+    pilot.context._menus.next();
+    pilot.context._menus.activate();
+
+    expect(localStorage.getItem("timePilot.gameSession")).toBeNull();
+    expect(pilot.context._gameTicker.isRunning).toBe(true);
+    expect(pilot.context._level).toBe(1);
 
     game.destroyGame();
   });

@@ -243,6 +243,7 @@ class Menus implements MenuSystemInstance {
   private _scrollBarDrag: { pointerStartY: number; scrollStartY: number } | null = null;
   private _selectedIndex = 0;
   private _shouldRevealSelected = true;
+  private _showRestartFromStart = false;
   private _sliderDragIndex: number | null = null;
   private _startLabel = i18n.menu.start;
   private _scrollY = 0;
@@ -271,6 +272,7 @@ class Menus implements MenuSystemInstance {
     this._awaitingBinding = null;
     this._bindingWarning = "";
     this._startLabel = options.startLabel ?? i18n.menu.start;
+    this._showRestartFromStart = options.showRestart ?? false;
     this._screen = "start";
     this._screenHistory = [];
     this._pressedItemIndex = null;
@@ -985,6 +987,16 @@ class Menus implements MenuSystemInstance {
     const showUpdate =
       !this._isPausedRootMenu() && (this._commands.canApplyUpdate?.() ?? false);
     itemY += 50;
+
+    if (this._showRestartFromStart) {
+      items.push(
+        this._createItem(i18n.menu.restart, "action", itemY, {
+          action: () =>
+            (this._commands.startNewGame ?? this._commands.restart)?.(),
+        })
+      );
+      itemY += 50;
+    }
 
     items.push(
       this._createItem(i18n.menu.options, "action", itemY, {
@@ -3369,6 +3381,7 @@ class Menus implements MenuSystemInstance {
     this._awaitingBinding = null;
     this._bindingWarning = "";
     this._startLabel = i18n.menu.start;
+    this._showRestartFromStart = false;
     this._screen = "start";
     this._screenHistory = [];
     this._pressedItemIndex = null;
