@@ -195,6 +195,14 @@ const keyBindingRows: Array<{ binding: BindingAction; label: string }> = [
 const konamiCode = [38, 38, 40, 40, 37, 39, 37, 39, 66, 65];
 const touchKonamiSwipeThreshold = 36;
 const menuChevronPixelSize = 3;
+const menuLanguageFlagScale = 2;
+const menuLanguageFlagGridWidth = 16;
+const menuLanguageFlagGridHeight = 8;
+const menuLanguageFlagWidth = menuLanguageFlagGridWidth * menuLanguageFlagScale;
+const menuLanguageFlagHeight =
+  menuLanguageFlagGridHeight * menuLanguageFlagScale;
+const menuLanguageFlagChevronGap = 8;
+const menuLanguageFlagTextGap = 8;
 const menuChevronBlocks = [
   { x: -4, y: -7 },
   { x: -1, y: -4 },
@@ -1626,13 +1634,7 @@ class Menus implements MenuSystemInstance {
 
       this._gameArena.renderText(
         item.getValue(),
-        item.rect.x +
-          item.rect.width -
-          (item.opensSubmenu
-            ? 34
-            : item.languageFlag || item.levelIcon
-              ? 48
-              : 14),
+        this._getItemValueRightX(item),
         item.rect.y + item.rect.height / 2,
         {
           size: item.kind === "key" ? 13 : 16,
@@ -1644,6 +1646,22 @@ class Menus implements MenuSystemInstance {
     }
 
     this._renderItemChevron(item, color);
+  };
+
+  private _getItemValueRightX = (item: MenuItem): number => {
+    if (item.languageFlag) {
+      return this._getLanguageFlagX(item) - menuLanguageFlagTextGap;
+    }
+
+    if (item.opensSubmenu) {
+      return item.rect.x + item.rect.width - 34;
+    }
+
+    if (item.levelIcon) {
+      return item.rect.x + item.rect.width - 48;
+    }
+
+    return item.rect.x + item.rect.width - 14;
   };
 
   private _renderItemChevron = (item: MenuItem, color: string): void => {
@@ -2591,9 +2609,9 @@ class Menus implements MenuSystemInstance {
     language: GameLanguage
   ): void => {
     const context = this._gameArena.getContext() as CanvasRenderingContext2D;
-    const scale = 2;
-    const x = item.rect.x + item.rect.width - 38;
-    const y = item.rect.y + item.rect.height / 2 - 8;
+    const scale = menuLanguageFlagScale;
+    const x = this._getLanguageFlagX(item);
+    const y = item.rect.y + item.rect.height / 2 - menuLanguageFlagHeight / 2;
     const rect = (
       gridX: number,
       gridY: number,
@@ -2759,6 +2777,21 @@ class Menus implements MenuSystemInstance {
     }
 
     drawEnglishFlag();
+  };
+
+  private _getLanguageFlagX = (item: MenuItem): number => {
+    const rightEdge = item.rect.x + item.rect.width;
+
+    if (item.opensSubmenu) {
+      return (
+        rightEdge -
+        16 -
+        menuLanguageFlagChevronGap -
+        menuLanguageFlagWidth
+      );
+    }
+
+    return rightEdge - 38;
   };
 
   private _renderBindingWarning = (context: CanvasRenderingContext2D): void => {
