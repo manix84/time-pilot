@@ -13,6 +13,9 @@ const APP_SHELL = [
   "./pwa-maskable-192.png",
   "./pwa-maskable-512.png",
   "./pwa-maskable.svg",
+  "./screenshots/time-pilot-gameplay-achievement.png",
+  "./screenshots/time-pilot-preroll-flyby.png",
+  "./screenshots/time-pilot-root-menu.png",
 ];
 const GAME_ASSETS = [
   "./fonts/font.ttf",

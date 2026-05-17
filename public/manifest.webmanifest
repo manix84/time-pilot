@@ -45,6 +45,29 @@
       ]
     }
   ],
+  "screenshots": [
+    {
+      "src": "screenshots/time-pilot-gameplay-achievement.png",
+      "sizes": "1456x790",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Time Pilot gameplay with an achievement unlock notification."
+    },
+    {
+      "src": "screenshots/time-pilot-root-menu.png",
+      "sizes": "1456x790",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "The Time Pilot root menu over the animated attract demo."
+    },
+    {
+      "src": "screenshots/time-pilot-preroll-flyby.png",
+      "sizes": "1535x790",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "The startup preroll with the Time Pilot logo and player flyby."
+    }
+  ],
   "icons": [
     {
       "src": "pwa-icon-192.png",
