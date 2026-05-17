@@ -315,8 +315,14 @@ input {
   height: 100%;
   image-rendering: pixelated;
   filter:
-    drop-shadow(0 0 calc(var(--filter-bloom) * 0.08px) rgba(132, 245, 255, 0.5))
-    drop-shadow(0 0 calc(var(--filter-explosion-bloom-boost) * 0.16px) rgba(255, 216, 96, 0.65));
+    drop-shadow(
+      0 0 calc(var(--filter-bloom) * 0.08px)
+      rgb(132 245 255 / calc(var(--filter-bloom) / 100))
+    )
+    drop-shadow(
+      0 0 calc(var(--filter-explosion-bloom-boost) * 0.16px)
+      rgb(255 216 96 / calc(var(--filter-explosion-bloom-boost) / 100))
+    );
 }
 
 .time-pilot-filter-bloom,
