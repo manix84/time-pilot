@@ -1,8 +1,15 @@
 import type { CSSProperties } from "react";
 import coverArt from "../art/cover.png";
-import { isPwaMode, isPwaRoute, isShowcaseMode } from "./app-routing";
+import { isAboutRoute, isPwaMode, isPwaRoute, isShowcaseMode } from "./app-routing";
 import titleBanner from "../art/titleBanner.png";
 import TimePilotGame from "./components/TimePilotGame";
+
+const appVersion =
+  typeof __TIME_PILOT_VERSION__ === "undefined" ? "0.0.0" : __TIME_PILOT_VERSION__;
+const authorLogo = `${import.meta.env.BASE_URL}logos/author-128-light.png`;
+const authorUrl = "https://github.com/manix84";
+const sourceUrl = "https://github.com/manix84/time-pilot";
+const sponsorUrl = "https://github.com/sponsors/manix84";
 
 const controlGroups = [
   {
@@ -46,6 +53,11 @@ const featureHighlights = [
     title: "Session restore",
     details:
       "Interrupted runs skip the intro on the next launch and reopen paused, with Continue and Restart ready.",
+  },
+  {
+    title: "About page",
+    details:
+      "Version, host, privacy stance, source link, and optional sponsorship are collected in one public page.",
   },
   {
     title: "Achievements",
@@ -98,6 +110,99 @@ const progress = [
   "GitHub Pages deployment",
 ];
 
+const getHostName = (): string => window.location.hostname || "localhost";
+
+function AboutPage() {
+  const facts = [
+    ["Version", appVersion],
+    ["Host", getHostName()],
+    ["Built By", "Rob"],
+    ["Cost", "Free"],
+    ["Privacy", "No adverts, no tracking, local-first storage"],
+    [
+      "Purpose",
+      "Keep a small arcade game playable, inspectable, and free while preserving the feel of a browser-era canvas project.",
+    ],
+  ];
+
+  return (
+    <main className={"app-shell about-shell"}>
+      <section className={"about-page"} aria-labelledby={"about-title"}>
+        <div className={"about-brand"}>
+          <div className={"about-logo-stack"}>
+            <img
+              className={"about-game-logo"}
+              src={titleBanner}
+              alt={"Time Pilot"}
+              width={574}
+              height={154}
+            />
+            <a
+              className={"about-author-link"}
+              href={authorUrl}
+              rel={"noreferrer"}
+              target={"_blank"}
+              aria-label={"Open Rob's GitHub profile"}
+            >
+              <img
+                className={"about-author-logo"}
+                src={authorLogo}
+                alt={"Rob"}
+                width={128}
+                height={128}
+              />
+            </a>
+          </div>
+          <h1 id={"about-title"}>Time Pilot</h1>
+          <p>A free, privacy-minded arcade rebuild for the web.</p>
+        </div>
+
+        <dl className={"about-facts"}>
+          {facts.map(([label, value]) => (
+            <div key={label}>
+              <dt>{label}</dt>
+              <dd>{value}</dd>
+            </div>
+          ))}
+        </dl>
+
+        <div className={"about-copy"}>
+          <p>
+            Time Pilot is a modern React and TypeScript rebuild of an older
+            browser-game prototype. It keeps the fast canvas arcade loop at the
+            centre: readable waves, touch-friendly play, achievements, offline
+            PWA support, and a codebase that is easy to study and improve.
+          </p>
+          <p>
+            I built it because small web games should still feel direct, owned,
+            and respectful of the person playing. The game is free, avoids ads
+            and tracking, and stores player preferences, scores, achievements,
+            and restore data locally on the device.
+          </p>
+          <p>
+            I’m Rob, a software engineer who likes making practical, focused
+            projects. Sponsorship is optional, but it helps keep projects like
+            this maintained and free to use.
+          </p>
+        </div>
+
+        <div className={"about-actions"}>
+          <a href={sourceUrl} rel={"noreferrer"} target={"_blank"}>
+            View Source
+          </a>
+          <a href={sponsorUrl} rel={"noreferrer"} target={"_blank"}>
+            Sponsor Rob
+          </a>
+        </div>
+        <p className={"about-sponsor-note"}>
+          Donations and sponsorships support hosting, maintenance, and continued
+          free access.
+        </p>
+      </section>
+    </main>
+  );
+}
+
 function App() {
   if (!isShowcaseMode() && isPwaRoute()) {
     return (
@@ -110,6 +215,10 @@ function App() {
         />
       </main>
     );
+  }
+
+  if (isAboutRoute()) {
+    return <AboutPage />;
   }
 
   return (
@@ -146,11 +255,13 @@ function App() {
               <span>Achievements</span>
               <span>Preroll</span>
               <span>Session restore</span>
+              <span>About page</span>
               <span>Manual updates</span>
             </div>
             <div className={"hero-actions"}>
               <a href={"#play"}>Play now</a>
               <a href={"pwa/"}>Open app view</a>
+              <a href={"about/"}>About</a>
             </div>
           </div>
 

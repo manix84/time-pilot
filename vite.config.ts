@@ -21,6 +21,7 @@ export default defineConfig({
   build: {
     rollupOptions: {
       input: {
+        about: path.resolve(dirname, "about/index.html"),
         main: path.resolve(dirname, "index.html"),
         pwa: path.resolve(dirname, "pwa/index.html"),
       },

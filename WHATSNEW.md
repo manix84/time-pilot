@@ -32,6 +32,8 @@
   running normally.
 - Added a page-lifecycle session snapshot so interrupted player runs can be
   restored without writing state every frame.
+- Added a public about page with build, host, privacy, source, and sponsorship
+  details.
 - Added keyboard, touch, and gamepad controller support with gamepad polling.
 - Added canvas-rendered start and options menus with volume controls,
   controller style selection, and keyboard/gamepad/mouse interaction.

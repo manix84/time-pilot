@@ -545,6 +545,157 @@ input {
   background: #07110e;
 }
 
+.about-shell {
+  display: grid;
+  place-items: start center;
+  padding: clamp(2rem, 6vw, 5rem) clamp(1rem, 3vw, 2rem);
+}
+
+.about-page {
+  width: min(760px, 100%);
+  margin: 0 auto;
+  color: #eaf4ff;
+}
+
+.about-brand {
+  display: grid;
+  justify-items: center;
+  text-align: center;
+}
+
+.about-logo-stack {
+  position: relative;
+  width: min(28rem, 92vw);
+  margin: 0 auto 1rem;
+}
+
+.about-game-logo {
+  display: block;
+  width: 100%;
+  height: auto;
+  image-rendering: crisp-edges;
+  filter: drop-shadow(0 18px 26px rgba(0, 0, 0, 0.46));
+}
+
+.about-author-link {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: clamp(2.75rem, 7.8vw, 4.35rem);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  padding: 0.2rem;
+  background: #fff;
+  overflow: hidden;
+  transform: translate(-30%, 20%);
+}
+
+.about-author-link:focus-visible {
+  outline: 3px solid #ffd45e;
+  outline-offset: 4px;
+}
+
+.about-author-logo {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 50%;
+  object-fit: cover;
+  transform: scale(1.2);
+  filter: drop-shadow(0 12px 18px rgba(0, 0, 0, 0.42));
+}
+
+.about-brand h1 {
+  margin: 0.8rem 0 0;
+  color: #fff4c1;
+  font-size: clamp(2.2rem, 6vw, 4.2rem);
+  line-height: 1;
+  letter-spacing: 0;
+}
+
+.about-brand p {
+  margin: 0.6rem 0 0;
+  color: #cfe4f6;
+  font-size: clamp(1rem, 2.2vw, 1.22rem);
+}
+
+.about-facts {
+  display: grid;
+  gap: 0.55rem;
+  width: min(34rem, 100%);
+  margin: clamp(2rem, 5vw, 3rem) auto 0;
+}
+
+.about-facts div {
+  display: grid;
+  grid-template-columns: minmax(6rem, 0.34fr) 1fr;
+  gap: 0.95rem;
+  align-items: start;
+}
+
+.about-facts dt {
+  color: #fff4c1;
+  font-weight: 900;
+  text-align: right;
+}
+
+.about-facts dd {
+  margin: 0;
+  color: #d9e8f6;
+  line-height: 1.4;
+}
+
+.about-copy {
+  margin: clamp(2rem, 5vw, 3rem) 0 0;
+  border-top: 1px solid rgba(126, 219, 211, 0.24);
+  padding-top: clamp(1.5rem, 4vw, 2rem);
+}
+
+.about-copy p {
+  margin: 0;
+  color: #e5f0fa;
+  font-size: 1.02rem;
+  line-height: 1.75;
+}
+
+.about-copy p + p {
+  margin-top: 1rem;
+}
+
+.about-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.8rem;
+  margin: 2rem 0 0;
+}
+
+.about-actions a {
+  border: 1px solid rgba(255, 212, 0, 0.55);
+  border-radius: 6px;
+  padding: 0.78rem 1rem;
+  color: #07110e;
+  background: #ffd45e;
+  font-size: 0.94rem;
+  font-weight: 900;
+  text-decoration: none;
+}
+
+.about-actions a + a {
+  border-color: rgba(126, 219, 211, 0.42);
+  color: #e8fbff;
+  background: rgba(7, 22, 32, 0.86);
+}
+
+.about-sponsor-note {
+  max-width: 27rem;
+  margin: 1rem auto 0;
+  color: #aec7d8;
+  font-size: 0.92rem;
+  line-height: 1.45;
+  text-align: center;
+}
+
 .intro-grid,
 .split-section {
   display: grid;
@@ -748,5 +899,14 @@ input {
   .feature-grid,
   .progress-list {
     grid-template-columns: 1fr;
+  }
+
+  .about-facts div {
+    grid-template-columns: 1fr;
+    gap: 0.25rem;
+  }
+
+  .about-facts dt {
+    text-align: left;
   }
 }

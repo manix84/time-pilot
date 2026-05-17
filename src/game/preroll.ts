@@ -52,7 +52,7 @@ class Preroll {
     this.onComplete = options.onComplete;
     this.onSettleStart = options.onSettleStart;
     this.playBulletSound = options.playBulletSound;
-    this.authorLogo.src = assetPath("logos/author.png");
+    this.authorLogo.src = assetPath("logos/author-128-dark.png");
     this.playerSprite.src = player.sprite.src;
     this.restart();
   }

@@ -15,6 +15,7 @@
 - 🏆 Achievement tracking with an achievements page, progress counters, and unlock popups.
 - 🎬 Startup preroll with the author logo, Time Pilot flyby, menu-logo handoff, and instant skip input.
 - 💾 Session restore that skips the preroll and returns interrupted runs to a paused Continue menu.
+- ℹ️ Public about page with version, host, privacy, source, and sponsorship links.
 - 🛠️ Debug tools for level select, preroll replay, runtime logging, and stored-data resets.
 - 📱 Installable offline PWA mode that launches as a standalone app and enters fullscreen play from Start/Continue.
 - 🔆 Optional PWA keep-awake mode, on by default, for active or paused player runs.
@@ -79,7 +80,9 @@ runs so the display does not sleep mid-game. It releases automatically outside
 real gameplay, such as demo, game-over, reset, and teardown states, and silently
 falls back on browsers that do not support wake locks.
 
-The showcase/landing page remains the default browser view.
+The showcase/landing page remains the default browser view. An `/about` page
+summarizes the game, current build version, host, author, privacy stance, source
+repository, and optional sponsorship link.
 
 Cold PWA/game starts now begin with a skippable preroll. The author logo fades
 in from black, the Time Pilot logo and player flyby play next, then the logo

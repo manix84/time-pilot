@@ -460,7 +460,7 @@ export class TimePilot {
 
     this.context._gameArena.registerAssets([
       assetPath("fonts/font.ttf"),
-      assetPath("logos/author.png"),
+      assetPath("logos/author-128-dark.png"),
       assetPath("sprites/player/player.png"),
       assetPath("sprites/player/timewarp.png"),
       assetPath("sounds/player/bullet.mp3"),
