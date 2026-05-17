@@ -30,8 +30,15 @@
 - Separated simulation ticking from rendering: game-state calculations run at 50fps, while canvas rendering runs every animation frame.
 - Removed the old 50,000-tick gameplay pause failsafe so long sessions can keep
   running normally.
-- Added an in-app controller configuration UI for keyboard layout selection and gamepad polling.
-- Added canvas-rendered start and options menus with volume controls, controller style selection, custom keyboard bindings, and keyboard/gamepad/mouse interaction.
+- Added a page-lifecycle session snapshot so interrupted player runs can be
+  restored without writing state every frame.
+- Added a public about page with build, host, privacy, source, and sponsorship
+  details.
+- Added in-app controller configuration support for keyboard layout selection
+  and gamepad polling.
+- Added canvas-rendered start and options menus with volume controls,
+  controller style selection, custom keyboard bindings, and
+  keyboard/gamepad/mouse interaction.
 - Fixed gamepad cleanup so animation frames are cancelled on disconnect.
 
 ## 🎮 Gameplay Tuning
@@ -49,6 +56,8 @@
 - Added the animated level 5 plasma projectile sprite and kept plasma shots non-homing while making their initial aim independent of UFO facing.
 - Added bomb and plasma projectile explosion sprites for shoot-downs and player impacts.
 - Updated player and enemy sprite handling for the newer sprite sheets, including level 1 biplane animation, level 3 helicopter turning, level 5 UFO animation, and the 32-frame player rotation sheet.
+- Pinned the boss-progress meter ships to a fixed propeller-frame sprite instead
+  of animating the meter icons.
 - Updated bonus and explosion sprite geometry for the refreshed parachute, basic enemy, boss, and special bomber sheets.
 - Replaced level 5 cloud props with refreshed asteroid sprites.
 - Updated level 1 biplane sprite handling for the half-size refreshed sheet.
@@ -79,6 +88,8 @@
 - Added the cold-start preroll flow: the author logo fades in first, the Time
   Pilot logo follows with a player flyby and double-shot cue, then the logo
   animates into the root-menu position while the attract demo begins behind it.
+- Added session restore on launch: saved player runs skip the preroll and reopen
+  paused at the root menu with Continue and Restart actions.
 - Added instant preroll skipping from keyboard, pointer, touch, and controller
   input.
 - Added a debug-menu Play Preroll action for replaying the startup sequence.
@@ -93,8 +104,10 @@
 - Added Spanish to the supported menu languages.
 - Added animated level select previews for basic enemies, special enemies, bosses, and bonuses.
 - Added projectile previews and labels to the debug level select showcase.
-- Made focused debug levels pin the background demo preview until leaving level select.
-- Added idle fading on the level select menu so the background demo is easier to inspect.
+- Made the debug level select descriptions and sprite showcase follow the
+  focused level instead of the currently running level.
+- Kept the level select backplate visible instead of fading to the running
+  game behind it.
 - Added UI zoom and game POV zoom options, both with automatic viewport scaling.
 - Expanded UI and game POV zoom limits to 25%-250%, with 100% as the default.
 - Kept pixel art crisp when the game POV zoom changes.
@@ -110,6 +123,13 @@
   and out of demo view and control-overlay input display for demo actions.
 - Added fullscreen options and an `F` key toggle that stay in sync with browser
   fullscreen state.
+- Switched the PWA manifest to standalone display mode with fullscreen as an
+  override, and request fullscreen/landscape presentation from the player's
+  Start/Continue action on the `/pwa/` route.
+- Added an installed-PWA-only root-menu Exit action that asks the browser to
+  close the app window where the platform allows it.
+- Added an installed-PWA-only Keep Screen Awake option, enabled by default,
+  that uses the Screen Wake Lock API during active or paused player runs.
 - Moved the controls overlay toggle into Options and hid the unfinished Control
   Type row behind an opt-in URL flag.
 - Added touch-friendly menu behavior, including scrollable menu containers,
@@ -118,6 +138,9 @@
 - Added touch gameplay affordances: two-finger menu access, three-finger
   restart confirmation, pinch zoom for UI and game scale together, and
   touch-relative steering.
+- Added a touch-screen-only Touch Steering Guide option that draws a live line
+  from the initial gameplay touch to the thumb-controlled fire button until
+  that touch is released.
 - Added root-menu update availability. When a PWA update is waiting, the
   non-playing root menu shows Update, applies the waiting worker, plays a
   no-delay player time-warp overlay, and reloads into the updated files.
@@ -138,8 +161,8 @@
   full project.
 - Added a dry-run production build to pull request checks.
 - Added installable PWA support with a dedicated `/pwa/` canvas-only endpoint,
-  offline app-shell/game-asset caching, and non-interrupting service worker
-  update detection.
+  standalone app display, fullscreen play entry, offline app-shell/game-asset
+  caching, and non-interrupting service worker update detection.
 - Added debug-menu-controlled runtime logging for key lifecycle events such as
   preroll, game starts, continues, resets, achievements, game over, and time
   warp.
@@ -154,7 +177,7 @@
   update menu availability, filter editing baselines, time-warp previews, and
   debug overlay stories.
 - Added coverage for achievement persistence/progress, reset actions, logging,
-  preroll, and the PWA update overlay.
+  preroll, session restore, and the PWA update overlay.
 - Replaced the previous placeholder test script with a real `npm test` suite.
 
 ## 🔜 Next Milestones

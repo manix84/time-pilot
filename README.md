@@ -9,13 +9,17 @@
 - 🧠 Typed game engine modules with explicit game context injection.
 - 🧱 Feature-oriented source layout under `src/game`.
 - 🧪 Vitest coverage for engine helpers, controllers, menus, factories, the game host, and React integration.
-- 🎛️ In-app keyboard layout and gamepad configuration.
+- 🎛️ Keyboard, touch, and gamepad controller support.
 - 🧭 Canvas-rendered start/options/debug menus with keyboard, gamepad, mouse, and touch interaction.
 - 🔎 UI zoom and game POV zoom with automatic viewport scaling.
 - 🏆 Achievement tracking with an achievements page, progress counters, and unlock popups.
 - 🎬 Startup preroll with the author logo, Time Pilot flyby, menu-logo handoff, and instant skip input.
+- 💾 Session restore that skips the preroll and returns interrupted runs to a paused Continue menu.
+- ℹ️ Public about page with version, host, privacy, source, and sponsorship links.
 - 🛠️ Debug tools for level select, preroll replay, runtime logging, and stored-data resets.
-- 📱 Installable offline PWA mode that launches straight into the game canvas in fullscreen display mode.
+- 📱 Installable offline PWA mode that launches as a standalone app and enters fullscreen play from Start/Continue.
+- 🔆 Optional PWA keep-awake mode, on by default, for active or paused player runs.
+- 👆 Optional touch steering guide that appears only while the active gameplay touch is held.
 - 🔁 Root-menu update flow that applies waiting PWA updates without interrupting play.
 - 📺 Optional CRT/VHS filter presets with custom sliders.
 - 🌍 Localized menus, level blurbs, and level showcase labels.
@@ -54,8 +58,10 @@ npm run preview
 
 The production build includes a web app manifest and service worker. Installed
 launches use the dedicated `/pwa/` endpoint, which renders only the game canvas.
-The manifest requests fullscreen display mode and landscape orientation so the
-app behaves like a dedicated game rather than a web page.
+The manifest uses standalone display mode with landscape orientation so Android
+identifies the install as an app, then the game requests fullscreen and a
+landscape orientation lock from the player's Start/Continue action where mobile
+browsers allow it.
 
 The service worker caches the app shell plus core game sprites, fonts, and
 sounds so the installed game can continue to run offline after it has been
@@ -64,11 +70,31 @@ worker on load, reconnect, and tab focus. Updates wait in the background and
 are applied only from the non-playing root menu through the `Update` button,
 followed by the player time-warp animation and a reload.
 
-The showcase/landing page remains the default browser view.
+When the game is running as an installed PWA, the root menu also shows an
+`Exit` action. It asks the browser to close the app window; platforms that do
+not allow scripted app closure may ignore the request.
+
+Installed PWA options also include `Keep Screen Awake`. It is enabled by
+default and uses the browser Screen Wake Lock API during active or paused player
+runs so the display does not sleep mid-game. It releases automatically outside
+real gameplay, such as demo, game-over, reset, and teardown states, and silently
+falls back on browsers that do not support wake locks.
+
+The showcase/landing page remains the default browser view. An `/about` page
+summarizes the game, current build version, host, author, privacy stance, source
+repository, and optional sponsorship link.
 
 Cold PWA/game starts now begin with a skippable preroll. The author logo fades
 in from black, the Time Pilot logo and player flyby play next, then the logo
 animates into the root-menu position while the attract demo starts behind it.
+
+If a real player run is interrupted by closing or backgrounding the page, the
+game stores a small session snapshot during page lifecycle events. On the next
+launch it skips the preroll, restores the run into the same era, and opens the
+root menu paused on `Continue`. A `Restart` action appears directly beneath it
+for players who want to discard the restored run and begin again. The snapshot
+is not written every frame, and demo, preroll, game-over, and time-warp states
+are ignored.
 
 ## 🧪 Quality Checks
 
@@ -121,6 +147,10 @@ React owns mounting and cleanup. The game engine owns simulation, rendering, inp
 - **Touch**: steering is relative to where the thumb first touches the screen,
   firing happens while touching, two-finger taps open the menu, three-finger
   taps request restart, and pinch gestures adjust UI and game zoom together.
+  On touch-capable devices, Options includes a `Touch Steering Guide` toggle.
+  When enabled, gameplay draws a guide from the initial touch point to the
+  player thumb's current fire button position, and it disappears as soon as
+  that touch is released.
 
 The game also renders its start and options menus inside the canvas. Keyboard
 and gamepad commands move, adjust, and activate menu items through the same
@@ -187,6 +217,8 @@ src/
     constants.ts            Game tuning and asset constants
     game-timing.ts          Shared simulation tick rate
     logger.ts               Debug-menu-controlled runtime logger
+    screen-wake-lock.ts     Installed-PWA keep-awake helper
+    storage-reset.ts        Debug reset helpers for persisted data
     achievements.ts         Achievement definitions and tracking subsystem
     achievement-notifications.ts
                             Canvas unlock popup renderer
@@ -196,7 +228,6 @@ src/
     engine/                 Canvas arena, ticker, sound, helpers
     menus/                  Menu definitions
     systems/                Collision, spawning, and rendering systems
-    storage-reset.ts        Debug reset helpers for persisted data
     ui-scale.ts             UI and game zoom helpers
     time-warp.ts            Player time-warp sequence timing
     *.ts                    Entities, factories, HUD, options

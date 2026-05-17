@@ -10,6 +10,12 @@ export const isPwaRoute = (): boolean => {
   return /\/pwa(?:\/index\.html|\/)?$/.test(url.pathname);
 };
 
+export const isAboutRoute = (): boolean => {
+  const url = new URL(window.location.href);
+
+  return /\/about(?:\/index\.html|\/)?$/.test(url.pathname);
+};
+
 export const isPwaMode = (): boolean => {
   const standaloneNavigator = navigator as Navigator & {
     standalone?: boolean;

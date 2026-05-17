@@ -7,7 +7,13 @@ import {
   useState,
   type CSSProperties,
 } from "react";
+import { exitInstalledApp } from "../game/app-exit";
 import { getFilterSettingsForMode } from "../game/filter-settings";
+import { enterGameFullscreen } from "../game/immersive-mode";
+import {
+  canUseScreenWakeLock,
+  ScreenWakeLockController,
+} from "../game/screen-wake-lock";
 import { useTimePilot } from "../game/use-time-pilot";
 import userOptions from "../game/user-options";
 import UpdateOverlay from "./UpdateOverlay";
@@ -28,6 +34,21 @@ type TimePilotGameProps = {
    * inside the game is expected.
    */
   enableUpdates?: boolean;
+
+  /**
+   * Requests fullscreen and landscape orientation when play starts.
+   */
+  enableImmersiveMode?: boolean;
+
+  /**
+   * Shows the root-menu Exit action and requests app closure when used.
+   */
+  enableAppExit?: boolean;
+
+  /**
+   * Shows the PWA keep-awake option and manages screen wake lock requests.
+   */
+  enableScreenWakeLock?: boolean;
 };
 
 /**
@@ -37,7 +58,13 @@ type TimePilotGameProps = {
  * mirrors user-selected video filter options into CSS custom properties, and
  * optionally renders the update overlay used by the PWA flow.
  */
-function TimePilotGame({ debug, enableUpdates = false }: TimePilotGameProps) {
+function TimePilotGame({
+  debug,
+  enableAppExit = false,
+  enableImmersiveMode = false,
+  enableScreenWakeLock = false,
+  enableUpdates = false,
+}: TimePilotGameProps) {
   const [filterVersion, setFilterVersion] = useState(0);
   const [isUpdateAvailable, setIsUpdateAvailable] = useState(false);
   const [updateOverlayState, setUpdateOverlayState] = useState<
@@ -46,6 +73,7 @@ function TimePilotGame({ debug, enableUpdates = false }: TimePilotGameProps) {
   const applyUpdateRef = useRef<() => void>(() => {});
   const isUpdateAvailableRef = useRef(false);
   const updateOverlayStateRef = useRef(updateOverlayState);
+  const wakeLockControllerRef = useRef<ScreenWakeLockController | null>(null);
   const rgbSplitFilterId = useId().replace(/:/g, "");
   const applyUpdate = useCallback(() => {
     if (
@@ -67,8 +95,24 @@ function TimePilotGame({ debug, enableUpdates = false }: TimePilotGameProps) {
         isUpdateAvailableRef.current &&
         updateOverlayStateRef.current === "idle",
       debug,
+      enterImmersiveMode: enableImmersiveMode
+        ? enterGameFullscreen
+        : undefined,
+      exitApp: enableAppExit ? exitInstalledApp : undefined,
+      canUseScreenWakeLock: () =>
+        enableScreenWakeLock && canUseScreenWakeLock(),
+      setScreenWakeLock: (active: boolean) => {
+        wakeLockControllerRef.current?.setActive(active);
+      },
     }),
-    [applyUpdate, debug, enableUpdates]
+    [
+      applyUpdate,
+      debug,
+      enableAppExit,
+      enableImmersiveMode,
+      enableScreenWakeLock,
+      enableUpdates,
+    ]
   );
   const { setContainerElement } = useTimePilot(options);
   const activeFilterSettings = getFilterSettingsForMode(
@@ -108,6 +152,21 @@ function TimePilotGame({ debug, enableUpdates = false }: TimePilotGameProps) {
   useEffect(() => {
     updateOverlayStateRef.current = updateOverlayState;
   }, [updateOverlayState]);
+
+  useEffect(() => {
+    if (!enableScreenWakeLock || !canUseScreenWakeLock()) {
+      wakeLockControllerRef.current?.destroy();
+      wakeLockControllerRef.current = null;
+      return;
+    }
+
+    wakeLockControllerRef.current = new ScreenWakeLockController();
+
+    return () => {
+      wakeLockControllerRef.current?.destroy();
+      wakeLockControllerRef.current = null;
+    };
+  }, [enableScreenWakeLock]);
 
   useEffect(() => {
     const handleOptionsChanged = (): void => {

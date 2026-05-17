@@ -74,6 +74,8 @@ const es: typeof en = {
     fullScreen: "Pantalla completa",
     gameOver: "Fin de la partida",
     gameZoom: "Zoom del juego",
+    keepScreenAwake: "Mantener pantalla",
+    touchSteeringOverlay: "Guia tactil",
     levelShowcase: {
       basic: {
         label: "Enemigos",
@@ -108,7 +110,7 @@ const es: typeof en = {
       info: "Info",
       warning: "Advertencia",
       error: "Error",
-      fatal: "Fatal",
+      fatal: "Critico",
     },
     masterVolume: "Volumen principal",
     musicVolume: "Volumen musica",

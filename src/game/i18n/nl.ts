@@ -74,6 +74,8 @@ const nl: typeof en = {
     fullScreen: "Volledig scherm",
     gameOver: "Spel voorbij",
     gameZoom: "Gamezoom",
+    keepScreenAwake: "Scherm wakker houden",
+    touchSteeringOverlay: "Touch-stuurhulp",
     levelShowcase: {
       basic: {
         label: "Vijanden",
@@ -108,7 +110,7 @@ const nl: typeof en = {
       info: "Info",
       warning: "Waarschuwing",
       error: "Fout",
-      fatal: "Fatal",
+      fatal: "Kritiek",
     },
     masterVolume: "Hoofdvolume",
     musicVolume: "Muziekvolume",

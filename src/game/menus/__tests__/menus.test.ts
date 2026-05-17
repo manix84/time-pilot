@@ -45,12 +45,18 @@ describe("menu definitions", () => {
     userOptions.setOption("debugLives", 3);
     userOptions.setOption("language", "en");
     userOptions.setOption("logLevel", "off");
+    userOptions.setOption("keepScreenAwake", true);
+    userOptions.setOption("touchSteeringOverlay", true);
     userOptions.setOption("gameZoom", 100);
     userOptions.setOption("masterVolume", 10);
     userOptions.setOption("uiZoom", 100);
     userOptions.setOption("filterSettings", { ...filterPresets.off });
     userOptions.setOption("videoFilterMode", "off");
     userOptions.setKeyboardBinding("up", [38, 87]);
+    Object.defineProperty(navigator, "maxTouchPoints", {
+      configurable: true,
+      value: 0,
+    });
     window.history.replaceState(null, "", "/");
   });
 
@@ -88,6 +94,42 @@ describe("menu definitions", () => {
       })
     );
     expect(start).toHaveBeenCalled();
+  });
+
+  it("adds root-menu exit only when app exit is available", () => {
+    const arena = createArena();
+    const exitApp = vi.fn();
+    const browserMenus = new Menus(arena, { start: vi.fn() });
+    const pwaMenus = new Menus(arena, {
+      exitApp,
+      start: vi.fn(),
+    });
+
+    browserMenus.showStart();
+    browserMenus.render();
+
+    expect(arena.renderText).not.toHaveBeenCalledWith(
+      "Exit",
+      expect.any(Number),
+      expect.any(Number),
+      expect.anything()
+    );
+
+    vi.mocked(arena.renderText).mockClear();
+    pwaMenus.showStart();
+    for (let i = 0; i < 3; i++) {
+      pwaMenus.next();
+    }
+    pwaMenus.render();
+    pwaMenus.activate();
+
+    expect(arena.renderText).toHaveBeenCalledWith(
+      "Exit",
+      expect.any(Number),
+      expect.any(Number),
+      expect.anything()
+    );
+    expect(exitApp).toHaveBeenCalled();
   });
 
   it("supports pointer selection and click activation", () => {
@@ -680,6 +722,90 @@ describe("menu definitions", () => {
 
     menus.activate();
     expect(userOptions.debug.showControlsOverlay).toBe(true);
+  });
+
+  it("shows the keep-awake option only when screen wake lock is available", () => {
+    const arena = createArena();
+    const syncScreenWakeLock = vi.fn();
+    const browserMenus = new Menus(arena, { start: vi.fn() });
+    const pwaMenus = new Menus(arena, {
+      canUseScreenWakeLock: () => true,
+      start: vi.fn(),
+      syncScreenWakeLock,
+    });
+
+    browserMenus.showStart();
+    browserMenus.next();
+    browserMenus.activate();
+    browserMenus.render();
+
+    expect(arena.renderText).not.toHaveBeenCalledWith(
+      "Keep Screen Awake",
+      expect.any(Number),
+      expect.any(Number),
+      expect.anything()
+    );
+
+    vi.mocked(arena.renderText).mockClear();
+    pwaMenus.showStart();
+    pwaMenus.next();
+    pwaMenus.activate();
+    for (let i = 0; i < 7; i++) {
+      pwaMenus.next();
+    }
+    pwaMenus.render();
+
+    expect(arena.renderText).toHaveBeenCalledWith(
+      "Keep Screen Awake",
+      expect.any(Number),
+      expect.any(Number),
+      expect.objectContaining({ align: "left" })
+    );
+    expect(arena.renderText).toHaveBeenCalledWith(
+      "On",
+      expect.any(Number),
+      expect.any(Number),
+      expect.objectContaining({ align: "right" })
+    );
+
+    pwaMenus.activate();
+
+    expect(userOptions.keepScreenAwake).toBe(false);
+    expect(syncScreenWakeLock).toHaveBeenCalled();
+  });
+
+  it("shows the touch steering guide option on touch devices", () => {
+    Object.defineProperty(navigator, "maxTouchPoints", {
+      configurable: true,
+      value: 1,
+    });
+    const arena = createArena();
+    const menus = new Menus(arena, { start: vi.fn() });
+
+    menus.showStart();
+    menus.next();
+    menus.activate();
+    for (let i = 0; i < 7; i++) {
+      menus.next();
+    }
+    menus.render();
+
+    expect(arena.renderText).toHaveBeenCalledWith(
+      "Touch Steering Guide",
+      expect.any(Number),
+      expect.any(Number),
+      expect.objectContaining({ align: "left" })
+    );
+    expect(arena.renderText).toHaveBeenCalledWith(
+      "On",
+      expect.any(Number),
+      expect.any(Number),
+      expect.objectContaining({ align: "right" })
+    );
+
+    menus.activate();
+
+    expect(userOptions.touchSteeringOverlay).toBe(false);
   });
 
   it("opens filters, changes presets, edits custom values, and resets", () => {
@@ -1484,13 +1610,19 @@ describe("menu definitions", () => {
     );
 
     menus.next();
-    expect(previewLevel).toHaveBeenLastCalledWith(1);
+    expect(previewLevel).toHaveBeenLastCalledWith(2);
     menus.render();
-    expect(arena.renderText).not.toHaveBeenCalledWith(
+    expect(arena.renderText).toHaveBeenCalledWith(
       "A.D 1940",
       -260,
       -54,
       expect.anything()
+    );
+    expect(arena.renderText).toHaveBeenCalledWith(
+      "War in the Clouds",
+      expect.any(Number),
+      expect.any(Number),
+      expect.objectContaining({ align: "left" })
     );
     expect(selectLevel).not.toHaveBeenCalled();
     menus.activate();
@@ -1499,7 +1631,7 @@ describe("menu definitions", () => {
     expect(selectLevel).toHaveBeenCalledWith(2);
   });
 
-  it("fades the level select menu backplate and restores it on escape", () => {
+  it("keeps the level select menu backplate visible while idle", () => {
     const arena = createArena();
     const menus = new Menus(arena, {
       getLevel: () => 1,
@@ -1537,7 +1669,7 @@ describe("menu definitions", () => {
           (call) => call[0] === -400 && call[1] === -300 && call[2] === 800 && call[3] === 600
         )
       )
-    ).toBe(false);
+    ).toBe(true);
 
     vi.mocked(arena.getContext).mockClear();
     now.mockReturnValue(3200);

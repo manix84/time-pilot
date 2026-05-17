@@ -22,6 +22,8 @@ type TimeWarpSceneProps = {
   warpScale?: number;
 };
 
+const timeWarpTileOverlap = 1;
+
 const flashDurationMs = 0;
 const endBlinkDurationMs = 90;
 const holdDurationMs = 900;
@@ -105,7 +107,7 @@ const drawWarpFrame = (
     timeWarpFrameHeight,
     x,
     y - renderHeight / 2,
-    renderWidth,
+    renderWidth + timeWarpTileOverlap,
     renderHeight
   );
 };

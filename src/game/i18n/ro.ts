@@ -74,6 +74,8 @@ const ro: typeof en = {
     fullScreen: "Ecran complet",
     gameOver: "Joc terminat",
     gameZoom: "Zoom joc",
+    keepScreenAwake: "Tine ecranul activ",
+    touchSteeringOverlay: "Ghid tactil",
     levelShowcase: {
       basic: {
         label: "Inamici",
@@ -108,7 +110,7 @@ const ro: typeof en = {
       info: "Info",
       warning: "Avertizare",
       error: "Eroare",
-      fatal: "Fatal",
+      fatal: "Critic",
     },
     masterVolume: "Volum principal",
     musicVolume: "Volum muzica",

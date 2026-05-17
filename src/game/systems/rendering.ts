@@ -19,6 +19,7 @@ import type {
 } from "../types";
 
 const playerRotationStep = 360 / player.rotationFrameCount;
+const timeWarpTileOverlap = 1;
 
 /**
  * Coordinates all canvas rendering for gameplay, HUD, menus, and transitions.
@@ -184,7 +185,7 @@ class RenderingSystem implements RenderingSystemInstance {
       timeWarpFrameHeight,
       posX,
       -renderHeight / 2,
-      renderWidth,
+      renderWidth + timeWarpTileOverlap,
       renderHeight
     );
   };

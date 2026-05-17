@@ -23,6 +23,7 @@ describe("TimePilot engine", () => {
     userOptions.setOption("controllerType", "keyboard1");
     userOptions.setOption("gameZoom", 100);
     userOptions.setOption("gamepadEnabled", true);
+    userOptions.setOption("keepScreenAwake", true);
     userOptions.setOption("language", "en");
     userOptions.setOption("logLevel", "off");
     userOptions.setOption("uiZoom", 100);
@@ -31,13 +32,14 @@ describe("TimePilot engine", () => {
       value: 0,
     });
     vi.restoreAllMocks();
+    vi.unstubAllGlobals();
   });
 
   it("mounts into a container and can pause, resume, restart, and destroy", async () => {
     userOptions.setOption("logLevel", "info");
     const game = new TimePilot(host, { debug: true });
 
-    await new Promise((resolve) => window.setTimeout(resolve, 5));
+    await new Promise((resolve) => window.setTimeout(resolve, 20));
 
     expect(host.querySelector("canvas")).toBeInstanceOf(HTMLCanvasElement);
 
@@ -66,6 +68,89 @@ describe("TimePilot engine", () => {
     expect(requestAnimationFrameSpy).not.toHaveBeenCalled();
 
     game.destroyGame();
+  });
+
+  it("requests immersive mode when the player starts from the menu", async () => {
+    const enterImmersiveMode = vi.fn();
+    const game = new TimePilot(host, {
+      debug: true,
+      enterImmersiveMode,
+      gamepadEnabled: false,
+    });
+    const pilot = game as unknown as {
+      context: {
+        _menus: {
+          activate: () => void;
+          showStart: () => void;
+        };
+      };
+    };
+
+    await new Promise((resolve) => window.setTimeout(resolve, 5));
+
+    pilot.context._menus.showStart();
+    pilot.context._menus.activate();
+
+    expect(enterImmersiveMode).toHaveBeenCalled();
+
+    game.destroyGame();
+  });
+
+  it("starts a restarted run as player gameplay instead of demo mode", async () => {
+    const game = new TimePilot(host, { debug: true, gamepadEnabled: false });
+    const pilot = game as unknown as {
+      context: {
+        _isDemoMode: boolean;
+        _level: number;
+        _player: {
+          getData: (key: "level") => number | undefined;
+        };
+      };
+      isDemoMode: boolean;
+      startDemoMode: () => void;
+      startNewGame: () => void;
+    };
+
+    await new Promise((resolve) => window.setTimeout(resolve, 5));
+
+    pilot.startDemoMode();
+    expect(pilot.context._isDemoMode).toBe(true);
+
+    pilot.startNewGame();
+
+    expect(pilot.isDemoMode).toBe(false);
+    expect(pilot.context._isDemoMode).toBe(false);
+    expect(pilot.context._level).toBe(1);
+    expect(pilot.context._player.getData("level")).toBe(1);
+
+    game.destroyGame();
+  });
+
+  it("keeps the screen wake lock active while gameplay is running or paused", async () => {
+    const setScreenWakeLock = vi.fn();
+    const game = new TimePilot(host, {
+      debug: true,
+      gamepadEnabled: false,
+      setScreenWakeLock,
+    });
+    const pilot = game as unknown as {
+      beginGame: () => void;
+    };
+
+    await new Promise((resolve) => window.setTimeout(resolve, 5));
+
+    pilot.beginGame();
+    expect(setScreenWakeLock).toHaveBeenLastCalledWith(true);
+
+    game.pauseGame(true);
+    expect(setScreenWakeLock).toHaveBeenLastCalledWith(true);
+
+    userOptions.setOption("keepScreenAwake", false);
+    game.resumeGame();
+    expect(setScreenWakeLock).toHaveBeenLastCalledWith(false);
+
+    game.destroyGame();
+    expect(setScreenWakeLock).toHaveBeenLastCalledWith(false);
   });
 
   it("defaults the active controls overlay to touch on touch devices", async () => {
@@ -379,6 +464,198 @@ describe("TimePilot engine", () => {
     game.destroyGame();
   });
 
+  it("saves a playable session snapshot when the page is hidden", async () => {
+    const game = new TimePilot(host, { debug: true });
+    const pilot = game as unknown as {
+      beginGame: () => void;
+      context: {
+        _player: {
+          setData: (key: string, value: unknown, isLastKnownGood?: boolean) => void;
+        };
+      };
+    };
+
+    await new Promise((resolve) => window.setTimeout(resolve, 5));
+
+    pilot.beginGame();
+    pilot.context._player.setData("score", 12345, true);
+    pilot.context._player.setData("lives", 2, true);
+    pilot.context._player.setData("continues", 1, true);
+    pilot.context._player.setData("posX", 42);
+    pilot.context._player.setData("posY", -24);
+    window.dispatchEvent(new Event("pagehide"));
+
+    const snapshot = JSON.parse(
+      localStorage.getItem("timePilot.gameSession") ?? "{}"
+    );
+
+    expect(snapshot).toMatchObject({
+      level: 1,
+      player: {
+        continues: 1,
+        lives: 2,
+        posX: 42,
+        posY: -24,
+        score: 12345,
+      },
+      version: 1,
+    });
+
+    game.destroyGame();
+  });
+
+  it("saves a playable session snapshot before exiting the installed app", async () => {
+    const exitApp = vi.fn();
+    const game = new TimePilot(host, {
+      exitApp,
+      gamepadEnabled: false,
+    });
+    const pilot = game as unknown as {
+      beginGame: () => void;
+      context: {
+        _menus: {
+          activate: () => void;
+          next: () => void;
+          showStart: (options?: { startLabel?: string }) => void;
+        };
+        _player: {
+          setData: (key: string, value: unknown, isLastKnownGood?: boolean) => void;
+        };
+      };
+    };
+
+    await new Promise((resolve) => window.setTimeout(resolve, 5));
+
+    pilot.beginGame();
+    pilot.context._player.setData("score", 23456, true);
+    pilot.context._player.setData("lives", 2, true);
+    pilot.context._player.setData("continues", 1, true);
+    pilot.context._player.setData("posX", 64);
+    pilot.context._player.setData("posY", -12);
+    pilot.context._menus.showStart({ startLabel: "Continue" });
+    for (let i = 0; i < 3; i++) {
+      pilot.context._menus.next();
+    }
+    pilot.context._menus.activate();
+
+    const snapshot = JSON.parse(
+      localStorage.getItem("timePilot.gameSession") ?? "{}"
+    );
+
+    expect(exitApp).toHaveBeenCalled();
+    expect(snapshot).toMatchObject({
+      level: 1,
+      player: {
+        continues: 1,
+        lives: 2,
+        posX: 64,
+        posY: -12,
+        score: 23456,
+      },
+      version: 1,
+    });
+
+    game.destroyGame();
+  });
+
+  it("does not show root-menu app exit when no app exit handler is available", async () => {
+    const game = new TimePilot(host, { gamepadEnabled: false });
+    const pilot = game as unknown as {
+      context: {
+        _gameArena: { renderText: (...args: unknown[]) => void };
+        _menus: {
+          render: () => void;
+          showStart: () => void;
+        };
+      };
+    };
+
+    await new Promise((resolve) => window.setTimeout(resolve, 5));
+
+    const renderText = vi.spyOn(pilot.context._gameArena, "renderText");
+
+    pilot.context._menus.showStart();
+    pilot.context._menus.render();
+
+    expect(renderText).not.toHaveBeenCalledWith(
+      "Exit",
+      expect.any(Number),
+      expect.any(Number),
+      expect.anything()
+    );
+
+    game.destroyGame();
+  });
+
+  it("restores a saved session paused at the root menu", async () => {
+    vi.stubGlobal(
+      "Image",
+      class {
+        complete = true;
+        onerror: (() => void) | null = null;
+        onload: (() => void) | null = null;
+
+        set src(_value: string) {
+          window.setTimeout(() => this.onload?.(), 0);
+        }
+      }
+    );
+    localStorage.setItem(
+      "timePilot.gameSession",
+      JSON.stringify({
+        level: 3,
+        player: {
+          continues: 2,
+          heading: 90,
+          lives: 1,
+          nextExtraLifeScore: 50000,
+          posX: 120,
+          posY: -80,
+          score: 34567,
+        },
+        savedAt: Date.now(),
+        version: 1,
+      })
+    );
+    const game = new TimePilot(host, { debug: true });
+    const pilot = game as unknown as {
+      context: {
+        _gameTicker: { isRunning: boolean };
+        _level: number;
+        _menus: { next: () => void; activate: () => void; render: () => void };
+        _player: {
+          getData: (
+            key: "continues" | "heading" | "lives" | "posX" | "posY" | "score"
+          ) => number | undefined;
+        };
+      };
+    };
+
+    await new Promise((resolve) => window.setTimeout(resolve, 5));
+
+    const renderText = vi.spyOn(pilot.context._menus, "render");
+    pilot.context._menus.render();
+
+    expect(pilot.context._gameTicker.isRunning).toBe(false);
+    expect(pilot.context._level).toBe(3);
+    expect(pilot.context._player.getData("score")).toBe(34567);
+    expect(pilot.context._player.getData("lives")).toBe(1);
+    expect(pilot.context._player.getData("continues")).toBe(2);
+    expect(pilot.context._player.getData("heading")).toBe(90);
+    expect(pilot.context._player.getData("posX")).toBe(120);
+    expect(pilot.context._player.getData("posY")).toBe(-80);
+    expect(renderText).toHaveBeenCalled();
+
+    pilot.context._menus.next();
+    pilot.context._menus.activate();
+
+    expect(localStorage.getItem("timePilot.gameSession")).toBeNull();
+    expect(pilot.context._gameTicker.isRunning).toBe(true);
+    expect(pilot.context._level).toBe(1);
+
+    game.destroyGame();
+  });
+
   it("freezes gameplay during the time-warp delay before the visible effect", () => {
     const game = new TimePilot(host, { debug: true, gamepadEnabled: false });
     const pilot = game as unknown as {
@@ -422,9 +699,8 @@ describe("TimePilot engine", () => {
     pilot.context._levelProgress.bossDefeated = true;
 
     const schedules = Object.values(pilot.context._gameTicker._schedule);
-    const gameplaySchedules = schedules.slice(-5);
-    const [movement, rotation, shooting] = gameplaySchedules;
-    const cleanup = gameplaySchedules[4];
+    expect(schedules).toHaveLength(7);
+    const [, , movement, rotation, shooting, , cleanup] = schedules;
 
     cleanup.callback();
     expect(pilot.context._levelProgress.bossDefeated).toBe(false);
@@ -447,6 +723,88 @@ describe("TimePilot engine", () => {
     expect(pilot.context._bullets.cleanup).not.toHaveBeenCalled();
     expect(pilot.context._enemyBullets.cleanup).not.toHaveBeenCalled();
     expect(pilot.context._props.cleanup).not.toHaveBeenCalled();
+
+    game.destroyGame();
+  });
+
+  it("keeps the player and scenery moving during a level intro until player input", () => {
+    const game = new TimePilot(host, { debug: true, gamepadEnabled: false });
+    const pilot = game as unknown as {
+      configureGameLoop: () => void;
+      context: {
+        _bonuses: { reposition: () => void };
+        _bullets: { reposition: () => void };
+        _controlInputState: { fire: boolean };
+        _enemyBullets: { reposition: () => void };
+        _enemies: { reposition: () => void };
+        _gameTicker: {
+          _schedule: Record<string, { callback: () => void; nthFrame: number }>;
+          clearSchedule: () => void;
+        };
+        _levelIntroUntilTick: number;
+        _player: {
+          reposition: () => void;
+          rotate: () => void;
+          setData: (key: string, value: unknown) => void;
+          shoot: () => void;
+          stopShooting: () => void;
+        };
+        _props: { reposition: () => void };
+      };
+      spawningSystem: { spawnEntities: () => void };
+    };
+
+    const spies = [
+      vi.spyOn(pilot.context._player, "reposition"),
+      vi.spyOn(pilot.context._player, "rotate"),
+      vi.spyOn(pilot.context._player, "shoot"),
+      vi.spyOn(pilot.context._player, "stopShooting"),
+      vi.spyOn(pilot.context._enemies, "reposition"),
+      vi.spyOn(pilot.context._bullets, "reposition"),
+      vi.spyOn(pilot.context._enemyBullets, "reposition"),
+      vi.spyOn(pilot.context._props, "reposition"),
+      vi.spyOn(pilot.context._bonuses, "reposition"),
+      vi.spyOn(pilot.spawningSystem, "spawnEntities"),
+    ];
+
+    pilot.context._gameTicker.clearSchedule();
+    pilot.configureGameLoop();
+    pilot.context._levelIntroUntilTick = 250;
+
+    const schedules = Object.values(pilot.context._gameTicker._schedule);
+    expect(schedules).toHaveLength(7);
+    const [, , movement, rotation, shooting] = schedules;
+
+    movement.callback();
+    rotation.callback();
+    shooting.callback();
+
+    expect(pilot.context._player.stopShooting).toHaveBeenCalled();
+    expect(pilot.context._player.reposition).toHaveBeenCalled();
+    expect(pilot.context._props.reposition).toHaveBeenCalled();
+    expect(pilot.spawningSystem.spawnEntities).toHaveBeenCalled();
+    expect(pilot.context._player.rotate).not.toHaveBeenCalled();
+    expect(pilot.context._player.shoot).not.toHaveBeenCalled();
+    expect(pilot.context._enemies.reposition).not.toHaveBeenCalled();
+    expect(pilot.context._bullets.reposition).not.toHaveBeenCalled();
+    expect(pilot.context._enemyBullets.reposition).not.toHaveBeenCalled();
+    expect(pilot.context._bonuses.reposition).not.toHaveBeenCalled();
+    expect(pilot.context._levelIntroUntilTick).toBe(250);
+
+    spies.forEach((spy) => spy.mockClear());
+    pilot.context._controlInputState.fire = true;
+
+    movement.callback();
+    rotation.callback();
+    shooting.callback();
+
+    expect(pilot.context._levelIntroUntilTick).toBe(0);
+    expect(pilot.context._enemies.reposition).toHaveBeenCalled();
+    expect(pilot.context._bullets.reposition).toHaveBeenCalled();
+    expect(pilot.context._enemyBullets.reposition).toHaveBeenCalled();
+    expect(pilot.context._bonuses.reposition).toHaveBeenCalled();
+    expect(pilot.context._player.rotate).toHaveBeenCalled();
+    expect(pilot.context._player.shoot).toHaveBeenCalled();
 
     game.destroyGame();
   });

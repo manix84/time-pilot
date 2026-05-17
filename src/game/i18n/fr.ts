@@ -74,6 +74,8 @@ const fr: typeof en = {
     fullScreen: "Plein ecran",
     gameOver: "Partie terminee",
     gameZoom: "Zoom jeu",
+    keepScreenAwake: "Garder l'ecran actif",
+    touchSteeringOverlay: "Guide tactile",
     levelShowcase: {
       basic: { label: "Ennemis", description: "Appareil principal de cette ere." },
       special: { label: "Special", description: "Menace rare aux attaques etranges." },
@@ -96,7 +98,7 @@ const fr: typeof en = {
       info: "Info",
       warning: "Avertissement",
       error: "Erreur",
-      fatal: "Fatal",
+      fatal: "Critique",
     },
     masterVolume: "Volume principal",
     musicVolume: "Volume musique",

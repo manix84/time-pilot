@@ -614,6 +614,17 @@ describe("context-backed game modules", () => {
     context._hud.render();
 
     expect(drawImage).toHaveBeenCalledTimes(20);
+    expect(drawImage).toHaveBeenCalledWith(
+      expect.any(Image),
+      64,
+      20,
+      16,
+      8,
+      expect.any(Number),
+      expect.any(Number),
+      expect.any(Number),
+      expect.any(Number)
+    );
     expect(rect).toHaveBeenCalledWith(-394, 262, 150, 34);
   });
 
@@ -1539,6 +1550,34 @@ describe("context-backed game modules", () => {
       expect.any(Number),
       expect.any(Number),
       expect.any(Object)
+    );
+  });
+
+  it("renders the live touch steering guide only during gameplay", () => {
+    const context = createContext();
+
+    context._controlInputState.activeController = "touch";
+    context._controlInputState.fire = true;
+    context._controlInputState.touchOrigin = { posX: 120, posY: 80 };
+    context._controlInputState.touchCurrent = { posX: 170, posY: 40 };
+    context._hud.render();
+
+    expect(context._gameArena.renderText).toHaveBeenCalledWith(
+      "FIRE",
+      170,
+      40,
+      expect.objectContaining({ align: "center" })
+    );
+
+    vi.mocked(context._gameArena.renderText).mockClear();
+    vi.mocked(context._menus.isActive).mockReturnValue(true);
+    context._hud.render();
+
+    expect(context._gameArena.renderText).not.toHaveBeenCalledWith(
+      "FIRE",
+      170,
+      40,
+      expect.anything()
     );
   });
 

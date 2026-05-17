@@ -19,9 +19,12 @@ const bossProgressHeight = 34;
 const bossProgressPadding = 3;
 const bossProgressEdgeInset = 6;
 const bossProgressBottomInset = 4;
-const bossProgressFrameDuration = 140;
+const bossProgressFixedFrameIndex = 1;
 const bossProgressEnemyScale = 0.5;
 const directionalEnemyVisibleHeight = 8;
+const touchSteeringOriginOuterRadius = 28;
+const touchSteeringOriginRadius = 18;
+const touchSteeringThumbRadius = 24;
 
 /**
  * Heads-up display renderer for score, lives, boss progress, credits, and overlays.
@@ -50,6 +53,8 @@ class Hud implements HudInstance {
     const uiScale = this._getUiScale();
     const uiWidth = this._getUiWidth();
     const uiHeight = this._getUiHeight();
+
+    this.renderTouchSteeringOverlay();
 
     context.save();
     context.scale(uiScale, uiScale);
@@ -219,19 +224,22 @@ class Hud implements HudInstance {
   private getRightFacingEnemyFrame = (
     enemyConfig: EnemyConfig
   ): { x: number; y: number } => {
-    const tick = Math.floor(performance.now() / bossProgressFrameDuration);
+    const animationRow = Math.min(
+      bossProgressFixedFrameIndex,
+      Math.max(0, (enemyConfig.animationRows ?? 1) - 1)
+    );
 
     if (enemyConfig.damageFrames) {
       return {
         x: 0,
-        y: tick % (enemyConfig.animationRows ?? 1),
+        y: animationRow,
       };
     }
 
     if (enemyConfig.animationRows && enemyConfig.horizontalDirectionFrames) {
       return {
         x: 0,
-        y: tick % enemyConfig.animationRows,
+        y: animationRow,
       };
     }
 
@@ -239,14 +247,20 @@ class Hud implements HudInstance {
       return {
         x: enemyConfig.canRotate
           ? this.getDirectionalFrameForHeading(enemyConfig, 90)
-          : tick % (enemyConfig.animationFrames ?? 1),
-        y: tick % enemyConfig.animationRows,
+          : Math.min(
+            bossProgressFixedFrameIndex,
+            Math.max(0, (enemyConfig.animationFrames ?? 1) - 1)
+          ),
+        y: animationRow,
       };
     }
 
     if (enemyConfig.animationFrames && !enemyConfig.canRotate) {
       return {
-        x: tick % enemyConfig.animationFrames,
+        x: Math.min(
+          bossProgressFixedFrameIndex,
+          Math.max(0, enemyConfig.animationFrames - 1)
+        ),
         y: 0,
       };
     }
@@ -363,6 +377,88 @@ class Hud implements HudInstance {
       );
     }
 
+    context.restore();
+  };
+
+  /**
+   * Draws the live touch steering guide at the thumb's gameplay position.
+   */
+  private renderTouchSteeringOverlay = (): void => {
+    const inputState = this._context._controlInputState;
+    const origin = inputState.touchOrigin;
+    const current = inputState.touchCurrent;
+
+    if (
+      !userOptions.touchSteeringOverlay ||
+      this._context._menus.isActive() ||
+      this._context._isDemoMode ||
+      inputState.activeController !== "touch" ||
+      !inputState.fire ||
+      !origin ||
+      !current
+    ) {
+      return;
+    }
+
+    const context = this._gameArena.getContext() as CanvasRenderingContext2D;
+    const distance = Math.hypot(current.posX - origin.posX, current.posY - origin.posY);
+
+    context.save();
+    context.lineWidth = 3;
+    context.strokeStyle = palette.overlay.line;
+    context.fillStyle = "transparent";
+    context.globalAlpha = 0.32;
+    context.beginPath();
+    context.arc(
+      origin.posX,
+      origin.posY,
+      touchSteeringOriginOuterRadius,
+      0,
+      Math.PI * 2
+    );
+    context.fill();
+    context.globalAlpha = 0.62;
+    context.beginPath();
+    context.arc(
+      origin.posX,
+      origin.posY,
+      touchSteeringOriginRadius,
+      0,
+      Math.PI * 2
+    );
+    context.stroke();
+
+    if (distance > touchSteeringOriginRadius + touchSteeringThumbRadius) {
+      const unitX = (current.posX - origin.posX) / distance;
+      const unitY = (current.posY - origin.posY) / distance;
+      const startX = origin.posX + unitX * touchSteeringOriginRadius;
+      const startY = origin.posY + unitY * touchSteeringOriginRadius;
+      const endX = current.posX - unitX * touchSteeringThumbRadius;
+      const endY = current.posY - unitY * touchSteeringThumbRadius;
+
+      context.strokeStyle = palette.overlay.line;
+      context.globalAlpha = 0.62;
+      context.beginPath();
+      context.moveTo(startX, startY);
+      context.lineTo(endX, endY);
+      context.stroke();
+    }
+
+    context.globalAlpha = 0.92;
+    context.fillStyle = palette.overlay.activeWashStrong;
+    context.strokeStyle = palette.overlay.activeFill;
+    context.beginPath();
+    context.arc(current.posX, current.posY, touchSteeringThumbRadius, 0, Math.PI * 2);
+    context.fill();
+    context.stroke();
+
+    context.globalAlpha = 1;
+    this._gameArena.renderText("FIRE", current.posX, current.posY, {
+      size: 8,
+      align: "center",
+      valign: "middle",
+      color: palette.menu.selectedText,
+    });
     context.restore();
   };
 

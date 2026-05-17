@@ -42,10 +42,12 @@ type PersistedUserOptions = Pick<
   | "gameZoom"
   | "filterSettings"
   | "keyboardBindings"
+  | "keepScreenAwake"
   | "language"
   | "logLevel"
   | "masterVolume"
   | "musicVolume"
+  | "touchSteeringOverlay"
   | "uiZoom"
   | "videoFilterMode"
 >;
@@ -91,11 +93,13 @@ const defaultPersistedOptions: PersistedUserOptions = {
   gamepadEnabled: true,
   filterSettings: defaultCustomFilterSettings,
   keyboardBindings: defaultKeyboardBindings,
+  keepScreenAwake: true,
   language: "en",
   logLevel: "off",
   masterVolume: 10,
   musicVolume: 8,
   effectsVolume: 8,
+  touchSteeringOverlay: true,
   uiZoom: zoomDefaultPercent,
   videoFilterMode: defaultFilterMode,
 };
@@ -246,10 +250,12 @@ const writeUserOptions = (): void => {
         gameZoom: userOptions.gameZoom,
         filterSettings: userOptions.filterSettings,
         keyboardBindings: userOptions.keyboardBindings,
+        keepScreenAwake: userOptions.keepScreenAwake,
         language: userOptions.language,
         logLevel: userOptions.logLevel,
         masterVolume: userOptions.masterVolume,
         musicVolume: userOptions.musicVolume,
+        touchSteeringOverlay: userOptions.touchSteeringOverlay,
         uiZoom: userOptions.uiZoom,
         videoFilterMode: userOptions.videoFilterMode,
       } satisfies PersistedUserOptions)
@@ -365,11 +371,23 @@ var userOptions: UserOptions = {
 
   keyboardBindings: normalizeKeyboardBindings(storedOptions.keyboardBindings),
 
+  /**
+   * Keep the screen awake during player runs in installed PWA mode.
+   */
+  keepScreenAwake:
+    storedOptions.keepScreenAwake ?? defaultPersistedOptions.keepScreenAwake,
+
   language: storedLanguage,
   logLevel: storedLogLevel,
   masterVolume: storedOptions.masterVolume ?? defaultPersistedOptions.masterVolume,
   musicVolume: storedOptions.musicVolume ?? defaultPersistedOptions.musicVolume,
   effectsVolume: storedOptions.effectsVolume ?? defaultPersistedOptions.effectsVolume,
+  /**
+   * Display a live touch steering guide during gameplay.
+   */
+  touchSteeringOverlay:
+    storedOptions.touchSteeringOverlay ??
+    defaultPersistedOptions.touchSteeringOverlay,
   uiZoom: normalizeZoomOption(storedOptions.uiZoom),
   videoFilterMode: storedFilterMode,
 
@@ -415,11 +433,13 @@ export const resetUserOptions = (): void => {
   userOptions.gamepadEnabled = defaults.gamepadEnabled;
   userOptions.filterSettings = defaults.filterSettings;
   userOptions.keyboardBindings = defaults.keyboardBindings;
+  userOptions.keepScreenAwake = defaults.keepScreenAwake;
   userOptions.language = defaults.language;
   userOptions.logLevel = defaults.logLevel;
   userOptions.masterVolume = defaults.masterVolume;
   userOptions.musicVolume = defaults.musicVolume;
   userOptions.effectsVolume = defaults.effectsVolume;
+  userOptions.touchSteeringOverlay = defaults.touchSteeringOverlay;
   userOptions.uiZoom = defaults.uiZoom;
   userOptions.videoFilterMode = defaults.videoFilterMode;
 

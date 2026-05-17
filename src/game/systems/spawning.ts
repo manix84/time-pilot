@@ -57,12 +57,13 @@ class SpawningSystem implements SpawningSystemInstance {
   };
 
   spawnEntities = (): void => {
+    this._spawnProp();
+
     if (this.isLevelIntroActive()) {
       return;
     }
 
     this._spawnEnemy();
-    this._spawnProp();
     this._spawnEnemyBullet();
     this._spawnSpecialBomberBomb();
     this._spawnBonus();

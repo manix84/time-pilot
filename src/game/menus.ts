@@ -170,9 +170,6 @@ const submenuLogoScale = 0.78;
 const logoBottomWidth = 390;
 const levelIconFrameDuration = 140;
 const levelBlurbLineWidth = 24;
-const levelMenuIdleFadeDelay = 3000;
-const levelMenuIdleFadeDuration = 800;
-const levelMenuIdleOpacity = 0.4;
 const alternatingFlagHoldDuration = 3000;
 const alternatingFlagFadeDuration = 500;
 const levelShowcaseDescriptionLineWidth = 18;
@@ -221,7 +218,6 @@ class Menus implements MenuSystemInstance {
   private _achievementIconSprites: Partial<Record<string, HTMLImageElement>> = {};
   private _achievementLayoutSignature = "";
   private _levelIconSprites: Partial<Record<number, HTMLImageElement>> = {};
-  private _levelMenuLastInteractionAt = 0;
   private _levelPreviewedLevel?: number;
   private _levelShowcaseSprites: Partial<Record<string, HTMLImageElement>> = {};
   private _povPreviewSprites: Partial<Record<string, HTMLImageElement>> = {};
@@ -243,6 +239,7 @@ class Menus implements MenuSystemInstance {
   private _scrollBarDrag: { pointerStartY: number; scrollStartY: number } | null = null;
   private _selectedIndex = 0;
   private _shouldRevealSelected = true;
+  private _showRestartFromStart = false;
   private _sliderDragIndex: number | null = null;
   private _startLabel = i18n.menu.start;
   private _scrollY = 0;
@@ -271,6 +268,7 @@ class Menus implements MenuSystemInstance {
     this._awaitingBinding = null;
     this._bindingWarning = "";
     this._startLabel = options.startLabel ?? i18n.menu.start;
+    this._showRestartFromStart = options.showRestart ?? false;
     this._screen = "start";
     this._screenHistory = [];
     this._pressedItemIndex = null;
@@ -281,7 +279,6 @@ class Menus implements MenuSystemInstance {
     this._selectedIndex = 0;
     this._shouldRevealSelected = true;
     this._levelPreviewedLevel = undefined;
-    this._resetLevelMenuIdleState();
     this._scrollY = 0;
     this._transition = null;
     this._buildItems();
@@ -312,7 +309,6 @@ class Menus implements MenuSystemInstance {
     this._selectedIndex = 0;
     this._shouldRevealSelected = false;
     this._levelPreviewedLevel = undefined;
-    this._resetLevelMenuIdleState();
     this._scrollY = 0;
     this._buildItems();
     this._demoWatchStartedAt = performance.now();
@@ -333,7 +329,6 @@ class Menus implements MenuSystemInstance {
     this._selectedIndex = 0;
     this._shouldRevealSelected = true;
     this._levelPreviewedLevel = undefined;
-    this._resetLevelMenuIdleState();
     this._scrollY = 0;
     this._transition = null;
     this._buildItems();
@@ -367,7 +362,6 @@ class Menus implements MenuSystemInstance {
 
     this._selectedIndex = (this._selectedIndex + 1) % this._items.length;
     this._shouldRevealSelected = true;
-    this._resetLevelMenuIdleState();
     this._previewFocusedLevel();
   };
 
@@ -384,7 +378,6 @@ class Menus implements MenuSystemInstance {
     this._selectedIndex =
       (this._selectedIndex - 1 + this._items.length) % this._items.length;
     this._shouldRevealSelected = true;
-    this._resetLevelMenuIdleState();
     this._previewFocusedLevel();
   };
 
@@ -456,7 +449,6 @@ class Menus implements MenuSystemInstance {
     this._buildItems();
     this._startTransition(previousScreen, "start");
     this._levelPreviewedLevel = undefined;
-    this._resetLevelMenuIdleState();
   };
 
   activate = (): void => {
@@ -468,8 +460,6 @@ class Menus implements MenuSystemInstance {
     if (!this._active) {
       return;
     }
-
-    this._resetLevelMenuIdleState();
 
     const item = this._items[this._selectedIndex];
 
@@ -505,8 +495,6 @@ class Menus implements MenuSystemInstance {
       this._exitDemoWatch();
       return true;
     }
-
-    this._resetLevelMenuIdleState();
 
     if (!this._awaitingBinding && (keyCode === 8 || keyCode === 27)) {
       if (this._screen === "start" && keyCode === 27) {
@@ -553,8 +541,6 @@ class Menus implements MenuSystemInstance {
       }
       return;
     }
-
-    this._resetLevelMenuIdleState();
 
     const menuPointer = this._getScaledPointer(pointer);
 
@@ -699,9 +685,7 @@ class Menus implements MenuSystemInstance {
     const renderLogo = options.renderLogo ?? true;
     const context = this._gameArena.getContext() as CanvasRenderingContext2D;
     const menuScale = this._getMenuScale();
-    const levelMenuIdleProgress = this._getLevelMenuIdleProgress();
-    const levelMenuOpacity = this._getLevelMenuOpacity(levelMenuIdleProgress);
-    const backplateOpacity = 1 - levelMenuIdleProgress;
+    const backplateOpacity = 1;
 
     if (this._screen !== "demo-watch" && backplateOpacity > 0) {
       context.save();
@@ -720,7 +704,6 @@ class Menus implements MenuSystemInstance {
     const layout = this._getAnimatedLayout(transition);
 
     context.save();
-    context.globalAlpha *= levelMenuOpacity;
     context.scale(menuScale, menuScale);
     if (renderLogo) {
       this._renderLogo(context, layout.logoY, layout.logoScale);
@@ -986,6 +969,16 @@ class Menus implements MenuSystemInstance {
       !this._isPausedRootMenu() && (this._commands.canApplyUpdate?.() ?? false);
     itemY += 50;
 
+    if (this._showRestartFromStart) {
+      items.push(
+        this._createItem(i18n.menu.restart, "action", itemY, {
+          action: () =>
+            (this._commands.startNewGame ?? this._commands.restart)?.(),
+        })
+      );
+      itemY += 50;
+    }
+
     items.push(
       this._createItem(i18n.menu.options, "action", itemY, {
         action: () => this._goToScreen("options"),
@@ -1035,6 +1028,15 @@ class Menus implements MenuSystemInstance {
           action: () => this._commands.applyUpdate?.(),
         })
       );
+      itemY += 50;
+    }
+
+    if (this._commands.exitApp) {
+      items.push(
+        this._createItem(i18n.menu.exit, "action", itemY, {
+          action: () => this._commands.exitApp?.(),
+        })
+      );
     }
 
     return items;
@@ -1075,42 +1077,48 @@ class Menus implements MenuSystemInstance {
 
   private _createOptionsItems = (): MenuItem[] => {
     const showControlType = this._shouldShowControlTypeOption();
-    const remapControlsY = showControlType ? 366 : 324;
-    const backY = showControlType ? 416 : 374;
-    const items = [
-      this._createItem(i18n.menu.masterVolume, "slider", -54, {
+    const showWakeLock = this._commands.canUseScreenWakeLock?.() ?? false;
+    let itemY = -54;
+    const nextItemY = (): number => {
+      const y = itemY;
+
+      itemY += 42;
+      return y;
+    };
+    const items: MenuItem[] = [
+      this._createItem(i18n.menu.masterVolume, "slider", nextItemY(), {
         getValue: () => `${userOptions.masterVolume}`,
         onAdjust: (direction) => this._adjustVolume("masterVolume", direction),
         onSetValue: (value) => this._setVolume("masterVolume", value),
       }),
-      this._createItem(i18n.menu.musicVolume, "slider", -12, {
+      this._createItem(i18n.menu.musicVolume, "slider", nextItemY(), {
         getValue: () => `${userOptions.musicVolume}`,
         onAdjust: (direction) => this._adjustVolume("musicVolume", direction),
         onSetValue: (value) => this._setVolume("musicVolume", value),
       }),
-      this._createItem(i18n.menu.effectsVolume, "slider", 30, {
+      this._createItem(i18n.menu.effectsVolume, "slider", nextItemY(), {
         getValue: () => `${userOptions.effectsVolume}`,
         onAdjust: (direction) => this._adjustVolume("effectsVolume", direction),
         onSetValue: (value) => this._setVolume("effectsVolume", value),
       }),
-      this._createItem(i18n.menu.uiZoom, "slider", 72, {
+      this._createItem(i18n.menu.uiZoom, "slider", nextItemY(), {
         getValue: () => formatUiZoom(),
         onAdjust: (direction) => this.adjustUiZoom(direction),
         onSetValue: (value) => this._setUiZoom(this._getZoomValueFromStep(value)),
         sliderSteps: this._getZoomSliderSteps(),
       }),
-      this._createItem(i18n.menu.gameZoom, "slider", 114, {
+      this._createItem(i18n.menu.gameZoom, "slider", nextItemY(), {
         getValue: () => formatGameZoom(),
         onAdjust: (direction) => this._adjustGameZoom(direction),
         onSetValue: (value) => this._setGameZoom(this._getZoomValueFromStep(value)),
         sliderSteps: this._getZoomSliderSteps(),
       }),
-      this._createItem(i18n.menu.filters, "action", 156, {
+      this._createItem(i18n.menu.filters, "action", nextItemY(), {
         getValue: () => filterModeLabels[userOptions.videoFilterMode],
         action: () => this._goToScreen("filters"),
         opensSubmenu: true,
       }),
-      this._createItem(i18n.menu.fullScreen, "toggle", 198, {
+      this._createItem(i18n.menu.fullScreen, "toggle", nextItemY(), {
         disabled:
           this._gameArena.isFullScreenLocked() ||
           !this._gameArena.canToggleFullScreen(),
@@ -1118,22 +1126,49 @@ class Menus implements MenuSystemInstance {
           this._gameArena.isFullScreen() ? i18n.menu.on : i18n.menu.off,
         onAdjust: () => this._gameArena.toggleFullScreen(),
       }),
+    ];
+
+    if (showWakeLock) {
+      items.push(
+        this._createItem(i18n.menu.keepScreenAwake, "toggle", nextItemY(), {
+          getValue: () =>
+            userOptions.keepScreenAwake ? i18n.menu.on : i18n.menu.off,
+          onAdjust: () => this._toggleKeepScreenAwake(),
+        })
+      );
+    }
+
+    if (this._shouldShowTouchSteeringOverlayOption()) {
+      items.push(
+        this._createItem(i18n.menu.touchSteeringOverlay, "toggle", nextItemY(), {
+          getValue: () =>
+            userOptions.touchSteeringOverlay ? i18n.menu.on : i18n.menu.off,
+          onAdjust: () =>
+            userOptions.setOption(
+              "touchSteeringOverlay",
+              !userOptions.touchSteeringOverlay
+            ),
+        })
+      );
+    }
+
+    items.push(
       this._createToggleItem(
         i18n.menu.showControlsOverlay,
         "showControlsOverlay",
-        240
+        nextItemY()
       ),
-      this._createItem(i18n.menu.language, "action", 282, {
+      this._createItem(i18n.menu.language, "action", nextItemY(), {
         getValue: () => getLanguageName(userOptions.language),
         languageFlag: userOptions.language,
         action: () => this._goToScreen("language"),
         opensSubmenu: true,
-      }),
-    ];
+      })
+    );
 
     if (showControlType) {
       items.push(
-        this._createItem(i18n.menu.controlType, "enum", 324, {
+        this._createItem(i18n.menu.controlType, "enum", nextItemY(), {
           getValue: () =>
             userOptions.controllerType === "keyboard1"
               ? i18n.menu.directional
@@ -1144,11 +1179,11 @@ class Menus implements MenuSystemInstance {
     }
 
     items.push(
-      this._createItem(i18n.menu.remapControls, "action", remapControlsY, {
+      this._createItem(i18n.menu.remapControls, "action", nextItemY(), {
         action: () => this._goToScreen("controls"),
         opensSubmenu: true,
       }),
-      this._createItem(i18n.menu.back, "action", backY, {
+      this._createItem(i18n.menu.back, "action", itemY + 8, {
         action: () => this._goBack(),
       })
     );
@@ -1160,6 +1195,13 @@ class Menus implements MenuSystemInstance {
     const url = new URL(window.location.href);
 
     return url.searchParams.get("showControlType") === "true";
+  };
+
+  private _shouldShowTouchSteeringOverlayOption = (): boolean => {
+    return (
+      navigator.maxTouchPoints > 0 ||
+      window.matchMedia?.("(pointer: coarse)").matches === true
+    );
   };
 
   private _createFilterItems = (): MenuItem[] => {
@@ -2382,6 +2424,16 @@ class Menus implements MenuSystemInstance {
   };
 
   private _getBlurbLevel = (): number => {
+    return this._getFocusedLevel();
+  };
+
+  private _getFocusedLevel = (): number => {
+    const focusedLevel = this._items[this._selectedIndex]?.levelIcon;
+
+    if (focusedLevel) {
+      return focusedLevel;
+    }
+
     return this._commands.getLevel?.() ?? 1;
   };
 
@@ -3369,6 +3421,7 @@ class Menus implements MenuSystemInstance {
     this._awaitingBinding = null;
     this._bindingWarning = "";
     this._startLabel = i18n.menu.start;
+    this._showRestartFromStart = false;
     this._screen = "start";
     this._screenHistory = [];
     this._pressedItemIndex = null;
@@ -3380,7 +3433,6 @@ class Menus implements MenuSystemInstance {
     this._selectedIndex = 0;
     this._shouldRevealSelected = true;
     this._levelPreviewedLevel = undefined;
-    this._resetLevelMenuIdleState();
     this._scrollY = 0;
     this._buildItems();
     this._startTransition(previousScreen, "start");
@@ -3396,7 +3448,6 @@ class Menus implements MenuSystemInstance {
     this._screenHistory.push(this._screen);
     this._screen = screen;
     this._selectedIndex = 0;
-    this._levelMenuLastInteractionAt = performance.now();
     this._awaitingBinding = null;
     this._bindingWarning = "";
     this._pressedItemIndex = null;
@@ -3410,7 +3461,6 @@ class Menus implements MenuSystemInstance {
     this._buildItems();
     this._startTransition(previousScreen, screen);
     this._levelPreviewedLevel = undefined;
-    this._resetLevelMenuIdleState();
     this._previewFocusedLevel();
   };
 
@@ -3424,7 +3474,6 @@ class Menus implements MenuSystemInstance {
 
     this._screen = nextScreen;
     this._selectedIndex = 0;
-    this._levelMenuLastInteractionAt = performance.now();
     this._awaitingBinding = null;
     this._bindingWarning = "";
     this._pressedItemIndex = null;
@@ -3440,7 +3489,6 @@ class Menus implements MenuSystemInstance {
     this._pendingResetScope =
       previousScreen === "debug-reset-confirm" ? null : this._pendingResetScope;
     this._levelPreviewedLevel = undefined;
-    this._resetLevelMenuIdleState();
     this._previewFocusedLevel();
   };
 
@@ -3582,6 +3630,11 @@ class Menus implements MenuSystemInstance {
     );
   };
 
+  private _toggleKeepScreenAwake = (): void => {
+    userOptions.setOption("keepScreenAwake", !userOptions.keepScreenAwake);
+    this._commands.syncScreenWakeLock?.();
+  };
+
   private _getZoomSliderSteps = (): number => {
     return (zoomMaxPercent - zoomMinPercent) / zoomStepPercent;
   };
@@ -3590,40 +3643,12 @@ class Menus implements MenuSystemInstance {
     return zoomMinPercent + step * zoomStepPercent;
   };
 
-  private _getLevelMenuOpacity = (idleProgress: number): number => {
-    return 1 - idleProgress * (1 - levelMenuIdleOpacity);
-  };
-
-  private _getLevelMenuIdleProgress = (): number => {
-    if (
-      this._screen !== "level" ||
-      !this._items[this._selectedIndex]?.levelIcon
-    ) {
-      return 0;
-    }
-
-    const elapsed = performance.now() - this._levelMenuLastInteractionAt;
-
-    if (elapsed <= levelMenuIdleFadeDelay) {
-      return 0;
-    }
-
-    return Math.min(
-      1,
-      (elapsed - levelMenuIdleFadeDelay) / levelMenuIdleFadeDuration
-    );
-  };
-
-  private _resetLevelMenuIdleState = (): void => {
-    this._levelMenuLastInteractionAt = performance.now();
-  };
-
   private _previewFocusedLevel = (): void => {
     if (this._screen !== "level") {
       return;
     }
 
-    const level = this._commands.getLevel?.() ?? 1;
+    const level = this._getFocusedLevel();
 
     if (!level || this._levelPreviewedLevel === level) {
       return;

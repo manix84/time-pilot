@@ -5,11 +5,11 @@
   "description": "A full-screen pixel-art arcade game rebuilt for the web.",
   "start_url": "./pwa/",
   "scope": "./",
-  "display": "fullscreen",
+  "display": "standalone",
   "display_override": ["fullscreen", "standalone"],
   "orientation": "landscape",
-  "background_color": "#070b12",
-  "theme_color": "#070b12",
+  "background_color": "#000000",
+  "theme_color": "#000000",
   "categories": ["games"],
   "icons": [
     {

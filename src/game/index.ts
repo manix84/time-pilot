@@ -42,6 +42,7 @@ import type {
   EnemyData,
   EnemyInstance,
   GameDataStore,
+  PlayerData,
   RenderingSystemInstance,
   SpawningSystemInstance,
 } from "./types";
@@ -93,10 +94,28 @@ const demoProjectileAvoidanceLookAhead = 170;
 const demoProjectileAvoidanceRadius = 82;
 const demoProjectileAvoidanceStrength = 3.2;
 const playerRotationStep = 360 / player.rotationFrameCount;
+const gameSessionStorageKey = "timePilot.gameSession";
+const gameSessionSnapshotVersion = 1;
 
 type DemoProgressSnapshot = {
   nextExtraLifeScore: number;
   score: number;
+};
+
+type GameSessionSnapshot = {
+  level: number;
+  player: Pick<
+    PlayerData,
+    | "continues"
+    | "heading"
+    | "lives"
+    | "nextExtraLifeScore"
+    | "posX"
+    | "posY"
+    | "score"
+  >;
+  savedAt: number;
+  version: typeof gameSessionSnapshotVersion;
 };
 
 /**
@@ -125,6 +144,8 @@ const createControlInputState = (
   restart: false,
   right: false,
   up: false,
+  touchCurrent: null,
+  touchOrigin: null,
   activeController,
 });
 
@@ -152,6 +173,22 @@ export interface TimePilotOptions {
    * Enables polling of the browser Gamepad API.
    */
   gamepadEnabled?: boolean;
+  /**
+   * Requests fullscreen/landscape presentation from a player action.
+   */
+  enterImmersiveMode?: () => Promise<void> | void;
+  /**
+   * Requests that the installed app window closes.
+   */
+  exitApp?: () => void;
+  /**
+   * Returns whether screen wake lock controls should be exposed.
+   */
+  canUseScreenWakeLock?: () => boolean;
+  /**
+   * Enables or disables the runtime screen wake lock.
+   */
+  setScreenWakeLock?: (active: boolean) => void;
 }
 
 /**
@@ -163,6 +200,7 @@ export interface TimePilotOptions {
 export class TimePilot {
   private readonly container: HTMLElement;
   private readonly options: Required<TimePilotOptions>;
+  private readonly canExitApp: boolean;
   private readonly context = {} as GameDataStore;
   private collisionSystem!: CollisionSystemInstance;
   private hasSeededInitialProps = false;
@@ -178,16 +216,32 @@ export class TimePilot {
   private preroll?: Preroll;
   private renderingSystem!: RenderingSystemInstance;
   private spawningSystem!: SpawningSystemInstance;
+  private readonly handleBeforeUnload = (): void => {
+    this.saveGameSessionSnapshot();
+  };
+  private readonly handlePageHide = (): void => {
+    this.saveGameSessionSnapshot();
+  };
+  private readonly handleVisibilityChange = (): void => {
+    if (document.visibilityState === "hidden") {
+      this.saveGameSessionSnapshot();
+    }
+  };
   private readonly timeWarpSound = new SoundEngine(sounds.timeWarp.src);
 
   constructor(element: HTMLElement, options: TimePilotOptions = {}) {
     this.container = element;
+    this.canExitApp = typeof options.exitApp === "function";
     this.options = {
       applyUpdate: options.applyUpdate ?? (() => {}),
       canApplyUpdate: options.canApplyUpdate ?? (() => false),
+      canUseScreenWakeLock: options.canUseScreenWakeLock ?? (() => false),
       controllerType: options.controllerType ?? userOptions.controllerType,
       debug: options.debug ?? userOptions.enableDebug,
+      enterImmersiveMode: options.enterImmersiveMode ?? (() => {}),
+      exitApp: options.exitApp ?? (() => {}),
       gamepadEnabled: options.gamepadEnabled ?? userOptions.gamepadEnabled,
+      setScreenWakeLock: options.setScreenWakeLock ?? (() => {}),
     };
 
     this.context._level = 1;
@@ -196,6 +250,8 @@ export class TimePilot {
 
   restartGame = (): void => {
     logger.info("Restarting game");
+    this.clearGameSessionSnapshot();
+    this.releaseScreenWakeLock();
     SoundEngine.destroyAll();
     const reset = () => {
       this.context._hud.restart();
@@ -226,6 +282,9 @@ export class TimePilot {
   };
 
   destroyGame = (): void => {
+    this.saveGameSessionSnapshot();
+    this.removeSessionSnapshotListeners();
+    this.releaseScreenWakeLock();
     this.isDestroyed = true;
     this.isDemoMode = false;
     this.context._isDemoMode = false;
@@ -253,21 +312,24 @@ export class TimePilot {
 
   pauseGame = (forcePause?: boolean): void => {
     if (this.context._gameTicker.isRunning || !!forcePause) {
-      logger.debug("Pausing game");
+      logger.info("Pausing game");
       this.context._gameTicker.stop();
       SoundEngine.pauseAll();
+      this.syncScreenWakeLock();
     } else {
-      logger.debug("Resuming game");
+      logger.info("Resuming game");
       this.context._gameTicker.start();
       SoundEngine.resumePaused();
+      this.syncScreenWakeLock();
     }
   };
 
   resumeGame = (): void => {
     if (!this.context._gameTicker.isRunning) {
-      logger.debug("Resuming game");
+      logger.info("Resuming game");
       this.context._gameTicker.start();
       SoundEngine.resumePaused();
+      this.syncScreenWakeLock();
     }
   };
 
@@ -305,6 +367,7 @@ export class TimePilot {
         this.options.applyUpdate();
       },
       canApplyUpdate: () => this.options.canApplyUpdate(),
+      canUseScreenWakeLock: () => this.options.canUseScreenWakeLock(),
       canWatchDemo: () => this.isDemoMode,
       clearLevelPreview: () => {
         this.clearDebugLevelPreview();
@@ -315,6 +378,14 @@ export class TimePilot {
       exitToRoot: () => {
         this.exitToRootMenu();
       },
+      ...(this.canExitApp
+        ? {
+          exitApp: () => {
+            this.saveGameSessionSnapshot();
+            this.options.exitApp();
+          },
+        }
+        : {}),
       getContinues: () => this.context._player.getData("continues") ?? 0,
       getAchievements: () => this.context._achievements?.getStatuses() ?? [],
       getLevel: () => this.selectedStartLevel,
@@ -340,8 +411,14 @@ export class TimePilot {
       setDebugLives: (lives) => {
         this.context._player.setData("lives", lives, true);
       },
+      syncScreenWakeLock: () => {
+        this.syncScreenWakeLock();
+      },
       start: () => {
         this.beginGame();
+      },
+      startNewGame: () => {
+        this.startNewGame();
       },
       watchDemo: () => {
         this.watchDemo();
@@ -383,12 +460,13 @@ export class TimePilot {
       );
     }
 
+    this.addSessionSnapshotListeners();
     this.context._player.setData("level", 1);
     this.context._gameArena.renderText("Loading", 20, 10, { size: 30 });
 
     this.context._gameArena.registerAssets([
       assetPath("fonts/font.ttf"),
-      assetPath("logos/author.png"),
+      assetPath("logos/author-128-dark.png"),
       assetPath("sprites/player/player.png"),
       assetPath("sprites/player/timewarp.png"),
       assetPath("sounds/player/bullet.mp3"),
@@ -429,7 +507,9 @@ export class TimePilot {
 
       if (!progress.remaining) {
         this.configureGameLoop();
-        this.startPreroll();
+        if (!this.restoreGameSessionSnapshot()) {
+          this.startPreroll();
+        }
         this.context._renderTicker.start();
       }
     });
@@ -457,22 +537,26 @@ export class TimePilot {
         return;
       }
 
-      if (this.isLevelIntroActive()) {
-        this.clearIntroControls();
-        return;
-      }
-
       if (this.isTimeWarpTransitionActive()) {
         this.clearIntroControls();
         return;
       }
 
+      const levelIntroActive = this.updateLevelIntroFromInput();
+
+      if (levelIntroActive) {
+        this.clearIntroControls();
+      }
+
       this.context._player.reposition();
-      this.context._enemies.reposition();
-      this.context._bullets.reposition();
-      this.context._enemyBullets.reposition();
       this.context._props.reposition();
-      this.context._bonuses.reposition();
+
+      if (!levelIntroActive) {
+        this.context._enemies.reposition();
+        this.context._bullets.reposition();
+        this.context._enemyBullets.reposition();
+        this.context._bonuses.reposition();
+      }
 
       this.spawningSystem.spawnEntities();
     }, 1);
@@ -632,6 +716,204 @@ export class TimePilot {
     resetStoredScores();
   };
 
+  private addSessionSnapshotListeners = (): void => {
+    window.addEventListener("beforeunload", this.handleBeforeUnload);
+    window.addEventListener("pagehide", this.handlePageHide);
+    document.addEventListener("visibilitychange", this.handleVisibilityChange);
+  };
+
+  private removeSessionSnapshotListeners = (): void => {
+    window.removeEventListener("beforeunload", this.handleBeforeUnload);
+    window.removeEventListener("pagehide", this.handlePageHide);
+    document.removeEventListener(
+      "visibilitychange",
+      this.handleVisibilityChange
+    );
+  };
+
+  private getGameSessionStorage = (): Storage | null => {
+    try {
+      if (
+        typeof localStorage === "undefined" ||
+        typeof localStorage.getItem !== "function" ||
+        typeof localStorage.setItem !== "function" ||
+        typeof localStorage.removeItem !== "function"
+      ) {
+        return null;
+      }
+
+      return localStorage;
+    } catch {
+      return null;
+    }
+  };
+
+  private clearGameSessionSnapshot = (): void => {
+    try {
+      this.getGameSessionStorage()?.removeItem(gameSessionStorageKey);
+    } catch {
+      // Session snapshots are best-effort and should not affect gameplay.
+    }
+  };
+
+  private readGameSessionSnapshot = (): GameSessionSnapshot | null => {
+    const storage = this.getGameSessionStorage();
+
+    if (!storage) {
+      return null;
+    }
+
+    try {
+      const snapshot = JSON.parse(
+        storage.getItem(gameSessionStorageKey) ?? "null"
+      ) as Partial<GameSessionSnapshot> | null;
+
+      if (
+        !snapshot ||
+        snapshot.version !== gameSessionSnapshotVersion ||
+        typeof snapshot.level !== "number" ||
+        !levels[snapshot.level]?.enabled ||
+        !snapshot.player ||
+        typeof snapshot.player.score !== "number" ||
+        typeof snapshot.player.lives !== "number" ||
+        typeof snapshot.player.continues !== "number" ||
+        typeof snapshot.player.nextExtraLifeScore !== "number" ||
+        typeof snapshot.player.posX !== "number" ||
+        typeof snapshot.player.posY !== "number" ||
+        typeof snapshot.player.heading !== "number"
+      ) {
+        return null;
+      }
+
+      return snapshot as GameSessionSnapshot;
+    } catch {
+      return null;
+    }
+  };
+
+  private shouldSaveGameSessionSnapshot = (): boolean => {
+    if (
+      this.isDestroyed ||
+      this.isDemoMode ||
+      this.preroll ||
+      this.hasShownGameOver ||
+      !this.hasStartedGame ||
+      this.isTimeWarpTransitionActive()
+    ) {
+      return false;
+    }
+
+    const playerData = this.context._player.getData();
+
+    return (
+      playerData.isAlive &&
+      !playerData.removeMe &&
+      playerData.lives > 0 &&
+      Number.isFinite(playerData.continues)
+    );
+  };
+
+  private saveGameSessionSnapshot = (): void => {
+    if (!this.shouldSaveGameSessionSnapshot()) {
+      return;
+    }
+
+    const storage = this.getGameSessionStorage();
+
+    if (!storage) {
+      return;
+    }
+
+    const playerData = this.context._player.getData();
+    const snapshot: GameSessionSnapshot = {
+      level: this.context._level,
+      player: {
+        continues: playerData.continues,
+        heading: playerData.heading,
+        lives: playerData.lives,
+        nextExtraLifeScore: playerData.nextExtraLifeScore,
+        posX: playerData.posX,
+        posY: playerData.posY,
+        score: playerData.score,
+      },
+      savedAt: Date.now(),
+      version: gameSessionSnapshotVersion,
+    };
+
+    try {
+      storage.setItem(gameSessionStorageKey, JSON.stringify(snapshot));
+      logger.debug("Saved game session snapshot", {
+        level: snapshot.level,
+        savedAt: snapshot.savedAt,
+      });
+    } catch (error) {
+      logger.error("Failed to save game session snapshot", { error });
+    }
+  };
+
+  private syncScreenWakeLock = (): void => {
+    this.options.setScreenWakeLock(
+      userOptions.keepScreenAwake &&
+        this.hasStartedGame &&
+        !this.hasShownGameOver &&
+        !this.isDemoMode &&
+        !this.preroll
+    );
+  };
+
+  /**
+   * Explicitly releases PWA wake lock for demo, game-over, teardown, and reset flows.
+   */
+  private releaseScreenWakeLock = (): void => {
+    this.options.setScreenWakeLock(false);
+  };
+
+  private restoreGameSessionSnapshot = (): boolean => {
+    const snapshot = this.readGameSessionSnapshot();
+
+    if (!snapshot) {
+      return false;
+    }
+
+    logger.info("Restoring game session snapshot", {
+      level: snapshot.level,
+      savedAt: snapshot.savedAt,
+    });
+    SoundEngine.stopAll();
+    SoundEngine.setMuted(false);
+    this.isDemoMode = false;
+    this.context._isDemoMode = false;
+    this.hasStartedGame = true;
+    this.hasShownGameOver = false;
+    this.selectedStartLevel = snapshot.level;
+    this.resetWorld(snapshot.level, { skipIntro: true });
+    this.context._player.setData("score", snapshot.player.score, true);
+    this.context._player.setData("lives", snapshot.player.lives, true);
+    this.context._player.setData("continues", snapshot.player.continues, true);
+    this.context._player.setData(
+      "nextExtraLifeScore",
+      snapshot.player.nextExtraLifeScore,
+      true
+    );
+    this.context._player.setData("posX", snapshot.player.posX);
+    this.context._player.setData("posY", snapshot.player.posY);
+    this.context._player.setData("heading", snapshot.player.heading);
+    this.context._player.setData("newHeading", false);
+    this.context._player.setData("isAlive", true);
+    this.context._player.setData("deathTick", false);
+    this.context._player.stopShooting();
+    this.spawningSystem.addInitialProps();
+    this.hasSeededInitialProps = true;
+    this.context._menus.showStart({
+      showRestart: true,
+      startLabel: i18n.menu.continue,
+    });
+    this.context._gameTicker.stop();
+    this.syncScreenWakeLock();
+
+    return true;
+  };
+
   private finishPreroll = (): void => {
     logger.info("Preroll complete");
     this.preroll = undefined;
@@ -658,17 +940,18 @@ export class TimePilot {
     this.startDemoMode();
   };
 
-  private beginGame = (): void => {
+  private beginGame = ({ forceFresh = false }: { forceFresh?: boolean } = {}): void => {
     if (this.isDestroyed) {
       return;
     }
 
-    const shouldStartFreshGame = this.isDemoMode || !this.hasStartedGame;
+    const shouldStartFreshGame = forceFresh || this.isDemoMode || !this.hasStartedGame;
 
     logger.info("Beginning game", {
       fresh: shouldStartFreshGame,
       level: this.selectedStartLevel,
     });
+    void this.options.enterImmersiveMode();
     this.stopMenuMusic();
     SoundEngine.resumePaused();
     SoundEngine.setMuted(false);
@@ -695,6 +978,17 @@ export class TimePilot {
     }
 
     this.context._gameTicker.start();
+    this.syncScreenWakeLock();
+  };
+
+  private startNewGame = (): void => {
+    this.clearGameSessionSnapshot();
+    this.selectedStartLevel = 1;
+    this.hasStartedGame = false;
+    this.hasShownGameOver = false;
+    this.isDemoMode = false;
+    this.context._isDemoMode = false;
+    this.beginGame({ forceFresh: true });
   };
 
   private continueGame = (): void => {
@@ -715,6 +1009,7 @@ export class TimePilot {
       remainingContinues: continues - 1,
       score,
     });
+    void this.options.enterImmersiveMode();
     this.stopMenuMusic();
     SoundEngine.resumePaused();
     SoundEngine.setMuted(false);
@@ -734,6 +1029,7 @@ export class TimePilot {
     this.spawningSystem.addInitialProps();
     this.hasSeededInitialProps = true;
     this.context._gameTicker.start();
+    this.syncScreenWakeLock();
   };
 
   private seedRespawnProps = (): void => {
@@ -766,6 +1062,7 @@ export class TimePilot {
 
     this.configureGameLoop();
     this.startDemoMode();
+    this.releaseScreenWakeLock();
   };
 
   private startDemoMode = (): void => {
@@ -786,6 +1083,7 @@ export class TimePilot {
     this.hasSeededInitialProps = true;
     this.context._menus.showStart({ startLabel: i18n.menu.start });
     this.context._gameTicker.start();
+    this.releaseScreenWakeLock();
   };
 
   private watchDemo = (): void => {
@@ -1149,6 +1447,8 @@ export class TimePilot {
     inputState.restart = false;
     inputState.rotateLeft = false;
     inputState.rotateRight = false;
+    inputState.touchCurrent = null;
+    inputState.touchOrigin = null;
   };
 
   private clearInputState = (inputState: ControlInputState): void => {
@@ -1283,6 +1583,7 @@ export class TimePilot {
     }
 
     this.hasShownGameOver = true;
+    this.clearGameSessionSnapshot();
     logger.info("Showing game over", {
       level: this.context._level,
       score: playerData.score,
@@ -1290,6 +1591,7 @@ export class TimePilot {
     this.context._achievements?.onGameOver();
     this.context._player.stopShooting();
     this.context._gameTicker.stop();
+    this.releaseScreenWakeLock();
     this.playMenuMusic();
     this.context._menus.showGameOver();
   };
@@ -1505,6 +1807,33 @@ export class TimePilot {
   private clearIntroControls = (): void => {
     this.context._player.setData("newHeading", false);
     this.context._player.stopShooting();
+  };
+
+  private updateLevelIntroFromInput = (): boolean => {
+    if (!this.isLevelIntroActive()) {
+      return false;
+    }
+
+    if (this.hasLevelIntroPlayerInput()) {
+      this.context._levelIntroUntilTick = 0;
+      return false;
+    }
+
+    return true;
+  };
+
+  private hasLevelIntroPlayerInput = (): boolean => {
+    const input = this.context._controlInputState;
+
+    return Boolean(
+      input.down ||
+        input.fire ||
+        input.left ||
+        input.right ||
+        input.rotateLeft ||
+        input.rotateRight ||
+        input.up
+    );
   };
 
   private playMenuMusic = (): void => {

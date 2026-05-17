@@ -173,6 +173,8 @@ export type ControlInputState = Record<ControlInputName, boolean> & {
   activeController: ControlInputSource;
   rotateLeft?: boolean;
   rotateRight?: boolean;
+  touchCurrent?: Coordinates | null;
+  touchOrigin?: Coordinates | null;
 };
 
 export interface KeyboardBindings {
@@ -496,8 +498,13 @@ export interface MenuSystemCommands {
   applyUpdate?: () => void;
   canWatchDemo?: () => boolean;
   canApplyUpdate?: () => boolean;
+  /**
+   * Returns whether PWA screen wake-lock controls should be shown.
+   */
+  canUseScreenWakeLock?: () => boolean;
   clearLevelPreview?: () => void;
   continueGame?: () => void;
+  exitApp?: () => void;
   exitToRoot?: () => void;
   getContinues?: () => number;
   getAchievements?: () => AchievementStatus[];
@@ -509,11 +516,17 @@ export interface MenuSystemCommands {
   selectLevel?: (level: number) => void;
   setDebugContinues?: (continues: number) => void;
   setDebugLives?: (lives: number) => void;
+  /**
+   * Reconciles the screen wake lock after the user toggles the PWA option.
+   */
+  syncScreenWakeLock?: () => void;
   start: () => void;
+  startNewGame?: () => void;
   watchDemo?: () => void;
 }
 
 export interface ShowStartMenuOptions {
+  showRestart?: boolean;
   startLabel?: string;
 }
 
@@ -788,6 +801,14 @@ export interface UserOptions {
   debugLives: number;
   gameZoom: number;
   gamepadEnabled: boolean;
+  /**
+   * Keeps the screen awake during active or paused player runs when supported.
+   */
+  keepScreenAwake: boolean;
+  /**
+   * Shows the live touch steering guide during gameplay.
+   */
+  touchSteeringOverlay: boolean;
   filterSettings: FilterSettings;
   keyboardBindings: KeyboardBindings;
   language: GameLanguage;
