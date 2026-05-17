@@ -496,22 +496,26 @@ export class TimePilot {
         return;
       }
 
-      if (this.isLevelIntroActive()) {
-        this.clearIntroControls();
-        return;
-      }
-
       if (this.isTimeWarpTransitionActive()) {
         this.clearIntroControls();
         return;
       }
 
+      const levelIntroActive = this.updateLevelIntroFromInput();
+
+      if (levelIntroActive) {
+        this.clearIntroControls();
+      }
+
       this.context._player.reposition();
-      this.context._enemies.reposition();
-      this.context._bullets.reposition();
-      this.context._enemyBullets.reposition();
       this.context._props.reposition();
-      this.context._bonuses.reposition();
+
+      if (!levelIntroActive) {
+        this.context._enemies.reposition();
+        this.context._bullets.reposition();
+        this.context._enemyBullets.reposition();
+        this.context._bonuses.reposition();
+      }
 
       this.spawningSystem.spawnEntities();
     }, 1);
@@ -1735,6 +1739,33 @@ export class TimePilot {
   private clearIntroControls = (): void => {
     this.context._player.setData("newHeading", false);
     this.context._player.stopShooting();
+  };
+
+  private updateLevelIntroFromInput = (): boolean => {
+    if (!this.isLevelIntroActive()) {
+      return false;
+    }
+
+    if (this.hasLevelIntroPlayerInput()) {
+      this.context._levelIntroUntilTick = 0;
+      return false;
+    }
+
+    return true;
+  };
+
+  private hasLevelIntroPlayerInput = (): boolean => {
+    const input = this.context._controlInputState;
+
+    return Boolean(
+      input.down ||
+        input.fire ||
+        input.left ||
+        input.right ||
+        input.rotateLeft ||
+        input.rotateRight ||
+        input.up
+    );
   };
 
   private playMenuMusic = (): void => {

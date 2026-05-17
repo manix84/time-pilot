@@ -560,6 +560,88 @@ describe("TimePilot engine", () => {
     game.destroyGame();
   });
 
+  it("keeps the player and scenery moving during a level intro until player input", () => {
+    const game = new TimePilot(host, { debug: true, gamepadEnabled: false });
+    const pilot = game as unknown as {
+      configureGameLoop: () => void;
+      context: {
+        _bonuses: { reposition: () => void };
+        _bullets: { reposition: () => void };
+        _controlInputState: { fire: boolean };
+        _enemyBullets: { reposition: () => void };
+        _enemies: { reposition: () => void };
+        _gameTicker: {
+          _schedule: Record<string, { callback: () => void; nthFrame: number }>;
+          clearSchedule: () => void;
+        };
+        _levelIntroUntilTick: number;
+        _player: {
+          reposition: () => void;
+          rotate: () => void;
+          setData: (key: string, value: unknown) => void;
+          shoot: () => void;
+          stopShooting: () => void;
+        };
+        _props: { reposition: () => void };
+      };
+      spawningSystem: { spawnEntities: () => void };
+    };
+
+    const spies = [
+      vi.spyOn(pilot.context._player, "reposition"),
+      vi.spyOn(pilot.context._player, "rotate"),
+      vi.spyOn(pilot.context._player, "shoot"),
+      vi.spyOn(pilot.context._player, "stopShooting"),
+      vi.spyOn(pilot.context._enemies, "reposition"),
+      vi.spyOn(pilot.context._bullets, "reposition"),
+      vi.spyOn(pilot.context._enemyBullets, "reposition"),
+      vi.spyOn(pilot.context._props, "reposition"),
+      vi.spyOn(pilot.context._bonuses, "reposition"),
+      vi.spyOn(pilot.spawningSystem, "spawnEntities"),
+    ];
+
+    pilot.context._gameTicker.clearSchedule();
+    pilot.configureGameLoop();
+    pilot.context._levelIntroUntilTick = 250;
+
+    const schedules = Object.values(pilot.context._gameTicker._schedule);
+    expect(schedules).toHaveLength(7);
+    const [, , movement, rotation, shooting] = schedules;
+
+    movement.callback();
+    rotation.callback();
+    shooting.callback();
+
+    expect(pilot.context._player.stopShooting).toHaveBeenCalled();
+    expect(pilot.context._player.reposition).toHaveBeenCalled();
+    expect(pilot.context._props.reposition).toHaveBeenCalled();
+    expect(pilot.spawningSystem.spawnEntities).toHaveBeenCalled();
+    expect(pilot.context._player.rotate).not.toHaveBeenCalled();
+    expect(pilot.context._player.shoot).not.toHaveBeenCalled();
+    expect(pilot.context._enemies.reposition).not.toHaveBeenCalled();
+    expect(pilot.context._bullets.reposition).not.toHaveBeenCalled();
+    expect(pilot.context._enemyBullets.reposition).not.toHaveBeenCalled();
+    expect(pilot.context._bonuses.reposition).not.toHaveBeenCalled();
+    expect(pilot.context._levelIntroUntilTick).toBe(250);
+
+    spies.forEach((spy) => spy.mockClear());
+    pilot.context._controlInputState.fire = true;
+
+    movement.callback();
+    rotation.callback();
+    shooting.callback();
+
+    expect(pilot.context._levelIntroUntilTick).toBe(0);
+    expect(pilot.context._enemies.reposition).toHaveBeenCalled();
+    expect(pilot.context._bullets.reposition).toHaveBeenCalled();
+    expect(pilot.context._enemyBullets.reposition).toHaveBeenCalled();
+    expect(pilot.context._bonuses.reposition).toHaveBeenCalled();
+    expect(pilot.context._player.rotate).toHaveBeenCalled();
+    expect(pilot.context._player.shoot).toHaveBeenCalled();
+
+    game.destroyGame();
+  });
+
   it("does not report demo time-warp progression to achievements", () => {
     const game = new TimePilot(host, { debug: true, gamepadEnabled: false });
     const pilot = game as unknown as {

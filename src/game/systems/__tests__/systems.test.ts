@@ -781,7 +781,7 @@ describe("game systems", () => {
     expect(context._bonuses.create).not.toHaveBeenCalled();
   });
 
-  it("does not spawn enemies, props, or bonuses while the level intro is active", () => {
+  it("only spawns scenery while the level intro is active", () => {
     const context = createContext({ levelIntroUntilTick: 250, ticks: 200 });
     const system = new SpawningSystem(context);
 
@@ -790,7 +790,7 @@ describe("game systems", () => {
     system.spawnEntities();
 
     expect(context._enemies.create).not.toHaveBeenCalled();
-    expect(context._props.create).not.toHaveBeenCalled();
+    expect(context._props.create).toHaveBeenCalled();
     expect(context._bonuses.create).not.toHaveBeenCalled();
   });
 
