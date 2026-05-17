@@ -9,7 +9,7 @@
 - 🧠 Typed game engine modules with explicit game context injection.
 - 🧱 Feature-oriented source layout under `src/game`.
 - 🧪 Vitest coverage for engine helpers, controllers, menus, factories, the game host, and React integration.
-- 🎛️ In-app keyboard layout and gamepad configuration.
+- 🎛️ Keyboard, touch, and gamepad controller support.
 - 🧭 Canvas-rendered start/options/debug menus with keyboard, gamepad, mouse, and touch interaction.
 - 🔎 UI zoom and game POV zoom with automatic viewport scaling.
 - 🏆 Achievement tracking with an achievements page, progress counters, and unlock popups.
@@ -154,8 +154,8 @@ and gamepad commands move, adjust, and activate menu items through the same
 controller interface used for gameplay. Mouse and touch input support pointer
 selection, scroll wheel or drag scrolling on overflowing menus, and scrollbar
 dragging. Options currently include volume levels, fullscreen, controls overlay,
-UI zoom, game POV zoom, video filters, achievements, language, and custom
-keyboard bindings. UI zoom can also be adjusted from the keyboard with `+`/`=`
+UI zoom, game POV zoom, video filters, achievements, and language. UI zoom can
+also be adjusted from the keyboard with `+`/`=`
 and `-`, and reset with `0`. Both zoom options default to 100% and range from
 25% to 250% in 5% steps.
 

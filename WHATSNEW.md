@@ -32,8 +32,9 @@
   running normally.
 - Added a page-lifecycle session snapshot so interrupted player runs can be
   restored without writing state every frame.
-- Added an in-app controller configuration UI for keyboard layout selection and gamepad polling.
-- Added canvas-rendered start and options menus with volume controls, controller style selection, custom keyboard bindings, and keyboard/gamepad/mouse interaction.
+- Added keyboard, touch, and gamepad controller support with gamepad polling.
+- Added canvas-rendered start and options menus with volume controls,
+  controller style selection, and keyboard/gamepad/mouse interaction.
 - Fixed gamepad cleanup so animation frames are cancelled on disconnect.
 
 ## 🎮 Gameplay Tuning
