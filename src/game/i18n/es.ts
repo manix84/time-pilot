@@ -108,7 +108,7 @@ const es: typeof en = {
       info: "Info",
       warning: "Advertencia",
       error: "Error",
-      fatal: "Fatal",
+      fatal: "Critico",
     },
     masterVolume: "Volumen principal",
     musicVolume: "Volumen musica",

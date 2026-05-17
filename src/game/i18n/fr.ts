@@ -96,7 +96,7 @@ const fr: typeof en = {
       info: "Info",
       warning: "Avertissement",
       error: "Erreur",
-      fatal: "Fatal",
+      fatal: "Critique",
     },
     masterVolume: "Volume principal",
     musicVolume: "Volume musique",

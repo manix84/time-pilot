@@ -108,7 +108,7 @@ const ro: typeof en = {
       info: "Info",
       warning: "Avertizare",
       error: "Eroare",
-      fatal: "Fatal",
+      fatal: "Critic",
     },
     masterVolume: "Volum principal",
     musicVolume: "Volum muzica",

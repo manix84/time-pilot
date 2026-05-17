@@ -253,11 +253,11 @@ export class TimePilot {
 
   pauseGame = (forcePause?: boolean): void => {
     if (this.context._gameTicker.isRunning || !!forcePause) {
-      logger.debug("Pausing game");
+      logger.info("Pausing game");
       this.context._gameTicker.stop();
       SoundEngine.pauseAll();
     } else {
-      logger.debug("Resuming game");
+      logger.info("Resuming game");
       this.context._gameTicker.start();
       SoundEngine.resumePaused();
     }
@@ -265,7 +265,7 @@ export class TimePilot {
 
   resumeGame = (): void => {
     if (!this.context._gameTicker.isRunning) {
-      logger.debug("Resuming game");
+      logger.info("Resuming game");
       this.context._gameTicker.start();
       SoundEngine.resumePaused();
     }
