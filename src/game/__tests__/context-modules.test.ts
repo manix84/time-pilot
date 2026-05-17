@@ -614,6 +614,17 @@ describe("context-backed game modules", () => {
     context._hud.render();
 
     expect(drawImage).toHaveBeenCalledTimes(20);
+    expect(drawImage).toHaveBeenCalledWith(
+      expect.any(Image),
+      64,
+      20,
+      16,
+      8,
+      expect.any(Number),
+      expect.any(Number),
+      expect.any(Number),
+      expect.any(Number)
+    );
     expect(rect).toHaveBeenCalledWith(-394, 262, 150, 34);
   });
 

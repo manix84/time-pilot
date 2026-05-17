@@ -19,7 +19,7 @@ const bossProgressHeight = 34;
 const bossProgressPadding = 3;
 const bossProgressEdgeInset = 6;
 const bossProgressBottomInset = 4;
-const bossProgressFrameDuration = 140;
+const bossProgressAnimationFrame = 1;
 const bossProgressEnemyScale = 0.5;
 const directionalEnemyVisibleHeight = 8;
 const touchSteeringOriginRadius = 18;
@@ -223,19 +223,22 @@ class Hud implements HudInstance {
   private getRightFacingEnemyFrame = (
     enemyConfig: EnemyConfig
   ): { x: number; y: number } => {
-    const tick = Math.floor(performance.now() / bossProgressFrameDuration);
+    const animationRow = Math.min(
+      bossProgressAnimationFrame,
+      Math.max(0, (enemyConfig.animationRows ?? 1) - 1)
+    );
 
     if (enemyConfig.damageFrames) {
       return {
         x: 0,
-        y: tick % (enemyConfig.animationRows ?? 1),
+        y: animationRow,
       };
     }
 
     if (enemyConfig.animationRows && enemyConfig.horizontalDirectionFrames) {
       return {
         x: 0,
-        y: tick % enemyConfig.animationRows,
+        y: animationRow,
       };
     }
 
@@ -243,14 +246,20 @@ class Hud implements HudInstance {
       return {
         x: enemyConfig.canRotate
           ? this.getDirectionalFrameForHeading(enemyConfig, 90)
-          : tick % (enemyConfig.animationFrames ?? 1),
-        y: tick % enemyConfig.animationRows,
+          : Math.min(
+            bossProgressAnimationFrame,
+            Math.max(0, (enemyConfig.animationFrames ?? 1) - 1)
+          ),
+        y: animationRow,
       };
     }
 
     if (enemyConfig.animationFrames && !enemyConfig.canRotate) {
       return {
-        x: tick % enemyConfig.animationFrames,
+        x: Math.min(
+          bossProgressAnimationFrame,
+          Math.max(0, enemyConfig.animationFrames - 1)
+        ),
         y: 0,
       };
     }
