@@ -69,6 +69,32 @@ describe("TimePilot engine", () => {
     game.destroyGame();
   });
 
+  it("requests immersive mode when the player starts from the menu", async () => {
+    const enterImmersiveMode = vi.fn();
+    const game = new TimePilot(host, {
+      debug: true,
+      enterImmersiveMode,
+      gamepadEnabled: false,
+    });
+    const pilot = game as unknown as {
+      context: {
+        _menus: {
+          activate: () => void;
+          showStart: () => void;
+        };
+      };
+    };
+
+    await new Promise((resolve) => window.setTimeout(resolve, 5));
+
+    pilot.context._menus.showStart();
+    pilot.context._menus.activate();
+
+    expect(enterImmersiveMode).toHaveBeenCalled();
+
+    game.destroyGame();
+  });
+
   it("defaults the active controls overlay to touch on touch devices", async () => {
     Object.defineProperty(navigator, "maxTouchPoints", {
       configurable: true,

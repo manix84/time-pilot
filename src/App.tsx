@@ -30,7 +30,7 @@ const featureHighlights = [
   {
     title: "Offline PWA",
     details:
-      "Install the canvas-only app, keep core sprites and sounds cached, and play when the network drops.",
+      "Install the canvas-only app, launch standalone, enter fullscreen play, and keep core sprites and sounds cached.",
   },
   {
     title: "Safe updates",
@@ -75,6 +75,7 @@ const systemUpdates = [
   "Spatial entity audio for bosses, rockets, bullets, bombs, and explosions.",
   "Skippable author and Time Pilot preroll before cold-start root-menu entry.",
   "Page-lifecycle session snapshots that restore interrupted player runs without per-frame storage writes.",
+  "Standalone PWA launch with fullscreen and landscape requests from player start actions.",
   "Achievement subsystem with page rendering, counter progress, and unlock popups.",
   "Watch Demo mode with a mortal autopilot that scores, dodges, shoots, continues, and collects bonuses.",
   "Debug-menu runtime logging and confirmed reset actions for stored preferences, scores, and achievements.",
@@ -100,7 +101,10 @@ function App() {
   if (!isShowcaseMode() && isPwaRoute()) {
     return (
       <main className={"app-shell app-shell--pwa"} aria-label={"Time Pilot"}>
-        <TimePilotGame enableUpdates={isPwaMode()} />
+        <TimePilotGame
+          enableImmersiveMode
+          enableUpdates={isPwaMode()}
+        />
       </main>
     );
   }
@@ -128,10 +132,10 @@ function App() {
             </h1>
             <p className={"hero-summary"}>
               A modern React + TypeScript port of a canvas arcade game, packaged
-              as a playable browser demo and installable offline PWA with typed
-              engine modules, achievements, skippable startup preroll,
-              paused session restore, configurable controls, and automated
-              release checks.
+              as a playable browser demo and installable standalone PWA with
+              typed engine modules, achievements, skippable startup preroll,
+              fullscreen play entry, paused session restore, configurable
+              controls, and automated release checks.
             </p>
             <div className={"hero-status"} aria-label={"Current build features"}>
               <span>Offline PWA</span>

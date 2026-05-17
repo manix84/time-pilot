@@ -97,8 +97,10 @@
 - Added Spanish to the supported menu languages.
 - Added animated level select previews for basic enemies, special enemies, bosses, and bonuses.
 - Added projectile previews and labels to the debug level select showcase.
-- Made focused debug levels pin the background demo preview until leaving level select.
-- Added idle fading on the level select menu so the background demo is easier to inspect.
+- Made the debug level select descriptions and sprite showcase follow the
+  focused level instead of the currently running level.
+- Kept the level select backplate visible instead of fading to the running
+  game behind it.
 - Added UI zoom and game POV zoom options, both with automatic viewport scaling.
 - Expanded UI and game POV zoom limits to 25%-250%, with 100% as the default.
 - Kept pixel art crisp when the game POV zoom changes.
@@ -114,6 +116,9 @@
   and out of demo view and control-overlay input display for demo actions.
 - Added fullscreen options and an `F` key toggle that stay in sync with browser
   fullscreen state.
+- Switched the PWA manifest to standalone display mode with fullscreen as an
+  override, and request fullscreen/landscape presentation from the player's
+  Start/Continue action on the `/pwa/` route.
 - Moved the controls overlay toggle into Options and hid the unfinished Control
   Type row behind an opt-in URL flag.
 - Added touch-friendly menu behavior, including scrollable menu containers,
@@ -142,8 +147,8 @@
   full project.
 - Added a dry-run production build to pull request checks.
 - Added installable PWA support with a dedicated `/pwa/` canvas-only endpoint,
-  offline app-shell/game-asset caching, and non-interrupting service worker
-  update detection.
+  standalone app display, fullscreen play entry, offline app-shell/game-asset
+  caching, and non-interrupting service worker update detection.
 - Added debug-menu-controlled runtime logging for key lifecycle events such as
   preroll, game starts, continues, resets, achievements, game over, and time
   warp.

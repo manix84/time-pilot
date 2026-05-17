@@ -1484,13 +1484,19 @@ describe("menu definitions", () => {
     );
 
     menus.next();
-    expect(previewLevel).toHaveBeenLastCalledWith(1);
+    expect(previewLevel).toHaveBeenLastCalledWith(2);
     menus.render();
-    expect(arena.renderText).not.toHaveBeenCalledWith(
+    expect(arena.renderText).toHaveBeenCalledWith(
       "A.D 1940",
       -260,
       -54,
       expect.anything()
+    );
+    expect(arena.renderText).toHaveBeenCalledWith(
+      "War in the Clouds",
+      expect.any(Number),
+      expect.any(Number),
+      expect.objectContaining({ align: "left" })
     );
     expect(selectLevel).not.toHaveBeenCalled();
     menus.activate();
@@ -1499,7 +1505,7 @@ describe("menu definitions", () => {
     expect(selectLevel).toHaveBeenCalledWith(2);
   });
 
-  it("fades the level select menu backplate and restores it on escape", () => {
+  it("keeps the level select menu backplate visible while idle", () => {
     const arena = createArena();
     const menus = new Menus(arena, {
       getLevel: () => 1,
@@ -1537,7 +1543,7 @@ describe("menu definitions", () => {
           (call) => call[0] === -400 && call[1] === -300 && call[2] === 800 && call[3] === 600
         )
       )
-    ).toBe(false);
+    ).toBe(true);
 
     vi.mocked(arena.getContext).mockClear();
     now.mockReturnValue(3200);

@@ -8,6 +8,7 @@ import {
   type CSSProperties,
 } from "react";
 import { getFilterSettingsForMode } from "../game/filter-settings";
+import { enterGameFullscreen } from "../game/immersive-mode";
 import { useTimePilot } from "../game/use-time-pilot";
 import userOptions from "../game/user-options";
 import UpdateOverlay from "./UpdateOverlay";
@@ -28,6 +29,11 @@ type TimePilotGameProps = {
    * inside the game is expected.
    */
   enableUpdates?: boolean;
+
+  /**
+   * Requests fullscreen and landscape orientation when play starts.
+   */
+  enableImmersiveMode?: boolean;
 };
 
 /**
@@ -37,7 +43,11 @@ type TimePilotGameProps = {
  * mirrors user-selected video filter options into CSS custom properties, and
  * optionally renders the update overlay used by the PWA flow.
  */
-function TimePilotGame({ debug, enableUpdates = false }: TimePilotGameProps) {
+function TimePilotGame({
+  debug,
+  enableImmersiveMode = false,
+  enableUpdates = false,
+}: TimePilotGameProps) {
   const [filterVersion, setFilterVersion] = useState(0);
   const [isUpdateAvailable, setIsUpdateAvailable] = useState(false);
   const [updateOverlayState, setUpdateOverlayState] = useState<
@@ -67,8 +77,11 @@ function TimePilotGame({ debug, enableUpdates = false }: TimePilotGameProps) {
         isUpdateAvailableRef.current &&
         updateOverlayStateRef.current === "idle",
       debug,
+      enterImmersiveMode: enableImmersiveMode
+        ? enterGameFullscreen
+        : undefined,
     }),
-    [applyUpdate, debug, enableUpdates]
+    [applyUpdate, debug, enableImmersiveMode, enableUpdates]
   );
   const { setContainerElement } = useTimePilot(options);
   const activeFilterSettings = getFilterSettingsForMode(

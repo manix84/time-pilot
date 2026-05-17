@@ -171,6 +171,10 @@ export interface TimePilotOptions {
    * Enables polling of the browser Gamepad API.
    */
   gamepadEnabled?: boolean;
+  /**
+   * Requests fullscreen/landscape presentation from a player action.
+   */
+  enterImmersiveMode?: () => Promise<void> | void;
 }
 
 /**
@@ -217,6 +221,7 @@ export class TimePilot {
       canApplyUpdate: options.canApplyUpdate ?? (() => false),
       controllerType: options.controllerType ?? userOptions.controllerType,
       debug: options.debug ?? userOptions.enableDebug,
+      enterImmersiveMode: options.enterImmersiveMode ?? (() => {}),
       gamepadEnabled: options.gamepadEnabled ?? userOptions.gamepadEnabled,
     };
 
@@ -892,6 +897,7 @@ export class TimePilot {
       fresh: shouldStartFreshGame,
       level: this.selectedStartLevel,
     });
+    void this.options.enterImmersiveMode();
     this.stopMenuMusic();
     SoundEngine.resumePaused();
     SoundEngine.setMuted(false);
@@ -948,6 +954,7 @@ export class TimePilot {
       remainingContinues: continues - 1,
       score,
     });
+    void this.options.enterImmersiveMode();
     this.stopMenuMusic();
     SoundEngine.resumePaused();
     SoundEngine.setMuted(false);

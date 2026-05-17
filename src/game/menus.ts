@@ -170,9 +170,6 @@ const submenuLogoScale = 0.78;
 const logoBottomWidth = 390;
 const levelIconFrameDuration = 140;
 const levelBlurbLineWidth = 24;
-const levelMenuIdleFadeDelay = 3000;
-const levelMenuIdleFadeDuration = 800;
-const levelMenuIdleOpacity = 0.4;
 const alternatingFlagHoldDuration = 3000;
 const alternatingFlagFadeDuration = 500;
 const levelShowcaseDescriptionLineWidth = 18;
@@ -221,7 +218,6 @@ class Menus implements MenuSystemInstance {
   private _achievementIconSprites: Partial<Record<string, HTMLImageElement>> = {};
   private _achievementLayoutSignature = "";
   private _levelIconSprites: Partial<Record<number, HTMLImageElement>> = {};
-  private _levelMenuLastInteractionAt = 0;
   private _levelPreviewedLevel?: number;
   private _levelShowcaseSprites: Partial<Record<string, HTMLImageElement>> = {};
   private _povPreviewSprites: Partial<Record<string, HTMLImageElement>> = {};
@@ -283,7 +279,6 @@ class Menus implements MenuSystemInstance {
     this._selectedIndex = 0;
     this._shouldRevealSelected = true;
     this._levelPreviewedLevel = undefined;
-    this._resetLevelMenuIdleState();
     this._scrollY = 0;
     this._transition = null;
     this._buildItems();
@@ -314,7 +309,6 @@ class Menus implements MenuSystemInstance {
     this._selectedIndex = 0;
     this._shouldRevealSelected = false;
     this._levelPreviewedLevel = undefined;
-    this._resetLevelMenuIdleState();
     this._scrollY = 0;
     this._buildItems();
     this._demoWatchStartedAt = performance.now();
@@ -335,7 +329,6 @@ class Menus implements MenuSystemInstance {
     this._selectedIndex = 0;
     this._shouldRevealSelected = true;
     this._levelPreviewedLevel = undefined;
-    this._resetLevelMenuIdleState();
     this._scrollY = 0;
     this._transition = null;
     this._buildItems();
@@ -369,7 +362,6 @@ class Menus implements MenuSystemInstance {
 
     this._selectedIndex = (this._selectedIndex + 1) % this._items.length;
     this._shouldRevealSelected = true;
-    this._resetLevelMenuIdleState();
     this._previewFocusedLevel();
   };
 
@@ -386,7 +378,6 @@ class Menus implements MenuSystemInstance {
     this._selectedIndex =
       (this._selectedIndex - 1 + this._items.length) % this._items.length;
     this._shouldRevealSelected = true;
-    this._resetLevelMenuIdleState();
     this._previewFocusedLevel();
   };
 
@@ -458,7 +449,6 @@ class Menus implements MenuSystemInstance {
     this._buildItems();
     this._startTransition(previousScreen, "start");
     this._levelPreviewedLevel = undefined;
-    this._resetLevelMenuIdleState();
   };
 
   activate = (): void => {
@@ -470,8 +460,6 @@ class Menus implements MenuSystemInstance {
     if (!this._active) {
       return;
     }
-
-    this._resetLevelMenuIdleState();
 
     const item = this._items[this._selectedIndex];
 
@@ -507,8 +495,6 @@ class Menus implements MenuSystemInstance {
       this._exitDemoWatch();
       return true;
     }
-
-    this._resetLevelMenuIdleState();
 
     if (!this._awaitingBinding && (keyCode === 8 || keyCode === 27)) {
       if (this._screen === "start" && keyCode === 27) {
@@ -555,8 +541,6 @@ class Menus implements MenuSystemInstance {
       }
       return;
     }
-
-    this._resetLevelMenuIdleState();
 
     const menuPointer = this._getScaledPointer(pointer);
 
@@ -701,9 +685,7 @@ class Menus implements MenuSystemInstance {
     const renderLogo = options.renderLogo ?? true;
     const context = this._gameArena.getContext() as CanvasRenderingContext2D;
     const menuScale = this._getMenuScale();
-    const levelMenuIdleProgress = this._getLevelMenuIdleProgress();
-    const levelMenuOpacity = this._getLevelMenuOpacity(levelMenuIdleProgress);
-    const backplateOpacity = 1 - levelMenuIdleProgress;
+    const backplateOpacity = 1;
 
     if (this._screen !== "demo-watch" && backplateOpacity > 0) {
       context.save();
@@ -722,7 +704,6 @@ class Menus implements MenuSystemInstance {
     const layout = this._getAnimatedLayout(transition);
 
     context.save();
-    context.globalAlpha *= levelMenuOpacity;
     context.scale(menuScale, menuScale);
     if (renderLogo) {
       this._renderLogo(context, layout.logoY, layout.logoScale);
@@ -2394,6 +2375,16 @@ class Menus implements MenuSystemInstance {
   };
 
   private _getBlurbLevel = (): number => {
+    return this._getFocusedLevel();
+  };
+
+  private _getFocusedLevel = (): number => {
+    const focusedLevel = this._items[this._selectedIndex]?.levelIcon;
+
+    if (focusedLevel) {
+      return focusedLevel;
+    }
+
     return this._commands.getLevel?.() ?? 1;
   };
 
@@ -3393,7 +3384,6 @@ class Menus implements MenuSystemInstance {
     this._selectedIndex = 0;
     this._shouldRevealSelected = true;
     this._levelPreviewedLevel = undefined;
-    this._resetLevelMenuIdleState();
     this._scrollY = 0;
     this._buildItems();
     this._startTransition(previousScreen, "start");
@@ -3409,7 +3399,6 @@ class Menus implements MenuSystemInstance {
     this._screenHistory.push(this._screen);
     this._screen = screen;
     this._selectedIndex = 0;
-    this._levelMenuLastInteractionAt = performance.now();
     this._awaitingBinding = null;
     this._bindingWarning = "";
     this._pressedItemIndex = null;
@@ -3423,7 +3412,6 @@ class Menus implements MenuSystemInstance {
     this._buildItems();
     this._startTransition(previousScreen, screen);
     this._levelPreviewedLevel = undefined;
-    this._resetLevelMenuIdleState();
     this._previewFocusedLevel();
   };
 
@@ -3437,7 +3425,6 @@ class Menus implements MenuSystemInstance {
 
     this._screen = nextScreen;
     this._selectedIndex = 0;
-    this._levelMenuLastInteractionAt = performance.now();
     this._awaitingBinding = null;
     this._bindingWarning = "";
     this._pressedItemIndex = null;
@@ -3453,7 +3440,6 @@ class Menus implements MenuSystemInstance {
     this._pendingResetScope =
       previousScreen === "debug-reset-confirm" ? null : this._pendingResetScope;
     this._levelPreviewedLevel = undefined;
-    this._resetLevelMenuIdleState();
     this._previewFocusedLevel();
   };
 
@@ -3603,40 +3589,12 @@ class Menus implements MenuSystemInstance {
     return zoomMinPercent + step * zoomStepPercent;
   };
 
-  private _getLevelMenuOpacity = (idleProgress: number): number => {
-    return 1 - idleProgress * (1 - levelMenuIdleOpacity);
-  };
-
-  private _getLevelMenuIdleProgress = (): number => {
-    if (
-      this._screen !== "level" ||
-      !this._items[this._selectedIndex]?.levelIcon
-    ) {
-      return 0;
-    }
-
-    const elapsed = performance.now() - this._levelMenuLastInteractionAt;
-
-    if (elapsed <= levelMenuIdleFadeDelay) {
-      return 0;
-    }
-
-    return Math.min(
-      1,
-      (elapsed - levelMenuIdleFadeDelay) / levelMenuIdleFadeDuration
-    );
-  };
-
-  private _resetLevelMenuIdleState = (): void => {
-    this._levelMenuLastInteractionAt = performance.now();
-  };
-
   private _previewFocusedLevel = (): void => {
     if (this._screen !== "level") {
       return;
     }
 
-    const level = this._commands.getLevel?.() ?? 1;
+    const level = this._getFocusedLevel();
 
     if (!level || this._levelPreviewedLevel === level) {
       return;

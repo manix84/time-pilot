@@ -16,7 +16,7 @@
 - 🎬 Startup preroll with the author logo, Time Pilot flyby, menu-logo handoff, and instant skip input.
 - 💾 Session restore that skips the preroll and returns interrupted runs to a paused Continue menu.
 - 🛠️ Debug tools for level select, preroll replay, runtime logging, and stored-data resets.
-- 📱 Installable offline PWA mode that launches straight into the game canvas in fullscreen display mode.
+- 📱 Installable offline PWA mode that launches as a standalone app and enters fullscreen play from Start/Continue.
 - 🔁 Root-menu update flow that applies waiting PWA updates without interrupting play.
 - 📺 Optional CRT/VHS filter presets with custom sliders.
 - 🌍 Localized menus, level blurbs, and level showcase labels.
@@ -55,8 +55,10 @@ npm run preview
 
 The production build includes a web app manifest and service worker. Installed
 launches use the dedicated `/pwa/` endpoint, which renders only the game canvas.
-The manifest requests fullscreen display mode and landscape orientation so the
-app behaves like a dedicated game rather than a web page.
+The manifest uses standalone display mode with landscape orientation so Android
+identifies the install as an app, then the game requests fullscreen and a
+landscape orientation lock from the player's Start/Continue action where mobile
+browsers allow it.
 
 The service worker caches the app shell plus core game sprites, fonts, and
 sounds so the installed game can continue to run offline after it has been
