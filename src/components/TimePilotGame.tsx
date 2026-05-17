@@ -41,6 +41,11 @@ type TimePilotGameProps = {
   enableImmersiveMode?: boolean;
 
   /**
+   * Maps OS/browser Back navigation onto gameplay and menu navigation.
+   */
+  enableHistoryNavigation?: boolean;
+
+  /**
    * Shows the root-menu Exit action and requests app closure when used.
    */
   enableAppExit?: boolean;
@@ -61,6 +66,7 @@ type TimePilotGameProps = {
 function TimePilotGame({
   debug,
   enableAppExit = false,
+  enableHistoryNavigation = false,
   enableImmersiveMode = false,
   enableScreenWakeLock = false,
   enableUpdates = false,
@@ -95,6 +101,7 @@ function TimePilotGame({
         isUpdateAvailableRef.current &&
         updateOverlayStateRef.current === "idle",
       debug,
+      enableHistoryNavigation,
       enterImmersiveMode: enableImmersiveMode
         ? enterGameFullscreen
         : undefined,
@@ -109,6 +116,7 @@ function TimePilotGame({
       applyUpdate,
       debug,
       enableAppExit,
+      enableHistoryNavigation,
       enableImmersiveMode,
       enableScreenWakeLock,
       enableUpdates,

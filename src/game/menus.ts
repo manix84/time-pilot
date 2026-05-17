@@ -31,6 +31,7 @@ import type {
   GameLanguage,
   KeyboardBindings,
   MenuRenderOptions,
+  MenuNavigationState,
   MenuPointerData,
   MenuSystemCommands,
   MenuSystemInstance,
@@ -259,6 +260,15 @@ class Menus implements MenuSystemInstance {
     return this._active && this._screen === "demo-watch";
   };
 
+  getNavigationState = (): MenuNavigationState => ({
+    active: this._active,
+    canGoBack: this._active && this._screen !== "start",
+    depth: this._active ? this._screenHistory.length : 0,
+    isPausedRoot: this._isPausedRootMenu(),
+    isRoot: this._active && this._screen === "start",
+    isWatchingDemo: this.isWatchingDemo(),
+  });
+
   showStart = (options: ShowStartMenuOptions = {}): void => {
     if (this._active && this._screen === "level") {
       this._commands.clearLevelPreview?.();
@@ -282,6 +292,7 @@ class Menus implements MenuSystemInstance {
     this._scrollY = 0;
     this._transition = null;
     this._buildItems();
+    this._notifyNavigationChanged();
   };
 
   showRestartConfirm = (): void => {
@@ -313,6 +324,7 @@ class Menus implements MenuSystemInstance {
     this._buildItems();
     this._demoWatchStartedAt = performance.now();
     this._startTransition(previousScreen, "demo-watch");
+    this._notifyNavigationChanged();
   };
 
   showGameOver = (): void => {
@@ -332,6 +344,7 @@ class Menus implements MenuSystemInstance {
     this._scrollY = 0;
     this._transition = null;
     this._buildItems();
+    this._notifyNavigationChanged();
   };
 
   hide = (): void => {
@@ -348,6 +361,7 @@ class Menus implements MenuSystemInstance {
     this._touchScrollDrag = null;
     this._scrollBarDrag = null;
     this._sliderDragIndex = null;
+    this._notifyNavigationChanged();
   };
 
   next = (): void => {
@@ -449,6 +463,7 @@ class Menus implements MenuSystemInstance {
     this._buildItems();
     this._startTransition(previousScreen, "start");
     this._levelPreviewedLevel = undefined;
+    this._notifyNavigationChanged();
   };
 
   activate = (): void => {
@@ -3436,6 +3451,7 @@ class Menus implements MenuSystemInstance {
     this._scrollY = 0;
     this._buildItems();
     this._startTransition(previousScreen, "start");
+    this._notifyNavigationChanged();
   };
 
   private _goToScreen = (screen: MenuScreen): void => {
@@ -3462,6 +3478,7 @@ class Menus implements MenuSystemInstance {
     this._startTransition(previousScreen, screen);
     this._levelPreviewedLevel = undefined;
     this._previewFocusedLevel();
+    this._notifyNavigationChanged();
   };
 
   private _goBack = (): void => {
@@ -3490,6 +3507,11 @@ class Menus implements MenuSystemInstance {
       previousScreen === "debug-reset-confirm" ? null : this._pendingResetScope;
     this._levelPreviewedLevel = undefined;
     this._previewFocusedLevel();
+    this._notifyNavigationChanged();
+  };
+
+  private _notifyNavigationChanged = (): void => {
+    this._commands.onNavigationChanged?.(this.getNavigationState());
   };
 
   private _showResetConfirm = (scope: StoredDataResetScope): void => {
