@@ -19,9 +19,10 @@ const bossProgressHeight = 34;
 const bossProgressPadding = 3;
 const bossProgressEdgeInset = 6;
 const bossProgressBottomInset = 4;
-const bossProgressAnimationFrame = 1;
+const bossProgressFixedFrameIndex = 1;
 const bossProgressEnemyScale = 0.5;
 const directionalEnemyVisibleHeight = 8;
+const touchSteeringOriginOuterRadius = 28;
 const touchSteeringOriginRadius = 18;
 const touchSteeringThumbRadius = 24;
 
@@ -224,7 +225,7 @@ class Hud implements HudInstance {
     enemyConfig: EnemyConfig
   ): { x: number; y: number } => {
     const animationRow = Math.min(
-      bossProgressAnimationFrame,
+      bossProgressFixedFrameIndex,
       Math.max(0, (enemyConfig.animationRows ?? 1) - 1)
     );
 
@@ -247,7 +248,7 @@ class Hud implements HudInstance {
         x: enemyConfig.canRotate
           ? this.getDirectionalFrameForHeading(enemyConfig, 90)
           : Math.min(
-            bossProgressAnimationFrame,
+            bossProgressFixedFrameIndex,
             Math.max(0, (enemyConfig.animationFrames ?? 1) - 1)
           ),
         y: animationRow,
@@ -257,7 +258,7 @@ class Hud implements HudInstance {
     if (enemyConfig.animationFrames && !enemyConfig.canRotate) {
       return {
         x: Math.min(
-          bossProgressAnimationFrame,
+          bossProgressFixedFrameIndex,
           Math.max(0, enemyConfig.animationFrames - 1)
         ),
         y: 0,
@@ -408,11 +409,23 @@ class Hud implements HudInstance {
     context.fillStyle = "transparent";
     context.globalAlpha = 0.32;
     context.beginPath();
-    context.arc(origin.posX, origin.posY, 28, 0, Math.PI * 2);
+    context.arc(
+      origin.posX,
+      origin.posY,
+      touchSteeringOriginOuterRadius,
+      0,
+      Math.PI * 2
+    );
     context.fill();
     context.globalAlpha = 0.62;
     context.beginPath();
-    context.arc(origin.posX, origin.posY, 18, 0, Math.PI * 2);
+    context.arc(
+      origin.posX,
+      origin.posY,
+      touchSteeringOriginRadius,
+      0,
+      Math.PI * 2
+    );
     context.stroke();
 
     if (distance > touchSteeringOriginRadius + touchSteeringThumbRadius) {

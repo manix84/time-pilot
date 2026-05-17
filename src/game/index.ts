@@ -200,6 +200,7 @@ export interface TimePilotOptions {
 export class TimePilot {
   private readonly container: HTMLElement;
   private readonly options: Required<TimePilotOptions>;
+  private readonly canExitApp: boolean;
   private readonly context = {} as GameDataStore;
   private collisionSystem!: CollisionSystemInstance;
   private hasSeededInitialProps = false;
@@ -230,6 +231,7 @@ export class TimePilot {
 
   constructor(element: HTMLElement, options: TimePilotOptions = {}) {
     this.container = element;
+    this.canExitApp = typeof options.exitApp === "function";
     this.options = {
       applyUpdate: options.applyUpdate ?? (() => {}),
       canApplyUpdate: options.canApplyUpdate ?? (() => false),
@@ -376,10 +378,14 @@ export class TimePilot {
       exitToRoot: () => {
         this.exitToRootMenu();
       },
-      exitApp: () => {
-        this.saveGameSessionSnapshot();
-        this.options.exitApp();
-      },
+      ...(this.canExitApp
+        ? {
+          exitApp: () => {
+            this.saveGameSessionSnapshot();
+            this.options.exitApp();
+          },
+        }
+        : {}),
       getContinues: () => this.context._player.getData("continues") ?? 0,
       getAchievements: () => this.context._achievements?.getStatuses() ?? [],
       getLevel: () => this.selectedStartLevel,
@@ -934,12 +940,12 @@ export class TimePilot {
     this.startDemoMode();
   };
 
-  private beginGame = (): void => {
+  private beginGame = ({ forceFresh = false }: { forceFresh?: boolean } = {}): void => {
     if (this.isDestroyed) {
       return;
     }
 
-    const shouldStartFreshGame = this.isDemoMode || !this.hasStartedGame;
+    const shouldStartFreshGame = forceFresh || this.isDemoMode || !this.hasStartedGame;
 
     logger.info("Beginning game", {
       fresh: shouldStartFreshGame,
@@ -980,9 +986,9 @@ export class TimePilot {
     this.selectedStartLevel = 1;
     this.hasStartedGame = false;
     this.hasShownGameOver = false;
-    this.isDemoMode = true;
-    this.context._isDemoMode = true;
-    this.beginGame();
+    this.isDemoMode = false;
+    this.context._isDemoMode = false;
+    this.beginGame({ forceFresh: true });
   };
 
   private continueGame = (): void => {

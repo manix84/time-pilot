@@ -96,6 +96,36 @@ describe("TimePilot engine", () => {
     game.destroyGame();
   });
 
+  it("starts a restarted run as player gameplay instead of demo mode", async () => {
+    const game = new TimePilot(host, { debug: true, gamepadEnabled: false });
+    const pilot = game as unknown as {
+      context: {
+        _isDemoMode: boolean;
+        _level: number;
+        _player: {
+          getData: (key: "level") => number | undefined;
+        };
+      };
+      isDemoMode: boolean;
+      startDemoMode: () => void;
+      startNewGame: () => void;
+    };
+
+    await new Promise((resolve) => window.setTimeout(resolve, 5));
+
+    pilot.startDemoMode();
+    expect(pilot.context._isDemoMode).toBe(true);
+
+    pilot.startNewGame();
+
+    expect(pilot.isDemoMode).toBe(false);
+    expect(pilot.context._isDemoMode).toBe(false);
+    expect(pilot.context._level).toBe(1);
+    expect(pilot.context._player.getData("level")).toBe(1);
+
+    game.destroyGame();
+  });
+
   it("keeps the screen wake lock active while gameplay is running or paused", async () => {
     const setScreenWakeLock = vi.fn();
     const game = new TimePilot(host, {
@@ -524,6 +554,35 @@ describe("TimePilot engine", () => {
       },
       version: 1,
     });
+
+    game.destroyGame();
+  });
+
+  it("does not show root-menu app exit when no app exit handler is available", async () => {
+    const game = new TimePilot(host, { gamepadEnabled: false });
+    const pilot = game as unknown as {
+      context: {
+        _gameArena: { renderText: (...args: unknown[]) => void };
+        _menus: {
+          render: () => void;
+          showStart: () => void;
+        };
+      };
+    };
+
+    await new Promise((resolve) => window.setTimeout(resolve, 5));
+
+    const renderText = vi.spyOn(pilot.context._gameArena, "renderText");
+
+    pilot.context._menus.showStart();
+    pilot.context._menus.render();
+
+    expect(renderText).not.toHaveBeenCalledWith(
+      "Exit",
+      expect.any(Number),
+      expect.any(Number),
+      expect.anything()
+    );
 
     game.destroyGame();
   });

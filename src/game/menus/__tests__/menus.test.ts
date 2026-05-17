@@ -29,12 +29,6 @@ const createArena = (): GameArenaInstance => ({
   getElement: vi.fn(() => document.createElement("canvas")),
 });
 
-const showHiddenControlsScreen = (menus: Menus): void => {
-  (menus as unknown as { _goToScreen: (screen: "controls") => void })._goToScreen(
-    "controls"
-  );
-};
-
 describe("menu definitions", () => {
   afterEach(() => {
     vi.restoreAllMocks();
@@ -232,7 +226,7 @@ describe("menu definitions", () => {
 
     expect(fillRectCalls).toEqual(
       expect.arrayContaining([
-        [-137, 349, 3, 3],
+        [-137, 391, 3, 3],
       ])
     );
   });
@@ -944,7 +938,7 @@ describe("menu definitions", () => {
 
     menus.next();
     menus.activate();
-    for (let i = 0; i < 8; i++) {
+    for (let i = 0; i < 9; i++) {
       menus.next();
     }
     menus.activate();
@@ -1281,7 +1275,7 @@ describe("menu definitions", () => {
       expect.objectContaining({ align: "center" })
     );
 
-    for (let i = 0; i < 9; i++) {
+    for (let i = 0; i < 10; i++) {
       menus.next();
     }
 
@@ -1699,7 +1693,14 @@ describe("menu definitions", () => {
     const menus = new Menus(createArena(), { start: vi.fn() });
 
     menus.showStart();
-    showHiddenControlsScreen(menus);
+    menus.next();
+    menus.activate();
+
+    for (let i = 0; i < 9; i++) {
+      menus.next();
+    }
+
+    menus.activate();
     menus.activate();
     expect(menus.captureKey(73)).toBe(true);
     expect(userOptions.keyboardBindings.up).toEqual([73]);
@@ -1744,7 +1745,14 @@ describe("menu definitions", () => {
     const menus = new Menus(arena, { start: vi.fn() });
 
     menus.showStart();
-    showHiddenControlsScreen(menus);
+    menus.next();
+    menus.activate();
+
+    for (let i = 0; i < 9; i++) {
+      menus.next();
+    }
+
+    menus.activate();
     menus.next();
     menus.next();
     menus.activate();

@@ -34,9 +34,11 @@
   restored without writing state every frame.
 - Added a public about page with build, host, privacy, source, and sponsorship
   details.
-- Added keyboard, touch, and gamepad controller support with gamepad polling.
+- Added in-app controller configuration support for keyboard layout selection
+  and gamepad polling.
 - Added canvas-rendered start and options menus with volume controls,
-  controller style selection, and keyboard/gamepad/mouse interaction.
+  controller style selection, custom keyboard bindings, and
+  keyboard/gamepad/mouse interaction.
 - Fixed gamepad cleanup so animation frames are cancelled on disconnect.
 
 ## 🎮 Gameplay Tuning
@@ -54,6 +56,8 @@
 - Added the animated level 5 plasma projectile sprite and kept plasma shots non-homing while making their initial aim independent of UFO facing.
 - Added bomb and plasma projectile explosion sprites for shoot-downs and player impacts.
 - Updated player and enemy sprite handling for the newer sprite sheets, including level 1 biplane animation, level 3 helicopter turning, level 5 UFO animation, and the 32-frame player rotation sheet.
+- Pinned the boss-progress meter ships to a fixed propeller-frame sprite instead
+  of animating the meter icons.
 - Updated bonus and explosion sprite geometry for the refreshed parachute, basic enemy, boss, and special bomber sheets.
 - Replaced level 5 cloud props with refreshed asteroid sprites.
 - Updated level 1 biplane sprite handling for the half-size refreshed sheet.

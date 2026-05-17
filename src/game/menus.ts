@@ -1179,6 +1179,10 @@ class Menus implements MenuSystemInstance {
     }
 
     items.push(
+      this._createItem(i18n.menu.remapControls, "action", nextItemY(), {
+        action: () => this._goToScreen("controls"),
+        opensSubmenu: true,
+      }),
       this._createItem(i18n.menu.back, "action", itemY + 8, {
         action: () => this._goBack(),
       })
