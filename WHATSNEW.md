@@ -34,6 +34,8 @@
   restored without writing state every frame.
 - Added a public about page with build, host, privacy, source, and sponsorship
   details.
+- Added installed-PWA back navigation for menu backtracking, paused-game resume,
+  and root-menu exit.
 - Added in-app controller configuration support for keyboard layout selection
   and gamepad polling.
 - Added canvas-rendered start and options menus with volume controls,

@@ -511,6 +511,7 @@ export interface MenuSystemCommands {
   getLevel?: () => number;
   previewLevel?: (level: number) => void;
   playPreroll?: () => void;
+  onNavigationChanged?: (state: MenuNavigationState) => void;
   resetStoredData?: (scope: StoredDataResetScope) => void;
   restart?: () => void;
   selectLevel?: (level: number) => void;
@@ -530,6 +531,15 @@ export interface ShowStartMenuOptions {
   startLabel?: string;
 }
 
+export interface MenuNavigationState {
+  active: boolean;
+  canGoBack: boolean;
+  depth: number;
+  isPausedRoot: boolean;
+  isRoot: boolean;
+  isWatchingDemo: boolean;
+}
+
 export interface MenuRenderOptions {
   renderLogo?: boolean;
 }
@@ -539,6 +549,7 @@ export interface MenuSystemInstance {
   resetUiZoom: () => void;
   adjust: (direction: -1 | 1) => void;
   captureKey: (keyCode: number) => boolean;
+  getNavigationState: () => MenuNavigationState;
   isActive: () => boolean;
   isWatchingDemo: () => boolean;
   showStart: (options?: ShowStartMenuOptions) => void;

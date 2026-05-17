@@ -80,6 +80,10 @@ runs so the display does not sleep mid-game. It releases automatically outside
 real gameplay, such as demo, game-over, reset, and teardown states, and silently
 falls back on browsers that do not support wake locks.
 
+Installed PWA back navigation is mapped onto the game: OS Back returns through
+open submenus, resumes play from the paused root menu, and exits from a fresh
+root menu.
+
 The showcase/landing page remains the default browser view. An `/about` page
 summarizes the game, current build version, host, author, privacy stance, source
 repository, and optional sponsorship link.

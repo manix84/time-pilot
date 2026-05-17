@@ -209,6 +209,7 @@ function App() {
       <main className={"app-shell app-shell--pwa"} aria-label={"Time Pilot"}>
         <TimePilotGame
           enableAppExit={isPwaMode()}
+          enableHistoryNavigation={isPwaMode()}
           enableImmersiveMode
           enableScreenWakeLock={isPwaMode()}
           enableUpdates={isPwaMode()}

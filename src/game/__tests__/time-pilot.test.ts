@@ -9,6 +9,7 @@ describe("TimePilot engine", () => {
     vi.spyOn(console, "info").mockImplementation(() => {});
     vi.spyOn(console, "log").mockImplementation(() => {});
     vi.spyOn(console, "warn").mockImplementation(() => {});
+    window.history.replaceState(null, "", "/");
     host = document.createElement("div");
     Object.defineProperty(host, "clientWidth", { value: 800 });
     Object.defineProperty(host, "clientHeight", { value: 600 });
@@ -583,6 +584,97 @@ describe("TimePilot engine", () => {
       expect.any(Number),
       expect.anything()
     );
+
+    game.destroyGame();
+  });
+
+  it("uses browser back to move from a submenu to the root menu", async () => {
+    const game = new TimePilot(host, {
+      enableHistoryNavigation: true,
+      exitApp: vi.fn(),
+      gamepadEnabled: false,
+    });
+    const pilot = game as unknown as {
+      context: {
+        _menus: {
+          activate: () => void;
+          getNavigationState: () => { isRoot: boolean };
+          next: () => void;
+          showStart: () => void;
+        };
+      };
+    };
+
+    await new Promise((resolve) => window.setTimeout(resolve, 5));
+
+    pilot.context._menus.showStart();
+    pilot.context._menus.next();
+    pilot.context._menus.activate();
+
+    expect(pilot.context._menus.getNavigationState().isRoot).toBe(false);
+
+    window.dispatchEvent(new PopStateEvent("popstate"));
+
+    expect(pilot.context._menus.getNavigationState().isRoot).toBe(true);
+
+    game.destroyGame();
+  });
+
+  it("uses browser back to resume from the paused root menu", async () => {
+    const game = new TimePilot(host, {
+      enableHistoryNavigation: true,
+      exitApp: vi.fn(),
+      gamepadEnabled: false,
+    });
+    const pilot = game as unknown as {
+      beginGame: () => void;
+      context: {
+        _gameTicker: { isRunning: boolean };
+        _menus: {
+          getNavigationState: () => { isPausedRoot: boolean };
+          isActive: () => boolean;
+        };
+      };
+      openPauseMenu: () => void;
+    };
+
+    await new Promise((resolve) => window.setTimeout(resolve, 5));
+
+    pilot.beginGame();
+    pilot.openPauseMenu();
+
+    expect(pilot.context._gameTicker.isRunning).toBe(false);
+    expect(pilot.context._menus.getNavigationState().isPausedRoot).toBe(true);
+
+    window.dispatchEvent(new PopStateEvent("popstate"));
+
+    expect(pilot.context._menus.isActive()).toBe(false);
+    expect(pilot.context._gameTicker.isRunning).toBe(true);
+
+    game.destroyGame();
+  });
+
+  it("uses browser back to exit from a fresh root menu", async () => {
+    const exitApp = vi.fn();
+    const game = new TimePilot(host, {
+      enableHistoryNavigation: true,
+      exitApp,
+      gamepadEnabled: false,
+    });
+    const pilot = game as unknown as {
+      context: {
+        _menus: {
+          showStart: () => void;
+        };
+      };
+    };
+
+    await new Promise((resolve) => window.setTimeout(resolve, 5));
+
+    pilot.context._menus.showStart();
+    window.dispatchEvent(new PopStateEvent("popstate"));
+
+    expect(exitApp).toHaveBeenCalled();
 
     game.destroyGame();
   });

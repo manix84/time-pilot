@@ -6,7 +6,6 @@ const APP_SHELL = [
   "./pwa/index.html",
   "./assets/app.css",
   "./assets/main.js",
-  "./manifest.webmanifest",
   "./pwa-icon-512.png",
   "./pwa-icon.svg",
   "./pwa-maskable-512.png",
@@ -209,6 +208,11 @@ self.addEventListener("fetch", (event) => {
 
   if (["script", "style"].includes(event.request.destination)) {
     event.respondWith(networkFirstEntryAsset(event.request));
+    return;
+  }
+
+  if (event.request.destination === "manifest") {
+    event.respondWith(networkFirst(event.request));
     return;
   }
 

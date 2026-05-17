@@ -17,7 +17,14 @@ export default defineConfig({
   define: {
     __TIME_PILOT_VERSION__: JSON.stringify(packageJson.version),
   },
-  plugins: [react()],
+  plugins: [
+    {
+      name: "time-pilot-html-version",
+      transformIndexHtml: (html) =>
+        html.replaceAll("%TIME_PILOT_VERSION%", packageJson.version),
+    },
+    react(),
+  ],
   build: {
     rollupOptions: {
       input: {

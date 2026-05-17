@@ -178,6 +178,10 @@ export interface TimePilotOptions {
    */
   enterImmersiveMode?: () => Promise<void> | void;
   /**
+   * Maps browser or installed-PWA Back navigation onto game menu navigation.
+   */
+  enableHistoryNavigation?: boolean;
+  /**
    * Requests that the installed app window closes.
    */
   exitApp?: () => void;
@@ -202,10 +206,12 @@ export class TimePilot {
   private readonly options: Required<TimePilotOptions>;
   private readonly canExitApp: boolean;
   private readonly context = {} as GameDataStore;
+  private browserHistoryDepth = 0;
   private collisionSystem!: CollisionSystemInstance;
   private hasSeededInitialProps = false;
   private hasShownGameOver = false;
   private hasStartedGame = false;
+  private isApplyingBrowserHistory = false;
   private isDestroyed = false;
   private isDemoMode = false;
   private isDebugLevelPreviewLocked = false;
@@ -227,6 +233,20 @@ export class TimePilot {
       this.saveGameSessionSnapshot();
     }
   };
+  private readonly handleBrowserBackNavigation = (): void => {
+    if (!this.options.enableHistoryNavigation || this.isDestroyed) {
+      return;
+    }
+
+    this.browserHistoryDepth = Math.max(0, this.browserHistoryDepth - 1);
+    this.isApplyingBrowserHistory = true;
+
+    try {
+      this.navigateBackFromBrowser();
+    } finally {
+      this.isApplyingBrowserHistory = false;
+    }
+  };
   private readonly timeWarpSound = new SoundEngine(sounds.timeWarp.src);
 
   constructor(element: HTMLElement, options: TimePilotOptions = {}) {
@@ -238,6 +258,7 @@ export class TimePilot {
       canUseScreenWakeLock: options.canUseScreenWakeLock ?? (() => false),
       controllerType: options.controllerType ?? userOptions.controllerType,
       debug: options.debug ?? userOptions.enableDebug,
+      enableHistoryNavigation: options.enableHistoryNavigation ?? false,
       enterImmersiveMode: options.enterImmersiveMode ?? (() => {}),
       exitApp: options.exitApp ?? (() => {}),
       gamepadEnabled: options.gamepadEnabled ?? userOptions.gamepadEnabled,
@@ -284,6 +305,7 @@ export class TimePilot {
   destroyGame = (): void => {
     this.saveGameSessionSnapshot();
     this.removeSessionSnapshotListeners();
+    this.removeBrowserHistoryNavigationListener();
     this.releaseScreenWakeLock();
     this.isDestroyed = true;
     this.isDemoMode = false;
@@ -389,6 +411,9 @@ export class TimePilot {
       getContinues: () => this.context._player.getData("continues") ?? 0,
       getAchievements: () => this.context._achievements?.getStatuses() ?? [],
       getLevel: () => this.selectedStartLevel,
+      onNavigationChanged: (state) => {
+        this.syncBrowserHistory(state.depth + (state.active ? 1 : 0));
+      },
       previewLevel: (level) => {
         this.previewDebugLevel(level);
       },
@@ -461,6 +486,7 @@ export class TimePilot {
     }
 
     this.addSessionSnapshotListeners();
+    this.addBrowserHistoryNavigationListener();
     this.context._player.setData("level", 1);
     this.context._gameArena.renderText("Loading", 20, 10, { size: 30 });
 
@@ -729,6 +755,79 @@ export class TimePilot {
       "visibilitychange",
       this.handleVisibilityChange
     );
+  };
+
+  private addBrowserHistoryNavigationListener = (): void => {
+    if (!this.options.enableHistoryNavigation) {
+      return;
+    }
+
+    window.addEventListener("popstate", this.handleBrowserBackNavigation);
+    window.history.replaceState(
+      { ...(window.history.state ?? {}), timePilotHistoryBase: true },
+      "",
+      window.location.href
+    );
+  };
+
+  private removeBrowserHistoryNavigationListener = (): void => {
+    window.removeEventListener("popstate", this.handleBrowserBackNavigation);
+  };
+
+  private syncBrowserHistory = (desiredDepth: number): void => {
+    if (!this.options.enableHistoryNavigation || this.isApplyingBrowserHistory) {
+      this.browserHistoryDepth = desiredDepth;
+      return;
+    }
+
+    while (this.browserHistoryDepth < desiredDepth) {
+      this.browserHistoryDepth++;
+      window.history.pushState(
+        {
+          timePilotHistoryDepth: this.browserHistoryDepth,
+        },
+        "",
+        window.location.href
+      );
+    }
+
+    if (desiredDepth < this.browserHistoryDepth) {
+      this.browserHistoryDepth = desiredDepth;
+    }
+  };
+
+  private navigateBackFromBrowser = (): void => {
+    const menuNavigation = this.context._menus.getNavigationState();
+
+    if (menuNavigation.isWatchingDemo) {
+      this.context._menus.goBack();
+      return;
+    }
+
+    if (menuNavigation.canGoBack) {
+      this.context._menus.goBack();
+      return;
+    }
+
+    if (menuNavigation.isPausedRoot) {
+      this.context._menus.hide();
+      this.resumeGame();
+      return;
+    }
+
+    if (menuNavigation.isRoot) {
+      this.saveGameSessionSnapshot();
+      this.options.exitApp();
+      return;
+    }
+
+    if (this.hasStartedGame && !this.isDemoMode) {
+      this.openPauseMenu();
+      return;
+    }
+
+    this.saveGameSessionSnapshot();
+    this.options.exitApp();
   };
 
   private getGameSessionStorage = (): Storage | null => {
