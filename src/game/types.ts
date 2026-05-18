@@ -763,6 +763,10 @@ export interface TimePilotConstants {
     enemyShoot: SoundAsset;
     extraLife: SoundAsset;
     gameStart: SoundAsset;
+    music: {
+      levels: Record<number, SoundAsset>;
+      menu: SoundAsset;
+    };
     nextLevel: SoundAsset;
     timeWarp: SoundAsset;
     waveStart: SoundAsset;

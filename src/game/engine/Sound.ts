@@ -5,6 +5,8 @@ interface SoundOptions {
   loop?: boolean;
   autoplay?: boolean;
   instantDestroy?: boolean;
+  channel?: "effects" | "music";
+  onEnded?: () => void;
 }
 
 interface TimePilotAudioElement extends HTMLAudioElement {
@@ -21,13 +23,18 @@ type SpatialAudioNodeSet = {
 };
 
 /**
- * HTML audio wrapper with global mute/pause handling and optional spatial panning.
+ * HTML audio wrapper with effects muting, global pause handling, and optional spatial panning.
  */
 class Sound {
   private static _instances = new Set<Sound>();
   private static _isMuted = false;
   private static _pausedInstances = new Set<Sound>();
+  private static _isListeningForUserOptions = false;
+  private readonly _channel: "effects" | "music";
   private readonly _instantDestroy: boolean;
+  private readonly _onEnded?: () => void;
+  private _fadeFrame = 0;
+  private _fadeMultiplier = 1;
   private _isPlaying = false;
   private _playMode?: "loop" | "play";
   private _pan = 0;
@@ -46,6 +53,7 @@ class Sound {
     this._isPlaying = false;
     this._playMode = undefined;
     Sound._pausedInstances.delete(this);
+    this._onEnded?.();
 
     if (this._instantDestroy) {
       this.destroy();
@@ -86,11 +94,16 @@ class Sound {
     Sound._pausedInstances.clear();
   };
 
+  static refreshAllVolumes = (): void => {
+    Sound._instances.forEach((sound) => sound.applyVolume());
+  };
+
   constructor(urls: string | string[], userOptions: SoundOptions = {}) {
     const options = {
       loop: false,
       autoplay: false,
       instantDestroy: false,
+      channel: "effects" as const,
       ...userOptions,
     };
     const soundUrls = typeof urls === "string" ? [urls] : urls;
@@ -100,7 +113,9 @@ class Sound {
     }
 
     this._theSound = new Audio() as TimePilotAudioElement;
+    this._channel = options.channel;
     this._instantDestroy = options.instantDestroy;
+    this._onEnded = options.onEnded;
 
     for (const url of soundUrls) {
       const source = document.createElement("source");
@@ -117,6 +132,7 @@ class Sound {
 
     this._theSound.addEventListener("canplay", this._markCanPlay, false);
     this._theSound.addEventListener("ended", this._markEnded, false);
+    Sound.listenForUserOptionChanges();
     Sound._instances.add(this);
   }
 
@@ -136,6 +152,27 @@ class Sound {
       this.applyVolume();
       this.playElement();
     }
+  };
+
+  fadeInLoop = (durationMs: number): void => {
+    this._fadeMultiplier = durationMs > 0 ? 0 : 1;
+    this.loop();
+    this.fadeTo(1, durationMs);
+  };
+
+  fadeInResume = (durationMs: number): void => {
+    this._fadeMultiplier = durationMs > 0 ? 0 : 1;
+    this.resume();
+    this.fadeTo(1, durationMs);
+  };
+
+  fadeOutAndDestroy = (durationMs: number): void => {
+    if (durationMs <= 0 || !this.isActive()) {
+      this.destroy();
+      return;
+    }
+
+    this.fadeTo(0, durationMs, () => this.destroy());
   };
 
   setPan = (pan: number): void => {
@@ -183,6 +220,7 @@ class Sound {
   };
 
   stop = (): void => {
+    this.cancelFade();
     this._theSound.pause();
     this._isPlaying = false;
     this._playMode = undefined;
@@ -205,10 +243,72 @@ class Sound {
   };
 
   private applyVolume = (): void => {
+    const channelVolume =
+      this._channel === "music"
+        ? userOptions.musicVolume
+        : userOptions.effectsVolume;
+
     this._theSound.volume =
-      Sound._isMuted
+      Sound._isMuted && this._channel === "effects"
         ? 0
-        : (userOptions.masterVolume / 10) * (userOptions.effectsVolume / 10);
+        : (userOptions.masterVolume / 10) *
+          (channelVolume / 10) *
+          this._fadeMultiplier;
+  };
+
+  private cancelFade = (): void => {
+    if (!this._fadeFrame) {
+      return;
+    }
+
+    window.cancelAnimationFrame(this._fadeFrame);
+    this._fadeFrame = 0;
+  };
+
+  private fadeTo = (
+    target: number,
+    durationMs: number,
+    onComplete?: () => void
+  ): void => {
+    this.cancelFade();
+
+    const start = this._fadeMultiplier;
+    const startedAt = performance.now();
+
+    if (durationMs <= 0) {
+      this._fadeMultiplier = target;
+      this.applyVolume();
+      onComplete?.();
+      return;
+    }
+
+    const update = (now: number): void => {
+      const progress = Math.min(1, (now - startedAt) / durationMs);
+
+      this._fadeMultiplier = start + (target - start) * progress;
+      this.applyVolume();
+
+      if (progress >= 1) {
+        this._fadeFrame = 0;
+        onComplete?.();
+        return;
+      }
+
+      this._fadeFrame = window.requestAnimationFrame(update);
+    };
+
+    this._fadeFrame = window.requestAnimationFrame(update);
+  };
+
+  private static listenForUserOptionChanges = (): void => {
+    if (Sound._isListeningForUserOptions) {
+      return;
+    }
+
+    window.addEventListener("timePilot:userOptionsChanged", () => {
+      Sound.refreshAllVolumes();
+    });
+    Sound._isListeningForUserOptions = true;
   };
 
   private playElement = (): void => {

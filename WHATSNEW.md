@@ -69,6 +69,8 @@
 - Updated the player sprite handling for the white and black time-warp animation layers.
 - Added the six-second player time-warp sound effect.
 - Added optional time-warp sound playback to the Storybook preview.
+- Added looping menu and era music with faded track transitions, routed through
+  the existing music volume channel and cached for offline PWA play.
 - Added looping boss sound effects for levels 1-4, with positional audio support where the browser allows it.
 - Added spatial enemy bullet, enemy explosion, rocket launch, and rocket flight sound effects.
 - Added score-based extra lives at 10,000 points and every 50,000 points after, with an extra-life sound effect.

@@ -20,6 +20,7 @@
 - 📱 Installable offline PWA mode that launches as a standalone app and enters fullscreen play from Start/Continue.
 - 🔆 Optional PWA keep-awake mode, on by default, for active or paused player runs.
 - 👆 Optional touch steering guide that appears only while the active gameplay touch is held.
+- 🎵 Looping menu and era music with faded track transitions, routed through the music volume channel.
 - 🔁 Root-menu update flow that applies waiting PWA updates without interrupting play.
 - 📺 Optional CRT/VHS filter presets with custom sliders.
 - 🌍 Localized menus, level blurbs, and level showcase labels.
