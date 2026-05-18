@@ -79,7 +79,9 @@ followed by the player time-warp animation and a reload.
 
 When the game is running as an installed PWA, the root menu also shows an
 `Exit` action. It asks the browser to close the app window; platforms that do
-not allow scripted app closure may ignore the request.
+not allow scripted app closure may ignore the request. If that happens, Time
+Pilot confirms the run has been saved and tells the player to leave with the
+device Home or Back button.
 
 Installed PWA options also include `Keep Screen Awake`. It is enabled by
 default and uses the browser Screen Wake Lock API during active or paused player

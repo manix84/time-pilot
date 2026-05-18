@@ -129,7 +129,8 @@
   override, and request fullscreen/landscape presentation from the player's
   Start/Continue action on the `/pwa/` route.
 - Added an installed-PWA-only root-menu Exit action that asks the browser to
-  close the app window where the platform allows it.
+  close the app window where the platform allows it, with a saved-state fallback
+  message when Android keeps the app open.
 - Added an installed-PWA-only Keep Screen Awake option, enabled by default,
   that uses the Screen Wake Lock API during active or paused player runs.
 - Moved the controls overlay toggle into Options and hid the unfinished Control

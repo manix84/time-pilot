@@ -7,7 +7,7 @@ import {
   useState,
   type CSSProperties,
 } from "react";
-import { exitInstalledApp } from "../game/app-exit";
+import { appExitBlockedEvent, exitInstalledApp } from "../game/app-exit";
 import { getFilterSettingsForMode } from "../game/filter-settings";
 import { enterGameFullscreen } from "../game/immersive-mode";
 import {
@@ -76,6 +76,7 @@ function TimePilotGame({
   const [updateOverlayState, setUpdateOverlayState] = useState<
     "idle" | "updating" | "warping"
   >("idle");
+  const [isExitFallbackVisible, setIsExitFallbackVisible] = useState(false);
   const applyUpdateRef = useRef<() => void>(() => {});
   const isUpdateAvailableRef = useRef(false);
   const updateOverlayStateRef = useRef(updateOverlayState);
@@ -160,6 +161,22 @@ function TimePilotGame({
   useEffect(() => {
     updateOverlayStateRef.current = updateOverlayState;
   }, [updateOverlayState]);
+
+  useEffect(() => {
+    if (!enableAppExit) {
+      return;
+    }
+
+    const handleAppExitBlocked = (): void => {
+      setIsExitFallbackVisible(true);
+    };
+
+    window.addEventListener(appExitBlockedEvent, handleAppExitBlocked);
+
+    return () => {
+      window.removeEventListener(appExitBlockedEvent, handleAppExitBlocked);
+    };
+  }, [enableAppExit]);
 
   useEffect(() => {
     if (!enableScreenWakeLock || !canUseScreenWakeLock()) {
@@ -275,6 +292,23 @@ function TimePilotGame({
           onWarpComplete={handleUpdateWarpComplete}
           state={updateOverlayState}
         />
+      ) : null}
+      {enableAppExit && isExitFallbackVisible ? (
+        <div className={"time-pilot-exit-fallback"} role={"status"}>
+          <div className={"time-pilot-exit-fallback-panel"}>
+            <h2>Game Saved</h2>
+            <p>
+              Android has kept the app open. Use your device Home or Back button
+              to leave Time Pilot; your current run will be restored next time.
+            </p>
+            <button
+              type={"button"}
+              onClick={() => setIsExitFallbackVisible(false)}
+            >
+              Return to Game
+            </button>
+          </div>
+        </div>
       ) : null}
     </div>
   );
