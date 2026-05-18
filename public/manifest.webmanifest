@@ -8,7 +8,6 @@
   "start_url": "./pwa/",
   "scope": "./",
   "display": "standalone",
-  "display_override": ["fullscreen", "standalone"],
   "orientation": "landscape",
   "background_color": "#000000",
   "theme_color": "#000000",
