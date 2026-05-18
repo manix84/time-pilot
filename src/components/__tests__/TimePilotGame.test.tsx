@@ -122,4 +122,31 @@ describe("TimePilotGame", () => {
 
     expect(container.querySelector(".time-pilot-update-overlay")).toBeNull();
   });
+
+  it("shows a saved fallback when installed app exit is blocked", async () => {
+    await act(async () => {
+      root.render(<TimePilotGame debug enableAppExit />);
+      await new Promise((resolve) => window.setTimeout(resolve, 5));
+    });
+
+    await act(async () => {
+      window.dispatchEvent(new CustomEvent("timePilot:appExitBlocked"));
+      await Promise.resolve();
+    });
+
+    expect(container.querySelector('[role="status"]')?.textContent).toContain(
+      "Game Saved"
+    );
+
+    await act(async () => {
+      container.querySelector("button")?.dispatchEvent(
+        new MouseEvent("click", {
+          bubbles: true,
+        })
+      );
+      await Promise.resolve();
+    });
+
+    expect(container.querySelector(".time-pilot-exit-fallback")).toBeNull();
+  });
 });

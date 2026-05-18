@@ -256,6 +256,50 @@ input {
   image-rendering: pixelated;
 }
 
+.time-pilot-exit-fallback {
+  position: fixed;
+  inset: 0;
+  z-index: 10001;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.84);
+  color: #f8fbff;
+}
+
+.time-pilot-exit-fallback-panel {
+  width: min(28rem, 100%);
+  padding: 1.25rem;
+  border: 2px solid #f4c14f;
+  background: #071120;
+  box-shadow: 0 0 0 2px #17395d;
+  text-align: center;
+}
+
+.time-pilot-exit-fallback-panel h2 {
+  margin: 0 0 0.75rem;
+  font-size: 1rem;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.time-pilot-exit-fallback-panel p {
+  margin: 0;
+  color: #d8e7f8;
+  line-height: 1.5;
+}
+
+.time-pilot-exit-fallback-panel button {
+  margin-top: 1rem;
+  padding: 0.625rem 0.875rem;
+  border: 2px solid #f4c14f;
+  background: #f4c14f;
+  color: #071120;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
 .time-pilot-update-status-text {
   position: absolute;
   width: 1px;
