@@ -33,6 +33,7 @@ class Sound {
   private readonly _channel: "effects" | "music";
   private readonly _instantDestroy: boolean;
   private readonly _onEnded?: () => void;
+  private _destroyAfterFade = false;
   private _fadeFrame = 0;
   private _fadeMultiplier = 1;
   private _isPlaying = false;
@@ -172,7 +173,11 @@ class Sound {
       return;
     }
 
-    this.fadeTo(0, durationMs, () => this.destroy());
+    this._destroyAfterFade = true;
+    this.fadeTo(0, durationMs, () => {
+      this._destroyAfterFade = false;
+      this.destroy();
+    });
   };
 
   setPan = (pan: number): void => {
@@ -220,12 +225,19 @@ class Sound {
   };
 
   stop = (): void => {
+    const shouldDestroy = this._destroyAfterFade;
+
+    this._destroyAfterFade = false;
     this.cancelFade();
     this._theSound.pause();
     this._isPlaying = false;
     this._playMode = undefined;
     if (this._theSound.currentTime > 0) {
       this._theSound.currentTime = 0;
+    }
+
+    if (shouldDestroy) {
+      this.destroy();
     }
   };
 

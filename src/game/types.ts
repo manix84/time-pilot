@@ -481,6 +481,7 @@ export interface CollisionSystemInstance {
 
 export interface SpawningSystemInstance {
   addInitialProps: () => void;
+  destroy?: () => void;
   spawnEntities: () => void;
 }
 
@@ -764,7 +765,7 @@ export interface TimePilotConstants {
     extraLife: SoundAsset;
     gameStart: SoundAsset;
     music: {
-      levels: Record<number, SoundAsset>;
+      levels: Partial<Record<number, SoundAsset>>;
       menu: SoundAsset;
     };
     nextLevel: SoundAsset;

@@ -1,7 +1,11 @@
-const CACHE_NAME = "time-pilot-v5";
+const CACHE_NAME = "time-pilot-v6";
+const CLACKS_HEADER_NAME = "X-Clacks-Overhead";
+const CLACKS_HEADER_VALUE = "GNU Terry Pratchett";
 const APP_SHELL = [
   "./",
   "./index.html",
+  "./about/",
+  "./about/index.html",
   "./pwa/",
   "./pwa/index.html",
   "./assets/app.css",
@@ -17,6 +21,21 @@ const APP_SHELL = [
   "./screenshots/time-pilot-preroll-flyby.png",
   "./screenshots/time-pilot-root-menu.png",
 ];
+
+const withClacksHeader = (response) => {
+  if (!response || response.type === "opaque") {
+    return response;
+  }
+
+  const headers = new Headers(response.headers);
+  headers.set(CLACKS_HEADER_NAME, CLACKS_HEADER_VALUE);
+
+  return new Response(response.body, {
+    headers,
+    status: response.status,
+    statusText: response.statusText,
+  });
+};
 const GAME_ASSETS = [
   "./fonts/font.ttf",
   "./music/level1.ogg",
@@ -108,6 +127,7 @@ self.addEventListener("activate", (event) => {
 
 const cacheResponse = async (request, response) => {
   const url = new URL(request.url);
+  const clacksResponse = withClacksHeader(response);
 
   if (
     !response ||
@@ -116,12 +136,12 @@ const cacheResponse = async (request, response) => {
     url.origin !== self.location.origin ||
     !["http:", "https:"].includes(url.protocol)
   ) {
-    return response;
+    return clacksResponse;
   }
 
   const cache = await caches.open(CACHE_NAME);
-  await cache.put(request, response.clone());
-  return response;
+  await cache.put(request, clacksResponse.clone());
+  return clacksResponse;
 };
 
 const networkFirst = async (request) => {
@@ -132,7 +152,7 @@ const networkFirst = async (request) => {
     const cachedResponse = await caches.match(request);
 
     if (cachedResponse) {
-      return cachedResponse;
+      return withClacksHeader(cachedResponse);
     }
 
     throw new Error(`No cached response available for ${request.url}`);
@@ -154,11 +174,11 @@ const getLegacyEntryAssetFallback = async (request) => {
   const cachedResponse = await caches.match(fallbackPath);
 
   if (cachedResponse) {
-    return cachedResponse;
+    return withClacksHeader(cachedResponse);
   }
 
   try {
-    return await fetch(fallbackPath);
+    return withClacksHeader(await fetch(fallbackPath));
   } catch {
     return undefined;
   }
@@ -176,11 +196,20 @@ const networkFirstEntryAsset = async (request) => {
 
 const getNavigationFallback = async (request) => {
   const url = new URL(request.url);
+  const isAboutRoute =
+    url.pathname.endsWith("/about") || url.pathname.includes("/about/");
   const fallbackPath = url.pathname.includes("/pwa/")
     ? "./pwa/index.html"
-    : "./index.html";
+    : isAboutRoute
+      ? "./about/index.html"
+      : "./index.html";
 
-  return caches.match(request) ?? caches.match(fallbackPath) ?? caches.match("./");
+  const response =
+    (await caches.match(request)) ??
+    (await caches.match(fallbackPath)) ??
+    (await caches.match("./"));
+
+  return withClacksHeader(response);
 };
 
 const staleWhileRevalidate = async (request) => {
@@ -192,7 +221,7 @@ const staleWhileRevalidate = async (request) => {
   const response = cachedResponse ?? (await networkResponse);
 
   if (response) {
-    return response;
+    return withClacksHeader(response);
   }
 
   throw new Error(`No cached response available for ${request.url}`);

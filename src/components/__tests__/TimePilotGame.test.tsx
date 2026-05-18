@@ -1,6 +1,7 @@
 import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { appExitBlockedEvent } from "../../game/app-exit";
 import userOptions from "../../game/user-options";
 import TimePilotGame from "../TimePilotGame";
 import UpdateOverlay from "../UpdateOverlay";
@@ -130,16 +131,18 @@ describe("TimePilotGame", () => {
     });
 
     await act(async () => {
-      window.dispatchEvent(new CustomEvent("timePilot:appExitBlocked"));
+      window.dispatchEvent(new CustomEvent(appExitBlockedEvent));
       await Promise.resolve();
     });
 
-    expect(container.querySelector('[role="status"]')?.textContent).toContain(
-      "Game Saved"
-    );
+    const dialog = container.querySelector(".time-pilot-exit-fallback");
+
+    expect(dialog?.getAttribute("role")).toBe("dialog");
+    expect(dialog?.getAttribute("aria-modal")).toBe("true");
+    expect(dialog?.textContent).toContain("Game Saved");
 
     await act(async () => {
-      container.querySelector("button")?.dispatchEvent(
+      dialog?.querySelector('button[type="button"]')?.dispatchEvent(
         new MouseEvent("click", {
           bubbles: true,
         })

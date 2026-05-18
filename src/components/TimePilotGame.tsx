@@ -79,6 +79,7 @@ function TimePilotGame({
   const [isExitFallbackVisible, setIsExitFallbackVisible] = useState(false);
   const applyUpdateRef = useRef<() => void>(() => {});
   const isUpdateAvailableRef = useRef(false);
+  const exitFallbackButtonRef = useRef<HTMLButtonElement | null>(null);
   const updateOverlayStateRef = useRef(updateOverlayState);
   const wakeLockControllerRef = useRef<ScreenWakeLockController | null>(null);
   const rgbSplitFilterId = useId().replace(/:/g, "");
@@ -161,6 +162,14 @@ function TimePilotGame({
   useEffect(() => {
     updateOverlayStateRef.current = updateOverlayState;
   }, [updateOverlayState]);
+
+  useEffect(() => {
+    if (!isExitFallbackVisible) {
+      return;
+    }
+
+    exitFallbackButtonRef.current?.focus();
+  }, [isExitFallbackVisible]);
 
   useEffect(() => {
     if (!enableAppExit) {
@@ -294,14 +303,20 @@ function TimePilotGame({
         />
       ) : null}
       {enableAppExit && isExitFallbackVisible ? (
-        <div className={"time-pilot-exit-fallback"} role={"status"}>
+        <div
+          aria-labelledby={"time-pilot-exit-fallback-title"}
+          aria-modal={"true"}
+          className={"time-pilot-exit-fallback"}
+          role={"dialog"}
+        >
           <div className={"time-pilot-exit-fallback-panel"}>
-            <h2>Game Saved</h2>
+            <h2 id={"time-pilot-exit-fallback-title"}>Game Saved</h2>
             <p>
               Android has kept the app open. Use your device Home or Back button
               to leave Time Pilot; your current run will be restored next time.
             </p>
             <button
+              ref={exitFallbackButtonRef}
               type={"button"}
               onClick={() => setIsExitFallbackVisible(false)}
             >

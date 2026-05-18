@@ -496,6 +496,24 @@ describe("game systems", () => {
     expect(context._bonuses.create).not.toHaveBeenCalled();
   });
 
+  it("plays the wave-start sound when a formation spawns", () => {
+    Object.defineProperty(HTMLMediaElement.prototype, "canPlay", {
+      configurable: true,
+      value: true,
+    });
+    const play = vi.mocked(HTMLMediaElement.prototype.play);
+    const context = createContext();
+    const system = new SpawningSystem(context);
+
+    play.mockClear();
+    vi.spyOn(Math, "random").mockReturnValue(0);
+
+    system.spawnEntities();
+
+    expect(context._enemies.create).toHaveBeenCalledTimes(5);
+    expect(play).toHaveBeenCalledTimes(1);
+  });
+
   it("spawns fast very-slow-homing rockets on level 3", () => {
     const context = createContext({ level: 3 });
     const system = new SpawningSystem(context);

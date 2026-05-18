@@ -1,6 +1,33 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { sounds } from "../constants";
 import TimePilot from "../index";
 import userOptions from "../user-options";
+
+const getPlayedSources = (): string[] => {
+  const playedSources: string[] = [];
+
+  Object.defineProperty(HTMLMediaElement.prototype, "canPlay", {
+    configurable: true,
+    value: true,
+  });
+  vi.spyOn(HTMLMediaElement.prototype, "play").mockImplementation(
+    function (this: HTMLMediaElement) {
+      const source = this.querySelector("source")?.getAttribute("src");
+
+      if (source) {
+        playedSources.push(source);
+      }
+
+      return Promise.resolve();
+    }
+  );
+
+  return playedSources;
+};
+
+const waitForAudioTimer = async (): Promise<void> => {
+  await new Promise((resolve) => window.setTimeout(resolve, 5));
+};
 
 describe("TimePilot engine", () => {
   let host: HTMLDivElement;
@@ -28,6 +55,10 @@ describe("TimePilot engine", () => {
     userOptions.setOption("language", "en");
     userOptions.setOption("logLevel", "off");
     userOptions.setOption("uiZoom", 100);
+    Object.defineProperty(HTMLMediaElement.prototype, "canPlay", {
+      configurable: true,
+      value: undefined,
+    });
     Object.defineProperty(navigator, "maxTouchPoints", {
       configurable: true,
       value: 0,
@@ -555,6 +586,63 @@ describe("TimePilot engine", () => {
       },
       version: 1,
     });
+
+    game.destroyGame();
+  });
+
+  it("queues the level intro cue before starting looping level music", async () => {
+    const playedSources = getPlayedSources();
+    const game = new TimePilot(host, { debug: true, gamepadEnabled: false });
+    const pilot = game as unknown as {
+      beginGame: () => void;
+      levelIntroMusic?: { _theSound: HTMLAudioElement };
+    };
+
+    await waitForAudioTimer();
+
+    pilot.beginGame();
+    await waitForAudioTimer();
+
+    expect(playedSources).toContain(sounds.gameStart.src);
+    expect(playedSources).not.toContain(sounds.music.levels[1]?.src);
+
+    HTMLMediaElement.prototype.dispatchEvent.call(
+      pilot.levelIntroMusic?._theSound,
+      new Event("ended")
+    );
+    await waitForAudioTimer();
+
+    expect(playedSources).toContain(sounds.music.levels[1]?.src);
+
+    game.destroyGame();
+  });
+
+  it("resumes paused level music from the menu without replaying the intro cue", async () => {
+    const playedSources = getPlayedSources();
+    const game = new TimePilot(host, { debug: true, gamepadEnabled: false });
+    const pilot = game as unknown as {
+      beginGame: () => void;
+      levelIntroMusic?: { _theSound: HTMLAudioElement };
+      openPauseMenu: () => void;
+    };
+
+    await waitForAudioTimer();
+
+    pilot.beginGame();
+    await waitForAudioTimer();
+    HTMLMediaElement.prototype.dispatchEvent.call(
+      pilot.levelIntroMusic?._theSound,
+      new Event("ended")
+    );
+    await waitForAudioTimer();
+    playedSources.length = 0;
+
+    pilot.openPauseMenu();
+    pilot.beginGame();
+    await waitForAudioTimer();
+
+    expect(playedSources).not.toContain(sounds.gameStart.src);
+    expect(playedSources).toContain(sounds.music.levels[1]?.src);
 
     game.destroyGame();
   });
