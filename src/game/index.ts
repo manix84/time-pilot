@@ -248,7 +248,9 @@ export class TimePilot {
     this.isApplyingBrowserHistory = true;
 
     try {
-      this.navigateBackFromBrowser();
+      if (this.navigateBackFromBrowser()) {
+        this.requestImmersiveMode();
+      }
     } finally {
       this.isApplyingBrowserHistory = false;
     }
@@ -809,38 +811,43 @@ export class TimePilot {
     }
   };
 
-  private navigateBackFromBrowser = (): void => {
+  private navigateBackFromBrowser = (): boolean => {
     const menuNavigation = this.context._menus.getNavigationState();
 
     if (menuNavigation.isWatchingDemo) {
       this.context._menus.goBack();
-      return;
+      return true;
     }
 
     if (menuNavigation.canGoBack) {
       this.context._menus.goBack();
-      return;
+      return true;
     }
 
     if (menuNavigation.isPausedRoot) {
       this.context._menus.hide();
       this.resumeGame();
-      return;
+      return true;
     }
 
     if (menuNavigation.isRoot) {
       this.saveGameSessionSnapshot();
       this.options.exitApp();
-      return;
+      return false;
     }
 
     if (this.hasStartedGame && !this.isDemoMode) {
       this.openPauseMenu();
-      return;
+      return true;
     }
 
     this.saveGameSessionSnapshot();
     this.options.exitApp();
+    return false;
+  };
+
+  private requestImmersiveMode = (): void => {
+    void this.options.enterImmersiveMode();
   };
 
   private getGameSessionStorage = (): Storage | null => {
