@@ -1,4 +1,5 @@
 /* Converted from engine/Sound.js (AMD) to ESM TypeScript. */
+import { logger } from "../logger";
 import userOptions from "../user-options";
 
 interface SoundOptions {
@@ -33,6 +34,7 @@ class Sound {
   private readonly _channel: "effects" | "music";
   private readonly _instantDestroy: boolean;
   private readonly _onEnded?: () => void;
+  private readonly _urls: string[];
   private _destroyAfterFade = false;
   private _fadeFrame = 0;
   private _fadeMultiplier = 1;
@@ -45,7 +47,7 @@ class Sound {
   private _markCanPlay = (): void => {
     this._theSound.canPlay = true;
 
-    if (this._playMode) {
+    if (this._playMode && !this._isPlaying) {
       this.applyVolume();
       this.playElement();
     }
@@ -117,6 +119,7 @@ class Sound {
     this._channel = options.channel;
     this._instantDestroy = options.instantDestroy;
     this._onEnded = options.onEnded;
+    this._urls = soundUrls;
 
     for (const url of soundUrls) {
       const source = document.createElement("source");
@@ -140,19 +143,15 @@ class Sound {
   play = (): void => {
     this._theSound.loop = false;
     this._playMode = "play";
-    if (this._theSound.canPlay) {
-      this.applyVolume();
-      this.playElement();
-    }
+    this.applyVolume();
+    this.playElement();
   };
 
   loop = (): void => {
     this._theSound.loop = true;
     this._playMode = "loop";
-    if (this._theSound.canPlay) {
-      this.applyVolume();
-      this.playElement();
-    }
+    this.applyVolume();
+    this.playElement();
   };
 
   fadeInLoop = (durationMs: number): void => {
@@ -218,10 +217,8 @@ class Sound {
   };
 
   resume = (): void => {
-    if (this._theSound.canPlay) {
-      this.applyVolume();
-      this.playElement();
-    }
+    this.applyVolume();
+    this.playElement();
   };
 
   stop = (): void => {
@@ -333,6 +330,10 @@ class Sound {
       void playPromise.catch(() => {
         this._isPlaying = false;
         Sound._pausedInstances.delete(this);
+        logger.warning("Audio playback was blocked", {
+          channel: this._channel,
+          sources: this._urls,
+        });
       });
     }
   };
