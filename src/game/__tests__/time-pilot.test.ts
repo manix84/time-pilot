@@ -677,8 +677,10 @@ describe("TimePilot engine", () => {
   });
 
   it("uses browser back to move from a submenu to the root menu", async () => {
+    const enterImmersiveMode = vi.fn();
     const game = new TimePilot(host, {
       enableHistoryNavigation: true,
+      enterImmersiveMode,
       exitApp: vi.fn(),
       gamepadEnabled: false,
     });
@@ -704,13 +706,16 @@ describe("TimePilot engine", () => {
     window.dispatchEvent(new PopStateEvent("popstate"));
 
     expect(pilot.context._menus.getNavigationState().isRoot).toBe(true);
+    expect(enterImmersiveMode).toHaveBeenCalledOnce();
 
     game.destroyGame();
   });
 
   it("uses browser back to resume from the paused root menu", async () => {
+    const enterImmersiveMode = vi.fn();
     const game = new TimePilot(host, {
       enableHistoryNavigation: true,
+      enterImmersiveMode,
       exitApp: vi.fn(),
       gamepadEnabled: false,
     });
@@ -730,6 +735,7 @@ describe("TimePilot engine", () => {
 
     pilot.beginGame();
     pilot.openPauseMenu();
+    enterImmersiveMode.mockClear();
 
     expect(pilot.context._gameTicker.isRunning).toBe(false);
     expect(pilot.context._menus.getNavigationState().isPausedRoot).toBe(true);
@@ -738,14 +744,17 @@ describe("TimePilot engine", () => {
 
     expect(pilot.context._menus.isActive()).toBe(false);
     expect(pilot.context._gameTicker.isRunning).toBe(true);
+    expect(enterImmersiveMode).toHaveBeenCalledOnce();
 
     game.destroyGame();
   });
 
   it("uses browser back to exit from a fresh root menu", async () => {
+    const enterImmersiveMode = vi.fn();
     const exitApp = vi.fn();
     const game = new TimePilot(host, {
       enableHistoryNavigation: true,
+      enterImmersiveMode,
       exitApp,
       gamepadEnabled: false,
     });
@@ -763,6 +772,7 @@ describe("TimePilot engine", () => {
     window.dispatchEvent(new PopStateEvent("popstate"));
 
     expect(exitApp).toHaveBeenCalled();
+    expect(enterImmersiveMode).not.toHaveBeenCalled();
 
     game.destroyGame();
   });

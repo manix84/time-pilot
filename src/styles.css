@@ -53,7 +53,19 @@ input {
   display: block;
   min-height: 100%;
   overflow: hidden;
-  background: #070b12;
+  background: #000;
+}
+
+.app-shell--pwa::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 10002;
+  height: max(2px, env(safe-area-inset-top, 0px));
+  pointer-events: none;
+  background: #000;
 }
 
 .app-shell--pwa .time-pilot-game,
