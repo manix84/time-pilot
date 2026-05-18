@@ -1211,6 +1211,7 @@ export class TimePilot {
     this.configureDemoPlayerData();
     this.spawningSystem.addInitialProps();
     this.hasSeededInitialProps = true;
+    this.playMenuMusic();
     this.context._menus.showStart({ startLabel: i18n.menu.start });
     this.context._gameTicker.start();
     this.releaseScreenWakeLock();
@@ -1995,7 +1996,7 @@ export class TimePilot {
     this.stopMenuMusic();
     this.stopLevelMusic();
 
-    this.levelMusicTimeout = window.setTimeout(() => {
+    const startCue = (): void => {
       if (cueId !== this.levelMusicCueId) {
         return;
       }
@@ -2024,7 +2025,14 @@ export class TimePilot {
         finishIntro,
         levelStartMusicFallbackMs
       );
-    }, introDelayMs);
+    };
+
+    if (introDelayMs > 0) {
+      this.levelMusicTimeout = window.setTimeout(startCue, introDelayMs);
+      return;
+    }
+
+    startCue();
   };
 
   private playLevelMusic = (level: number): void => {

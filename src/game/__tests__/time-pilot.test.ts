@@ -257,6 +257,23 @@ describe("TimePilot engine", () => {
     game.destroyGame();
   });
 
+  it("starts menu music when entering the demo root menu", async () => {
+    const playedSources = getPlayedSources();
+    const game = new TimePilot(host, { debug: true, gamepadEnabled: false });
+    const pilot = game as unknown as {
+      startDemoMode: () => void;
+    };
+
+    await waitForAudioTimer();
+
+    playedSources.length = 0;
+    pilot.startDemoMode();
+
+    expect(playedSources).toContain(sounds.music.menu.src);
+
+    game.destroyGame();
+  });
+
   it("steers the demo player away from incoming projectiles", async () => {
     const game = new TimePilot(host, { debug: true, gamepadEnabled: false });
     const pilot = game as unknown as {
