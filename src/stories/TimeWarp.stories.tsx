@@ -166,7 +166,7 @@ const TimeWarpScene = ({
 
     const playerSprite = loadImage(constants.player.sprite.src);
     const warpSprite = loadImage(assetPath("sprites/player/timewarp.png"));
-    const timeWarpSound = new Audio(assetPath("sounds/player/timewarp.wav"));
+    const timeWarpSound = new Audio(assetPath("sounds/player/timewarp.ogg"));
     const sequenceDurationMs =
       timeWarpDelayMs +
       flashDurationMs +

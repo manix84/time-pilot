@@ -504,7 +504,7 @@ export class TimePilot {
       assetPath("logos/author-128-dark.png"),
       assetPath("sprites/player/player.png"),
       assetPath("sprites/player/timewarp.png"),
-      assetPath("sounds/player/bullet.mp3"),
+      assetPath("sounds/player/bullet.ogg"),
       assetPath("sprites/player/explosion.png"),
       assetPath("sprites/enemies/basic/level1.png"),
       assetPath("sprites/enemies/boss/level1.png"),

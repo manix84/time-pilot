@@ -225,7 +225,7 @@ describe("engine modules", () => {
   });
 
   it("creates playable sounds", () => {
-    const sound = new Sound("/sounds/player/bullet.mp3", { autoplay: false });
+    const sound = new Sound("/sounds/player/bullet.ogg", { autoplay: false });
 
     sound.pause();
     sound.stop();
@@ -241,7 +241,7 @@ describe("engine modules", () => {
     });
     const play = vi.mocked(HTMLMediaElement.prototype.play);
     const pause = vi.mocked(HTMLMediaElement.prototype.pause);
-    const sound = new Sound("/sounds/player/bullet.mp3", { autoplay: false });
+    const sound = new Sound("/sounds/player/bullet.ogg", { autoplay: false });
 
     sound.play();
     Sound.pauseAll();
@@ -285,7 +285,7 @@ describe("engine modules", () => {
       value: true,
     });
     const play = vi.mocked(HTMLMediaElement.prototype.play);
-    const sound = new Sound("/music/game_start.wav", { autoplay: false });
+    const sound = new Sound("/music/game_start.ogg", { autoplay: false });
 
     sound.play();
     play.mockClear();
@@ -303,7 +303,7 @@ describe("engine modules", () => {
 
   it("calls an ended callback when a one-shot sound finishes", () => {
     const onEnded = vi.fn();
-    const sound = new Sound("/music/game_start.wav", {
+    const sound = new Sound("/music/game_start.ogg", {
       autoplay: false,
       onEnded,
     });
@@ -327,7 +327,7 @@ describe("engine modules", () => {
 
     play.mockRejectedValueOnce(new DOMException("Blocked", "NotAllowedError"));
 
-    const sound = new Sound("/music/game_start.wav", { autoplay: false });
+    const sound = new Sound("/music/game_start.ogg", { autoplay: false });
 
     sound.play();
     await Promise.resolve();
@@ -381,7 +381,7 @@ describe("engine modules", () => {
     vi.stubGlobal("AudioContext", MockAudioContext);
     vi.stubGlobal("PannerNode", MockPannerNode);
 
-    const sound = new Sound("/sounds/player/bullet.mp3", { autoplay: false });
+    const sound = new Sound("/sounds/player/bullet.ogg", { autoplay: false });
 
     sound.setSpatialPosition(10, 0, 100, 100);
     sound.play();
