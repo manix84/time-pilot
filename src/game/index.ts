@@ -83,6 +83,8 @@ const timeWarpDelayFrames = Math.max(
   1,
   Math.round((TIME_WARP_DELAY_MS / 1000) * gameFps)
 );
+const musicFadeDurationMs = 700;
+const levelStartMusicFallbackMs = 12000;
 const continueLives = 3;
 const demoContinues = Infinity;
 const demoAttackRadius = 520;
@@ -217,7 +219,11 @@ export class TimePilot {
   private isDebugLevelPreviewLocked = false;
   private selectedStartLevel = 1;
   private readonly coinDropSound = new SoundEngine(sounds.coinDrop.src);
-  private readonly gameStartSound = new SoundEngine(sounds.gameStart.src);
+  private levelIntroMusic?: SoundEngine;
+  private levelMusicCueId = 0;
+  private levelMusic?: { level: number; sound: SoundEngine };
+  private levelMusicTimeout = 0;
+  private menuMusic?: SoundEngine;
   private readonly nextLevelSound = new SoundEngine(sounds.nextLevel.src);
   private preroll?: Preroll;
   private renderingSystem!: RenderingSystemInstance;
@@ -312,6 +318,9 @@ export class TimePilot {
     this.context._isDemoMode = false;
     this.clearControlInputState();
     this.clearDemoControlInputState();
+    this.cancelQueuedLevelMusic();
+    this.stopLevelMusic();
+    this.stopMenuMusic();
     SoundEngine.stopAll();
 
     this.context._gameTicker.stop();
@@ -698,6 +707,9 @@ export class TimePilot {
     this.context._menus.hide();
     this.isDemoMode = false;
     this.context._isDemoMode = false;
+    this.cancelQueuedLevelMusic();
+    this.stopLevelMusic();
+    this.stopMenuMusic();
     SoundEngine.stopAll();
     SoundEngine.setMuted(false);
 
@@ -978,6 +990,9 @@ export class TimePilot {
       level: snapshot.level,
       savedAt: snapshot.savedAt,
     });
+    this.cancelQueuedLevelMusic();
+    this.stopLevelMusic();
+    this.stopMenuMusic();
     SoundEngine.stopAll();
     SoundEngine.setMuted(false);
     this.isDemoMode = false;
@@ -1003,6 +1018,7 @@ export class TimePilot {
     this.context._player.stopShooting();
     this.spawningSystem.addInitialProps();
     this.hasSeededInitialProps = true;
+    this.playMenuMusic();
     this.context._menus.showStart({
       showRestart: true,
       startLabel: i18n.menu.continue,
@@ -1060,13 +1076,14 @@ export class TimePilot {
     if (shouldStartFreshGame) {
       this.coinDropSound.stop();
       this.coinDropSound.play();
-      this.gameStartSound.stop();
-      this.gameStartSound.play();
       this.resetWorld(this.selectedStartLevel, { skipIntro: false });
+      this.cueLevelMusic(this.context._level);
       this.hasStartedGame = true;
       this.hasShownGameOver = false;
       this.context._achievements?.onRunStarted(this.context._player.getData());
       this.context._achievements?.onLevelStarted(this.context._level);
+    } else {
+      this.resumeLevelMusic(this.context._level);
     }
 
     this.context._menus.hide();
@@ -1118,6 +1135,7 @@ export class TimePilot {
     this.hasShownGameOver = false;
 
     this.resetWorld(level, { skipIntro: false });
+    this.cueLevelMusic(this.context._level);
     this.context._player.setData("nextExtraLifeScore", nextExtraLifeScore, true);
     this.context._player.setData("score", score, true);
     this.context._player.setData("lives", continueLives, true);
@@ -1143,6 +1161,9 @@ export class TimePilot {
 
   private exitToRootMenu = (): void => {
     logger.info("Exiting to root menu");
+    this.cancelQueuedLevelMusic();
+    this.stopLevelMusic();
+    this.stopMenuMusic();
     SoundEngine.stopAll();
     this.context._gameTicker.stop();
     this.context._gameTicker.clearTicks();
@@ -1170,7 +1191,9 @@ export class TimePilot {
     }
 
     logger.debug("Starting demo mode");
+    this.cancelQueuedLevelMusic();
     this.stopMenuMusic();
+    this.stopLevelMusic();
     SoundEngine.stopAll();
     this.isDemoMode = true;
     this.context._isDemoMode = true;
@@ -1204,6 +1227,7 @@ export class TimePilot {
       this.pauseGame(true);
     }
 
+    this.cancelQueuedLevelMusic();
     this.playMenuMusic();
     this.context._menus.showStart({ startLabel: i18n.menu.continue });
   };
@@ -1691,6 +1715,8 @@ export class TimePilot {
     this.context._player.stopShooting();
     this.context._gameTicker.stop();
     this.releaseScreenWakeLock();
+    this.cancelQueuedLevelMusic();
+    this.stopLevelMusic();
     this.playMenuMusic();
     this.context._menus.showGameOver();
   };
@@ -1785,6 +1811,7 @@ export class TimePilot {
       nextLevel: transition.nextLevel,
     });
     this.resetWorld(transition.nextLevel, { skipIntro: false });
+    this.cueLevelMusic(transition.nextLevel);
     this.context._player.setData("score", transition.score);
     this.context._player.setData("score", transition.score, true);
     this.context._player.setData("lives", transition.lives);
@@ -1936,11 +1963,109 @@ export class TimePilot {
   };
 
   private playMenuMusic = (): void => {
-    // Menu music will be wired here when the asset is available.
+    if (this.menuMusic) {
+      return;
+    }
+
+    this.menuMusic = new SoundEngine(sounds.music.menu.src, {
+      channel: "music",
+    });
+    this.menuMusic.fadeInLoop(musicFadeDurationMs);
   };
 
   private stopMenuMusic = (): void => {
-    // Menu music will be stopped here when the asset is available.
+    this.menuMusic?.fadeOutAndDestroy(musicFadeDurationMs);
+    this.menuMusic = undefined;
+  };
+
+  private cueLevelMusic = (level: number): void => {
+    const hadActiveMusic = Boolean(this.menuMusic || this.levelMusic);
+    const introDelayMs = hadActiveMusic ? musicFadeDurationMs : 0;
+
+    this.cancelQueuedLevelMusic();
+    const cueId = ++this.levelMusicCueId;
+    this.stopMenuMusic();
+    this.stopLevelMusic();
+
+    this.levelMusicTimeout = window.setTimeout(() => {
+      if (cueId !== this.levelMusicCueId) {
+        return;
+      }
+
+      const finishIntro = (): void => {
+        if (cueId !== this.levelMusicCueId) {
+          return;
+        }
+
+        if (this.levelMusicTimeout) {
+          window.clearTimeout(this.levelMusicTimeout);
+          this.levelMusicTimeout = 0;
+        }
+
+        this.levelIntroMusic?.destroy();
+        this.levelIntroMusic = undefined;
+        this.playLevelMusic(level);
+      };
+
+      this.levelIntroMusic = new SoundEngine(sounds.gameStart.src, {
+        channel: "music",
+        onEnded: finishIntro,
+      });
+      this.levelIntroMusic.play();
+      this.levelMusicTimeout = window.setTimeout(
+        finishIntro,
+        levelStartMusicFallbackMs
+      );
+    }, introDelayMs);
+  };
+
+  private playLevelMusic = (level: number): void => {
+    if (this.levelMusic?.level === level) {
+      this.levelMusic.sound.loop();
+      return;
+    }
+
+    this.stopLevelMusic();
+
+    const music = sounds.music.levels[level];
+
+    if (!music) {
+      return;
+    }
+
+    this.levelMusic = {
+      level,
+      sound: new SoundEngine(music.src, {
+        channel: "music",
+      }),
+    };
+    this.levelMusic.sound.fadeInLoop(musicFadeDurationMs);
+  };
+
+  private stopLevelMusic = (): void => {
+    this.levelMusic?.sound.fadeOutAndDestroy(musicFadeDurationMs);
+    this.levelMusic = undefined;
+  };
+
+  private resumeLevelMusic = (level: number): void => {
+    if (this.levelMusic?.level === level) {
+      this.levelMusic.sound.fadeInResume(musicFadeDurationMs);
+      return;
+    }
+
+    this.cueLevelMusic(level);
+  };
+
+  private cancelQueuedLevelMusic = (): void => {
+    this.levelMusicCueId++;
+
+    if (this.levelMusicTimeout) {
+      window.clearTimeout(this.levelMusicTimeout);
+      this.levelMusicTimeout = 0;
+    }
+
+    this.levelIntroMusic?.destroy();
+    this.levelIntroMusic = undefined;
   };
 
   private createKeyboardController = (

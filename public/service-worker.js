@@ -19,6 +19,13 @@ const APP_SHELL = [
 ];
 const GAME_ASSETS = [
   "./fonts/font.ttf",
+  "./music/level1.ogg",
+  "./music/level2.ogg",
+  "./music/level3.ogg",
+  "./music/level4.ogg",
+  "./music/level5.ogg",
+  "./music/game_start.wav",
+  "./music/main_menu.ogg",
   "./sprites/bonuses/parachute.png",
   "./sprites/enemies/basic/explosion.png",
   "./sprites/enemies/basic/level1.png",
@@ -67,7 +74,6 @@ const GAME_ASSETS = [
   "./sounds/player/extra_life.wav",
   "./sounds/player/timewarp.wav",
   "./sounds/ui/coindrop.wav",
-  "./sounds/ui/game_start.wav",
   "./sounds/ui/next_level.wav",
 ];
 

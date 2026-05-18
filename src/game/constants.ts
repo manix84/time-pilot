@@ -706,7 +706,19 @@ const timePilotConstants: TimePilotConstants = {
       src: assetPath("sounds/player/extra_life.wav"),
     },
     gameStart: {
-      src: assetPath("sounds/ui/game_start.wav"),
+      src: assetPath("music/game_start.wav"),
+    },
+    music: {
+      levels: {
+        1: { src: assetPath("music/level1.ogg") },
+        2: { src: assetPath("music/level2.ogg") },
+        3: { src: assetPath("music/level3.ogg") },
+        4: { src: assetPath("music/level4.ogg") },
+        5: { src: assetPath("music/level5.ogg") },
+      },
+      menu: {
+        src: assetPath("music/main_menu.ogg"),
+      },
     },
     nextLevel: {
       src: assetPath("sounds/ui/next_level.wav"),

@@ -41,7 +41,7 @@ const audioSamples = [
   { label: "Boss level 4", path: "sounds/enemies/boss/boss4.wav" },
   { label: "Boss explosion", path: "sounds/enemies/boss/explosion.wav" },
   { label: "Coin drop", path: "sounds/ui/coindrop.wav" },
-  { label: "Game start", path: "sounds/ui/game_start.wav" },
+  { label: "Game start", path: "music/game_start.wav" },
   { label: "High score", path: "sounds/ui/highscore.wav" },
   { label: "Next level", path: "sounds/ui/next_level.wav" },
   { label: "Pickup", path: "sounds/pickup.wav" },

@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import userOptions from "../../user-options";
 import GameArena from "../arena";
 import Sound from "../Sound";
 import Ticker from "../Ticker";
@@ -9,6 +10,10 @@ describe("engine modules", () => {
   });
 
   afterEach(() => {
+    userOptions.setOption("masterVolume", 10);
+    userOptions.setOption("musicVolume", 8);
+    userOptions.setOption("effectsVolume", 8);
+    Sound.destroyAll();
     vi.unstubAllGlobals();
   });
 
@@ -248,13 +253,39 @@ describe("engine modules", () => {
     expect(pause).toHaveBeenCalledTimes(3);
   });
 
+  it("uses the music volume for music-channel sounds", () => {
+    Object.defineProperty(HTMLMediaElement.prototype, "canPlay", {
+      configurable: true,
+      value: true,
+    });
+    userOptions.setOption("masterVolume", 5);
+    userOptions.setOption("musicVolume", 4);
+    userOptions.setOption("effectsVolume", 9);
+    const sound = new Sound("/music/main_menu.ogg", {
+      autoplay: false,
+      channel: "music",
+    });
+    const element = (sound as unknown as { _theSound: HTMLAudioElement })
+      ._theSound;
+
+    sound.loop();
+
+    expect(element.volume).toBeCloseTo(0.2);
+
+    userOptions.setOption("musicVolume", 2);
+
+    expect(element.volume).toBeCloseTo(0.1);
+
+    sound.destroy();
+  });
+
   it("does not resume one-shot sounds that finished before pausing", () => {
     Object.defineProperty(HTMLMediaElement.prototype, "canPlay", {
       configurable: true,
       value: true,
     });
     const play = vi.mocked(HTMLMediaElement.prototype.play);
-    const sound = new Sound("/sounds/ui/game_start.wav", { autoplay: false });
+    const sound = new Sound("/music/game_start.wav", { autoplay: false });
 
     sound.play();
     play.mockClear();
@@ -270,6 +301,23 @@ describe("engine modules", () => {
     expect(play).not.toHaveBeenCalled();
   });
 
+  it("calls an ended callback when a one-shot sound finishes", () => {
+    const onEnded = vi.fn();
+    const sound = new Sound("/music/game_start.wav", {
+      autoplay: false,
+      onEnded,
+    });
+
+    HTMLMediaElement.prototype.dispatchEvent.call(
+      (sound as unknown as { _theSound: HTMLAudioElement })._theSound,
+      new Event("ended")
+    );
+
+    expect(onEnded).toHaveBeenCalledTimes(1);
+
+    sound.destroy();
+  });
+
   it("handles browser autoplay rejections without leaking active sound state", async () => {
     Object.defineProperty(HTMLMediaElement.prototype, "canPlay", {
       configurable: true,
@@ -279,7 +327,7 @@ describe("engine modules", () => {
 
     play.mockRejectedValueOnce(new DOMException("Blocked", "NotAllowedError"));
 
-    const sound = new Sound("/sounds/ui/game_start.wav", { autoplay: false });
+    const sound = new Sound("/music/game_start.wav", { autoplay: false });
 
     sound.play();
     await Promise.resolve();
