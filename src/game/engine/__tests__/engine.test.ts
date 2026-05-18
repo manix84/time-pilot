@@ -318,6 +318,31 @@ describe("engine modules", () => {
     sound.destroy();
   });
 
+  it("destroys fade-out sounds when a global stop cancels the fade", () => {
+    Object.defineProperty(HTMLMediaElement.prototype, "canPlay", {
+      configurable: true,
+      value: true,
+    });
+    userOptions.setOption("masterVolume", 10);
+    userOptions.setOption("musicVolume", 5);
+    const sound = new Sound("/music/main_menu.ogg", {
+      autoplay: false,
+      channel: "music",
+      loop: true,
+    });
+    const element = (sound as unknown as { _theSound: HTMLAudioElement })
+      ._theSound;
+
+    sound.loop();
+    expect(element.volume).toBeCloseTo(0.5);
+
+    sound.fadeOutAndDestroy(700);
+    Sound.stopAll();
+    userOptions.setOption("musicVolume", 2);
+
+    expect(element.volume).toBeCloseTo(0.5);
+  });
+
   it("handles browser autoplay rejections without leaking active sound state", async () => {
     Object.defineProperty(HTMLMediaElement.prototype, "canPlay", {
       configurable: true,

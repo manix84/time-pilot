@@ -1,4 +1,5 @@
-import { levels, limits } from "../constants";
+import { levels, limits, sounds } from "../constants";
+import SoundEngine from "../engine/Sound";
 import helpers from "../engine/helpers";
 import type {
   Coordinates,
@@ -25,6 +26,9 @@ let nextFormationId = 1;
  */
 class SpawningSystem implements SpawningSystemInstance {
   private _context: GameDataStore;
+  private _waveStartSound = new SoundEngine(sounds.waveStart.src, {
+    channel: "effects",
+  });
 
   constructor(context: GameDataStore) {
     this._context = context;
@@ -52,6 +56,10 @@ class SpawningSystem implements SpawningSystemInstance {
           spawnPadding
       );
     }
+  };
+
+  destroy = (): void => {
+    this._waveStartSound.destroy();
   };
 
   spawnEntities = (): void => {
@@ -209,6 +217,8 @@ class SpawningSystem implements SpawningSystemInstance {
       total: formation.slots.length,
     };
     this._context._achievements?.onWaveStarted(formationId);
+    this._waveStartSound.stop();
+    this._waveStartSound.play();
 
     formation.slots.forEach((slot, index) => {
       const position = this._rotateFormationSlot(center, slot, heading);

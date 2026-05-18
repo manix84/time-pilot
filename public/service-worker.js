@@ -1,9 +1,11 @@
-const CACHE_NAME = "time-pilot-v5";
+const CACHE_NAME = "time-pilot-v6";
 const CLACKS_HEADER_NAME = "X-Clacks-Overhead";
 const CLACKS_HEADER_VALUE = "GNU Terry Pratchett";
 const APP_SHELL = [
   "./",
   "./index.html",
+  "./about/",
+  "./about/index.html",
   "./pwa/",
   "./pwa/index.html",
   "./assets/app.css",
@@ -194,9 +196,13 @@ const networkFirstEntryAsset = async (request) => {
 
 const getNavigationFallback = async (request) => {
   const url = new URL(request.url);
+  const isAboutRoute =
+    url.pathname.endsWith("/about") || url.pathname.includes("/about/");
   const fallbackPath = url.pathname.includes("/pwa/")
     ? "./pwa/index.html"
-    : "./index.html";
+    : isAboutRoute
+      ? "./about/index.html"
+      : "./index.html";
 
   const response =
     (await caches.match(request)) ??

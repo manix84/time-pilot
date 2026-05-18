@@ -330,6 +330,7 @@ export class TimePilot {
     this.context._renderTicker.stop();
     this.context._renderTicker.clearSchedule();
     this.context._renderTicker.clearTicks();
+    this.spawningSystem.destroy?.();
     this.renderingSystem.destroy?.();
 
     this.context._currentController.forEach((controller: Controller) => {
