@@ -518,6 +518,12 @@ describe("TimePilot engine", () => {
     const pilot = game as unknown as {
       beginGame: () => void;
       context: {
+        _levelProgress: {
+          bossDefeated: boolean;
+          bossKillThreshold: number;
+          bossSpawned: boolean;
+          standardEnemyKills: number;
+        };
         _player: {
           setData: (key: string, value: unknown, isLastKnownGood?: boolean) => void;
         };
@@ -532,6 +538,7 @@ describe("TimePilot engine", () => {
     pilot.context._player.setData("continues", 1, true);
     pilot.context._player.setData("posX", 42);
     pilot.context._player.setData("posY", -24);
+    pilot.context._levelProgress.standardEnemyKills = 37;
     window.dispatchEvent(new Event("pagehide"));
 
     const snapshot = JSON.parse(
@@ -540,6 +547,11 @@ describe("TimePilot engine", () => {
 
     expect(snapshot).toMatchObject({
       level: 1,
+      levelProgress: {
+        bossDefeated: false,
+        bossSpawned: false,
+        standardEnemyKills: 37,
+      },
       player: {
         continues: 1,
         lives: 2,
@@ -811,6 +823,11 @@ describe("TimePilot engine", () => {
       "timePilot.gameSession",
       JSON.stringify({
         level: 3,
+        levelProgress: {
+          bossDefeated: false,
+          bossSpawned: true,
+          standardEnemyKills: 41,
+        },
         player: {
           continues: 2,
           heading: 90,
@@ -829,6 +846,12 @@ describe("TimePilot engine", () => {
       context: {
         _gameTicker: { isRunning: boolean };
         _level: number;
+        _levelProgress: {
+          bossDefeated: boolean;
+          bossKillThreshold: number;
+          bossSpawned: boolean;
+          standardEnemyKills: number;
+        };
         _menus: { next: () => void; activate: () => void; render: () => void };
         _player: {
           getData: (
@@ -851,6 +874,10 @@ describe("TimePilot engine", () => {
     expect(pilot.context._player.getData("heading")).toBe(90);
     expect(pilot.context._player.getData("posX")).toBe(120);
     expect(pilot.context._player.getData("posY")).toBe(-80);
+    expect(pilot.context._levelProgress.standardEnemyKills).toBe(41);
+    expect(pilot.context._levelProgress.bossKillThreshold).toBe(56);
+    expect(pilot.context._levelProgress.bossSpawned).toBe(false);
+    expect(pilot.context._levelProgress.bossDefeated).toBe(false);
     expect(renderText).toHaveBeenCalled();
 
     pilot.context._menus.next();
@@ -859,6 +886,106 @@ describe("TimePilot engine", () => {
     expect(localStorage.getItem("timePilot.gameSession")).toBeNull();
     expect(pilot.context._gameTicker.isRunning).toBe(true);
     expect(pilot.context._level).toBe(1);
+
+    game.destroyGame();
+  });
+
+  it("clamps out-of-range restored boss progress to the current level threshold", async () => {
+    vi.stubGlobal(
+      "Image",
+      class {
+        complete = true;
+        onerror: (() => void) | null = null;
+        onload: (() => void) | null = null;
+
+        set src(_value: string) {
+          window.setTimeout(() => this.onload?.(), 0);
+        }
+      }
+    );
+    localStorage.setItem(
+      "timePilot.gameSession",
+      JSON.stringify({
+        level: 1,
+        levelProgress: {
+          bossDefeated: false,
+          bossSpawned: true,
+          standardEnemyKills: 999,
+        },
+        player: {
+          continues: 2,
+          heading: 90,
+          lives: 1,
+          nextExtraLifeScore: 50000,
+          posX: 120,
+          posY: -80,
+          score: 34567,
+        },
+        savedAt: Date.now(),
+        version: 1,
+      })
+    );
+    const game = new TimePilot(host, { debug: true });
+    const pilot = game as unknown as {
+      context: {
+        _levelProgress: {
+          bossSpawned: boolean;
+          standardEnemyKills: number;
+        };
+      };
+    };
+
+    await new Promise((resolve) => window.setTimeout(resolve, 5));
+
+    expect(pilot.context._levelProgress.standardEnemyKills).toBe(56);
+    expect(pilot.context._levelProgress.bossSpawned).toBe(false);
+
+    game.destroyGame();
+  });
+
+  it("rejects restored sessions with invalid boss progress types", async () => {
+    vi.stubGlobal(
+      "Image",
+      class {
+        complete = true;
+        onerror: (() => void) | null = null;
+        onload: (() => void) | null = null;
+
+        set src(_value: string) {
+          window.setTimeout(() => this.onload?.(), 0);
+        }
+      }
+    );
+    localStorage.setItem(
+      "timePilot.gameSession",
+      JSON.stringify({
+        level: 1,
+        levelProgress: {
+          bossDefeated: false,
+          bossSpawned: "yes",
+          standardEnemyKills: 12,
+        },
+        player: {
+          continues: 2,
+          heading: 90,
+          lives: 1,
+          nextExtraLifeScore: 50000,
+          posX: 120,
+          posY: -80,
+          score: 34567,
+        },
+        savedAt: Date.now(),
+        version: 1,
+      })
+    );
+    const game = new TimePilot(host, { debug: true });
+    const pilot = game as unknown as {
+      preroll?: unknown;
+    };
+
+    await new Promise((resolve) => window.setTimeout(resolve, 5));
+
+    expect(pilot.preroll).toBeTruthy();
 
     game.destroyGame();
   });

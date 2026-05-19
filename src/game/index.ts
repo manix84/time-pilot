@@ -42,6 +42,7 @@ import type {
   EnemyData,
   EnemyInstance,
   GameDataStore,
+  LevelProgressState,
   PlayerData,
   RenderingSystemInstance,
   SpawningSystemInstance,
@@ -106,6 +107,10 @@ type DemoProgressSnapshot = {
 
 type GameSessionSnapshot = {
   level: number;
+  levelProgress?: Pick<
+    LevelProgressState,
+    "bossDefeated" | "bossSpawned" | "standardEnemyKills"
+  >;
   player: Pick<
     PlayerData,
     | "continues"
@@ -886,6 +891,11 @@ export class TimePilot {
       const snapshot = JSON.parse(
         storage.getItem(gameSessionStorageKey) ?? "null"
       ) as Partial<GameSessionSnapshot> | null;
+      const hasInvalidLevelProgress =
+        !!snapshot?.levelProgress &&
+        (typeof snapshot.levelProgress.bossDefeated !== "boolean" ||
+          typeof snapshot.levelProgress.bossSpawned !== "boolean" ||
+          typeof snapshot.levelProgress.standardEnemyKills !== "number");
 
       if (
         !snapshot ||
@@ -899,7 +909,8 @@ export class TimePilot {
         typeof snapshot.player.nextExtraLifeScore !== "number" ||
         typeof snapshot.player.posX !== "number" ||
         typeof snapshot.player.posY !== "number" ||
-        typeof snapshot.player.heading !== "number"
+        typeof snapshot.player.heading !== "number" ||
+        hasInvalidLevelProgress
       ) {
         return null;
       }
@@ -944,8 +955,14 @@ export class TimePilot {
     }
 
     const playerData = this.context._player.getData();
+    const levelProgress = this.context._levelProgress;
     const snapshot: GameSessionSnapshot = {
       level: this.context._level,
+      levelProgress: {
+        bossDefeated: levelProgress.bossDefeated,
+        bossSpawned: levelProgress.bossSpawned,
+        standardEnemyKills: levelProgress.standardEnemyKills,
+      },
       player: {
         continues: playerData.continues,
         heading: playerData.heading,
@@ -1009,6 +1026,23 @@ export class TimePilot {
     this.hasShownGameOver = false;
     this.selectedStartLevel = snapshot.level;
     this.resetWorld(snapshot.level, { skipIntro: true });
+    if (snapshot.levelProgress) {
+      const currentThreshold = this.context._levelProgress.bossKillThreshold;
+      const bossWasDefeated = snapshot.levelProgress.bossDefeated;
+
+      this.context._levelProgress = {
+        ...this.context._levelProgress,
+        bossDefeated: bossWasDefeated,
+        bossSpawned: bossWasDefeated && snapshot.levelProgress.bossSpawned,
+        standardEnemyKills: Math.max(
+          0,
+          Math.min(
+            snapshot.levelProgress.standardEnemyKills,
+            currentThreshold
+          )
+        ),
+      };
+    }
     this.context._player.setData("score", snapshot.player.score, true);
     this.context._player.setData("lives", snapshot.player.lives, true);
     this.context._player.setData("continues", snapshot.player.continues, true);

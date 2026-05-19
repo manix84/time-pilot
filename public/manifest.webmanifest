@@ -11,11 +11,6 @@
   "orientation": "landscape",
   "background_color": "#000000",
   "theme_color": "#000000",
-  "categories": ["games"],
-  "prefer_related_applications": false,
-  "launch_handler": {
-    "client_mode": ["navigate-existing", "auto"]
-  },
   "shortcuts": [
     {
       "name": "Play Time Pilot",
