@@ -1,12 +1,21 @@
-import { useCallback, useEffect, useRef } from "react";
+import { useEffect, useRef } from "react";
+import type { ReactNode } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import Menus from "../game/menus";
 import palette from "../game/palette";
-import { CanvasDemo } from "./canvas-demo";
+import type { HighScoreEntry, MenuSystemCommands } from "../game/types";
 import { createCanvasArena } from "./menu-arena";
 import "./storybook.css";
 
-type MenuScreenDemo = "start" | "options" | "debug" | "paused" | "level" | "zoom";
+type MenuScreenDemo =
+  | "start"
+  | "paused"
+  | "options"
+  | "zoom"
+  | "debug"
+  | "level"
+  | "high-scores"
+  | "high-score-entry";
 type TransitionInspectableMenu = {
   _transition: null;
 };
@@ -14,6 +23,41 @@ type TransitionInspectableMenu = {
 const menuStoryCanvasWidth = 800;
 const menuStoryCanvasHeight = 600;
 const menuStoryRenderScale = 1;
+const konamiCode = [38, 38, 40, 40, 37, 39, 37, 39, 66, 65];
+
+const storyHighScores: HighScoreEntry[] = [
+  {
+    id: "local-ace",
+    name: "Local Ace",
+    score: 234560,
+    stats: ["Era: 1982", "Lives left: 1", "Continues: 0", "Boss progress: 51/56"],
+  },
+  {
+    id: "shooty-mcshootface",
+    name: "Shooty McShootface",
+    score: 1000000,
+    stats: ["Era: 2001", "Bosses: 5", "Continues: 0", "Accuracy: suspicious"],
+  },
+  {
+    id: "debug-dave",
+    name: "Debug Dave",
+    score: 123456,
+    stats: ["Era: 1910", "Hitboxes blamed: yes", "Restart count: private"],
+  },
+];
+
+const createMenuCommands = (): MenuSystemCommands => ({
+  clearLevelPreview: () => {},
+  getHighScores: () => storyHighScores,
+  getPendingHighScore: () => ({
+    score: 345670,
+    stats: ["Era: 1970", "Lives left: 0", "Continues: 1", "Boss progress: 44/56"],
+  }),
+  previewLevel: () => {},
+  saveHighScore: () => {},
+  selectLevel: () => {},
+  start: () => {},
+});
 
 const renderMenuFrame = (
   context: CanvasRenderingContext2D,
@@ -29,34 +73,50 @@ const renderMenuFrame = (
   context.restore();
 };
 
-const prepareMenu = (menu: Menus, screen: MenuScreenDemo): void => {
-  menu.showStart(screen === "paused" ? { startLabel: "Continue" } : undefined);
+const unlockDebugMenu = (menu: Menus): void => {
+  konamiCode.forEach((keyCode) => {
+    menu.captureKey(keyCode);
+  });
+};
 
-  if (screen === "options") {
+const selectRootItem = (menu: Menus, itemOffset: number): void => {
+  for (let i = 0; i < itemOffset; i++) {
     menu.next();
-    menu.activate();
+  }
+
+  menu.activate();
+};
+
+const prepareMenu = (menu: Menus, screen: MenuScreenDemo): void => {
+  if (screen === "high-score-entry") {
+    menu.showGameOver();
     return;
   }
 
-  if (screen === "zoom") {
-    menu.next();
-    menu.activate();
-    for (let i = 0; i < 4; i++) {
-      menu.next();
+  menu.showStart(screen === "paused" ? { startLabel: "Continue" } : undefined);
+
+  if (screen === "options" || screen === "zoom") {
+    selectRootItem(menu, 1);
+
+    if (screen === "zoom") {
+      for (let i = 0; i < 4; i++) {
+        menu.next();
+      }
     }
     return;
   }
 
+  if (screen === "high-scores") {
+    selectRootItem(menu, 3);
+    return;
+  }
+
   if (screen === "debug" || screen === "level") {
-    [38, 38, 40, 40, 37, 39, 37, 39, 66, 65].forEach((keyCode) => {
-      menu.captureKey(keyCode);
-    });
-    menu.next();
-    menu.next();
-    menu.activate();
+    unlockDebugMenu(menu);
+    selectRootItem(menu, 4);
 
     if (screen === "level") {
-      for (let i = 0; i < 6; i++) {
+      for (let i = 0; i < 8; i++) {
         menu.next();
       }
       menu.activate();
@@ -66,15 +126,6 @@ const prepareMenu = (menu: Menus, screen: MenuScreenDemo): void => {
 
 const settleMenuTransition = (menu: Menus): void => {
   (menu as unknown as TransitionInspectableMenu)._transition = null;
-};
-
-const drawMenu = (context: CanvasRenderingContext2D, canvas: HTMLCanvasElement, screen: MenuScreenDemo): void => {
-  const arena = createCanvasArena(canvas, context);
-  const menu = new Menus(arena, { start: () => {} });
-  prepareMenu(menu, screen);
-  settleMenuTransition(menu);
-
-  renderMenuFrame(context, canvas, menu);
 };
 
 const MenuLiveDemo = ({
@@ -97,12 +148,7 @@ const MenuLiveDemo = ({
     }
 
     const arena = createCanvasArena(canvas, context);
-    const menu = new Menus(arena, {
-      clearLevelPreview: () => {},
-      previewLevel: () => {},
-      selectLevel: () => {},
-      start: () => {},
-    });
+    const menu = new Menus(arena, createMenuCommands());
     let animationFrame = 0;
 
     prepareMenu(menu, screen);
@@ -140,7 +186,7 @@ const MenuTransitionDemo = () => {
     }
 
     const arena = createCanvasArena(canvas, context);
-    const menu = new Menus(arena, { start: () => {} });
+    const menu = new Menus(arena, createMenuCommands());
     let isOpen = false;
     let lastToggleAt = performance.now() - 900;
     let animationFrame = 0;
@@ -152,8 +198,7 @@ const MenuTransitionDemo = () => {
         menu.previous();
         menu.activate();
       } else {
-        menu.next();
-        menu.activate();
+        selectRootItem(menu, 1);
       }
 
       isOpen = !isOpen;
@@ -186,92 +231,94 @@ const MenuTransitionDemo = () => {
   );
 };
 
-const MenuRenderingDemo = () => {
-  const drawStart = useCallback(
-    (context: CanvasRenderingContext2D, canvas: HTMLCanvasElement) => {
-      drawMenu(context, canvas, "start");
-    },
-    []
-  );
-  const drawOptions = useCallback(
-    (context: CanvasRenderingContext2D, canvas: HTMLCanvasElement) => {
-      drawMenu(context, canvas, "options");
-    },
-    []
-  );
-  const drawDebug = useCallback(
-    (context: CanvasRenderingContext2D, canvas: HTMLCanvasElement) => {
-      drawMenu(context, canvas, "debug");
-    },
-    []
-  );
+const MenuStoryFrame = ({
+  children,
+  label,
+}: {
+  children: ReactNode;
+  label: string;
+}) => (
+  <main className={"storybook-surface"}>
+    <section className={"storybook-section storybook-menu-section"}>
+      <p className={"storybook-eyebrow"}>Game UI</p>
+      <h1 className={"storybook-title"}>{label}</h1>
+      <div className={"storybook-demo-grid storybook-menu-grid"}>
+        <article className={"storybook-card storybook-wide-card"}>
+          <h2>{label}</h2>
+          {children}
+        </article>
+      </div>
+    </section>
+  </main>
+);
 
-  return (
-    <main className={"storybook-surface"}>
-      <section className={"storybook-section storybook-menu-section"}>
-        <p className={"storybook-eyebrow"}>Game UI</p>
-        <h1 className={"storybook-title"}>Menu Rendering</h1>
-        <div className={"storybook-demo-grid storybook-menu-grid"}>
-          <article className={"storybook-card"}>
-            <h2>Main Menu</h2>
-            <CanvasDemo
-              draw={drawStart}
-              height={menuStoryCanvasHeight}
-              width={menuStoryCanvasWidth}
-            />
-          </article>
-          <article className={"storybook-card"}>
-            <h2>Paused Root Menu</h2>
-            <MenuLiveDemo screen={"paused"} />
-          </article>
-          <article className={"storybook-card"}>
-            <h2>Options Menu</h2>
-            <CanvasDemo
-              draw={drawOptions}
-              height={menuStoryCanvasHeight}
-              width={menuStoryCanvasWidth}
-            />
-          </article>
-          <article className={"storybook-card"}>
-            <h2>Game Zoom Preview</h2>
-            <MenuLiveDemo screen={"zoom"} />
-          </article>
-          <article className={"storybook-card"}>
-            <h2>Debug Menu</h2>
-            <CanvasDemo
-              draw={drawDebug}
-              height={menuStoryCanvasHeight}
-              width={menuStoryCanvasWidth}
-            />
-          </article>
-          <article className={"storybook-card storybook-wide-card"}>
-            <h2>Level Select Showcase</h2>
-            <MenuLiveDemo screen={"level"} />
-          </article>
-          <article className={"storybook-card"}>
-            <h2>Submenu Transition</h2>
-            <MenuTransitionDemo />
-          </article>
-        </div>
-      </section>
-    </main>
-  );
-};
+const MenuScreenStory = ({ screen, title }: { screen: MenuScreenDemo; title: string }) => (
+  <MenuStoryFrame label={title}>
+    <MenuLiveDemo screen={screen} />
+  </MenuStoryFrame>
+);
 
 const meta = {
   title: "Game/Menu Rendering",
-  component: MenuRenderingDemo,
+  component: MenuScreenStory,
   parameters: {
     docs: {
       description: {
         component:
-          "Canvas snapshots rendered through the production menu system after transition settling, plus a live submenu transition loop.",
+          "Canvas snapshots rendered through the production menu system, split by menu section.",
       },
     },
   },
-} satisfies Meta<typeof MenuRenderingDemo>;
+} satisfies Meta<typeof MenuScreenStory>;
 
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const Examples: Story = {};
+export const RootMenu: Story = {
+  args: { screen: "start", title: "Root Menu" },
+  render: () => <MenuScreenStory screen={"start"} title={"Root Menu"} />,
+};
+
+export const PausedRootMenu: Story = {
+  args: { screen: "paused", title: "Paused Root Menu" },
+  render: () => <MenuScreenStory screen={"paused"} title={"Paused Root Menu"} />,
+};
+
+export const Options: Story = {
+  args: { screen: "options", title: "Options Menu" },
+  render: () => <MenuScreenStory screen={"options"} title={"Options Menu"} />,
+};
+
+export const GameZoomPreview: Story = {
+  args: { screen: "zoom", title: "Game Zoom Preview" },
+  render: () => <MenuScreenStory screen={"zoom"} title={"Game Zoom Preview"} />,
+};
+
+export const Debug: Story = {
+  args: { screen: "debug", title: "Debug Menu" },
+  render: () => <MenuScreenStory screen={"debug"} title={"Debug Menu"} />,
+};
+
+export const LevelSelect: Story = {
+  args: { screen: "level", title: "Level Select Showcase" },
+  render: () => <MenuScreenStory screen={"level"} title={"Level Select Showcase"} />,
+};
+
+export const HighScores: Story = {
+  args: { screen: "high-scores", title: "High Scores" },
+  render: () => <MenuScreenStory screen={"high-scores"} title={"High Scores"} />,
+};
+
+export const SaveScoreNameEntry: Story = {
+  args: { screen: "high-score-entry", title: "Save Score Name Entry" },
+  render: () => <MenuScreenStory screen={"high-score-entry"} title={"Save Score Name Entry"} />,
+};
+
+export const SubmenuTransition: Story = {
+  args: { screen: "start", title: "Submenu Transition" },
+  render: () => (
+    <MenuStoryFrame label={"Submenu Transition"}>
+      <MenuTransitionDemo />
+    </MenuStoryFrame>
+  ),
+};

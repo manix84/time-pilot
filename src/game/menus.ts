@@ -10,6 +10,7 @@ import {
   filterPresets,
   normalizeFilterIntensity,
 } from "./filter-settings";
+import { fakeHighScores } from "./high-scores";
 import i18n, {
   availableLanguages,
   getCurrentLanguage,
@@ -29,6 +30,7 @@ import type {
   EnemyConfig,
   GameArenaInstance,
   GameLanguage,
+  HighScoreEntry,
   KeyboardBindings,
   MenuRenderOptions,
   MenuNavigationState,
@@ -54,6 +56,8 @@ import userOptions from "./user-options";
 type MenuScreen =
   | "start"
   | "achievements"
+  | "high-score-entry"
+  | "high-scores"
   | "options"
   | "controls"
   | "filters"
@@ -87,6 +91,7 @@ interface MenuItem {
   languageFlag?: GameLanguage;
   isCurrent?: () => boolean;
   achievement?: AchievementStatus;
+  highScore?: HighScoreEntry;
   levelIcon?: number;
   onAdjust?: (direction: -1 | 1) => void;
   onSetValue?: (value: number) => void;
@@ -223,6 +228,7 @@ class Menus implements MenuSystemInstance {
   private _demoWatchStartedAt = 0;
   private _gameArena: GameArenaInstance;
   private _items: MenuItem[] = [];
+  private _highScoreName = "PILOT";
   private _konamiIndex = 0;
   private _achievementIconSprites: Partial<Record<string, HTMLImageElement>> = {};
   private _achievementLayoutSignature = "";
@@ -339,7 +345,9 @@ class Menus implements MenuSystemInstance {
     this._active = true;
     this._awaitingBinding = null;
     this._bindingWarning = "";
-    this._screen = "game-over";
+    this._screen = this._commands.getPendingHighScore?.()
+      ? "high-score-entry"
+      : "game-over";
     this._screenHistory = [];
     this._pressedItemIndex = null;
     this._pressedItemDragged = false;
@@ -512,6 +520,10 @@ class Menus implements MenuSystemInstance {
   captureKey = (keyCode: number): boolean => {
     if (!this._active) {
       return false;
+    }
+
+    if (this._screen === "high-score-entry") {
+      return this._captureHighScoreNameKey(keyCode);
     }
 
     if (this.isWatchingDemo()) {
@@ -835,6 +847,11 @@ class Menus implements MenuSystemInstance {
         return;
       }
 
+      if (this._screen === "high-scores" && item.highScore) {
+        this._renderHighScoreItem(item, index === this._selectedIndex, index + 1);
+        return;
+      }
+
       this._renderItem(item, index === this._selectedIndex);
     });
 
@@ -857,6 +874,10 @@ class Menus implements MenuSystemInstance {
 
     if (this._screen === "debug-reset-confirm") {
       this._renderResetWarning();
+    }
+
+    if (this._screen === "high-score-entry") {
+      this._renderHighScoreEntry();
     }
   };
 
@@ -956,6 +977,10 @@ class Menus implements MenuSystemInstance {
       this._items = this._createOptionsItems();
     } else if (this._screen === "achievements") {
       this._items = this._createAchievementItems();
+    } else if (this._screen === "high-score-entry") {
+      this._items = this._createHighScoreEntryItems();
+    } else if (this._screen === "high-scores") {
+      this._items = this._createHighScoreItems();
     } else if (this._screen === "filters") {
       this._items = this._createFilterItems();
     } else if (this._screen === "filter-custom") {
@@ -1013,6 +1038,14 @@ class Menus implements MenuSystemInstance {
     items.push(
       this._createItem(i18n.menu.achievements, "action", itemY, {
         action: () => this._goToScreen("achievements"),
+        opensSubmenu: true,
+      })
+    );
+    itemY += 50;
+
+    items.push(
+      this._createItem(i18n.menu.highScores, "action", itemY, {
+        action: () => this._goToScreen("high-scores"),
         opensSubmenu: true,
       })
     );
@@ -1097,6 +1130,45 @@ class Menus implements MenuSystemInstance {
       ),
     ];
   };
+
+  private _createHighScoreItems = (): MenuItem[] => {
+    const scores = this._commands.getHighScores?.() ?? fakeHighScores;
+    const cardWidth = Math.min(520, Math.max(280, this._getItemsViewport().width - 28));
+    const cardHeight = 70;
+    const gap = 12;
+    const startY = -54;
+
+    return [
+      ...scores.map((score, index) =>
+        this._createItem(score.name, "action", startY + index * (cardHeight + gap), {
+          highScore: score,
+          rect: {
+            x: -cardWidth / 2,
+            y: startY + index * (cardHeight + gap),
+            width: cardWidth,
+            height: cardHeight,
+          },
+        })
+      ),
+      this._createItem(
+        i18n.menu.back,
+        "action",
+        startY + scores.length * (cardHeight + gap) + 10,
+        {
+          action: () => this.goBack(),
+        }
+      ),
+    ];
+  };
+
+  private _createHighScoreEntryItems = (): MenuItem[] => [
+    this._createItem(i18n.menu.saveScore, "action", 100, {
+      action: () => this._completeHighScoreEntry(true),
+    }),
+    this._createItem(i18n.menu.skip, "action", 150, {
+      action: () => this._completeHighScoreEntry(false),
+    }),
+  ];
 
   private _createOptionsItems = (): MenuItem[] => {
     const showControlType = this._shouldShowControlTypeOption();
@@ -1866,6 +1938,119 @@ class Menus implements MenuSystemInstance {
     this._achievementIconSprites[achievement.icon.src] = sprite;
 
     return sprite;
+  };
+
+  private _renderHighScoreItem = (
+    item: MenuItem,
+    isSelected: boolean,
+    rank: number
+  ): void => {
+    const highScore = item.highScore;
+
+    if (!highScore) {
+      return;
+    }
+
+    const context = this._gameArena.getContext() as CanvasRenderingContext2D;
+    const padding = 10;
+    const rankWidth = 34;
+    const textX = item.rect.x + padding + rankWidth;
+    const scoreText = this._formatScore(highScore.score);
+
+    context.fillStyle = isSelected
+      ? palette.menu.selectedBackground
+      : palette.menu.itemBackground;
+    context.fillRect(
+      item.rect.x,
+      item.rect.y,
+      item.rect.width,
+      item.rect.height
+    );
+    context.strokeStyle = isSelected
+      ? palette.menu.selectedBorder
+      : palette.menu.itemBorder;
+    context.lineWidth = 2;
+    context.strokeRect(
+      item.rect.x,
+      item.rect.y,
+      item.rect.width,
+      item.rect.height
+    );
+
+    this._gameArena.renderText(`#${rank}`, item.rect.x + padding, item.rect.y + 12, {
+      size: 12,
+      align: "left",
+      valign: "top",
+      color: isSelected ? palette.menu.selectedText : palette.menu.mutedText,
+    });
+    this._gameArena.renderText(highScore.name, textX, item.rect.y + 10, {
+      size: 13,
+      align: "left",
+      valign: "top",
+      color: isSelected ? palette.menu.selectedText : palette.menu.itemText,
+    });
+    this._gameArena.renderText(
+      scoreText,
+      item.rect.x + item.rect.width - padding,
+      item.rect.y + 10,
+      {
+        size: 13,
+        align: "right",
+        valign: "top",
+        color: isSelected ? palette.menu.selectedText : palette.menu.waitingText,
+      }
+    );
+
+    highScore.stats.slice(0, 4).forEach((stat, index) => {
+      this._gameArena.renderText(stat, textX, item.rect.y + 33 + index * 9, {
+        size: 7,
+        align: "left",
+        valign: "top",
+        color: isSelected ? palette.menu.selectedText : palette.menu.mutedText,
+      });
+    });
+  };
+
+  private _renderHighScoreEntry = (): void => {
+    const pendingScore = this._commands.getPendingHighScore?.();
+    const context = this._gameArena.getContext() as CanvasRenderingContext2D;
+    const boxWidth = 320;
+    const boxX = -boxWidth / 2;
+    const boxY = -54;
+
+    context.fillStyle = palette.menu.itemBackground;
+    context.fillRect(boxX, boxY, boxWidth, 94);
+    context.strokeStyle = palette.menu.selectedBorder;
+    context.lineWidth = 2;
+    context.strokeRect(boxX, boxY, boxWidth, 94);
+
+    this._gameArena.renderText(i18n.menu.highScoreName, boxX + 14, boxY + 14, {
+      size: 10,
+      align: "left",
+      valign: "top",
+      color: palette.menu.mutedText,
+    });
+    this._gameArena.renderText(this._highScoreName || "_", 0, boxY + 40, {
+      size: 18,
+      align: "center",
+      valign: "middle",
+      color: palette.menu.itemText,
+    });
+    this._gameArena.renderText(i18n.menu.highScoreNameHint, 0, boxY + 68, {
+      size: 8,
+      align: "center",
+      valign: "middle",
+      color: palette.menu.mutedText,
+    });
+
+    if (pendingScore) {
+      this._gameArena.renderText(this._formatScore(pendingScore.score), 0, 58, {
+        size: 18,
+        align: "center",
+        valign: "middle",
+        color: palette.menu.waitingText,
+      });
+    }
   };
 
   private _renderLevelBlurb = (): void => {
@@ -3411,6 +3596,14 @@ class Menus implements MenuSystemInstance {
       return i18n.menu.achievements;
     }
 
+    if (this._screen === "high-scores") {
+      return i18n.menu.highScores;
+    }
+
+    if (this._screen === "high-score-entry") {
+      return i18n.menu.highScoreEntryTitle;
+    }
+
     if (this._screen === "controls") {
       return i18n.menu.controls;
     }
@@ -3566,6 +3759,74 @@ class Menus implements MenuSystemInstance {
   private _cancelReset = (): void => {
     this._pendingResetScope = null;
     this._goBack();
+  };
+
+  private _captureHighScoreNameKey = (keyCode: number): boolean => {
+    if (keyCode === 13) {
+      this._completeHighScoreEntry(true);
+      return true;
+    }
+
+    if (keyCode === 27) {
+      this._completeHighScoreEntry(false);
+      return true;
+    }
+
+    if (keyCode === 8) {
+      this._highScoreName = this._highScoreName.slice(0, -1);
+      return true;
+    }
+
+    const character = this._getHighScoreNameCharacter(keyCode);
+
+    if (!character) {
+      return false;
+    }
+
+    if (this._highScoreName.length >= 16) {
+      return true;
+    }
+
+    this._highScoreName += character;
+    return true;
+  };
+
+  private _completeHighScoreEntry = (saveScore: boolean): void => {
+    if (saveScore) {
+      this._commands.saveHighScore?.(this._highScoreName);
+    } else {
+      this._commands.discardHighScore?.();
+    }
+
+    const previousScreen = this._screen;
+    this._screen = "game-over";
+    this._screenHistory = [];
+    this._selectedIndex = 0;
+    this._scrollY = 0;
+    this._shouldRevealSelected = true;
+    this._buildItems();
+    this._startTransition(previousScreen, "game-over");
+    this._notifyNavigationChanged();
+  };
+
+  private _getHighScoreNameCharacter = (keyCode: number): string => {
+    if (keyCode >= 65 && keyCode <= 90) {
+      return String.fromCharCode(keyCode);
+    }
+
+    if (keyCode >= 48 && keyCode <= 57) {
+      return String.fromCharCode(keyCode);
+    }
+
+    if (keyCode === 32) {
+      return " ";
+    }
+
+    if (keyCode === 189) {
+      return "-";
+    }
+
+    return "";
   };
 
   private _adjustControllerType = (direction: -1 | 1): void => {
@@ -3749,6 +4010,10 @@ class Menus implements MenuSystemInstance {
     };
 
     return namedKeys[keyCode] ?? `${keyCode}`;
+  };
+
+  private _formatScore = (score: number): string => {
+    return Math.max(0, Math.floor(score)).toLocaleString("en-GB");
   };
 
   private _formatBindingLabel = (binding: BindingAction): string => {

@@ -505,16 +505,20 @@ export interface MenuSystemCommands {
   canUseScreenWakeLock?: () => boolean;
   clearLevelPreview?: () => void;
   continueGame?: () => void;
+  discardHighScore?: () => void;
   exitApp?: () => void;
   exitToRoot?: () => void;
   getContinues?: () => number;
   getAchievements?: () => AchievementStatus[];
+  getHighScores?: () => HighScoreEntry[];
+  getPendingHighScore?: () => PendingHighScoreEntry | null;
   getLevel?: () => number;
   previewLevel?: (level: number) => void;
   playPreroll?: () => void;
   onNavigationChanged?: (state: MenuNavigationState) => void;
   resetStoredData?: (scope: StoredDataResetScope) => void;
   restart?: () => void;
+  saveHighScore?: (name: string) => void;
   selectLevel?: (level: number) => void;
   setDebugContinues?: (continues: number) => void;
   setDebugLives?: (lives: number) => void;
@@ -539,6 +543,18 @@ export interface MenuNavigationState {
   isPausedRoot: boolean;
   isRoot: boolean;
   isWatchingDemo: boolean;
+}
+
+export interface HighScoreEntry {
+  id: string;
+  name: string;
+  score: number;
+  stats: string[];
+}
+
+export interface PendingHighScoreEntry {
+  score: number;
+  stats: string[];
 }
 
 export interface MenuRenderOptions {

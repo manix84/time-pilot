@@ -117,7 +117,7 @@ describe("menu definitions", () => {
 
     vi.mocked(arena.renderText).mockClear();
     pwaMenus.showStart();
-    for (let i = 0; i < 3; i++) {
+    for (let i = 0; i < 4; i++) {
       pwaMenus.next();
     }
     pwaMenus.render();
@@ -187,6 +187,7 @@ describe("menu definitions", () => {
     menus.next();
     menus.next();
     menus.next();
+    menus.next();
     menus.activate();
 
     expect(applyUpdate).toHaveBeenCalled();
@@ -252,6 +253,7 @@ describe("menu definitions", () => {
     );
 
     vi.mocked(arena.renderText).mockClear();
+    menus.next();
     menus.next();
     menus.next();
     menus.next();
@@ -401,6 +403,105 @@ describe("menu definitions", () => {
       );
 
     expect(fillRectCalls.length).toBeGreaterThan(0);
+  });
+
+  it("opens the high-score page from the root menu below achievements", () => {
+    const arena = createArena();
+    const menus = new Menus(arena, {
+      getHighScores: () => [
+        {
+          id: "shooty",
+          name: "Shooty McShootface",
+          score: 1000000,
+          stats: ["Era: 2001", "Bosses: 5", "Continues: 0"],
+        },
+      ],
+      start: vi.fn(),
+    });
+
+    menus.showStart();
+    menus.render();
+
+    const achievementsY = vi
+      .mocked(arena.renderText)
+      .mock.calls.find((call) => call[0] === "Achievements")?.[2];
+    const highScoresY = vi
+      .mocked(arena.renderText)
+      .mock.calls.find((call) => call[0] === "High Scores")?.[2];
+
+    expect(achievementsY).toBeLessThan(
+      typeof highScoresY === "number" ? highScoresY : Number.NaN
+    );
+
+    vi.mocked(arena.renderText).mockClear();
+    menus.next();
+    menus.next();
+    menus.next();
+    menus.activate();
+    menus.render();
+
+    expect(arena.renderText).toHaveBeenCalledWith(
+      "High Scores",
+      expect.any(Number),
+      expect.any(Number),
+      expect.objectContaining({ align: "center" })
+    );
+    expect(arena.renderText).toHaveBeenCalledWith(
+      "Shooty McShootface",
+      expect.any(Number),
+      expect.any(Number),
+      expect.objectContaining({ align: "left" })
+    );
+    expect(arena.renderText).toHaveBeenCalledWith(
+      "1,000,000",
+      expect.any(Number),
+      expect.any(Number),
+      expect.objectContaining({ align: "right" })
+    );
+    expect(arena.renderText).toHaveBeenCalledWith(
+      "Era: 2001",
+      expect.any(Number),
+      expect.any(Number),
+      expect.objectContaining({ align: "left" })
+    );
+  });
+
+  it("captures a pilot name before saving a game-over high score", () => {
+    const arena = createArena();
+    const saveHighScore = vi.fn();
+    const menus = new Menus(arena, {
+      getPendingHighScore: () => ({
+        score: 12345,
+        stats: ["Era: 1910", "Continues: 0"],
+      }),
+      saveHighScore,
+      start: vi.fn(),
+    });
+
+    menus.showGameOver();
+    menus.render();
+
+    expect(arena.renderText).toHaveBeenCalledWith(
+      "Save Score",
+      expect.any(Number),
+      expect.any(Number),
+      expect.objectContaining({ align: "center" })
+    );
+    expect(arena.renderText).toHaveBeenCalledWith(
+      "12,345",
+      expect.any(Number),
+      expect.any(Number),
+      expect.objectContaining({ align: "center" })
+    );
+
+    for (let i = 0; i < 5; i++) {
+      expect(menus.captureKey(8)).toBe(true);
+    }
+    expect(menus.captureKey(65)).toBe(true);
+    expect(menus.captureKey(66)).toBe(true);
+    expect(menus.captureKey(13)).toBe(true);
+
+    expect(saveHighScore).toHaveBeenCalledWith("AB");
   });
 
   it("does not crash the achievements page while icon art is missing", () => {
@@ -1345,6 +1446,7 @@ describe("menu definitions", () => {
     menus.next();
     menus.next();
     menus.next();
+    menus.next();
     menus.activate();
 
     for (let i = 0; i < 9; i++) {
@@ -1439,6 +1541,7 @@ describe("menu definitions", () => {
     menus.next();
     menus.next();
     menus.next();
+    menus.next();
     menus.activate();
     menus.render();
 
@@ -1529,6 +1632,7 @@ describe("menu definitions", () => {
       menus.captureKey(keyCode);
     }
 
+    menus.next();
     menus.next();
     menus.next();
     menus.next();
@@ -1783,6 +1887,7 @@ describe("menu definitions", () => {
       menus.captureKey(keyCode);
     }
 
+    menus.next();
     menus.next();
     menus.next();
     menus.next();

@@ -493,7 +493,7 @@ describe("TimePilot engine", () => {
     await new Promise((resolve) => window.setTimeout(resolve, 5));
 
     pilot.context._menus.showStart();
-    for (let i = 0; i < 3; i++) {
+    for (let i = 0; i < 4; i++) {
       pilot.context._menus.next();
     }
     pilot.context._menus.activate();
@@ -594,7 +594,7 @@ describe("TimePilot engine", () => {
     pilot.context._player.setData("posX", 64);
     pilot.context._player.setData("posY", -12);
     pilot.context._menus.showStart({ startLabel: "Continue" });
-    for (let i = 0; i < 3; i++) {
+    for (let i = 0; i < 4; i++) {
       pilot.context._menus.next();
     }
     pilot.context._menus.activate();

@@ -57,6 +57,7 @@ export function createCanvasContextMock() {
     stroke: vi.fn((...args: unknown[]) => calls.push({ method: "stroke", args })),
     strokeRect: vi.fn((...args: unknown[]) => calls.push({ method: "strokeRect", args })),
     fillRect: vi.fn((...args: unknown[]) => calls.push({ method: "fillRect", args })),
+    measureText: vi.fn((text: string) => ({ width: text.length * 8 })),
     moveTo: vi.fn((...args: unknown[]) => calls.push({ method: "moveTo", args })),
     lineTo: vi.fn((...args: unknown[]) => calls.push({ method: "lineTo", args })),
     roundRect: vi.fn((...args: unknown[]) => calls.push({ method: "roundRect", args })),

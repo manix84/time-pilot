@@ -14,6 +14,7 @@ import GameArena from "./engine/arena";
 import SoundEngine from "./engine/Sound";
 import Ticker from "./engine/Ticker";
 import { gameFps } from "./game-timing";
+import { getHighScores, saveHighScore } from "./high-scores";
 import Hud from "./hud";
 import i18n from "./i18n";
 import { logger } from "./logger";
@@ -222,6 +223,7 @@ export class TimePilot {
   private isDestroyed = false;
   private isDemoMode = false;
   private isDebugLevelPreviewLocked = false;
+  private pendingHighScore: { score: number; stats: string[] } | null = null;
   private selectedStartLevel = 1;
   private readonly coinDropSound = new SoundEngine(sounds.coinDrop.src);
   private levelIntroMusic?: SoundEngine;
@@ -414,6 +416,9 @@ export class TimePilot {
       continueGame: () => {
         this.continueGame();
       },
+      discardHighScore: () => {
+        this.pendingHighScore = null;
+      },
       exitToRoot: () => {
         this.exitToRootMenu();
       },
@@ -427,6 +432,8 @@ export class TimePilot {
         : {}),
       getContinues: () => this.context._player.getData("continues") ?? 0,
       getAchievements: () => this.context._achievements?.getStatuses() ?? [],
+      getHighScores: () => getHighScores(),
+      getPendingHighScore: () => this.pendingHighScore,
       getLevel: () => this.selectedStartLevel,
       onNavigationChanged: (state) => {
         this.syncBrowserHistory(state.depth + (state.active ? 1 : 0));
@@ -442,6 +449,9 @@ export class TimePilot {
       },
       restart: () => {
         this.restartGame();
+      },
+      saveHighScore: (name) => {
+        this.savePendingHighScore(name);
       },
       selectLevel: (level) => {
         this.selectDebugLevel(level);
@@ -1114,6 +1124,7 @@ export class TimePilot {
     SoundEngine.setMuted(false);
     this.isDemoMode = false;
     this.context._isDemoMode = false;
+    this.pendingHighScore = null;
 
     if (shouldStartFreshGame) {
       this.coinDropSound.stop();
@@ -1754,6 +1765,13 @@ export class TimePilot {
       level: this.context._level,
       score: playerData.score,
     });
+    this.pendingHighScore =
+      playerData.score > 0
+        ? {
+          score: playerData.score,
+          stats: this.createHighScoreStats(playerData),
+        }
+        : null;
     this.context._achievements?.onGameOver();
     this.context._player.stopShooting();
     this.context._gameTicker.stop();
@@ -1762,6 +1780,29 @@ export class TimePilot {
     this.stopLevelMusic();
     this.playMenuMusic();
     this.context._menus.showGameOver();
+  };
+
+  private createHighScoreStats = (playerData: PlayerData): string[] => [
+    `Era: ${this.context._level}`,
+    `Lives left: ${Math.max(0, playerData.lives)}`,
+    `Continues: ${Math.max(0, playerData.continues)}`,
+    `Boss progress: ${Math.max(
+      0,
+      this.context._levelProgress.standardEnemyKills
+    )}/${this.context._levelProgress.bossKillThreshold}`,
+  ];
+
+  private savePendingHighScore = (name: string): void => {
+    if (!this.pendingHighScore) {
+      return;
+    }
+
+    saveHighScore(name, this.pendingHighScore.score, this.pendingHighScore.stats);
+    logger.info("Saved high score", {
+      name,
+      score: this.pendingHighScore.score,
+    });
+    this.pendingHighScore = null;
   };
 
   private beginTimeWarpTransition = (): void => {
