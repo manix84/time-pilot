@@ -37,6 +37,8 @@
   setups.
 - Added single-use signed run receipts and server-side plausibility checks for
   best-effort protection against fake remote high score submissions.
+- Added extra run statistics for high-score cards, including loops, near
+  misses, and mid-run restarts after pauses or restored sessions.
 - Added a public about page with build, host, privacy, source, and sponsorship
   details.
 - Added installed-PWA back navigation for menu backtracking, paused-game resume,

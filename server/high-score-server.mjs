@@ -12,6 +12,7 @@ const { Pool } = pg;
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const jsonStorePath = resolve(__dirname, "../data/high-scores.json");
 const maxBodyBytes = 64 * 1024;
+const maxScoreStats = 12;
 const maxScores = 100;
 const maxPublicScores = 25;
 const runReceiptTtlMs = 6 * 60 * 60 * 1000;
@@ -326,7 +327,7 @@ const validateScoreSubmission = async (payload) => {
       id: randomUUID(),
       name: normalizeName(entry.name),
       score: Math.max(0, Math.floor(entry.score)),
-      stats: entry.stats.slice(0, 6),
+      stats: entry.stats.slice(0, maxScoreStats),
     },
     submittedAt: Math.max(0, Math.floor(submittedAt)),
   };
@@ -448,7 +449,7 @@ const toPublicScore = (score) => ({
   name: normalizeName(score.name),
   receivedAt: score.receivedAt,
   score: Math.max(0, Math.floor(score.score)),
-  stats: score.stats.slice(0, 6),
+  stats: score.stats.slice(0, maxScoreStats),
 });
 
 const normalizeName = (name) => {

@@ -16,6 +16,7 @@
 - 🎬 Startup preroll with the author logo, Time Pilot flyby, menu-logo handoff, and instant skip input.
 - 💾 Session restore that skips the preroll and returns interrupted runs to a paused Continue menu.
 - 🏅 Local-first high scores with optional remote sync through PostgreSQL or JSON-backed API storage.
+- 📊 High-score stat cards track accuracy, enemies, loops, near misses, restarts, bonuses, and survival time.
 - ℹ️ Public about page with version, host, privacy, source, and sponsorship links.
 - 🛠️ Debug tools for level select, preroll replay, runtime logging, and stored-data resets.
 - 📱 Installable offline PWA mode that launches as a standalone app and enters fullscreen play from Start/Continue.

@@ -18,6 +18,7 @@ import type {
 
 const playerConst = player;
 const playerSpriteArcDegrees = 360;
+const loopTurnDegrees = 360;
 
 /**
  * Player aircraft entity responsible for movement, shooting, lives, and scoring.
@@ -36,6 +37,7 @@ class Player implements PlayerInstance {
   private _playerDeathSprite: HTMLImageElement;
   private _playerSprite: HTMLImageElement;
   private _rotationStep: number;
+  private _turnDegreesSinceLoop = 0;
 
   constructor(context: GameDataStore) {
     this._context = context;
@@ -115,6 +117,7 @@ class Player implements PlayerInstance {
 
   resetData = (): void => {
     this._data = helpers.cloneObject(this._dataDefaults);
+    this._turnDegreesSinceLoop = 0;
   };
 
   private getLevelData = (): LevelConfig["player"] => {
@@ -152,11 +155,15 @@ class Player implements PlayerInstance {
 
   rotate = (): void => {
     if (this._data.isAlive && this._data.newHeading !== false) {
+      const previousHeading = this._data.heading;
+
       this._data.heading = helpers.rotateTo(
         this._data.newHeading,
         this._data.heading,
         this._rotationStep
       );
+
+      this._trackLoop(previousHeading, this._data.heading);
     }
   };
 
@@ -166,6 +173,27 @@ class Player implements PlayerInstance {
 
   stopShooting = (): void => {
     this._data.isShooting = false;
+  };
+
+  private _trackLoop = (previousHeading: number, nextHeading: number): void => {
+    if (this._context._isDemoMode) {
+      return;
+    }
+
+    const turnDelta = Math.abs(
+      ((((nextHeading - previousHeading) % 360) + 540) % 360) - 180
+    );
+
+    if (turnDelta <= 0) {
+      return;
+    }
+
+    this._turnDegreesSinceLoop += turnDelta;
+
+    while (this._turnDegreesSinceLoop >= loopTurnDegrees) {
+      this._context._runStats.loops += 1;
+      this._turnDegreesSinceLoop -= loopTurnDegrees;
+    }
   };
 
   shoot = (): void => {

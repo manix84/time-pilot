@@ -368,6 +368,7 @@ export class TimePilot {
       this.syncScreenWakeLock();
     } else {
       logger.info("Resuming game");
+      this.recordRunRestart();
       this.context._gameTicker.start();
       SoundEngine.resumePaused();
       this.syncScreenWakeLock();
@@ -377,9 +378,16 @@ export class TimePilot {
   resumeGame = (): void => {
     if (!this.context._gameTicker.isRunning) {
       logger.info("Resuming game");
+      this.recordRunRestart();
       this.context._gameTicker.start();
       SoundEngine.resumePaused();
       this.syncScreenWakeLock();
+    }
+  };
+
+  private recordRunRestart = (): void => {
+    if (this.hasStartedGame && !this.isDemoMode && !this.hasShownGameOver) {
+      this.context._runStats.restarts += 1;
     }
   };
 
@@ -1160,6 +1168,7 @@ export class TimePilot {
       this.context._achievements?.onRunStarted(this.context._player.getData());
       this.context._achievements?.onLevelStarted(this.context._level);
     } else {
+      this.recordRunRestart();
       this.resumeLevelMusic(this.context._level);
     }
 
@@ -1824,6 +1833,9 @@ export class TimePilot {
     return [
       `Era: ${Math.max(this.context._level, stats.highestLevelReached)}`,
       `Accuracy: ${accuracy}%`,
+      `Near misses: ${stats.nearMisses}`,
+      `Loops: ${stats.loops}`,
+      `Restarts: ${stats.restarts}`,
       `Enemies: ${stats.enemiesDestroyed}`,
       `Shots: ${stats.shotsHit}/${stats.shotsFired}`,
       `Bonuses: ${stats.bonusesCollected}`,

@@ -403,6 +403,19 @@ describe("game systems", () => {
     expect(context._runStats.playerProjectileHits).toBe(1);
   });
 
+  it("counts near misses once when threats pass close to the player", () => {
+    const context = createContext({ enemyCollides: false });
+    const enemyBullet = createEnemyBullet({ posX: 30, posY: 20 });
+    vi.mocked(context._enemyBullets.getEntities).mockReturnValue([enemyBullet]);
+    const system = new CollisionSystem(context);
+
+    system.detectCollisions();
+    system.detectCollisions();
+
+    expect(context._player.kill).not.toHaveBeenCalled();
+    expect(context._runStats.nearMisses).toBe(1);
+  });
+
   it("lets player bullets shoot down shootable enemy projectiles", () => {
     const context = createContext({
       enemyCollides: false,

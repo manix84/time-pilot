@@ -57,7 +57,7 @@ const featureHighlights = [
   {
     title: "High scores",
     details:
-      "Scores save locally first and can sync to a PostgreSQL or JSON-backed leaderboard when the API is available.",
+      "Scores save locally first, sync when available, and show run stats like loops, near misses, and restarts.",
   },
   {
     title: "About page",

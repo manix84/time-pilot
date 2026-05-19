@@ -345,8 +345,11 @@ export interface RunStats {
   highestLevelReached: number;
   levelsCompleted: number;
   livesLost: number;
+  loops: number;
+  nearMisses: number;
   playerEnemyCollisions: number;
   playerProjectileHits: number;
+  restarts: number;
   shootableProjectilesDestroyed: number;
   shotsFired: number;
   shotsHit: number;

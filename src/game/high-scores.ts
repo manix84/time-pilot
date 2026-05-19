@@ -17,6 +17,7 @@ interface StoredHighScoreEntry extends HighScoreEntry {
 
 const highScoreStorageKey = "timePilot.highScores";
 const highScoreApiBasePath = "/api/high-scores";
+const maxHighScoreStats = 12;
 const maxStoredHighScores = 10;
 const maxCachedHighScores = 50;
 
@@ -62,6 +63,30 @@ export const fakeHighScores: HighScoreEntry[] = [
     name: "Debug Dave",
     score: 123456,
     stats: ["Era: 1910", "Hitboxes blamed: yes", "Restart count: private"],
+  },
+  {
+    id: "loop-de-loop-lou",
+    name: "Loop-de-Loop Lou",
+    score: 98765,
+    stats: ["Era: 1910", "Loops: 42", "Near misses: 0", "Dignity: optional"],
+  },
+  {
+    id: "captain-one-more",
+    name: "Captain One More",
+    score: 76543,
+    stats: ["Era: 1910", "Restarts: 9", "Continues: 3", "Sleep: none"],
+  },
+  {
+    id: "miss-by-a-mile",
+    name: "Missed By A Pixel",
+    score: 54321,
+    stats: ["Era: 1910", "Near misses: 128", "Luck: suspicious"],
+  },
+  {
+    id: "keyboard-karen",
+    name: "Keyboard Karen",
+    score: 1910,
+    stats: ["Era: 1910", "Complaints filed: 12", "Clouds blamed: yes"],
   },
 ];
 
@@ -129,7 +154,7 @@ export const saveHighScore = (
     name: normalizeHighScoreName(name),
     run: run ?? undefined,
     score: Math.max(0, Math.floor(score)),
-    stats: stats.slice(0, 6),
+    stats: stats.slice(0, maxHighScoreStats),
     submittedAt: Date.now(),
     syncState: run ? "pending" : "local",
   };
@@ -244,7 +269,7 @@ const submitPendingScores = async (): Promise<void> => {
       record.id = storedRemoteEntry.id;
       record.name = storedRemoteEntry.name;
       record.score = Math.max(0, Math.floor(storedRemoteEntry.score));
-      record.stats = storedRemoteEntry.stats.slice(0, 6);
+      record.stats = storedRemoteEntry.stats.slice(0, maxHighScoreStats);
       record.receivedAt = storedRemoteEntry.receivedAt ?? Date.now();
       record.syncState = "synced";
       changed = true;
@@ -325,7 +350,7 @@ const normalizeStoredEntry = (
       typeof stored.receivedAt === "number" ? stored.receivedAt : undefined,
     run: isHighScoreRunReceipt(stored.run) ? stored.run : undefined,
     score: Math.max(0, Math.floor(entry.score)),
-    stats: entry.stats.slice(0, 6),
+    stats: entry.stats.slice(0, maxHighScoreStats),
     submittedAt:
       typeof stored.submittedAt === "number" ? stored.submittedAt : Date.now(),
     syncState: normalizeSyncState(stored.syncState, stored.run),
