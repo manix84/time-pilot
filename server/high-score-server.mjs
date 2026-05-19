@@ -90,49 +90,60 @@ const createPostgresStore = (pool) => ({
       [run.runId, run.tokenHash, run.issuedAt, run.expiresAt]
     );
   },
-  async consumeRun(runId, tokenHash, now) {
-    const result = await pool.query(
-      `update time_pilot_high_score_runs
-        set used = true
-        where run_id = $1
-          and token_hash = $2
-          and used = false
-          and expires_at >= $3
-        returning run_id, token_hash, issued_at, expires_at, used`,
-      [runId, tokenHash, now]
-    );
-    const row = result.rows[0];
+  async saveScoreForRun(runId, tokenHash, now, score) {
+    const client = await pool.connect();
 
-    if (!row) {
-      return null;
+    try {
+      await client.query("begin");
+      const result = await client.query(
+        `update time_pilot_high_score_runs
+          set used = true
+          where run_id = $1
+            and token_hash = $2
+            and used = false
+            and expires_at >= $3
+          returning run_id, token_hash, issued_at, expires_at, used`,
+        [runId, tokenHash, now]
+      );
+      const row = result.rows[0];
+
+      if (!row) {
+        await client.query("rollback");
+        return null;
+      }
+
+      await client.query(
+        `insert into time_pilot_high_scores
+          (id, created_at, name, score, stats, game_version, submitted_at, received_at, run_id)
+          values ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+          on conflict (id) do nothing`,
+        [
+          score.id,
+          score.createdAt,
+          score.name,
+          score.score,
+          JSON.stringify(score.stats),
+          score.gameVersion,
+          score.submittedAt,
+          score.receivedAt,
+          score.runId,
+        ]
+      );
+      await client.query("commit");
+
+      return {
+        expiresAt: Number(row.expires_at),
+        issuedAt: Number(row.issued_at),
+        runId: row.run_id,
+        tokenHash: row.token_hash,
+        used: true,
+      };
+    } catch (error) {
+      await client.query("rollback");
+      throw error;
+    } finally {
+      client.release();
     }
-
-    return {
-      expiresAt: Number(row.expires_at),
-      issuedAt: Number(row.issued_at),
-      runId: row.run_id,
-      tokenHash: row.token_hash,
-      used: row.used,
-    };
-  },
-  async saveScore(score) {
-    await pool.query(
-      `insert into time_pilot_high_scores
-        (id, created_at, name, score, stats, game_version, submitted_at, received_at, run_id)
-        values ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-        on conflict (id) do nothing`,
-      [
-        score.id,
-        score.createdAt,
-        score.name,
-        score.score,
-        JSON.stringify(score.stats),
-        score.gameVersion,
-        score.submittedAt,
-        score.receivedAt,
-        score.runId,
-      ]
-    );
   },
   async listScores(limit = maxPublicScores) {
     const result = await pool.query(
@@ -189,7 +200,7 @@ const createJsonStore = () => ({
     jsonState.runs.push(run);
     await saveJsonState();
   },
-  async consumeRun(runId, tokenHash, now) {
+  async saveScoreForRun(runId, tokenHash, now, score) {
     const run = jsonState.runs.find((candidate) => candidate.runId === runId);
 
     if (
@@ -201,15 +212,21 @@ const createJsonStore = () => ({
       return null;
     }
 
-    run.used = true;
-    await saveJsonState();
+    const previousScores = [...jsonState.scores];
+    const previousUsed = run.used;
 
-    return run;
-  },
-  async saveScore(score) {
-    if (!jsonState.scores.some((candidate) => candidate.id === score.id)) {
-      jsonState.scores.push(score);
+    try {
+      if (!jsonState.scores.some((candidate) => candidate.id === score.id)) {
+        jsonState.scores.push(score);
+      }
+      run.used = true;
       await saveJsonState();
+
+      return run;
+    } catch (error) {
+      jsonState.scores = previousScores;
+      run.used = previousUsed;
+      throw error;
     }
   },
   async listScores(limit = maxPublicScores) {
@@ -282,7 +299,6 @@ const handleSubmitScore = async (request, response) => {
     return;
   }
 
-  const store = await getStore();
   const receivedAt = Date.now();
   const scoreRecord = {
     ...validation.score,
@@ -292,8 +308,18 @@ const handleSubmitScore = async (request, response) => {
     runId: validation.run.runId,
     submittedAt: validation.submittedAt,
   };
+  const store = await getStore();
+  const storedRun = await store.saveScoreForRun(
+    validation.run.runId,
+    hashToken(validation.run.token),
+    receivedAt,
+    scoreRecord
+  );
 
-  await store.saveScore(scoreRecord);
+  if (!storedRun) {
+    sendJson(response, 401, { error: "invalid_run_receipt" });
+    return;
+  }
 
   sendJson(response, 201, toPublicScore(scoreRecord));
 };
@@ -317,24 +343,13 @@ const validateScoreSubmission = async (payload) => {
     return reject("implausible_score", 422);
   }
 
-  const store = await getStore();
-  const storedRun = await store.consumeRun(
-    run.runId,
-    hashToken(run.token),
-    Date.now()
-  );
-
-  if (!storedRun) {
-    return reject("invalid_run_receipt", 401);
-  }
-
   return {
     accepted: true,
     gameVersion:
       typeof gameVersion === "string" && gameVersion.length <= 32
         ? gameVersion
         : "unknown",
-    run: storedRun,
+    run,
     score: {
       id: randomUUID(),
       name: normalizeName(entry.name),

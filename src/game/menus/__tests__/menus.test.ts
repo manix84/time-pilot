@@ -29,6 +29,15 @@ const createArena = (): GameArenaInstance => ({
   getElement: vi.fn(() => document.createElement("canvas")),
 });
 
+const createArenaWithSize = (
+  width: number,
+  height: number
+): GameArenaInstance => ({
+  ...createArena(),
+  width,
+  height,
+});
+
 describe("menu definitions", () => {
   afterEach(() => {
     vi.restoreAllMocks();
@@ -478,6 +487,36 @@ describe("menu definitions", () => {
       expect.any(Number),
       expect.objectContaining({ align: "left" })
     );
+  });
+
+  it("renders selected high-score stats below the list on narrow screens", () => {
+    const arena = createArenaWithSize(420, 600);
+    const menus = new Menus(arena, {
+      getHighScores: () => [
+        {
+          createdAt: Date.UTC(2012, 8, 13),
+          id: "shooty",
+          name: "Shooty McShootface",
+          score: 1000000,
+          stats: ["Era: 2001", "Bosses: 5", "Continues: 0"],
+        },
+      ],
+      start: vi.fn(),
+    });
+
+    menus.showStart();
+    menus.next();
+    menus.next();
+    menus.next();
+    menus.activate();
+    menus.render();
+
+    const statCall = vi
+      .mocked(arena.renderText)
+      .mock.calls.find((call) => call[0] === "#1 Shooty McShootface");
+
+    expect(statCall?.[1]).toBeGreaterThan(-220);
+    expect(statCall?.[2]).toBeGreaterThan(-30);
   });
 
   it("captures a pilot name before saving a game-over high score", () => {

@@ -209,14 +209,14 @@ const sortHighScores = (left: HighScoreEntry, right: HighScoreEntry): number =>
   left.name.localeCompare(right.name);
 
 const loadStoredScoreRecords = (): StoredHighScoreEntry[] => {
-  const storage = getStorage();
-  const storedScores = storage?.getItem(highScoreStorageKey);
-
-  if (!storedScores) {
-    return [];
-  }
-
   try {
+    const storage = getStorage();
+    const storedScores = storage?.getItem(highScoreStorageKey);
+
+    if (!storedScores) {
+      return [];
+    }
+
     const parsed = JSON.parse(storedScores);
 
     if (!Array.isArray(parsed)) {
@@ -272,6 +272,13 @@ const submitPendingScores = async (): Promise<void> => {
           submittedAt: record.submittedAt,
         }),
       });
+
+      if (isTerminalSyncRejection(response.status)) {
+        record.syncState = "local";
+        record.run = undefined;
+        changed = true;
+        continue;
+      }
 
       if (!response.ok) {
         continue;
@@ -398,6 +405,9 @@ const normalizeSyncState = (
 
   return isHighScoreRunReceipt(run) ? "pending" : "local";
 };
+
+const isTerminalSyncRejection = (status: number): boolean =>
+  status === 401 || status === 422;
 
 const toHighScoreEntry = (entry: HighScoreEntry): HighScoreEntry => ({
   createdAt: entry.createdAt,

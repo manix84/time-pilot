@@ -109,6 +109,8 @@ const playerRotationStep = 360 / player.rotationFrameCount;
 const gameSessionStorageKey = "timePilot.gameSession";
 const gameSessionSnapshotVersion = 1;
 
+type HighScoreRunReceipt = Awaited<ReturnType<typeof startHighScoreRun>>;
+
 type DemoProgressSnapshot = {
   nextExtraLifeScore: number;
   score: number;
@@ -130,6 +132,7 @@ type GameSessionSnapshot = {
     | "posY"
     | "score"
   >;
+  highScoreRunReceipt?: NonNullable<HighScoreRunReceipt>;
   runStats?: RunStats;
   savedAt: number;
   version: typeof gameSessionSnapshotVersion;
@@ -165,6 +168,22 @@ const createControlInputState = (
   touchOrigin: null,
   activeController,
 });
+
+const isHighScoreRunReceipt = (
+  value: unknown
+): value is NonNullable<HighScoreRunReceipt> => {
+  if (!value || typeof value !== "object") {
+    return false;
+  }
+
+  const receipt = value as Partial<NonNullable<HighScoreRunReceipt>>;
+
+  return (
+    typeof receipt.issuedAt === "number" &&
+    typeof receipt.runId === "string" &&
+    typeof receipt.token === "string"
+  );
+};
 
 /**
  * Options accepted by the TimePilot engine constructor.
@@ -233,7 +252,7 @@ export class TimePilot {
   private isDemoMode = false;
   private isDebugLevelPreviewLocked = false;
   private pendingHighScore: { score: number; stats: string[] } | null = null;
-  private highScoreRunReceipt: Awaited<ReturnType<typeof startHighScoreRun>> = null;
+  private highScoreRunReceipt: HighScoreRunReceipt = null;
   private highScoreRunRequestId = 0;
   private hasPlayedHighScoreSound = false;
   private highScoreTarget = 0;
@@ -959,6 +978,13 @@ export class TimePilot {
         return null;
       }
 
+      if (
+        snapshot.highScoreRunReceipt !== undefined &&
+        !isHighScoreRunReceipt(snapshot.highScoreRunReceipt)
+      ) {
+        return null;
+      }
+
       return snapshot as GameSessionSnapshot;
     } catch {
       return null;
@@ -1007,6 +1033,7 @@ export class TimePilot {
         bossSpawned: levelProgress.bossSpawned,
         standardEnemyKills: levelProgress.standardEnemyKills,
       },
+      highScoreRunReceipt: this.highScoreRunReceipt ?? undefined,
       player: {
         continues: playerData.continues,
         heading: playerData.heading,
@@ -1107,6 +1134,10 @@ export class TimePilot {
     this.context._player.setData("isAlive", true);
     this.context._player.setData("deathTick", false);
     this.context._player.stopShooting();
+    this.highScoreRunReceipt = snapshot.highScoreRunReceipt ?? null;
+    if (!this.highScoreRunReceipt) {
+      void this.prepareHighScoreRunReceipt();
+    }
     this.prepareHighScoreTarget(snapshot.player.score);
     this.spawningSystem.addInitialProps();
     this.hasSeededInitialProps = true;

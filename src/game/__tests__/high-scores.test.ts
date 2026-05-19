@@ -155,6 +155,51 @@ describe("high score storage", () => {
     ).not.toThrow();
   });
 
+  it("keeps gameplay-safe score reads best effort when storage reads fail", () => {
+    vi.spyOn(Storage.prototype, "getItem").mockImplementation(() => {
+      throw new DOMException("Blocked", "SecurityError");
+    });
+
+    expect(loadStoredHighScores()).toEqual([]);
+    expect(getHighScores()).toHaveLength(10);
+  });
+
+  it("downgrades terminal sync rejections to local scores", async () => {
+    vi.spyOn(globalThis, "fetch").mockResolvedValue({
+      ok: false,
+      status: 401,
+    } as Response);
+
+    localStorage.setItem(
+      highScoreStorageKey,
+      JSON.stringify([
+        {
+          id: "expired-score",
+          createdAt: 2000,
+          name: "Expired Pilot",
+          run: {
+            issuedAt: 1000,
+            runId: "run-expired",
+            token: "receipt-token",
+          },
+          score: 5000,
+          stats: ["Era: 1910"],
+          submittedAt: 2000,
+          syncState: "pending",
+        },
+      ])
+    );
+
+    await syncHighScores();
+
+    const storedScores = JSON.parse(
+      localStorage.getItem(highScoreStorageKey) ?? "[]"
+    ) as Array<{ run?: unknown; syncState: string }>;
+
+    expect(storedScores[0]).toMatchObject({ syncState: "local" });
+    expect(storedScores[0]?.run).toBeUndefined();
+  });
+
   it("persists successful pending sync updates before a later submit fails", async () => {
     const remoteEntry = {
       id: "remote-score",

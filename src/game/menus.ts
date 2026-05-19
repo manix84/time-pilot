@@ -1160,7 +1160,7 @@ class Menus implements MenuSystemInstance {
   private _createHighScoreItems = (): MenuItem[] => {
     const scores = this._commands.getHighScores?.() ?? fakeHighScores;
     const viewport = this._getItemsViewport();
-    const hasStatsPanel = viewport.width >= 560;
+    const hasStatsPanel = this._canShowHighScoreSideStats(viewport);
     const cardWidth = hasStatsPanel
       ? Math.min(320, Math.max(250, viewport.width * 0.42))
       : Math.min(360, Math.max(250, viewport.width - 28));
@@ -2135,8 +2135,16 @@ class Menus implements MenuSystemInstance {
     const rank = this._items
       .slice(0, this._selectedIndex + 1)
       .filter((candidate) => candidate.highScore).length;
-    const x = -260;
-    let y = -54;
+    const viewport = this._getItemsViewport();
+    const hasSideStatsPanel = this._canShowHighScoreSideStats(viewport);
+    const statsPanelWidth = Math.min(viewport.width, this._gameArena.width);
+    const x = hasSideStatsPanel ? -260 : -(statsPanelWidth / 2) + 14;
+    let y = hasSideStatsPanel
+      ? -54
+      : item.rect.y + item.rect.height + this._scrollY + 12;
+    const wrapWidth = hasSideStatsPanel
+      ? 30
+      : Math.max(24, Math.floor((statsPanelWidth - 28) / 7));
 
     this._gameArena.renderText(`#${rank} ${highScore.name}`, x, y, {
       size: 15,
@@ -2155,7 +2163,7 @@ class Menus implements MenuSystemInstance {
     y += 30;
 
     highScore.stats.slice(0, 12).forEach((stat) => {
-      this._wrapText(stat, 30).forEach((line) => {
+      this._wrapText(stat, wrapWidth).forEach((line) => {
         this._gameArena.renderText(line, x, y, {
           size: 10,
           align: "left",
@@ -2175,6 +2183,9 @@ class Menus implements MenuSystemInstance {
       color: palette.menu.mutedText,
     });
   };
+
+  private _canShowHighScoreSideStats = (viewport: MenuViewport): boolean =>
+    Math.min(viewport.width, this._gameArena.width) >= 560;
 
   private _formatHighScoreDate = (createdAt: number): string => {
     const date = new Date(createdAt);

@@ -956,6 +956,61 @@ describe("TimePilot engine", () => {
     game.destroyGame();
   });
 
+  it("restores an active high-score run receipt from a saved session", async () => {
+    vi.stubGlobal(
+      "Image",
+      class {
+        complete = true;
+        onerror: (() => void) | null = null;
+        onload: (() => void) | null = null;
+
+        set src(_value: string) {
+          window.setTimeout(() => this.onload?.(), 0);
+        }
+      }
+    );
+    localStorage.setItem(
+      "timePilot.gameSession",
+      JSON.stringify({
+        level: 2,
+        highScoreRunReceipt: {
+          issuedAt: 1000,
+          runId: "restored-run",
+          token: "restored-token",
+        },
+        player: {
+          continues: 1,
+          heading: 90,
+          lives: 2,
+          nextExtraLifeScore: 50000,
+          posX: 0,
+          posY: 0,
+          score: 12345,
+        },
+        savedAt: Date.now(),
+        version: 1,
+      })
+    );
+
+    const game = new TimePilot(host, { debug: true });
+    const pilot = game as unknown as {
+      highScoreRunReceipt: {
+        issuedAt: number;
+        runId: string;
+        token: string;
+      } | null;
+    };
+
+    await new Promise((resolve) => window.setTimeout(resolve, 5));
+
+    expect(pilot.highScoreRunReceipt).toMatchObject({
+      runId: "restored-run",
+      token: "restored-token",
+    });
+
+    game.destroyGame();
+  });
+
   it("clamps out-of-range restored boss progress to the current level threshold", async () => {
     vi.stubGlobal(
       "Image",
