@@ -178,6 +178,10 @@ class Player implements PlayerInstance {
         playerConst.projectile.velocity,
         playerConst.projectile.color
       );
+
+      if (!this._context._isDemoMode) {
+        this._context._runStats.shotsFired += 1;
+      }
     }
   };
 
@@ -279,6 +283,9 @@ class Player implements PlayerInstance {
     }
 
     this._data.lives = Math.max(0, this._data.lives - 1);
+    if (!this._context._isDemoMode) {
+      this._context._runStats.livesLost += 1;
+    }
     this._data.isAlive = false;
     this._data.isShooting = false;
     this._data.newHeading = false;

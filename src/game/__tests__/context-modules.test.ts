@@ -6,6 +6,7 @@ import EnemyFactory from "../enemy-factory";
 import Hud from "../hud";
 import Player from "../player";
 import PropFactory from "../prop-factory";
+import { createRunStats } from "../run-stats";
 import userOptions from "../user-options";
 import type {
   BulletData,
@@ -85,6 +86,7 @@ const createContext = (): GameDataStore => {
       bossSpawned: false,
       standardEnemyKills: 0,
     },
+    _runStats: createRunStats(),
     _nextParachuteScore: 1000,
     _controlInputState: {
       down: false,

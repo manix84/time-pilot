@@ -337,6 +337,22 @@ export interface LevelProgressState {
   standardEnemyKills: number;
 }
 
+export interface RunStats {
+  bonusesCollected: number;
+  bossesDefeated: number;
+  continuesUsed: number;
+  enemiesDestroyed: number;
+  highestLevelReached: number;
+  levelsCompleted: number;
+  livesLost: number;
+  playerEnemyCollisions: number;
+  playerProjectileHits: number;
+  shootableProjectilesDestroyed: number;
+  shotsFired: number;
+  shotsHit: number;
+  startedAtTick: number;
+}
+
 export interface TimeWarpTransitionState {
   endsAtTick: number;
   effectStartedAtTick: number;
@@ -451,6 +467,7 @@ export interface ControllerInterfaceInstance {
 export interface GameDataStore {
   _level: number;
   _levelProgress: LevelProgressState;
+  _runStats: RunStats;
   _formations: Record<string, FormationState>;
   _demoFadeStartedAtTick?: number;
   _demoFadeUntilTick?: number;

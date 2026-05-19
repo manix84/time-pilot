@@ -4,6 +4,7 @@ import CollisionSystem from "../collision";
 import RenderingSystem from "../rendering";
 import SpawningSystem from "../spawning";
 import userOptions from "../../user-options";
+import { createRunStats } from "../../run-stats";
 import type {
   BonusFactoryInstance,
   BonusInstance,
@@ -239,6 +240,7 @@ const createContext = ({
       bossSpawned: false,
       standardEnemyKills: 0,
     },
+    _runStats: createRunStats(0, level),
     _demoFadeStartedAtTick: demoFadeStartedAtTick,
     _demoFadeUntilTick: demoFadeUntilTick,
     _isDemoMode: demoMode,
@@ -373,6 +375,8 @@ describe("game systems", () => {
     const [enemy] = context._enemies.getEntities();
     expect(enemy.kill).toHaveBeenCalled();
     expect(context._player.kill).toHaveBeenCalled();
+    expect(context._runStats.playerEnemyCollisions).toBe(1);
+    expect(context._runStats.shotsHit).toBe(1);
   });
 
   it("collects bonuses through player collision only", () => {
@@ -396,6 +400,7 @@ describe("game systems", () => {
 
     expect(context._player.kill).toHaveBeenCalled();
     expect(enemyBullet.removeMe).toBe(true);
+    expect(context._runStats.playerProjectileHits).toBe(1);
   });
 
   it("lets player bullets shoot down shootable enemy projectiles", () => {
@@ -418,6 +423,8 @@ describe("game systems", () => {
     expect(playerBullet.removeMe).toBe(true);
     expect(enemyBullet.removeMe).toBe(true);
     expect(context._player.kill).not.toHaveBeenCalled();
+    expect(context._runStats.shotsHit).toBe(1);
+    expect(context._runStats.shootableProjectilesDestroyed).toBe(1);
   });
 
   it("allows demo collisions to kill the player while still resolving bullets", () => {

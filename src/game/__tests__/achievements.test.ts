@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import AchievementSystem, { achievementDefinitions } from "../achievements";
 import { gameFps } from "../game-timing";
+import { createRunStats } from "../run-stats";
 import type {
   BonusFactoryInstance,
   BulletFactoryInstance,
@@ -98,6 +99,7 @@ const createContext = (
       bossSpawned: false,
       standardEnemyKills: 0,
     },
+    _runStats: createRunStats(0, data.level),
     _formations: {},
     _isDemoMode: false,
     _controlInputState: {

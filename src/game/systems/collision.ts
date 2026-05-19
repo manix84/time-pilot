@@ -67,6 +67,9 @@ class CollisionSystem implements CollisionSystemInstance {
           this._context._player.kill();
 
           if (wasAlive && !this._context._player.getData("isAlive")) {
+            if (!this._context._isDemoMode) {
+              this._context._runStats.playerProjectileHits += 1;
+            }
             this._context._achievements?.onPlayerHit(
               "projectile",
               this._context._player.getData()
@@ -113,6 +116,14 @@ class CollisionSystem implements CollisionSystemInstance {
         enemy.kill();
         this._context._player.kill();
 
+        if (
+          wasPlayerAlive &&
+          !this._context._isDemoMode &&
+          !this._context._player.getData("isAlive")
+        ) {
+          this._context._runStats.playerEnemyCollisions += 1;
+        }
+
         if (!enemy.isAlive) {
           this._context._achievements?.onEnemyDestroyed({
             enemyData,
@@ -150,6 +161,9 @@ class CollisionSystem implements CollisionSystemInstance {
           const enemyData = enemy.getData() as EnemyData;
           bullet.removeMe = true;
           enemy.kill();
+          if (!this._context._isDemoMode) {
+            this._context._runStats.shotsHit += 1;
+          }
 
           if (!enemy.isAlive) {
             this._context._achievements?.onEnemyDestroyed({
@@ -219,6 +233,10 @@ class CollisionSystem implements CollisionSystemInstance {
         ) {
           bullet.removeMe = true;
           enemyBullet.explode();
+          if (!this._context._isDemoMode) {
+            this._context._runStats.shotsHit += 1;
+            this._context._runStats.shootableProjectilesDestroyed += 1;
+          }
           this._context._achievements?.onShootableProjectileDestroyed();
         }
       });

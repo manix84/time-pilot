@@ -22,6 +22,7 @@ import Menus from "./menus";
 import Player from "./player";
 import Preroll from "./preroll";
 import PropFactory from "./prop-factory";
+import { createRunStats, isRunStats, normalizeRunStats } from "./run-stats";
 import {
   resetAllStoredTimePilotData,
   resetStoredScores,
@@ -46,6 +47,7 @@ import type {
   LevelProgressState,
   PlayerData,
   RenderingSystemInstance,
+  RunStats,
   SpawningSystemInstance,
 } from "./types";
 import userOptions, { resetUserOptions } from "./user-options";
@@ -122,6 +124,7 @@ type GameSessionSnapshot = {
     | "posY"
     | "score"
   >;
+  runStats?: RunStats;
   savedAt: number;
   version: typeof gameSessionSnapshotVersion;
 };
@@ -385,6 +388,7 @@ export class TimePilot {
     );
     this.context._formations = {};
     this.context._levelProgress = this.createLevelProgress(1);
+    this.context._runStats = createRunStats(0, 1);
     this.context._demoFadeStartedAtTick = 0;
     this.context._demoFadeUntilTick = 0;
     this.context._isDemoMode = false;
@@ -906,6 +910,8 @@ export class TimePilot {
         (typeof snapshot.levelProgress.bossDefeated !== "boolean" ||
           typeof snapshot.levelProgress.bossSpawned !== "boolean" ||
           typeof snapshot.levelProgress.standardEnemyKills !== "number");
+      const hasInvalidRunStats =
+        !!snapshot?.runStats && !isRunStats(snapshot.runStats);
 
       if (
         !snapshot ||
@@ -920,7 +926,8 @@ export class TimePilot {
         typeof snapshot.player.posX !== "number" ||
         typeof snapshot.player.posY !== "number" ||
         typeof snapshot.player.heading !== "number" ||
-        hasInvalidLevelProgress
+        hasInvalidLevelProgress ||
+        hasInvalidRunStats
       ) {
         return null;
       }
@@ -982,6 +989,7 @@ export class TimePilot {
         posY: playerData.posY,
         score: playerData.score,
       },
+      runStats: this.context._runStats,
       savedAt: Date.now(),
       version: gameSessionSnapshotVersion,
     };
@@ -1036,6 +1044,10 @@ export class TimePilot {
     this.hasShownGameOver = false;
     this.selectedStartLevel = snapshot.level;
     this.resetWorld(snapshot.level, { skipIntro: true });
+    this.context._runStats = normalizeRunStats(
+      snapshot.runStats ?? createRunStats(this.context._gameTicker.getTicks(), snapshot.level),
+      createRunStats(this.context._gameTicker.getTicks(), snapshot.level)
+    );
     if (snapshot.levelProgress) {
       const currentThreshold = this.context._levelProgress.bossKillThreshold;
       const bossWasDefeated = snapshot.levelProgress.bossDefeated;
@@ -1129,6 +1141,10 @@ export class TimePilot {
     if (shouldStartFreshGame) {
       this.coinDropSound.stop();
       this.coinDropSound.play();
+      this.context._runStats = createRunStats(
+        this.context._gameTicker.getTicks(),
+        this.selectedStartLevel
+      );
       this.resetWorld(this.selectedStartLevel, { skipIntro: false });
       this.cueLevelMusic(this.context._level);
       this.hasStartedGame = true;
@@ -1186,6 +1202,7 @@ export class TimePilot {
     this.context._isDemoMode = false;
     this.hasStartedGame = true;
     this.hasShownGameOver = false;
+    this.context._runStats.continuesUsed += 1;
 
     this.resetWorld(level, { skipIntro: false });
     this.cueLevelMusic(this.context._level);
@@ -1782,15 +1799,35 @@ export class TimePilot {
     this.context._menus.showGameOver();
   };
 
-  private createHighScoreStats = (playerData: PlayerData): string[] => [
-    `Era: ${this.context._level}`,
-    `Lives left: ${Math.max(0, playerData.lives)}`,
-    `Continues: ${Math.max(0, playerData.continues)}`,
-    `Boss progress: ${Math.max(
+  private createHighScoreStats = (playerData: PlayerData): string[] => {
+    const stats = this.context._runStats;
+    const accuracy =
+      stats.shotsFired > 0
+        ? Math.round((stats.shotsHit / stats.shotsFired) * 100)
+        : 0;
+    const survivedSeconds = Math.max(
       0,
-      this.context._levelProgress.standardEnemyKills
-    )}/${this.context._levelProgress.bossKillThreshold}`,
-  ];
+      Math.floor(
+        (this.context._gameTicker.getTicks() - stats.startedAtTick) / gameFps
+      )
+    );
+
+    return [
+      `Era: ${Math.max(this.context._level, stats.highestLevelReached)}`,
+      `Accuracy: ${accuracy}%`,
+      `Enemies: ${stats.enemiesDestroyed}`,
+      `Shots: ${stats.shotsHit}/${stats.shotsFired}`,
+      `Bonuses: ${stats.bonusesCollected}`,
+      `Lives lost: ${stats.livesLost}`,
+      `Continues: ${stats.continuesUsed}`,
+      `Survived: ${survivedSeconds}s`,
+      `Boss progress: ${Math.max(
+        0,
+        this.context._levelProgress.standardEnemyKills
+      )}/${this.context._levelProgress.bossKillThreshold}`,
+      `Score: ${playerData.score}`,
+    ];
+  };
 
   private savePendingHighScore = (name: string): void => {
     if (!this.pendingHighScore) {
@@ -1894,6 +1931,13 @@ export class TimePilot {
     logger.info("Completing time warp transition", {
       nextLevel: transition.nextLevel,
     });
+    if (!this.isDemoMode) {
+      this.context._runStats.levelsCompleted += 1;
+      this.context._runStats.highestLevelReached = Math.max(
+        this.context._runStats.highestLevelReached,
+        transition.nextLevel
+      );
+    }
     this.resetWorld(transition.nextLevel, { skipIntro: false });
     this.cueLevelMusic(transition.nextLevel);
     this.context._player.setData("score", transition.score);
