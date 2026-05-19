@@ -101,6 +101,7 @@ const createContext = (
     },
     _runStats: createRunStats(0, data.level),
     _hasReachedHighScore: false,
+    _scoreTrophyRank: null,
     _formations: {},
     _isDemoMode: false,
     _controlInputState: {

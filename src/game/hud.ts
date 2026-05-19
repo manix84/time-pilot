@@ -11,6 +11,7 @@ import type {
   GameArenaInstance,
   GameDataStore,
   HudInstance,
+  ScoreTrophyRank,
   SpriteImage,
 } from "./types";
 
@@ -31,6 +32,11 @@ const highScoreTrophyGap = 8;
 const highScoreTrophyFrameSize = 32;
 const highScoreTrophyFrameCount = 8;
 const highScoreTrophyFrameDurationMs = 480;
+const trophySpritePaths: Record<Exclude<ScoreTrophyRank, null>, string> = {
+  1: "sprites/achievements/trophy_gold_32.png",
+  2: "sprites/achievements/trophy_silver_32.png",
+  3: "sprites/achievements/trophy_bronze_32.png",
+};
 
 /**
  * Heads-up display renderer for score, lives, boss progress, credits, and overlays.
@@ -40,7 +46,7 @@ class Hud implements HudInstance {
   private _enemySprites: Partial<Record<number, SpriteImage>> = {};
   private _gameArena: GameArenaInstance;
   private _playerSprite: SpriteImage;
-  private _trophySprite: SpriteImage;
+  private _trophySprites: Record<Exclude<ScoreTrophyRank, null>, SpriteImage>;
 
   constructor(context: GameDataStore) {
     this._context = context;
@@ -53,12 +59,11 @@ class Hud implements HudInstance {
     this._playerSprite.frameX = 0;
     this._playerSprite.frameY = 0;
 
-    this._trophySprite = new Image() as SpriteImage;
-    this._trophySprite.src = assetPath("sprites/achievements/trophy_gold_32.png");
-    this._trophySprite.frameWidth = highScoreTrophyFrameSize;
-    this._trophySprite.frameHeight = highScoreTrophyFrameSize;
-    this._trophySprite.frameX = 0;
-    this._trophySprite.frameY = 0;
+    this._trophySprites = {
+      1: this.createTrophySprite(trophySpritePaths[1]),
+      2: this.createTrophySprite(trophySpritePaths[2]),
+      3: this.createTrophySprite(trophySpritePaths[3]),
+    };
   }
 
   render = (): void => {
@@ -126,14 +131,15 @@ class Hud implements HudInstance {
   ): void => {
     const scoreX = -(uiWidth / 2) + 20;
     const scoreY = -(uiHeight / 2) + 10;
-    const hasReachedHighScore = this._context._hasReachedHighScore;
+    const trophyRank = this._context._scoreTrophyRank;
+    const trophySprite = trophyRank ? this._trophySprites[trophyRank] : null;
 
-    if (hasReachedHighScore) {
-      this._gameArena.renderSprite(this._trophySprite, {
-        frameWidth: this._trophySprite.frameWidth ?? highScoreTrophyFrameSize,
-        frameHeight: this._trophySprite.frameHeight ?? highScoreTrophyFrameSize,
+    if (trophySprite) {
+      this._gameArena.renderSprite(trophySprite, {
+        frameWidth: trophySprite.frameWidth ?? highScoreTrophyFrameSize,
+        frameHeight: trophySprite.frameHeight ?? highScoreTrophyFrameSize,
         frameX: this.getHighScoreTrophyFrame(),
-        frameY: this._trophySprite.frameY ?? 0,
+        frameY: trophySprite.frameY ?? 0,
         renderWidth: highScoreTrophySize,
         renderHeight: highScoreTrophySize,
         posX: scoreX,
@@ -144,10 +150,22 @@ class Hud implements HudInstance {
     this._gameArena.renderText(
       score,
       scoreX +
-        (hasReachedHighScore ? highScoreTrophySize + highScoreTrophyGap : 0),
+        (trophySprite ? highScoreTrophySize + highScoreTrophyGap : 0),
       scoreY,
       { size: 30 }
     );
+  };
+
+  private createTrophySprite = (path: string): SpriteImage => {
+    const sprite = new Image() as SpriteImage;
+
+    sprite.src = assetPath(path);
+    sprite.frameWidth = highScoreTrophyFrameSize;
+    sprite.frameHeight = highScoreTrophyFrameSize;
+    sprite.frameX = 0;
+    sprite.frameY = 0;
+
+    return sprite;
   };
 
   private getHighScoreTrophyFrame = (): number =>

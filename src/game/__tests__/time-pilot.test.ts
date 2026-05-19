@@ -683,6 +683,7 @@ describe("TimePilot engine", () => {
       beginGame: () => void;
       context: {
         _hasReachedHighScore: boolean;
+        _scoreTrophyRank: 1 | 2 | 3 | null;
         _player: {
           setData: (key: "score", value: number) => void;
         };
@@ -702,6 +703,41 @@ describe("TimePilot engine", () => {
       playedSources.filter((source) => source === sounds.highScore.src)
     ).toHaveLength(1);
     expect(pilot.context._hasReachedHighScore).toBe(true);
+    expect(pilot.context._scoreTrophyRank).toBe(1);
+
+    game.destroyGame();
+  });
+
+  it("awards lower score trophies without playing the high-score sound", async () => {
+    const playedSources = getPlayedSources();
+    const game = new TimePilot(host, { debug: true, gamepadEnabled: false });
+    const pilot = game as unknown as {
+      beginGame: () => void;
+      context: {
+        _hasReachedHighScore: boolean;
+        _scoreTrophyRank: 1 | 2 | 3 | null;
+        _player: {
+          setData: (key: "score", value: number) => void;
+        };
+      };
+    };
+
+    await waitForAudioTimer();
+
+    pilot.beginGame();
+    playedSources.length = 0;
+
+    pilot.context._player.setData("score", 742251);
+
+    expect(pilot.context._scoreTrophyRank).toBe(3);
+    expect(pilot.context._hasReachedHighScore).toBe(false);
+    expect(playedSources).not.toContain(sounds.highScore.src);
+
+    pilot.context._player.setData("score", 875501);
+
+    expect(pilot.context._scoreTrophyRank).toBe(2);
+    expect(pilot.context._hasReachedHighScore).toBe(false);
+    expect(playedSources).not.toContain(sounds.highScore.src);
 
     game.destroyGame();
   });

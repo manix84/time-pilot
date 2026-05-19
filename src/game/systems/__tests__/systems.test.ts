@@ -243,6 +243,7 @@ const createContext = ({
     },
     _runStats: createRunStats(0, level),
     _hasReachedHighScore: false,
+    _scoreTrophyRank: null,
     _demoFadeStartedAtTick: demoFadeStartedAtTick,
     _demoFadeUntilTick: demoFadeUntilTick,
     _isDemoMode: demoMode,

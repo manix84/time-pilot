@@ -473,6 +473,7 @@ export interface GameDataStore {
   _levelProgress: LevelProgressState;
   _runStats: RunStats;
   _hasReachedHighScore: boolean;
+  _scoreTrophyRank: ScoreTrophyRank;
   _formations: Record<string, FormationState>;
   _demoFadeStartedAtTick?: number;
   _demoFadeUntilTick?: number;
@@ -496,6 +497,8 @@ export interface GameDataStore {
   _currentController: Controller[];
   _achievements?: AchievementSystem;
 }
+
+export type ScoreTrophyRank = 1 | 2 | 3 | null;
 
 export interface CollisionSystemInstance {
   detectCollisions: () => void;

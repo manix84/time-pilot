@@ -39,6 +39,7 @@ import type {
   MenuSystemCommands,
   MenuSystemInstance,
   ProjectileConfig,
+  ScoreTrophyRank,
   ShowStartMenuOptions,
 } from "./types";
 import type { StoredDataResetScope } from "./storage-reset";
@@ -75,6 +76,11 @@ type MenuItemKind = "action" | "enum" | "slider" | "key" | "toggle";
 const highScoreTrophyFrameSize = 32;
 const highScoreTrophyFrameCount = 8;
 const highScoreTrophyFrameDurationMs = 480;
+const highScoreTrophySpritePaths: Record<Exclude<ScoreTrophyRank, null>, string> = {
+  1: "sprites/achievements/trophy_gold_32.png",
+  2: "sprites/achievements/trophy_silver_32.png",
+  3: "sprites/achievements/trophy_bronze_32.png",
+};
 
 type ToggleDebugOption =
   | "invincible"
@@ -243,7 +249,10 @@ class Menus implements MenuSystemInstance {
   private _povPreviewSprites: Partial<Record<string, HTMLImageElement>> = {};
   private _logoLanguage?: GameLanguage;
   private _logoCanvas?: HTMLCanvasElement;
-  private readonly _highScoreTrophySprite: HTMLImageElement;
+  private readonly _highScoreTrophySprites: Record<
+    Exclude<ScoreTrophyRank, null>,
+    HTMLImageElement
+  >;
   private readonly _logoHeight = 96;
   private readonly _logoWidth = 420;
   private _povPreviewAlpha = 0;
@@ -270,10 +279,11 @@ class Menus implements MenuSystemInstance {
     this._gameArena = gameArena;
     this._commands = commands;
     this._debugUnlocked = userOptions.enableDebug;
-    this._highScoreTrophySprite = new Image();
-    this._highScoreTrophySprite.src = assetPath(
-      "sprites/achievements/trophy_gold_32.png"
-    );
+    this._highScoreTrophySprites = {
+      1: this._createHighScoreTrophySprite(highScoreTrophySpritePaths[1]),
+      2: this._createHighScoreTrophySprite(highScoreTrophySpritePaths[2]),
+      3: this._createHighScoreTrophySprite(highScoreTrophySpritePaths[3]),
+    };
   }
 
   isActive = (): boolean => {
@@ -2061,10 +2071,12 @@ class Menus implements MenuSystemInstance {
     posX: number,
     rowY: number
   ): void => {
+    const trophySprite = this._getHighScoreTrophySprite(rank);
+
     if (
-      rank !== 1 ||
-      !this._highScoreTrophySprite.complete ||
-      this._highScoreTrophySprite.naturalWidth <= 0
+      !trophySprite ||
+      !trophySprite.complete ||
+      trophySprite.naturalWidth <= 0
     ) {
       return;
     }
@@ -2076,7 +2088,7 @@ class Menus implements MenuSystemInstance {
       highScoreTrophyFrameCount;
 
     context.drawImage(
-      this._highScoreTrophySprite,
+      trophySprite,
       frameX * highScoreTrophyFrameSize,
       0,
       highScoreTrophyFrameSize,
@@ -2086,6 +2098,24 @@ class Menus implements MenuSystemInstance {
       trophySize,
       trophySize
     );
+  };
+
+  private _createHighScoreTrophySprite = (path: string): HTMLImageElement => {
+    const sprite = new Image();
+
+    sprite.src = assetPath(path);
+
+    return sprite;
+  };
+
+  private _getHighScoreTrophySprite = (
+    rank: number
+  ): HTMLImageElement | undefined => {
+    if (rank !== 1 && rank !== 2 && rank !== 3) {
+      return undefined;
+    }
+
+    return this._highScoreTrophySprites[rank];
   };
 
   private _renderHighScoreStats = (): void => {

@@ -88,6 +88,7 @@ const createContext = (): GameDataStore => {
     },
     _runStats: createRunStats(),
     _hasReachedHighScore: false,
+    _scoreTrophyRank: null,
     _nextParachuteScore: 1000,
     _controlInputState: {
       down: false,
@@ -152,12 +153,12 @@ const getHudLifeIconCalls = (context: GameDataStore) =>
       (sprite as HTMLImageElement).src.includes("/sprites/player/player.png")
     );
 
-const getHudTrophyCalls = (context: GameDataStore) =>
+const getHudTrophyCalls = (context: GameDataStore, trophy: string) =>
   vi
     .mocked(context._gameArena.renderSprite)
     .mock.calls.filter(([sprite]) =>
       (sprite as HTMLImageElement).src.includes(
-        "/sprites/achievements/trophy_gold_32.png"
+        `/sprites/achievements/${trophy}_32.png`
       )
     );
 
@@ -547,16 +548,32 @@ describe("context-backed game modules", () => {
   it("renders a trophy next to the score after reaching the highest score", () => {
     const context = createContext();
 
-    context._hasReachedHighScore = true;
+    context._scoreTrophyRank = 1;
     context._hud.render();
 
-    expect(getHudTrophyCalls(context)).toHaveLength(1);
+    expect(getHudTrophyCalls(context, "trophy_gold")).toHaveLength(1);
+    expect(getHudTrophyCalls(context, "trophy_silver")).toHaveLength(0);
     expect(context._gameArena.renderText).toHaveBeenCalledWith(
       0,
       -348,
       -290,
       expect.objectContaining({ size: 30 })
     );
+  });
+
+  it("renders silver and bronze score trophies for lower leaderboard ranks", () => {
+    const context = createContext();
+
+    context._scoreTrophyRank = 2;
+    context._hud.render();
+
+    expect(getHudTrophyCalls(context, "trophy_silver")).toHaveLength(1);
+
+    vi.mocked(context._gameArena.renderSprite).mockClear();
+    context._scoreTrophyRank = 3;
+    context._hud.render();
+
+    expect(getHudTrophyCalls(context, "trophy_bronze")).toHaveLength(1);
   });
 
   it("renders HUD with current player data after reset", () => {
