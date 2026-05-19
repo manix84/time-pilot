@@ -2,6 +2,13 @@
 
 **Time Pilot** is a modernized React + TypeScript rebuild of an older browser-game prototype. The game still renders through a pixel-art canvas engine, but it now lives inside a Vite application with typed game modules, React lifecycle integration, CI checks, GitHub Pages deployment, and release automation.
 
+## 🕰️ Project History
+
+Time Pilot started as a browser-game experiment on **September 13, 2012**. Work
+paused on **November 3, 2013**, leaving the prototype unfinished for more than a
+decade. I picked it back up on **May 11, 2026**, with the goal of finishing the
+game properly while preserving the original canvas-era feel.
+
 ## ✨ Highlights
 
 - 🎮 Canvas-based arcade gameplay hosted inside React.
