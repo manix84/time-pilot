@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { achievementDefinitions } from "../../achievements";
+import { levels } from "../../constants";
 import CollisionSystem from "../collision";
 import RenderingSystem from "../rendering";
 import SpawningSystem from "../spawning";
@@ -496,7 +497,7 @@ describe("game systems", () => {
     expect(context._enemyBullets.create).toHaveBeenCalledWith(
       100,
       100,
-      expect.any(Number),
+      180,
       6,
       5.5,
       "#FF9",
@@ -515,6 +516,22 @@ describe("game systems", () => {
       undefined
     );
     expect(context._bonuses.create).not.toHaveBeenCalled();
+  });
+
+  it("keeps basic enemy shots facing-only until UFOs", () => {
+    expect(levels[1].enemies.basic.projectile.initialAim).toBe("facing");
+    expect(levels[2].enemies.basic.projectile.initialAim).toBe("facing");
+    expect(levels[3].enemies.basic.projectile.initialAim).toBe("facing");
+    expect(levels[4].enemies.basic.projectile.initialAim).toBe("facing");
+    expect(levels[5].enemies.basic.projectile.initialAim).toBe("player");
+  });
+
+  it("lets bosses fire omnidirectionally at the player", () => {
+    expect(levels[1].enemies.boss.projectile.initialAim).toBe("player");
+    expect(levels[2].enemies.boss.projectile.initialAim).toBe("player");
+    expect(levels[3].enemies.boss.projectile.initialAim).toBe("player");
+    expect(levels[4].enemies.boss.projectile.initialAim).toBe("player");
+    expect(levels[5].enemies.boss.projectile.initialAim).toBe("player");
   });
 
   it("plays the wave-start sound when a formation spawns", () => {
