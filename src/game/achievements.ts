@@ -84,6 +84,10 @@ export interface AchievementStatus extends AchievementDefinition {
    * Whether this achievement has been unlocked.
    */
   unlocked: boolean;
+  /**
+   * Millisecond timestamp for when the achievement was unlocked.
+   */
+  unlockedAt?: number;
 }
 
 const achievementIcon = (fileName: string): AchievementDefinition["icon"] => ({
@@ -250,6 +254,7 @@ type PlayerHitCause = "enemy" | "projectile";
 interface AchievementStorageState {
   counters?: Partial<Record<"continuesUsed", number>>;
   unlocked?: AchievementId[];
+  unlockedAt?: Partial<Record<AchievementId, number>>;
 }
 
 interface RunState {
@@ -355,6 +360,7 @@ class AchievementSystem {
   private era: EraState | undefined;
   private run: RunState = createDefaultRunState();
   private readonly unlocked: Set<AchievementId>;
+  private readonly unlockedAt: Partial<Record<AchievementId, number>>;
   private readonly waves = new Map<string, WaveState>();
 
   constructor(context: GameDataStore) {
@@ -365,6 +371,7 @@ class AchievementSystem {
       continuesUsed: storage.counters?.continuesUsed ?? 0,
     };
     this.unlocked = new Set(storage.unlocked ?? []);
+    this.unlockedAt = { ...storage.unlockedAt };
   }
 
   getUnlocked = (): AchievementId[] => [...this.unlocked];
@@ -385,6 +392,7 @@ class AchievementSystem {
         ...achievement,
         progress,
         unlocked: this.hasUnlocked(achievement.id),
+        unlockedAt: this.unlockedAt[achievement.id],
       };
     });
 
@@ -685,6 +693,9 @@ class AchievementSystem {
     this.era = undefined;
     this.run = createDefaultRunState();
     this.unlocked.clear();
+    Object.keys(this.unlockedAt).forEach((id) => {
+      delete this.unlockedAt[id as AchievementId];
+    });
     this.waves.clear();
 
     try {
@@ -754,6 +765,7 @@ class AchievementSystem {
     }
 
     this.unlocked.add(id);
+    this.unlockedAt[id] = Date.now();
     logger.info("Achievement unlocked", { id });
     this.persist();
     window.dispatchEvent(
@@ -776,6 +788,7 @@ class AchievementSystem {
         JSON.stringify({
           counters: this.counters,
           unlocked: this.getUnlocked(),
+          unlockedAt: this.unlockedAt,
         } satisfies AchievementStorageState)
       );
     } catch {

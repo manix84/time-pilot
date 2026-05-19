@@ -332,6 +332,7 @@ describe("menu definitions", () => {
           description: "Reach a new era on your final life.",
           icon: icon("achievement_lastChance.png"),
           unlocked: true,
+          unlockedAt: Date.UTC(2026, 4, 19, 8, 30),
         },
         {
           id: "quarter-master",
@@ -391,6 +392,12 @@ describe("menu definitions", () => {
     );
     expect(arena.renderText).toHaveBeenCalledWith(
       "7/25",
+      expect.any(Number),
+      expect.any(Number),
+      expect.objectContaining({ align: "left" })
+    );
+    expect(arena.renderText).toHaveBeenCalledWith(
+      expect.stringMatching(/^2026-05-19 \d{1,2}:30 (am|pm)$/),
       expect.any(Number),
       expect.any(Number),
       expect.objectContaining({ align: "left" })

@@ -31,6 +31,10 @@ const getAchievementStatuses = (): AchievementStatus[] =>
         }
         : undefined,
     unlocked: index % 4 === 0 || achievement.id === "last-chance",
+    unlockedAt:
+      index % 4 === 0 || achievement.id === "last-chance"
+        ? Date.UTC(2026, 4, 19, 10 + (index % 8), index * 3)
+        : undefined,
   }));
 
 const renderAchievementsPage = (

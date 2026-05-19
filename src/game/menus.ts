@@ -1844,6 +1844,20 @@ class Menus implements MenuSystemInstance {
       });
     });
 
+    if (achievement.unlocked && achievement.unlockedAt) {
+      this._gameArena.renderText(
+        this._formatAchievementUnlockDate(achievement.unlockedAt),
+        textX,
+        item.rect.y + item.rect.height - 10,
+        {
+          size: 7,
+          align: "left",
+          valign: "middle",
+          color: palette.menu.mutedText,
+        }
+      );
+    }
+
     if (!achievement.progress || progress === null) {
       return;
     }
@@ -1872,6 +1886,22 @@ class Menus implements MenuSystemInstance {
         ? palette.menu.itemText
         : palette.menu.disabledText,
     });
+  };
+
+  private _formatAchievementUnlockDate = (unlockedAt: number): string => {
+    const date = new Date(unlockedAt);
+
+    if (Number.isNaN(date.getTime())) {
+      return "";
+    }
+
+    const datePart = date.toISOString().slice(0, 10);
+    const hours24 = date.getHours();
+    const hours12 = hours24 % 12 || 12;
+    const minutes = `${date.getMinutes()}`.padStart(2, "0");
+    const meridiem = hours24 < 12 ? "am" : "pm";
+
+    return `${datePart} ${hours12}:${minutes} ${meridiem}`;
   };
 
   private _renderAchievementIcon = (
