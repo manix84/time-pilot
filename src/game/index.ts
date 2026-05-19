@@ -109,10 +109,7 @@ type GameSessionSnapshot = {
   level: number;
   levelProgress?: Pick<
     LevelProgressState,
-    | "bossDefeated"
-    | "bossKillThreshold"
-    | "bossSpawned"
-    | "standardEnemyKills"
+    "bossDefeated" | "bossSpawned" | "standardEnemyKills"
   >;
   player: Pick<
     PlayerData,
@@ -897,7 +894,6 @@ export class TimePilot {
       const hasInvalidLevelProgress =
         !!snapshot?.levelProgress &&
         (typeof snapshot.levelProgress.bossDefeated !== "boolean" ||
-          typeof snapshot.levelProgress.bossKillThreshold !== "number" ||
           typeof snapshot.levelProgress.bossSpawned !== "boolean" ||
           typeof snapshot.levelProgress.standardEnemyKills !== "number");
 
@@ -964,7 +960,6 @@ export class TimePilot {
       level: this.context._level,
       levelProgress: {
         bossDefeated: levelProgress.bossDefeated,
-        bossKillThreshold: levelProgress.bossKillThreshold,
         bossSpawned: levelProgress.bossSpawned,
         standardEnemyKills: levelProgress.standardEnemyKills,
       },
@@ -1032,16 +1027,18 @@ export class TimePilot {
     this.selectedStartLevel = snapshot.level;
     this.resetWorld(snapshot.level, { skipIntro: true });
     if (snapshot.levelProgress) {
+      const currentThreshold = this.context._levelProgress.bossKillThreshold;
+      const bossWasDefeated = snapshot.levelProgress.bossDefeated;
+
       this.context._levelProgress = {
         ...this.context._levelProgress,
-        bossDefeated: snapshot.levelProgress.bossDefeated,
-        bossKillThreshold: Math.max(1, snapshot.levelProgress.bossKillThreshold),
-        bossSpawned: snapshot.levelProgress.bossSpawned,
+        bossDefeated: bossWasDefeated,
+        bossSpawned: bossWasDefeated && snapshot.levelProgress.bossSpawned,
         standardEnemyKills: Math.max(
           0,
           Math.min(
             snapshot.levelProgress.standardEnemyKills,
-            Math.max(1, snapshot.levelProgress.bossKillThreshold)
+            currentThreshold
           )
         ),
       };
