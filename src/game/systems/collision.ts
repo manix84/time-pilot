@@ -1,4 +1,4 @@
-import { player } from "../constants";
+import { levels, player } from "../constants";
 import helpers from "../engine/helpers";
 import type {
   BulletData,
@@ -139,6 +139,9 @@ class CollisionSystem implements CollisionSystemInstance {
         }
       } else {
         const enemyData = enemy.getData() as EnemyData;
+        const levelData =
+          levels[this._context._level].enemies[enemyData.type] ??
+          levels[this._context._level].enemies.basic;
         const enemyDistance = Math.hypot(
           enemyData.posX - playerData.posX,
           enemyData.posY - playerData.posY
@@ -148,7 +151,7 @@ class CollisionSystem implements CollisionSystemInstance {
           enemy,
           this._nearMissedEnemies,
           enemyDistance,
-          player.hitRadius
+          player.hitRadius + levelData.hitRadius
         );
       }
 

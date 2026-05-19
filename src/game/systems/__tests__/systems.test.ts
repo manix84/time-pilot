@@ -177,6 +177,7 @@ const createContext = ({
   demoMode = false,
   enemyAlive = true,
   enemyCollides = true,
+  enemyDataOverrides = {},
   enemyLimitAvailable = true,
   levelIntroUntilTick = 0,
   playerOverrides = {},
@@ -191,6 +192,7 @@ const createContext = ({
   demoMode?: boolean;
   enemyAlive?: boolean;
   enemyCollides?: boolean;
+  enemyDataOverrides?: Partial<EnemyData>;
   enemyLimitAvailable?: boolean;
   levelIntroUntilTick?: number;
   playerOverrides?: Partial<PlayerData>;
@@ -208,6 +210,7 @@ const createContext = ({
     posY: 100,
     tickOffset: 0,
     type: "basic",
+    ...enemyDataOverrides,
   };
   const enemy: EnemyInstance = {
     isAlive: enemyAlive,
@@ -416,6 +419,24 @@ describe("game systems", () => {
     system.detectCollisions();
 
     expect(context._player.kill).not.toHaveBeenCalled();
+    expect(context._runStats.nearMisses).toBe(1);
+  });
+
+  it("counts enemy near misses outside the full collision radius", () => {
+    const context = createContext({
+      enemyCollides: false,
+      enemyDataOverrides: {
+        hitPoints: 7,
+        posX: 58,
+        posY: 20,
+        type: "boss",
+      },
+    });
+    vi.mocked(context._enemyBullets.getEntities).mockReturnValue([]);
+    const system = new CollisionSystem(context);
+
+    system.detectCollisions();
+
     expect(context._runStats.nearMisses).toBe(1);
   });
 

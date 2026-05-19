@@ -488,6 +488,7 @@ describe("menu definitions", () => {
         score: 12345,
         stats: ["Era: 1910", "Continues: 0"],
       }),
+      getContinues: () => 0,
       saveHighScore,
       start: vi.fn(),
     });
@@ -629,6 +630,39 @@ describe("menu definitions", () => {
     menus.next();
     menus.activate();
     expect(exitToRoot).toHaveBeenCalled();
+  });
+
+  it("does not interrupt continues with high-score entry", () => {
+    const continueGame = vi.fn();
+    const arena = createArena();
+    const menus = new Menus(arena, {
+      continueGame,
+      getContinues: () => 1,
+      getPendingHighScore: () => ({
+        score: 12345,
+        stats: ["Era: 1910", "Continues: 0"],
+      }),
+      start: vi.fn(),
+    });
+
+    menus.showGameOver();
+    menus.render();
+
+    expect(arena.renderText).toHaveBeenCalledWith(
+      "Continue",
+      expect.any(Number),
+      expect.any(Number),
+      expect.objectContaining({ align: "left" })
+    );
+    expect(arena.renderText).not.toHaveBeenCalledWith(
+      "Save Score",
+      expect.any(Number),
+      expect.any(Number),
+      expect.any(Object)
+    );
+
+    menus.activate();
+    expect(continueGame).toHaveBeenCalled();
   });
 
   it("shows restart on game over when no continues remain", () => {

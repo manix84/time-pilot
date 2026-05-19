@@ -234,6 +234,7 @@ export class TimePilot {
   private isDebugLevelPreviewLocked = false;
   private pendingHighScore: { score: number; stats: string[] } | null = null;
   private highScoreRunReceipt: Awaited<ReturnType<typeof startHighScoreRun>> = null;
+  private highScoreRunRequestId = 0;
   private hasPlayedHighScoreSound = false;
   private highScoreTarget = 0;
   private highScoreTrophyTargets: number[] = [];
@@ -1818,7 +1819,7 @@ export class TimePilot {
       score: playerData.score,
     });
     this.pendingHighScore =
-      playerData.score > 0
+      playerData.score > 0 && playerData.continues <= 0
         ? {
           score: playerData.score,
           stats: this.createHighScoreStats(playerData),
@@ -1886,8 +1887,14 @@ export class TimePilot {
   };
 
   private prepareHighScoreRunReceipt = async (): Promise<void> => {
+    const requestId = ++this.highScoreRunRequestId;
+
     this.highScoreRunReceipt = null;
-    this.highScoreRunReceipt = await startHighScoreRun();
+    const receipt = await startHighScoreRun();
+
+    if (requestId === this.highScoreRunRequestId) {
+      this.highScoreRunReceipt = receipt;
+    }
   };
 
   private prepareHighScoreTarget = (currentScore = 0): void => {

@@ -90,10 +90,16 @@ const createPostgresStore = (pool) => ({
       [run.runId, run.tokenHash, run.issuedAt, run.expiresAt]
     );
   },
-  async getRun(runId) {
+  async consumeRun(runId, tokenHash, now) {
     const result = await pool.query(
-      "select run_id, token_hash, issued_at, expires_at, used from time_pilot_high_score_runs where run_id = $1",
-      [runId]
+      `update time_pilot_high_score_runs
+        set used = true
+        where run_id = $1
+          and token_hash = $2
+          and used = false
+          and expires_at >= $3
+        returning run_id, token_hash, issued_at, expires_at, used`,
+      [runId, tokenHash, now]
     );
     const row = result.rows[0];
 
@@ -108,12 +114,6 @@ const createPostgresStore = (pool) => ({
       tokenHash: row.token_hash,
       used: row.used,
     };
-  },
-  async markRunUsed(runId) {
-    await pool.query(
-      "update time_pilot_high_score_runs set used = true where run_id = $1",
-      [runId]
-    );
   },
   async saveScore(score) {
     await pool.query(
@@ -189,16 +189,22 @@ const createJsonStore = () => ({
     jsonState.runs.push(run);
     await saveJsonState();
   },
-  async getRun(runId) {
-    return jsonState.runs.find((run) => run.runId === runId) ?? null;
-  },
-  async markRunUsed(runId) {
+  async consumeRun(runId, tokenHash, now) {
     const run = jsonState.runs.find((candidate) => candidate.runId === runId);
 
-    if (run) {
-      run.used = true;
-      await saveJsonState();
+    if (
+      !run ||
+      run.used ||
+      run.expiresAt < now ||
+      !safeTokenEqual(run.tokenHash, tokenHash)
+    ) {
+      return null;
     }
+
+    run.used = true;
+    await saveJsonState();
+
+    return run;
   },
   async saveScore(score) {
     if (!jsonState.scores.some((candidate) => candidate.id === score.id)) {
@@ -288,7 +294,6 @@ const handleSubmitScore = async (request, response) => {
   };
 
   await store.saveScore(scoreRecord);
-  await store.markRunUsed(validation.run.runId);
 
   sendJson(response, 201, toPublicScore(scoreRecord));
 };
@@ -308,19 +313,19 @@ const validateScoreSubmission = async (payload) => {
     return reject("missing_run_receipt", 401);
   }
 
-  const store = await getStore();
-  const storedRun = await store.getRun(run.runId);
-
-  if (!storedRun || storedRun.used || storedRun.expiresAt < Date.now()) {
-    return reject("invalid_run_receipt", 401);
-  }
-
-  if (!safeTokenEqual(storedRun.tokenHash, hashToken(run.token))) {
-    return reject("invalid_run_receipt", 401);
-  }
-
   if (!isPlausibleScore(entry)) {
     return reject("implausible_score", 422);
+  }
+
+  const store = await getStore();
+  const storedRun = await store.consumeRun(
+    run.runId,
+    hashToken(run.token),
+    Date.now()
+  );
+
+  if (!storedRun) {
+    return reject("invalid_run_receipt", 401);
   }
 
   return {

@@ -362,10 +362,12 @@ class Menus implements MenuSystemInstance {
   };
 
   showGameOver = (): void => {
+    const canContinue = (this._commands.getContinues?.() ?? 0) > 0;
+
     this._active = true;
     this._awaitingBinding = null;
     this._bindingWarning = "";
-    this._screen = this._commands.getPendingHighScore?.()
+    this._screen = !canContinue && this._commands.getPendingHighScore?.()
       ? "high-score-entry"
       : "game-over";
     this._screenHistory = [];
@@ -1915,7 +1917,11 @@ class Menus implements MenuSystemInstance {
       return "";
     }
 
-    const datePart = date.toISOString().slice(0, 10);
+    const datePart = [
+      date.getFullYear(),
+      `${date.getMonth() + 1}`.padStart(2, "0"),
+      `${date.getDate()}`.padStart(2, "0"),
+    ].join("-");
     const hours24 = date.getHours();
     const hours12 = hours24 % 12 || 12;
     const minutes = `${date.getMinutes()}`.padStart(2, "0");

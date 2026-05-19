@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
+  getHighScores,
   loadStoredHighScores,
   saveHighScore,
   syncHighScores,
@@ -133,5 +134,103 @@ describe("high score storage", () => {
       "Older",
       "Newer",
     ]);
+  });
+
+  it("keeps saved scores visible ahead of placeholder scores", () => {
+    saveHighScore("New Pilot", 1200, ["Era: 1910"]);
+
+    expect(getHighScores()[0]).toMatchObject({
+      name: "New Pilot",
+      score: 1200,
+    });
+  });
+
+  it("keeps gameplay-safe score saves best effort when storage writes fail", () => {
+    vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => {
+      throw new DOMException("Full", "QuotaExceededError");
+    });
+
+    expect(() =>
+      saveHighScore("Storage Pilot", 4000, ["Era: 1910"])
+    ).not.toThrow();
+  });
+
+  it("persists successful pending sync updates before a later submit fails", async () => {
+    const remoteEntry = {
+      id: "remote-score",
+      createdAt: 2000,
+      name: "Sync Pilot",
+      receivedAt: 123456,
+      score: 5000,
+      stats: ["Era: 1910", "Enemies: 2"],
+    };
+    let postCount = 0;
+
+    vi.spyOn(globalThis, "fetch").mockImplementation((input, init) => {
+      if (input === "/api/high-scores" && init?.method === "POST") {
+        postCount += 1;
+
+        if (postCount === 1) {
+          return Promise.resolve(createJsonResponse(remoteEntry));
+        }
+
+        return Promise.reject(new Error("offline"));
+      }
+
+      return Promise.resolve(createJsonResponse([]));
+    });
+
+    localStorage.setItem(
+      highScoreStorageKey,
+      JSON.stringify([
+        {
+          id: "first-local-score",
+          createdAt: 2000,
+          name: "Sync Pilot",
+          run: {
+            issuedAt: 1000,
+            runId: "run-1",
+            token: "receipt-token",
+          },
+          score: 5000,
+          stats: ["Era: 1910", "Enemies: 2"],
+          submittedAt: 2000,
+          syncState: "pending",
+        },
+        {
+          id: "second-local-score",
+          createdAt: 3000,
+          name: "Offline Pilot",
+          run: {
+            issuedAt: 1000,
+            runId: "run-2",
+            token: "receipt-token",
+          },
+          score: 4500,
+          stats: ["Era: 1910", "Enemies: 1"],
+          submittedAt: 3000,
+          syncState: "pending",
+        },
+      ])
+    );
+
+    await syncHighScores();
+
+    const storedScores = JSON.parse(
+      localStorage.getItem(highScoreStorageKey) ?? "[]"
+    ) as Array<{ id: string; syncState: string }>;
+
+    expect(storedScores).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          id: "remote-score",
+          syncState: "synced",
+        }),
+        expect.objectContaining({
+          id: "second-local-score",
+          syncState: "pending",
+        }),
+      ])
+    );
   });
 });

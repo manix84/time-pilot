@@ -115,9 +115,10 @@ export const loadStoredHighScores = (): HighScoreEntry[] => {
  * Combines locally saved scores with the fake default table.
  */
 export const getHighScores = (): HighScoreEntry[] =>
-  [...loadStoredHighScores(), ...fakeHighScores]
-    .sort(sortHighScores)
-    .slice(0, maxStoredHighScores);
+  [
+    ...loadStoredHighScores(),
+    ...fakeHighScores.slice(0, maxStoredHighScores),
+  ].slice(0, maxStoredHighScores);
 
 /**
  * Starts a remotely verifiable high-score run when the API is available.
@@ -233,10 +234,14 @@ const loadStoredScoreRecords = (): StoredHighScoreEntry[] => {
 };
 
 const saveStoredScoreRecords = (entries: StoredHighScoreEntry[]): void => {
-  getStorage()?.setItem(
-    highScoreStorageKey,
-    JSON.stringify(entries.sort(sortHighScores).slice(0, maxCachedHighScores))
-  );
+  try {
+    getStorage()?.setItem(
+      highScoreStorageKey,
+      JSON.stringify(entries.sort(sortHighScores).slice(0, maxCachedHighScores))
+    );
+  } catch {
+    // High-score persistence is best effort; gameplay should keep running.
+  }
 };
 
 const submitPendingScores = async (): Promise<void> => {
@@ -290,7 +295,7 @@ const submitPendingScores = async (): Promise<void> => {
       record.syncState = "synced";
       changed = true;
     } catch {
-      return;
+      break;
     }
   }
 
