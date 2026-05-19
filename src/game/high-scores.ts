@@ -17,6 +17,7 @@ interface StoredHighScoreEntry extends HighScoreEntry {
 
 const highScoreStorageKey = "timePilot.highScores";
 const highScoreApiBasePath = "/api/high-scores";
+const fakeHighScoreBaseCreatedAt = Date.UTC(2026, 0, 1);
 const maxHighScoreStats = 12;
 const maxStoredHighScores = 10;
 const maxCachedHighScores = 50;
@@ -29,60 +30,70 @@ const maxCachedHighScores = 50;
  */
 export const fakeHighScores: HighScoreEntry[] = [
   {
+    createdAt: fakeHighScoreBaseCreatedAt,
     id: "shooty-mcshootface",
     name: "Shooty McShootface",
     score: 1000000,
     stats: ["Era: 2001", "Bosses: 5", "Continues: 0", "Accuracy: suspicious"],
   },
   {
+    createdAt: fakeHighScoreBaseCreatedAt + 86400000,
     id: "captain-definitely-real",
     name: "Captain Definitely Real",
     score: 875500,
     stats: ["Era: 1982", "Bosses: 4", "Lives left: 1", "Clouds dodged: all"],
   },
   {
+    createdAt: fakeHighScoreBaseCreatedAt + 86400000 * 2,
     id: "pewpew-von-laser",
     name: "PewPew von Laser",
     score: 742250,
     stats: ["Era: 1970", "Missiles annoyed: 312", "Continues: 1"],
   },
   {
+    createdAt: fakeHighScoreBaseCreatedAt + 86400000 * 3,
     id: "baron-von-biplane",
     name: "Baron von Biplane",
     score: 501910,
     stats: ["Era: 1940", "Loops: too many", "Near misses: 88"],
   },
   {
+    createdAt: fakeHighScoreBaseCreatedAt + 86400000 * 4,
     id: "not-a-bot-9000",
     name: "Not A Bot 9000",
     score: 404404,
     stats: ["Era: 1910", "Inputs: perfectly normal", "Snacks: 3"],
   },
   {
+    createdAt: fakeHighScoreBaseCreatedAt + 86400000 * 5,
     id: "debug-dave",
     name: "Debug Dave",
     score: 123456,
     stats: ["Era: 1910", "Hitboxes blamed: yes", "Restart count: private"],
   },
   {
+    createdAt: fakeHighScoreBaseCreatedAt + 86400000 * 6,
     id: "loop-de-loop-lou",
     name: "Loop-de-Loop Lou",
     score: 98765,
     stats: ["Era: 1910", "Loops: 42", "Near misses: 0", "Dignity: optional"],
   },
   {
+    createdAt: fakeHighScoreBaseCreatedAt + 86400000 * 7,
     id: "captain-one-more",
     name: "Captain One More",
     score: 76543,
     stats: ["Era: 1910", "Restarts: 9", "Continues: 3", "Sleep: none"],
   },
   {
+    createdAt: fakeHighScoreBaseCreatedAt + 86400000 * 8,
     id: "miss-by-a-mile",
     name: "Missed By A Pixel",
     score: 54321,
     stats: ["Era: 1910", "Near misses: 128", "Luck: suspicious"],
   },
   {
+    createdAt: fakeHighScoreBaseCreatedAt + 86400000 * 9,
     id: "keyboard-karen",
     name: "Keyboard Karen",
     score: 1910,
@@ -149,13 +160,15 @@ export const saveHighScore = (
   stats: string[],
   run?: HighScoreRunReceipt | null
 ): HighScoreEntry => {
+  const createdAt = Date.now();
   const entry: StoredHighScoreEntry = {
+    createdAt,
     id: `local-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
     name: normalizeHighScoreName(name),
     run: run ?? undefined,
     score: Math.max(0, Math.floor(score)),
     stats: stats.slice(0, maxHighScoreStats),
-    submittedAt: Date.now(),
+    submittedAt: createdAt,
     syncState: run ? "pending" : "local",
   };
   const storedScores = upsertScoreRecords(loadStoredScoreRecords(), [entry])
@@ -190,7 +203,9 @@ export const normalizeHighScoreName = (name: string): string => {
 };
 
 const sortHighScores = (left: HighScoreEntry, right: HighScoreEntry): number =>
-  right.score - left.score || left.name.localeCompare(right.name);
+  right.score - left.score ||
+  left.createdAt - right.createdAt ||
+  left.name.localeCompare(right.name);
 
 const loadStoredScoreRecords = (): StoredHighScoreEntry[] => {
   const storage = getStorage();
@@ -267,6 +282,7 @@ const submitPendingScores = async (): Promise<void> => {
         Partial<StoredHighScoreEntry>;
 
       record.id = storedRemoteEntry.id;
+      record.createdAt = storedRemoteEntry.createdAt;
       record.name = storedRemoteEntry.name;
       record.score = Math.max(0, Math.floor(storedRemoteEntry.score));
       record.stats = storedRemoteEntry.stats.slice(0, maxHighScoreStats);
@@ -345,6 +361,12 @@ const normalizeStoredEntry = (
 
   return {
     id: entry.id,
+    createdAt:
+      typeof stored.createdAt === "number"
+        ? stored.createdAt
+        : typeof stored.submittedAt === "number"
+          ? stored.submittedAt
+          : Date.now(),
     name: normalizeHighScoreName(entry.name),
     receivedAt:
       typeof stored.receivedAt === "number" ? stored.receivedAt : undefined,
@@ -373,6 +395,7 @@ const normalizeSyncState = (
 };
 
 const toHighScoreEntry = (entry: HighScoreEntry): HighScoreEntry => ({
+  createdAt: entry.createdAt,
   id: entry.id,
   name: entry.name,
   score: entry.score,
@@ -419,6 +442,8 @@ const isHighScoreEntry = (value: unknown): value is HighScoreEntry => {
   const candidate = value as Partial<HighScoreEntry>;
 
   return (
+    (candidate.createdAt === undefined ||
+      typeof candidate.createdAt === "number") &&
     typeof candidate.id === "string" &&
     typeof candidate.name === "string" &&
     typeof candidate.score === "number" &&

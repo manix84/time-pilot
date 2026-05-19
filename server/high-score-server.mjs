@@ -66,6 +66,7 @@ const ensurePostgresSchema = async (pool) => {
   await pool.query(`
     create table if not exists time_pilot_high_scores (
       id text primary key,
+      created_at bigint,
       name text not null,
       score integer not null,
       stats jsonb not null,
@@ -75,6 +76,9 @@ const ensurePostgresSchema = async (pool) => {
       run_id text unique not null
     )
   `);
+  await pool.query(
+    "alter table time_pilot_high_scores add column if not exists created_at bigint"
+  );
 };
 
 const createPostgresStore = (pool) => ({
@@ -114,11 +118,12 @@ const createPostgresStore = (pool) => ({
   async saveScore(score) {
     await pool.query(
       `insert into time_pilot_high_scores
-        (id, name, score, stats, game_version, submitted_at, received_at, run_id)
-        values ($1, $2, $3, $4, $5, $6, $7, $8)
+        (id, created_at, name, score, stats, game_version, submitted_at, received_at, run_id)
+        values ($1, $2, $3, $4, $5, $6, $7, $8, $9)
         on conflict (id) do nothing`,
       [
         score.id,
+        score.createdAt,
         score.name,
         score.score,
         JSON.stringify(score.stats),
@@ -131,14 +136,15 @@ const createPostgresStore = (pool) => ({
   },
   async listScores(limit = maxPublicScores) {
     const result = await pool.query(
-      `select id, name, score, stats, received_at
+      `select id, created_at, name, score, stats, received_at
         from time_pilot_high_scores
-        order by score desc, received_at asc
+        order by score desc, coalesce(created_at, received_at) asc
         limit $1`,
       [limit]
     );
 
     return result.rows.map((row) => ({
+      createdAt: Number(row.created_at ?? row.received_at),
       id: row.id,
       name: row.name,
       receivedAt: Number(row.received_at),
@@ -274,6 +280,7 @@ const handleSubmitScore = async (request, response) => {
   const receivedAt = Date.now();
   const scoreRecord = {
     ...validation.score,
+    createdAt: validation.createdAt,
     gameVersion: validation.gameVersion,
     receivedAt,
     runId: validation.run.runId,
@@ -329,6 +336,7 @@ const validateScoreSubmission = async (payload) => {
       score: Math.max(0, Math.floor(entry.score)),
       stats: entry.stats.slice(0, maxScoreStats),
     },
+    createdAt: Math.max(0, Math.floor(entry.createdAt ?? submittedAt)),
     submittedAt: Math.max(0, Math.floor(submittedAt)),
   };
 };
@@ -438,6 +446,7 @@ const isRunReceipt = (value) =>
 const isPublicScore = (value) =>
   !!value &&
   typeof value === "object" &&
+  (value.createdAt === undefined || typeof value.createdAt === "number") &&
   typeof value.name === "string" &&
   typeof value.score === "number" &&
   Array.isArray(value.stats) &&
@@ -445,6 +454,7 @@ const isPublicScore = (value) =>
   value.stats.every((stat) => typeof stat === "string" && stat.length <= 80);
 
 const toPublicScore = (score) => ({
+  createdAt: score.createdAt ?? score.receivedAt,
   id: score.id,
   name: normalizeName(score.name),
   receivedAt: score.receivedAt,
@@ -463,7 +473,8 @@ const normalizeName = (name) => {
 };
 
 const sortScoreRecords = (left, right) =>
-  right.score - left.score || left.receivedAt - right.receivedAt;
+  right.score - left.score ||
+  (left.createdAt ?? left.receivedAt) - (right.createdAt ?? right.receivedAt);
 
 const reject = (error, status = 400) => ({
   accepted: false,

@@ -410,6 +410,7 @@ describe("menu definitions", () => {
     const menus = new Menus(arena, {
       getHighScores: () => [
         {
+          createdAt: Date.UTC(2026, 4, 19),
           id: "shooty",
           name: "Shooty McShootface",
           score: 1000000,
@@ -460,6 +461,12 @@ describe("menu definitions", () => {
     );
     expect(arena.renderText).toHaveBeenCalledWith(
       "Era: 2001",
+      expect.any(Number),
+      expect.any(Number),
+      expect.objectContaining({ align: "left" })
+    );
+    expect(arena.renderText).toHaveBeenCalledWith(
+      "Date: 2026-05-19",
       expect.any(Number),
       expect.any(Number),
       expect.objectContaining({ align: "left" })

@@ -566,6 +566,7 @@ export interface MenuNavigationState {
 }
 
 export interface HighScoreEntry {
+  createdAt: number;
   id: string;
   name: string;
   score: number;

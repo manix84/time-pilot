@@ -16,6 +16,9 @@ const createJsonResponse = (body: unknown) =>
 describe("high score storage", () => {
   beforeEach(() => {
     localStorage.clear();
+    vi.spyOn(Date, "now").mockReturnValue(
+      Date.parse("2026-05-19T10:00:00.000Z")
+    );
   });
 
   afterEach(() => {
@@ -32,6 +35,7 @@ describe("high score storage", () => {
     ) as Array<{ name: string; syncState: string }>;
 
     expect(loadStoredHighScores()[0]).toMatchObject({
+      createdAt: Date.parse("2026-05-19T10:00:00.000Z"),
       name: "Ace Pilot",
       score: 1200,
     });
@@ -41,6 +45,7 @@ describe("high score storage", () => {
   it("submits receipt-backed pending scores and stores remote results", async () => {
     const remoteEntry = {
       id: "remote-score",
+      createdAt: 2000,
       name: "Sync Pilot",
       receivedAt: 123456,
       score: 5000,
@@ -61,6 +66,7 @@ describe("high score storage", () => {
       JSON.stringify([
         {
           id: "local-score",
+          createdAt: 2000,
           name: "Sync Pilot",
           run: {
             issuedAt: 1000,
@@ -79,16 +85,53 @@ describe("high score storage", () => {
 
     const storedScores = JSON.parse(
       localStorage.getItem(highScoreStorageKey) ?? "[]"
-    ) as Array<{ id: string; receivedAt: number; syncState: string }>;
+    ) as Array<{
+      createdAt: number;
+      id: string;
+      receivedAt: number;
+      syncState: string;
+    }>;
 
     expect(fetchMock).toHaveBeenCalledWith(
       "/api/high-scores",
       expect.objectContaining({ method: "POST" })
     );
     expect(storedScores[0]).toMatchObject({
+      createdAt: 2000,
       id: "remote-score",
       receivedAt: 123456,
       syncState: "synced",
     });
+  });
+
+  it("sorts matching scores by the first creation timestamp", () => {
+    localStorage.setItem(
+      highScoreStorageKey,
+      JSON.stringify([
+        {
+          createdAt: 3000,
+          id: "newer-score",
+          name: "Newer",
+          score: 1000,
+          stats: [],
+          submittedAt: 3000,
+          syncState: "local",
+        },
+        {
+          createdAt: 1000,
+          id: "older-score",
+          name: "Older",
+          score: 1000,
+          stats: [],
+          submittedAt: 1000,
+          syncState: "local",
+        },
+      ])
+    );
+
+    expect(loadStoredHighScores().map((score) => score.name)).toEqual([
+      "Older",
+      "Newer",
+    ]);
   });
 });

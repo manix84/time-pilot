@@ -2057,6 +2057,24 @@ class Menus implements MenuSystemInstance {
       });
       y += 3;
     });
+
+    y += 8;
+    this._gameArena.renderText(this._formatHighScoreDate(highScore.createdAt), x, y, {
+      size: 9,
+      align: "left",
+      valign: "top",
+      color: palette.menu.mutedText,
+    });
+  };
+
+  private _formatHighScoreDate = (createdAt: number): string => {
+    const date = new Date(createdAt);
+
+    if (Number.isNaN(date.getTime())) {
+      return "Date: unknown";
+    }
+
+    return `Date: ${date.toISOString().slice(0, 10)}`;
   };
 
   private _truncateText = (text: string, maxLength: number): string => {
