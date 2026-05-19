@@ -708,6 +708,9 @@ const timePilotConstants: TimePilotConstants = {
     gameStart: {
       src: assetPath("music/game_start.ogg"),
     },
+    highScore: {
+      src: assetPath("sounds/ui/highscore.ogg"),
+    },
     music: {
       levels: {
         1: { src: assetPath("music/level1.ogg") },

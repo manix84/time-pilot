@@ -676,6 +676,34 @@ describe("TimePilot engine", () => {
     game.destroyGame();
   });
 
+  it("plays the high-score sound once when crossing the known top score", async () => {
+    const playedSources = getPlayedSources();
+    const game = new TimePilot(host, { debug: true, gamepadEnabled: false });
+    const pilot = game as unknown as {
+      beginGame: () => void;
+      context: {
+        _player: {
+          setData: (key: "score", value: number) => void;
+        };
+      };
+    };
+
+    await waitForAudioTimer();
+
+    pilot.beginGame();
+    playedSources.length = 0;
+
+    pilot.context._player.setData("score", 1000000);
+    pilot.context._player.setData("score", 1000001);
+    pilot.context._player.setData("score", 1000200);
+
+    expect(
+      playedSources.filter((source) => source === sounds.highScore.src)
+    ).toHaveLength(1);
+
+    game.destroyGame();
+  });
+
   it("does not show root-menu app exit when no app exit handler is available", async () => {
     const game = new TimePilot(host, { gamepadEnabled: false });
     const pilot = game as unknown as {

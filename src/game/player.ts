@@ -38,6 +38,7 @@ class Player implements PlayerInstance {
   private _playerSprite: HTMLImageElement;
   private _rotationStep: number;
   private _turnDegreesSinceLoop = 0;
+  onScoreChanged?: (previousScore: number, nextScore: number) => void;
 
   constructor(context: GameDataStore) {
     this._context = context;
@@ -91,10 +92,13 @@ class Player implements PlayerInstance {
 
   setData = <K extends keyof PlayerData>(key: K, value: PlayerData[K], isLastKnownGood?: boolean): boolean => {
     if (this._data[key] !== undefined) {
+      const previousScore = this._data.score;
+
       this._data[key] = value;
 
       if (key === "score") {
         this.awardExtraLives();
+        this.onScoreChanged?.(previousScore, this._data.score);
       }
 
       if (isLastKnownGood) {

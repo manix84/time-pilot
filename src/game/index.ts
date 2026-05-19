@@ -233,8 +233,11 @@ export class TimePilot {
   private isDebugLevelPreviewLocked = false;
   private pendingHighScore: { score: number; stats: string[] } | null = null;
   private highScoreRunReceipt: Awaited<ReturnType<typeof startHighScoreRun>> = null;
+  private hasPlayedHighScoreSound = false;
+  private highScoreTarget = 0;
   private selectedStartLevel = 1;
   private readonly coinDropSound = new SoundEngine(sounds.coinDrop.src);
+  private readonly highScoreSound = new SoundEngine(sounds.highScore.src);
   private levelIntroMusic?: SoundEngine;
   private levelMusicCueId = 0;
   private levelMusic?: { level: number; sound: SoundEngine };
@@ -415,6 +418,7 @@ export class TimePilot {
     this.context._bullets = new BulletFactory(this.context);
     this.context._enemyBullets = new BulletFactory(this.context);
     this.context._player = new Player(this.context);
+    this.context._player.onScoreChanged = this.handleScoreChanged;
     this.context._enemies = new EnemyFactory(this.context);
     this.context._props = new PropFactory(this.context);
     this.context._player.setRespawnCallback?.(this.seedRespawnProps);
@@ -1157,6 +1161,7 @@ export class TimePilot {
       this.coinDropSound.stop();
       this.coinDropSound.play();
       void this.prepareHighScoreRunReceipt();
+      this.prepareHighScoreTarget();
       this.context._runStats = createRunStats(
         this.context._gameTicker.getTicks(),
         this.selectedStartLevel
@@ -1228,6 +1233,7 @@ export class TimePilot {
     this.context._player.setData("score", score, true);
     this.context._player.setData("lives", continueLives, true);
     this.context._player.setData("continues", continues - 1, true);
+    this.prepareHighScoreTarget(score);
     this.context._achievements?.onContinueUsed(continues - 1);
     this.context._achievements?.onLevelStarted(this.context._level);
     this.context._menus.hide();
@@ -1725,6 +1731,7 @@ export class TimePilot {
     this.context._player.setData("isAlive", true);
     this.context._player.setData("deathTick", false);
     this.context._player.stopShooting();
+    this.hasPlayedHighScoreSound = false;
     this.context._levelIntroUntilTick = options.skipIntro
       ? 0
       : this.context._gameTicker.getTicks() + levelIntroDurationFrames;
@@ -1871,6 +1878,33 @@ export class TimePilot {
   private prepareHighScoreRunReceipt = async (): Promise<void> => {
     this.highScoreRunReceipt = null;
     this.highScoreRunReceipt = await startHighScoreRun();
+  };
+
+  private prepareHighScoreTarget = (currentScore = 0): void => {
+    this.highScoreTarget = Math.max(
+      0,
+      ...getHighScores().map((score) => score.score)
+    );
+    this.hasPlayedHighScoreSound = currentScore > this.highScoreTarget;
+  };
+
+  private handleScoreChanged = (
+    previousScore: number,
+    nextScore: number
+  ): void => {
+    if (
+      this.isDemoMode ||
+      this.hasPlayedHighScoreSound ||
+      this.highScoreTarget <= 0 ||
+      previousScore > this.highScoreTarget ||
+      nextScore <= this.highScoreTarget
+    ) {
+      return;
+    }
+
+    this.hasPlayedHighScoreSound = true;
+    this.highScoreSound.stop();
+    this.highScoreSound.play();
   };
 
   private beginTimeWarpTransition = (): void => {

@@ -289,6 +289,7 @@ export interface BulletFactoryInstance {
 export interface PlayerInstance {
   getData(): PlayerData;
   getData<K extends keyof PlayerData>(key: K): PlayerData[K] | undefined;
+  onScoreChanged?: (previousScore: number, nextScore: number) => void;
   setData: <K extends keyof PlayerData>(
     key: K,
     value: PlayerData[K],
@@ -801,6 +802,7 @@ export interface TimePilotConstants {
     enemyShoot: SoundAsset;
     extraLife: SoundAsset;
     gameStart: SoundAsset;
+    highScore: SoundAsset;
     music: {
       levels: Partial<Record<number, SoundAsset>>;
       menu: SoundAsset;
