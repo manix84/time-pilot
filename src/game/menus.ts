@@ -879,6 +879,10 @@ class Menus implements MenuSystemInstance {
     if (this._screen === "high-score-entry") {
       this._renderHighScoreEntry();
     }
+
+    if (this._screen === "high-scores") {
+      this._renderHighScoreStats();
+    }
   };
 
   private _getLogoCanvas = (): HTMLCanvasElement => {
@@ -1133,9 +1137,14 @@ class Menus implements MenuSystemInstance {
 
   private _createHighScoreItems = (): MenuItem[] => {
     const scores = this._commands.getHighScores?.() ?? fakeHighScores;
-    const cardWidth = Math.min(520, Math.max(280, this._getItemsViewport().width - 28));
-    const cardHeight = 70;
-    const gap = 12;
+    const viewport = this._getItemsViewport();
+    const hasStatsPanel = viewport.width >= 560;
+    const cardWidth = hasStatsPanel
+      ? Math.min(320, Math.max(250, viewport.width * 0.42))
+      : Math.min(360, Math.max(250, viewport.width - 28));
+    const cardHeight = 32;
+    const gap = 6;
+    const cardX = hasStatsPanel ? 8 : -cardWidth / 2;
     const startY = -54;
 
     return [
@@ -1143,7 +1152,7 @@ class Menus implements MenuSystemInstance {
         this._createItem(score.name, "action", startY + index * (cardHeight + gap), {
           highScore: score,
           rect: {
-            x: -cardWidth / 2,
+            x: cardX,
             y: startY + index * (cardHeight + gap),
             width: cardWidth,
             height: cardHeight,
@@ -1952,10 +1961,14 @@ class Menus implements MenuSystemInstance {
     }
 
     const context = this._gameArena.getContext() as CanvasRenderingContext2D;
-    const padding = 10;
-    const rankWidth = 34;
+    const padding = 8;
+    const rankWidth = 32;
+    const scoreWidth = 92;
     const textX = item.rect.x + padding + rankWidth;
     const scoreText = this._formatScore(highScore.score);
+    const nameWidth = item.rect.width - padding * 2 - rankWidth - scoreWidth;
+    const displayName = this._truncateText(highScore.name, Math.max(8, nameWidth / 7));
+    const rowY = item.rect.y + item.rect.height / 2;
 
     context.fillStyle = isSelected
       ? palette.menu.selectedBackground
@@ -1977,38 +1990,87 @@ class Menus implements MenuSystemInstance {
       item.rect.height
     );
 
-    this._gameArena.renderText(`#${rank}`, item.rect.x + padding, item.rect.y + 12, {
+    this._gameArena.renderText(`#${rank}`, item.rect.x + padding, rowY, {
       size: 12,
       align: "left",
-      valign: "top",
+      valign: "middle",
       color: isSelected ? palette.menu.selectedText : palette.menu.mutedText,
     });
-    this._gameArena.renderText(highScore.name, textX, item.rect.y + 10, {
+    this._gameArena.renderText(displayName, textX, rowY, {
       size: 13,
       align: "left",
-      valign: "top",
+      valign: "middle",
       color: isSelected ? palette.menu.selectedText : palette.menu.itemText,
     });
     this._gameArena.renderText(
       scoreText,
       item.rect.x + item.rect.width - padding,
-      item.rect.y + 10,
+      rowY,
       {
         size: 13,
         align: "right",
-        valign: "top",
+        valign: "middle",
         color: isSelected ? palette.menu.selectedText : palette.menu.waitingText,
       }
     );
+  };
 
-    highScore.stats.slice(0, 4).forEach((stat, index) => {
-      this._gameArena.renderText(stat, textX, item.rect.y + 33 + index * 9, {
-        size: 7,
-        align: "left",
-        valign: "top",
-        color: isSelected ? palette.menu.selectedText : palette.menu.mutedText,
-      });
+  private _renderHighScoreStats = (): void => {
+    const item = this._items[this._selectedIndex];
+    const highScore = item?.highScore;
+
+    if (!highScore) {
+      return;
+    }
+
+    const rank = this._items
+      .slice(0, this._selectedIndex + 1)
+      .filter((candidate) => candidate.highScore).length;
+    const x = -260;
+    let y = -54;
+
+    this._gameArena.renderText(`#${rank} ${highScore.name}`, x, y, {
+      size: 15,
+      align: "left",
+      valign: "top",
+      color: palette.menu.selectedBackground,
     });
+    y += 24;
+
+    this._gameArena.renderText(this._formatScore(highScore.score), x, y, {
+      size: 16,
+      align: "left",
+      valign: "top",
+      color: palette.menu.waitingText,
+    });
+    y += 30;
+
+    highScore.stats.slice(0, 8).forEach((stat) => {
+      this._wrapText(stat, 30).forEach((line) => {
+        this._gameArena.renderText(line, x, y, {
+          size: 10,
+          align: "left",
+          valign: "top",
+          color: palette.menu.itemText,
+        });
+        y += 14;
+      });
+      y += 3;
+    });
+  };
+
+  private _truncateText = (text: string, maxLength: number): string => {
+    const limit = Math.max(1, Math.floor(maxLength));
+
+    if (text.length <= limit) {
+      return text;
+    }
+
+    if (limit <= 1) {
+      return text.slice(0, limit);
+    }
+
+    return `${text.slice(0, limit - 1)}…`;
   };
 
   private _renderHighScoreEntry = (): void => {
