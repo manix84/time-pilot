@@ -17,7 +17,7 @@ interface StoredHighScoreEntry extends HighScoreEntry {
 
 const highScoreStorageKey = "timePilot.highScores";
 const highScoreApiBasePath = "/api/high-scores";
-const fakeHighScoreBaseCreatedAt = Date.UTC(2026, 0, 1);
+const fakeHighScoreBaseCreatedAt = Date.UTC(2012, 8, 13);
 const maxHighScoreStats = 12;
 const maxStoredHighScores = 10;
 const maxCachedHighScores = 50;

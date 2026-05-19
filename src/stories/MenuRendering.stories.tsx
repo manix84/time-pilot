@@ -27,21 +27,21 @@ const konamiCode = [38, 38, 40, 40, 37, 39, 37, 39, 66, 65];
 
 const storyHighScores: HighScoreEntry[] = [
   {
-    createdAt: Date.UTC(2026, 4, 16),
+    createdAt: Date.UTC(2012, 8, 13),
     id: "local-ace",
     name: "Local Ace",
     score: 234560,
     stats: ["Era: 1982", "Lives left: 1", "Continues: 0", "Boss progress: 51/56"],
   },
   {
-    createdAt: Date.UTC(2026, 4, 17),
+    createdAt: Date.UTC(2012, 8, 14),
     id: "shooty-mcshootface",
     name: "Shooty McShootface",
     score: 1000000,
     stats: ["Era: 2001", "Bosses: 5", "Continues: 0", "Accuracy: suspicious"],
   },
   {
-    createdAt: Date.UTC(2026, 4, 18),
+    createdAt: Date.UTC(2012, 8, 15),
     id: "debug-dave",
     name: "Debug Dave",
     score: 123456,
