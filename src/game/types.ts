@@ -472,6 +472,7 @@ export interface GameDataStore {
   _level: number;
   _levelProgress: LevelProgressState;
   _runStats: RunStats;
+  _hasReachedHighScore: boolean;
   _formations: Record<string, FormationState>;
   _demoFadeStartedAtTick?: number;
   _demoFadeUntilTick?: number;

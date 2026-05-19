@@ -241,6 +241,7 @@ const createContext = ({
       standardEnemyKills: 0,
     },
     _runStats: createRunStats(0, level),
+    _hasReachedHighScore: false,
     _demoFadeStartedAtTick: demoFadeStartedAtTick,
     _demoFadeUntilTick: demoFadeUntilTick,
     _isDemoMode: demoMode,

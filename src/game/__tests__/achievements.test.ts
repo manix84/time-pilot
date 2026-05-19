@@ -100,6 +100,7 @@ const createContext = (
       standardEnemyKills: 0,
     },
     _runStats: createRunStats(0, data.level),
+    _hasReachedHighScore: false,
     _formations: {},
     _isDemoMode: false,
     _controlInputState: {

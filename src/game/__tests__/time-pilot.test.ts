@@ -682,6 +682,7 @@ describe("TimePilot engine", () => {
     const pilot = game as unknown as {
       beginGame: () => void;
       context: {
+        _hasReachedHighScore: boolean;
         _player: {
           setData: (key: "score", value: number) => void;
         };
@@ -700,6 +701,7 @@ describe("TimePilot engine", () => {
     expect(
       playedSources.filter((source) => source === sounds.highScore.src)
     ).toHaveLength(1);
+    expect(pilot.context._hasReachedHighScore).toBe(true);
 
     game.destroyGame();
   });

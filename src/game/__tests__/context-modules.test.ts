@@ -87,6 +87,7 @@ const createContext = (): GameDataStore => {
       standardEnemyKills: 0,
     },
     _runStats: createRunStats(),
+    _hasReachedHighScore: false,
     _nextParachuteScore: 1000,
     _controlInputState: {
       down: false,
@@ -149,6 +150,15 @@ const getHudLifeIconCalls = (context: GameDataStore) =>
     .mocked(context._gameArena.renderSprite)
     .mock.calls.filter(([sprite]) =>
       (sprite as HTMLImageElement).src.includes("/sprites/player/player.png")
+    );
+
+const getHudTrophyCalls = (context: GameDataStore) =>
+  vi
+    .mocked(context._gameArena.renderSprite)
+    .mock.calls.filter(([sprite]) =>
+      (sprite as HTMLImageElement).src.includes(
+        "/sprites/achievements/trophy_gold_32.png"
+      )
     );
 
 describe("context-backed game modules", () => {
@@ -531,6 +541,21 @@ describe("context-backed game modules", () => {
       expect.any(Number),
       expect.any(Number),
       expect.any(Object)
+    );
+  });
+
+  it("renders a trophy next to the score after reaching the highest score", () => {
+    const context = createContext();
+
+    context._hasReachedHighScore = true;
+    context._hud.render();
+
+    expect(getHudTrophyCalls(context)).toHaveLength(1);
+    expect(context._gameArena.renderText).toHaveBeenCalledWith(
+      0,
+      -348,
+      -290,
+      expect.objectContaining({ size: 30 })
     );
   });
 

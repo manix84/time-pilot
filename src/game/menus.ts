@@ -1,4 +1,5 @@
 /* Converted from TimePilot.Menu.js (AMD) to ESM TypeScript. */
+import { assetPath } from "./asset-path";
 import { levels, player } from "./constants";
 import {
   defaultFilterMode,
@@ -71,6 +72,10 @@ type MenuScreen =
   | "restart-confirm"
   | "level";
 type MenuItemKind = "action" | "enum" | "slider" | "key" | "toggle";
+const highScoreTrophyFrameSize = 32;
+const highScoreTrophyFrameCount = 8;
+const highScoreTrophyFrameDurationMs = 480;
+
 type ToggleDebugOption =
   | "invincible"
   | "showHeadingVectors"
@@ -238,6 +243,7 @@ class Menus implements MenuSystemInstance {
   private _povPreviewSprites: Partial<Record<string, HTMLImageElement>> = {};
   private _logoLanguage?: GameLanguage;
   private _logoCanvas?: HTMLCanvasElement;
+  private readonly _highScoreTrophySprite: HTMLImageElement;
   private readonly _logoHeight = 96;
   private readonly _logoWidth = 420;
   private _povPreviewAlpha = 0;
@@ -264,6 +270,10 @@ class Menus implements MenuSystemInstance {
     this._gameArena = gameArena;
     this._commands = commands;
     this._debugUnlocked = userOptions.enableDebug;
+    this._highScoreTrophySprite = new Image();
+    this._highScoreTrophySprite.src = assetPath(
+      "sprites/achievements/trophy_gold_32.png"
+    );
   }
 
   isActive = (): boolean => {
@@ -1992,7 +2002,7 @@ class Menus implements MenuSystemInstance {
 
     const context = this._gameArena.getContext() as CanvasRenderingContext2D;
     const padding = 8;
-    const rankWidth = 32;
+    const rankWidth = 52;
     const scoreWidth = 92;
     const textX = item.rect.x + padding + rankWidth;
     const scoreText = this._formatScore(highScore.score);
@@ -2026,6 +2036,7 @@ class Menus implements MenuSystemInstance {
       valign: "middle",
       color: isSelected ? palette.menu.selectedText : palette.menu.mutedText,
     });
+    this._renderHighScoreTrophy(rank, item.rect.x + padding + 24, rowY);
     this._gameArena.renderText(displayName, textX, rowY, {
       size: 13,
       align: "left",
@@ -2042,6 +2053,38 @@ class Menus implements MenuSystemInstance {
         valign: "middle",
         color: isSelected ? palette.menu.selectedText : palette.menu.waitingText,
       }
+    );
+  };
+
+  private _renderHighScoreTrophy = (
+    rank: number,
+    posX: number,
+    rowY: number
+  ): void => {
+    if (
+      rank !== 1 ||
+      !this._highScoreTrophySprite.complete ||
+      this._highScoreTrophySprite.naturalWidth <= 0
+    ) {
+      return;
+    }
+
+    const context = this._gameArena.getContext() as CanvasRenderingContext2D;
+    const trophySize = 18;
+    const frameX =
+      Math.floor(performance.now() / highScoreTrophyFrameDurationMs) %
+      highScoreTrophyFrameCount;
+
+    context.drawImage(
+      this._highScoreTrophySprite,
+      frameX * highScoreTrophyFrameSize,
+      0,
+      highScoreTrophyFrameSize,
+      highScoreTrophyFrameSize,
+      posX,
+      rowY - trophySize / 2,
+      trophySize,
+      trophySize
     );
   };
 

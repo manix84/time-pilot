@@ -406,6 +406,7 @@ export class TimePilot {
     this.context._formations = {};
     this.context._levelProgress = this.createLevelProgress(1);
     this.context._runStats = createRunStats(0, 1);
+    this.context._hasReachedHighScore = false;
     this.context._demoFadeStartedAtTick = 0;
     this.context._demoFadeUntilTick = 0;
     this.context._isDemoMode = false;
@@ -574,6 +575,7 @@ export class TimePilot {
       assetPath("sprites/props/cloud1.png"),
       assetPath("sprites/props/cloud2.png"),
       assetPath("sprites/props/cloud3.png"),
+      assetPath("sprites/achievements/trophy_gold_32.png"),
     ]);
 
     this.context._gameArena.preloadAssets((progress: AssetProgress) => {
@@ -1885,7 +1887,9 @@ export class TimePilot {
       0,
       ...getHighScores().map((score) => score.score)
     );
-    this.hasPlayedHighScoreSound = currentScore > this.highScoreTarget;
+    this.context._hasReachedHighScore =
+      this.highScoreTarget > 0 && currentScore > this.highScoreTarget;
+    this.hasPlayedHighScoreSound = this.context._hasReachedHighScore;
   };
 
   private handleScoreChanged = (
@@ -1903,6 +1907,7 @@ export class TimePilot {
     }
 
     this.hasPlayedHighScoreSound = true;
+    this.context._hasReachedHighScore = true;
     this.highScoreSound.stop();
     this.highScoreSound.play();
   };
