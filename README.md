@@ -100,6 +100,7 @@ receipt when a score is submitted. The server checks the receipt, expiry,
 single-use status, score shape, and basic score/stat plausibility before storing
 the score. Offline runs still save locally, but they do not receive a remote run
 receipt and are treated as local-only rather than trusted remote submissions.
+See [PRIVACY.md](PRIVACY.md) for the backend data-storage breakdown.
 
 ## 📱 Installable PWA
 
@@ -364,3 +365,9 @@ TIME_PILOT_VERSION_BUMP=none git commit
 ## 🗒️ Milestones
 
 See [WHATSNEW.md](./WHATSNEW.md) for major project milestones and migration history.
+
+## 📄 Licence
+
+See [LICENSE.md](./LICENSE.md). In short: play it, learn from it, and tinker
+with it privately; do not publish, host, distribute, or re-release it without
+permission.
