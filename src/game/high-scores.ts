@@ -1,7 +1,24 @@
 import type { HighScoreEntry } from "./types";
 
+type HighScoreSyncState = "local" | "pending" | "synced";
+
+interface HighScoreRunReceipt {
+  issuedAt: number;
+  runId: string;
+  token: string;
+}
+
+interface StoredHighScoreEntry extends HighScoreEntry {
+  receivedAt?: number;
+  run?: HighScoreRunReceipt;
+  submittedAt: number;
+  syncState: HighScoreSyncState;
+}
+
 const highScoreStorageKey = "timePilot.highScores";
+const highScoreApiBasePath = "/api/high-scores";
 const maxStoredHighScores = 10;
+const maxCachedHighScores = 50;
 
 /**
  * Placeholder high-score table used until remote score storage exists.
@@ -52,32 +69,10 @@ export const fakeHighScores: HighScoreEntry[] = [
  * Reads player-submitted high scores from local storage.
  */
 export const loadStoredHighScores = (): HighScoreEntry[] => {
-  const storedScores = localStorage.getItem(highScoreStorageKey);
-
-  if (!storedScores) {
-    return [];
-  }
-
-  try {
-    const parsed = JSON.parse(storedScores);
-
-    if (!Array.isArray(parsed)) {
-      return [];
-    }
-
-    return parsed
-      .filter(isHighScoreEntry)
-      .map((entry) => ({
-        id: entry.id,
-        name: entry.name,
-        score: Math.max(0, Math.floor(entry.score)),
-        stats: entry.stats.slice(0, 6),
-      }))
-      .sort(sortHighScores)
-      .slice(0, maxStoredHighScores);
-  } catch {
-    return [];
-  }
+  return loadStoredScoreRecords()
+    .sort(sortHighScores)
+    .slice(0, maxStoredHighScores)
+    .map(toHighScoreEntry);
 };
 
 /**
@@ -89,26 +84,71 @@ export const getHighScores = (): HighScoreEntry[] =>
     .slice(0, maxStoredHighScores);
 
 /**
+ * Starts a remotely verifiable high-score run when the API is available.
+ */
+export const startHighScoreRun = async (): Promise<HighScoreRunReceipt | null> => {
+  try {
+    const response = await fetch(`${highScoreApiBasePath}/runs`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        gameVersion: getGameVersion(),
+        startedAt: Date.now(),
+      }),
+    });
+
+    if (!response.ok) {
+      return null;
+    }
+
+    const receipt = (await response.json()) as Partial<HighScoreRunReceipt>;
+
+    if (!isHighScoreRunReceipt(receipt)) {
+      return null;
+    }
+
+    return receipt;
+  } catch {
+    return null;
+  }
+};
+
+/**
  * Persists a newly submitted high score locally.
  */
 export const saveHighScore = (
   name: string,
   score: number,
-  stats: string[]
+  stats: string[],
+  run?: HighScoreRunReceipt | null
 ): HighScoreEntry => {
-  const entry: HighScoreEntry = {
+  const entry: StoredHighScoreEntry = {
     id: `local-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
     name: normalizeHighScoreName(name),
+    run: run ?? undefined,
     score: Math.max(0, Math.floor(score)),
     stats: stats.slice(0, 6),
+    submittedAt: Date.now(),
+    syncState: run ? "pending" : "local",
   };
-  const storedScores = [...loadStoredHighScores(), entry]
+  const storedScores = upsertScoreRecords(loadStoredScoreRecords(), [entry])
     .sort(sortHighScores)
-    .slice(0, maxStoredHighScores);
+    .slice(0, maxCachedHighScores);
 
-  localStorage.setItem(highScoreStorageKey, JSON.stringify(storedScores));
+  saveStoredScoreRecords(storedScores);
+  void syncHighScores();
 
-  return entry;
+  return toHighScoreEntry(entry);
+};
+
+/**
+ * Best-effort two-way sync between local high scores and the remote API.
+ */
+export const syncHighScores = async (): Promise<void> => {
+  await submitPendingScores();
+  await pullRemoteScores();
 };
 
 /**
@@ -126,6 +166,225 @@ export const normalizeHighScoreName = (name: string): string => {
 
 const sortHighScores = (left: HighScoreEntry, right: HighScoreEntry): number =>
   right.score - left.score || left.name.localeCompare(right.name);
+
+const loadStoredScoreRecords = (): StoredHighScoreEntry[] => {
+  const storage = getStorage();
+  const storedScores = storage?.getItem(highScoreStorageKey);
+
+  if (!storedScores) {
+    return [];
+  }
+
+  try {
+    const parsed = JSON.parse(storedScores);
+
+    if (!Array.isArray(parsed)) {
+      return [];
+    }
+
+    return parsed
+      .filter(isHighScoreEntry)
+      .map(normalizeStoredEntry)
+      .sort(sortHighScores)
+      .slice(0, maxCachedHighScores);
+  } catch {
+    return [];
+  }
+};
+
+const saveStoredScoreRecords = (entries: StoredHighScoreEntry[]): void => {
+  getStorage()?.setItem(
+    highScoreStorageKey,
+    JSON.stringify(entries.sort(sortHighScores).slice(0, maxCachedHighScores))
+  );
+};
+
+const submitPendingScores = async (): Promise<void> => {
+  const records = loadStoredScoreRecords();
+  let changed = false;
+
+  for (const record of records) {
+    if (record.syncState !== "pending") {
+      continue;
+    }
+
+    if (!record.run) {
+      record.syncState = "local";
+      changed = true;
+      continue;
+    }
+
+    try {
+      const response = await fetch(highScoreApiBasePath, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          entry: toHighScoreEntry(record),
+          gameVersion: getGameVersion(),
+          run: record.run,
+          submittedAt: record.submittedAt,
+        }),
+      });
+
+      if (!response.ok) {
+        continue;
+      }
+
+      const remoteEntry = (await response.json()) as Partial<StoredHighScoreEntry>;
+
+      if (!isHighScoreEntry(remoteEntry)) {
+        continue;
+      }
+
+      const storedRemoteEntry = remoteEntry as HighScoreEntry &
+        Partial<StoredHighScoreEntry>;
+
+      record.id = storedRemoteEntry.id;
+      record.name = storedRemoteEntry.name;
+      record.score = Math.max(0, Math.floor(storedRemoteEntry.score));
+      record.stats = storedRemoteEntry.stats.slice(0, 6);
+      record.receivedAt = storedRemoteEntry.receivedAt ?? Date.now();
+      record.syncState = "synced";
+      changed = true;
+    } catch {
+      return;
+    }
+  }
+
+  if (changed) {
+    saveStoredScoreRecords(records);
+  }
+};
+
+const pullRemoteScores = async (): Promise<void> => {
+  try {
+    const response = await fetch(highScoreApiBasePath);
+
+    if (!response.ok) {
+      return;
+    }
+
+    const remoteScores = (await response.json()) as unknown;
+
+    if (!Array.isArray(remoteScores)) {
+      return;
+    }
+
+    const remoteRecords = remoteScores
+      .filter(isHighScoreEntry)
+      .map((entry) => {
+        const remoteEntry = entry as HighScoreEntry &
+          Partial<StoredHighScoreEntry>;
+
+        return normalizeStoredEntry({
+          ...remoteEntry,
+          receivedAt:
+            typeof remoteEntry.receivedAt === "number"
+              ? remoteEntry.receivedAt
+              : Date.now(),
+          submittedAt:
+            typeof remoteEntry.submittedAt === "number"
+              ? remoteEntry.submittedAt
+              : Date.now(),
+          syncState: "synced",
+        });
+      });
+
+    saveStoredScoreRecords(
+      upsertScoreRecords(loadStoredScoreRecords(), remoteRecords)
+    );
+  } catch {
+    // Offline-first sync is intentionally best effort.
+  }
+};
+
+const upsertScoreRecords = (
+  current: StoredHighScoreEntry[],
+  incoming: StoredHighScoreEntry[]
+): StoredHighScoreEntry[] => {
+  const byId = new Map(current.map((entry) => [entry.id, entry]));
+
+  incoming.forEach((entry) => {
+    byId.set(entry.id, entry);
+  });
+
+  return [...byId.values()];
+};
+
+const normalizeStoredEntry = (
+  entry: HighScoreEntry | StoredHighScoreEntry
+): StoredHighScoreEntry => {
+  const stored = entry as Partial<StoredHighScoreEntry>;
+
+  return {
+    id: entry.id,
+    name: normalizeHighScoreName(entry.name),
+    receivedAt:
+      typeof stored.receivedAt === "number" ? stored.receivedAt : undefined,
+    run: isHighScoreRunReceipt(stored.run) ? stored.run : undefined,
+    score: Math.max(0, Math.floor(entry.score)),
+    stats: entry.stats.slice(0, 6),
+    submittedAt:
+      typeof stored.submittedAt === "number" ? stored.submittedAt : Date.now(),
+    syncState: normalizeSyncState(stored.syncState, stored.run),
+  };
+};
+
+const normalizeSyncState = (
+  syncState: unknown,
+  run: unknown
+): HighScoreSyncState => {
+  if (
+    syncState === "local" ||
+    syncState === "pending" ||
+    syncState === "synced"
+  ) {
+    return syncState;
+  }
+
+  return isHighScoreRunReceipt(run) ? "pending" : "local";
+};
+
+const toHighScoreEntry = (entry: HighScoreEntry): HighScoreEntry => ({
+  id: entry.id,
+  name: entry.name,
+  score: entry.score,
+  stats: entry.stats,
+});
+
+const getStorage = (): Storage | null => {
+  try {
+    return typeof localStorage === "undefined" ? null : localStorage;
+  } catch {
+    return null;
+  }
+};
+
+const getGameVersion = (): string => {
+  if (typeof __TIME_PILOT_VERSION__ === "undefined") {
+    return "dev";
+  }
+
+  return __TIME_PILOT_VERSION__;
+};
+
+const isHighScoreRunReceipt = (
+  value: unknown
+): value is HighScoreRunReceipt => {
+  if (!value || typeof value !== "object") {
+    return false;
+  }
+
+  const receipt = value as Partial<HighScoreRunReceipt>;
+
+  return (
+    typeof receipt.issuedAt === "number" &&
+    typeof receipt.runId === "string" &&
+    typeof receipt.token === "string"
+  );
+};
 
 const isHighScoreEntry = (value: unknown): value is HighScoreEntry => {
   if (!value || typeof value !== "object") {

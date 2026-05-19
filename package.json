@@ -1,12 +1,13 @@
 {
   "name": "time-pilot",
   "private": true,
-  "version": "21.1.0",
+  "version": "21.2.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build && node scripts/prune-release-assets.mjs",
     "preview": "vite preview",
+    "api": "node server/high-score-server.mjs",
     "typecheck": "tsc --noEmit --noImplicitAny true",
     "test": "vitest run",
     "storybook": "storybook dev -p 6006",
@@ -17,6 +18,7 @@
     "lint:fix": "eslint . --fix"
   },
   "dependencies": {
+    "pg": "^8.21.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"
   },

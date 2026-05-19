@@ -14,7 +14,12 @@ import GameArena from "./engine/arena";
 import SoundEngine from "./engine/Sound";
 import Ticker from "./engine/Ticker";
 import { gameFps } from "./game-timing";
-import { getHighScores, saveHighScore } from "./high-scores";
+import {
+  getHighScores,
+  saveHighScore,
+  startHighScoreRun,
+  syncHighScores,
+} from "./high-scores";
 import Hud from "./hud";
 import i18n from "./i18n";
 import { logger } from "./logger";
@@ -227,6 +232,7 @@ export class TimePilot {
   private isDemoMode = false;
   private isDebugLevelPreviewLocked = false;
   private pendingHighScore: { score: number; stats: string[] } | null = null;
+  private highScoreRunReceipt: Awaited<ReturnType<typeof startHighScoreRun>> = null;
   private selectedStartLevel = 1;
   private readonly coinDropSound = new SoundEngine(sounds.coinDrop.src);
   private levelIntroMusic?: SoundEngine;
@@ -483,6 +489,7 @@ export class TimePilot {
     this.collisionSystem = new CollisionSystem(this.context);
     this.renderingSystem = new RenderingSystem(this.context);
     this.spawningSystem = new SpawningSystem(this.context);
+    void syncHighScores();
 
     const controllerInterface = new ControllerInterface(this.context, {
       isPrerollActive: () => this.isPrerollActive(),
@@ -1141,6 +1148,7 @@ export class TimePilot {
     if (shouldStartFreshGame) {
       this.coinDropSound.stop();
       this.coinDropSound.play();
+      void this.prepareHighScoreRunReceipt();
       this.context._runStats = createRunStats(
         this.context._gameTicker.getTicks(),
         this.selectedStartLevel
@@ -1203,6 +1211,7 @@ export class TimePilot {
     this.hasStartedGame = true;
     this.hasShownGameOver = false;
     this.context._runStats.continuesUsed += 1;
+    void this.prepareHighScoreRunReceipt();
 
     this.resetWorld(level, { skipIntro: false });
     this.cueLevelMusic(this.context._level);
@@ -1834,12 +1843,22 @@ export class TimePilot {
       return;
     }
 
-    saveHighScore(name, this.pendingHighScore.score, this.pendingHighScore.stats);
+    saveHighScore(
+      name,
+      this.pendingHighScore.score,
+      this.pendingHighScore.stats,
+      this.highScoreRunReceipt
+    );
     logger.info("Saved high score", {
       name,
       score: this.pendingHighScore.score,
     });
     this.pendingHighScore = null;
+  };
+
+  private prepareHighScoreRunReceipt = async (): Promise<void> => {
+    this.highScoreRunReceipt = null;
+    this.highScoreRunReceipt = await startHighScoreRun();
   };
 
   private beginTimeWarpTransition = (): void => {

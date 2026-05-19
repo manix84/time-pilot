@@ -55,6 +55,11 @@ const featureHighlights = [
       "Interrupted runs skip the intro on the next launch and reopen paused, with Continue and Restart ready.",
   },
   {
+    title: "High scores",
+    details:
+      "Scores save locally first and can sync to a PostgreSQL or JSON-backed leaderboard when the API is available.",
+  },
+  {
     title: "About page",
     details:
       "Version, host, privacy stance, source link, and optional sponsorship are collected in one public page.",
@@ -88,6 +93,7 @@ const systemUpdates = [
   "Skippable author and Time Pilot preroll before cold-start root-menu entry.",
   "Page-lifecycle session snapshots that restore interrupted player runs without per-frame storage writes.",
   "Standalone PWA launch with fullscreen, landscape, keep-awake, and installed-app exit requests from player actions.",
+  "Local-first high scores with optional remote sync and single-use run receipts for submitted scores.",
   "Touch steering guide that follows the active fire thumb from its initial touch point.",
   "Achievement subsystem with page rendering, counter progress, and unlock popups.",
   "Watch Demo mode with a mortal autopilot that scores, dodges, shoots, continues, and collects bonuses.",

@@ -32,6 +32,11 @@
   running normally.
 - Added a page-lifecycle session snapshot so interrupted player runs can be
   restored without writing state every frame.
+- Added local-first high score storage with optional remote sync through a
+  PostgreSQL-backed API, plus JSON-file fallback storage for local/self-hosted
+  setups.
+- Added single-use signed run receipts and server-side plausibility checks for
+  best-effort protection against fake remote high score submissions.
 - Added a public about page with build, host, privacy, source, and sponsorship
   details.
 - Added installed-PWA back navigation for menu backtracking, paused-game resume,
