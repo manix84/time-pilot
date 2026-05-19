@@ -518,6 +518,12 @@ describe("TimePilot engine", () => {
     const pilot = game as unknown as {
       beginGame: () => void;
       context: {
+        _levelProgress: {
+          bossDefeated: boolean;
+          bossKillThreshold: number;
+          bossSpawned: boolean;
+          standardEnemyKills: number;
+        };
         _player: {
           setData: (key: string, value: unknown, isLastKnownGood?: boolean) => void;
         };
@@ -532,6 +538,7 @@ describe("TimePilot engine", () => {
     pilot.context._player.setData("continues", 1, true);
     pilot.context._player.setData("posX", 42);
     pilot.context._player.setData("posY", -24);
+    pilot.context._levelProgress.standardEnemyKills = 37;
     window.dispatchEvent(new Event("pagehide"));
 
     const snapshot = JSON.parse(
@@ -540,6 +547,12 @@ describe("TimePilot engine", () => {
 
     expect(snapshot).toMatchObject({
       level: 1,
+      levelProgress: {
+        bossDefeated: false,
+        bossKillThreshold: 56,
+        bossSpawned: false,
+        standardEnemyKills: 37,
+      },
       player: {
         continues: 1,
         lives: 2,
@@ -811,6 +824,12 @@ describe("TimePilot engine", () => {
       "timePilot.gameSession",
       JSON.stringify({
         level: 3,
+        levelProgress: {
+          bossDefeated: false,
+          bossKillThreshold: 56,
+          bossSpawned: false,
+          standardEnemyKills: 41,
+        },
         player: {
           continues: 2,
           heading: 90,
@@ -829,6 +848,12 @@ describe("TimePilot engine", () => {
       context: {
         _gameTicker: { isRunning: boolean };
         _level: number;
+        _levelProgress: {
+          bossDefeated: boolean;
+          bossKillThreshold: number;
+          bossSpawned: boolean;
+          standardEnemyKills: number;
+        };
         _menus: { next: () => void; activate: () => void; render: () => void };
         _player: {
           getData: (
@@ -851,6 +876,10 @@ describe("TimePilot engine", () => {
     expect(pilot.context._player.getData("heading")).toBe(90);
     expect(pilot.context._player.getData("posX")).toBe(120);
     expect(pilot.context._player.getData("posY")).toBe(-80);
+    expect(pilot.context._levelProgress.standardEnemyKills).toBe(41);
+    expect(pilot.context._levelProgress.bossKillThreshold).toBe(56);
+    expect(pilot.context._levelProgress.bossSpawned).toBe(false);
+    expect(pilot.context._levelProgress.bossDefeated).toBe(false);
     expect(renderText).toHaveBeenCalled();
 
     pilot.context._menus.next();
