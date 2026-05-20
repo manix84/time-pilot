@@ -45,6 +45,12 @@ export default defineConfig({
   server: {
     host: "0.0.0.0",
     open: true,
+    proxy: {
+      "/api": {
+        target: process.env.HIGH_SCORE_API_URL ?? "http://localhost:8787",
+        changeOrigin: true,
+      },
+    },
   },
   test: {
     projects: [

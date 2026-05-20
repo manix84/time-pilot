@@ -14,6 +14,14 @@ import GameArena from "./engine/arena";
 import SoundEngine from "./engine/Sound";
 import Ticker from "./engine/Ticker";
 import { gameFps } from "./game-timing";
+import {
+  getHighScores,
+  getHighScoreThresholds,
+  getHighScoreSyncStatus,
+  saveHighScore,
+  startHighScoreRun,
+  syncHighScores,
+} from "./high-scores";
 import Hud from "./hud";
 import i18n from "./i18n";
 import { logger } from "./logger";
@@ -21,6 +29,7 @@ import Menus from "./menus";
 import Player from "./player";
 import Preroll from "./preroll";
 import PropFactory from "./prop-factory";
+import { createRunStats, isRunStats, normalizeRunStats } from "./run-stats";
 import {
   resetAllStoredTimePilotData,
   resetStoredScores,
@@ -45,6 +54,8 @@ import type {
   LevelProgressState,
   PlayerData,
   RenderingSystemInstance,
+  RunStats,
+  ScoreTrophyRank,
   SpawningSystemInstance,
 } from "./types";
 import userOptions, { resetUserOptions } from "./user-options";
@@ -100,6 +111,8 @@ const playerRotationStep = 360 / player.rotationFrameCount;
 const gameSessionStorageKey = "timePilot.gameSession";
 const gameSessionSnapshotVersion = 1;
 
+type HighScoreRunReceipt = Awaited<ReturnType<typeof startHighScoreRun>>;
+
 type DemoProgressSnapshot = {
   nextExtraLifeScore: number;
   score: number;
@@ -121,6 +134,8 @@ type GameSessionSnapshot = {
     | "posY"
     | "score"
   >;
+  highScoreRunReceipt?: NonNullable<HighScoreRunReceipt>;
+  runStats?: RunStats;
   savedAt: number;
   version: typeof gameSessionSnapshotVersion;
 };
@@ -155,6 +170,22 @@ const createControlInputState = (
   touchOrigin: null,
   activeController,
 });
+
+const isHighScoreRunReceipt = (
+  value: unknown
+): value is NonNullable<HighScoreRunReceipt> => {
+  if (!value || typeof value !== "object") {
+    return false;
+  }
+
+  const receipt = value as Partial<NonNullable<HighScoreRunReceipt>>;
+
+  return (
+    typeof receipt.issuedAt === "number" &&
+    typeof receipt.runId === "string" &&
+    typeof receipt.token === "string"
+  );
+};
 
 /**
  * Options accepted by the TimePilot engine constructor.
@@ -222,8 +253,15 @@ export class TimePilot {
   private isDestroyed = false;
   private isDemoMode = false;
   private isDebugLevelPreviewLocked = false;
+  private pendingHighScore: { score: number; stats: string[] } | null = null;
+  private highScoreRunReceipt: HighScoreRunReceipt = null;
+  private highScoreRunRequestId = 0;
+  private hasPlayedHighScoreSound = false;
+  private highScoreTarget = 0;
+  private highScoreTrophyTargets: number[] = [];
   private selectedStartLevel = 1;
   private readonly coinDropSound = new SoundEngine(sounds.coinDrop.src);
+  private readonly highScoreSound = new SoundEngine(sounds.highScore.src);
   private levelIntroMusic?: SoundEngine;
   private levelMusicCueId = 0;
   private levelMusic?: { level: number; sound: SoundEngine };
@@ -357,6 +395,7 @@ export class TimePilot {
       this.syncScreenWakeLock();
     } else {
       logger.info("Resuming game");
+      this.recordRunRestart();
       this.context._gameTicker.start();
       SoundEngine.resumePaused();
       this.syncScreenWakeLock();
@@ -366,9 +405,16 @@ export class TimePilot {
   resumeGame = (): void => {
     if (!this.context._gameTicker.isRunning) {
       logger.info("Resuming game");
+      this.recordRunRestart();
       this.context._gameTicker.start();
       SoundEngine.resumePaused();
       this.syncScreenWakeLock();
+    }
+  };
+
+  private recordRunRestart = (): void => {
+    if (this.hasStartedGame && !this.isDemoMode && !this.hasShownGameOver) {
+      this.context._runStats.restarts += 1;
     }
   };
 
@@ -383,6 +429,9 @@ export class TimePilot {
     );
     this.context._formations = {};
     this.context._levelProgress = this.createLevelProgress(1);
+    this.context._runStats = createRunStats(0, 1);
+    this.context._hasReachedHighScore = false;
+    this.context._scoreTrophyRank = null;
     this.context._demoFadeStartedAtTick = 0;
     this.context._demoFadeUntilTick = 0;
     this.context._isDemoMode = false;
@@ -395,6 +444,7 @@ export class TimePilot {
     this.context._bullets = new BulletFactory(this.context);
     this.context._enemyBullets = new BulletFactory(this.context);
     this.context._player = new Player(this.context);
+    this.context._player.onScoreChanged = this.handleScoreChanged;
     this.context._enemies = new EnemyFactory(this.context);
     this.context._props = new PropFactory(this.context);
     this.context._player.setRespawnCallback?.(this.seedRespawnProps);
@@ -414,6 +464,9 @@ export class TimePilot {
       continueGame: () => {
         this.continueGame();
       },
+      discardHighScore: () => {
+        this.pendingHighScore = null;
+      },
       exitToRoot: () => {
         this.exitToRootMenu();
       },
@@ -427,6 +480,9 @@ export class TimePilot {
         : {}),
       getContinues: () => this.context._player.getData("continues") ?? 0,
       getAchievements: () => this.context._achievements?.getStatuses() ?? [],
+      getHighScores: () => getHighScores(),
+      getPendingHighScore: () => this.pendingHighScore,
+      getHighScoreSyncStatus: () => getHighScoreSyncStatus(),
       getLevel: () => this.selectedStartLevel,
       onNavigationChanged: (state) => {
         this.syncBrowserHistory(state.depth + (state.active ? 1 : 0));
@@ -442,6 +498,9 @@ export class TimePilot {
       },
       restart: () => {
         this.restartGame();
+      },
+      saveHighScore: (name) => {
+        this.savePendingHighScore(name);
       },
       selectLevel: (level) => {
         this.selectDebugLevel(level);
@@ -469,6 +528,7 @@ export class TimePilot {
     this.collisionSystem = new CollisionSystem(this.context);
     this.renderingSystem = new RenderingSystem(this.context);
     this.spawningSystem = new SpawningSystem(this.context);
+    void syncHighScores();
 
     const controllerInterface = new ControllerInterface(this.context, {
       isPrerollActive: () => this.isPrerollActive(),
@@ -541,6 +601,10 @@ export class TimePilot {
       assetPath("sprites/props/cloud1.png"),
       assetPath("sprites/props/cloud2.png"),
       assetPath("sprites/props/cloud3.png"),
+      assetPath("sprites/achievements/trophy_gold_32.png"),
+      assetPath("sprites/achievements/trophy_silver_32.png"),
+      assetPath("sprites/achievements/trophy_bronze_32.png"),
+      assetPath("sprites/ui/satelite.png"),
     ]);
 
     this.context._gameArena.preloadAssets((progress: AssetProgress) => {
@@ -896,6 +960,8 @@ export class TimePilot {
         (typeof snapshot.levelProgress.bossDefeated !== "boolean" ||
           typeof snapshot.levelProgress.bossSpawned !== "boolean" ||
           typeof snapshot.levelProgress.standardEnemyKills !== "number");
+      const hasInvalidRunStats =
+        !!snapshot?.runStats && !isRunStats(snapshot.runStats);
 
       if (
         !snapshot ||
@@ -910,7 +976,15 @@ export class TimePilot {
         typeof snapshot.player.posX !== "number" ||
         typeof snapshot.player.posY !== "number" ||
         typeof snapshot.player.heading !== "number" ||
-        hasInvalidLevelProgress
+        hasInvalidLevelProgress ||
+        hasInvalidRunStats
+      ) {
+        return null;
+      }
+
+      if (
+        snapshot.highScoreRunReceipt !== undefined &&
+        !isHighScoreRunReceipt(snapshot.highScoreRunReceipt)
       ) {
         return null;
       }
@@ -963,6 +1037,7 @@ export class TimePilot {
         bossSpawned: levelProgress.bossSpawned,
         standardEnemyKills: levelProgress.standardEnemyKills,
       },
+      highScoreRunReceipt: this.highScoreRunReceipt ?? undefined,
       player: {
         continues: playerData.continues,
         heading: playerData.heading,
@@ -972,6 +1047,7 @@ export class TimePilot {
         posY: playerData.posY,
         score: playerData.score,
       },
+      runStats: this.context._runStats,
       savedAt: Date.now(),
       version: gameSessionSnapshotVersion,
     };
@@ -1026,6 +1102,10 @@ export class TimePilot {
     this.hasShownGameOver = false;
     this.selectedStartLevel = snapshot.level;
     this.resetWorld(snapshot.level, { skipIntro: true });
+    this.context._runStats = normalizeRunStats(
+      snapshot.runStats ?? createRunStats(this.context._gameTicker.getTicks(), snapshot.level),
+      createRunStats(this.context._gameTicker.getTicks(), snapshot.level)
+    );
     if (snapshot.levelProgress) {
       const currentThreshold = this.context._levelProgress.bossKillThreshold;
       const bossWasDefeated = snapshot.levelProgress.bossDefeated;
@@ -1058,6 +1138,11 @@ export class TimePilot {
     this.context._player.setData("isAlive", true);
     this.context._player.setData("deathTick", false);
     this.context._player.stopShooting();
+    this.highScoreRunReceipt = snapshot.highScoreRunReceipt ?? null;
+    if (!this.highScoreRunReceipt) {
+      void this.prepareHighScoreRunReceipt();
+    }
+    this.prepareHighScoreTarget(snapshot.player.score);
     this.spawningSystem.addInitialProps();
     this.hasSeededInitialProps = true;
     this.playMenuMusic();
@@ -1114,10 +1199,17 @@ export class TimePilot {
     SoundEngine.setMuted(false);
     this.isDemoMode = false;
     this.context._isDemoMode = false;
+    this.pendingHighScore = null;
 
     if (shouldStartFreshGame) {
       this.coinDropSound.stop();
       this.coinDropSound.play();
+      void this.prepareHighScoreRunReceipt();
+      this.prepareHighScoreTarget();
+      this.context._runStats = createRunStats(
+        this.context._gameTicker.getTicks(),
+        this.selectedStartLevel
+      );
       this.resetWorld(this.selectedStartLevel, { skipIntro: false });
       this.cueLevelMusic(this.context._level);
       this.hasStartedGame = true;
@@ -1125,6 +1217,7 @@ export class TimePilot {
       this.context._achievements?.onRunStarted(this.context._player.getData());
       this.context._achievements?.onLevelStarted(this.context._level);
     } else {
+      this.recordRunRestart();
       this.resumeLevelMusic(this.context._level);
     }
 
@@ -1175,6 +1268,8 @@ export class TimePilot {
     this.context._isDemoMode = false;
     this.hasStartedGame = true;
     this.hasShownGameOver = false;
+    this.context._runStats.continuesUsed += 1;
+    void this.prepareHighScoreRunReceipt();
 
     this.resetWorld(level, { skipIntro: false });
     this.cueLevelMusic(this.context._level);
@@ -1182,6 +1277,7 @@ export class TimePilot {
     this.context._player.setData("score", score, true);
     this.context._player.setData("lives", continueLives, true);
     this.context._player.setData("continues", continues - 1, true);
+    this.prepareHighScoreTarget(score);
     this.context._achievements?.onContinueUsed(continues - 1);
     this.context._achievements?.onLevelStarted(this.context._level);
     this.context._menus.hide();
@@ -1679,6 +1775,9 @@ export class TimePilot {
     this.context._player.setData("isAlive", true);
     this.context._player.setData("deathTick", false);
     this.context._player.stopShooting();
+    this.hasPlayedHighScoreSound = false;
+    this.context._hasReachedHighScore = false;
+    this.context._scoreTrophyRank = null;
     this.context._levelIntroUntilTick = options.skipIntro
       ? 0
       : this.context._gameTicker.getTicks() + levelIntroDurationFrames;
@@ -1754,6 +1853,13 @@ export class TimePilot {
       level: this.context._level,
       score: playerData.score,
     });
+    this.pendingHighScore =
+      playerData.score > 0 && playerData.continues <= 0
+        ? {
+          score: playerData.score,
+          stats: this.createHighScoreStats(playerData),
+        }
+        : null;
     this.context._achievements?.onGameOver();
     this.context._player.stopShooting();
     this.context._gameTicker.stop();
@@ -1762,6 +1868,116 @@ export class TimePilot {
     this.stopLevelMusic();
     this.playMenuMusic();
     this.context._menus.showGameOver();
+  };
+
+  private createHighScoreStats = (playerData: PlayerData): string[] => {
+    const stats = this.context._runStats;
+    const accuracy =
+      stats.shotsFired > 0
+        ? Math.round((stats.shotsHit / stats.shotsFired) * 100)
+        : 0;
+    const survivedSeconds = Math.max(
+      0,
+      Math.floor(
+        (this.context._gameTicker.getTicks() - stats.startedAtTick) / gameFps
+      )
+    );
+
+    return [
+      `Era: ${Math.max(this.context._level, stats.highestLevelReached)}`,
+      `Accuracy: ${accuracy}%`,
+      `Near misses: ${stats.nearMisses}`,
+      `Loops: ${stats.loops}`,
+      `Restarts: ${stats.restarts}`,
+      `Enemies: ${stats.enemiesDestroyed}`,
+      `Shots: ${stats.shotsHit}/${stats.shotsFired}`,
+      `Bonuses: ${stats.bonusesCollected}`,
+      `Lives lost: ${stats.livesLost}`,
+      `Continues: ${stats.continuesUsed}`,
+      `Survived: ${survivedSeconds}s`,
+      `Boss progress: ${Math.max(
+        0,
+        this.context._levelProgress.standardEnemyKills
+      )}/${this.context._levelProgress.bossKillThreshold}`,
+      `Score: ${playerData.score}`,
+    ];
+  };
+
+  private savePendingHighScore = (name: string): void => {
+    if (!this.pendingHighScore) {
+      return;
+    }
+
+    saveHighScore(
+      name,
+      this.pendingHighScore.score,
+      this.pendingHighScore.stats,
+      this.highScoreRunReceipt
+    );
+    logger.info("Saved high score", {
+      name,
+      score: this.pendingHighScore.score,
+    });
+    this.pendingHighScore = null;
+  };
+
+  private prepareHighScoreRunReceipt = async (): Promise<void> => {
+    const requestId = ++this.highScoreRunRequestId;
+
+    this.highScoreRunReceipt = null;
+    const receipt = await startHighScoreRun();
+
+    if (requestId === this.highScoreRunRequestId) {
+      this.highScoreRunReceipt = receipt;
+    }
+  };
+
+  private prepareHighScoreTarget = (currentScore = 0): void => {
+    this.highScoreTrophyTargets = getHighScoreThresholds(3)
+      .map((score) => score.score);
+    this.highScoreTarget = this.highScoreTrophyTargets[0] ?? 0;
+    this.context._scoreTrophyRank = this.getScoreTrophyRank(currentScore);
+    this.context._hasReachedHighScore = this.context._scoreTrophyRank === 1;
+    this.hasPlayedHighScoreSound = this.context._hasReachedHighScore;
+  };
+
+  private getScoreTrophyRank = (score: number): ScoreTrophyRank => {
+    const rank = this.highScoreTrophyTargets.findIndex(
+      (target) => target > 0 && score > target
+    );
+
+    if (rank < 0) {
+      return null;
+    }
+
+    return (rank + 1) as ScoreTrophyRank;
+  };
+
+  private handleScoreChanged = (
+    previousScore: number,
+    nextScore: number
+  ): void => {
+    if (this.isDemoMode) {
+      return;
+    }
+
+    this.context._scoreTrophyRank = this.getScoreTrophyRank(nextScore);
+    this.context._hasReachedHighScore = this.context._scoreTrophyRank === 1;
+
+    if (
+      this.hasPlayedHighScoreSound ||
+      this.highScoreTarget <= 0 ||
+      previousScore > this.highScoreTarget ||
+      nextScore <= this.highScoreTarget
+    ) {
+      return;
+    }
+
+    this.hasPlayedHighScoreSound = true;
+    this.context._hasReachedHighScore = true;
+    this.context._scoreTrophyRank = 1;
+    this.highScoreSound.stop();
+    this.highScoreSound.play();
   };
 
   private beginTimeWarpTransition = (): void => {
@@ -1853,6 +2069,13 @@ export class TimePilot {
     logger.info("Completing time warp transition", {
       nextLevel: transition.nextLevel,
     });
+    if (!this.isDemoMode) {
+      this.context._runStats.levelsCompleted += 1;
+      this.context._runStats.highestLevelReached = Math.max(
+        this.context._runStats.highestLevelReached,
+        transition.nextLevel
+      );
+    }
     this.resetWorld(transition.nextLevel, { skipIntro: false });
     this.cueLevelMusic(transition.nextLevel);
     this.context._player.setData("score", transition.score);

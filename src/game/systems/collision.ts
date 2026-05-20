@@ -1,18 +1,23 @@
-import { player } from "../constants";
+import { levels, player } from "../constants";
 import helpers from "../engine/helpers";
 import type {
   BulletData,
   BulletInstance,
   CollisionSystemInstance,
   EnemyData,
+  EnemyInstance,
   GameDataStore,
 } from "../types";
+
+const nearMissClearance = 18;
 
 /**
  * Detects collisions between player, enemies, bullets, and bonuses.
  */
 class CollisionSystem implements CollisionSystemInstance {
   private _context: GameDataStore;
+  private _nearMissedEnemyBullets = new WeakSet<BulletInstance>();
+  private _nearMissedEnemies = new WeakSet<EnemyInstance>();
 
   constructor(context: GameDataStore) {
     this._context = context;
@@ -48,30 +53,33 @@ class CollisionSystem implements CollisionSystemInstance {
               posY: bulletData.posY + playerData.posY,
             };
 
-        if (
-          helpers.detectCollision(
-            {
-              posX: bulletPosition.posX,
-              posY: bulletPosition.posY,
-              radius: bulletData.size,
-            },
-            {
-              posX: playerData.posX,
-              posY: playerData.posY,
-              radius: player.hitRadius,
-            }
-          )
-        ) {
+        const bulletHitRadius = bulletData.size + player.hitRadius;
+        const bulletDistanceSquared = this.getDistanceSquared(
+          bulletPosition.posX - playerData.posX,
+          bulletPosition.posY - playerData.posY
+        );
+
+        if (bulletDistanceSquared <= bulletHitRadius ** 2) {
           const wasAlive = playerData.isAlive;
           bullet.explode();
           this._context._player.kill();
 
           if (wasAlive && !this._context._player.getData("isAlive")) {
+            if (!this._context._isDemoMode) {
+              this._context._runStats.playerProjectileHits += 1;
+            }
             this._context._achievements?.onPlayerHit(
               "projectile",
               this._context._player.getData()
             );
           }
+        } else {
+          this._trackNearMiss(
+            bullet,
+            this._nearMissedEnemyBullets,
+            bulletDistanceSquared,
+            bulletHitRadius
+          );
         }
       });
 
@@ -101,17 +109,19 @@ class CollisionSystem implements CollisionSystemInstance {
         return;
       }
 
-      if (
-        enemy.detectCollision(
-          playerData.posX,
-          playerData.posY,
-          player.hitRadius
-        )
-      ) {
+      if (enemy.detectCollision(playerData.posX, playerData.posY, player.hitRadius)) {
         const enemyData = enemy.getData() as EnemyData;
         const wasPlayerAlive = playerData.isAlive;
         enemy.kill();
         this._context._player.kill();
+
+        if (
+          wasPlayerAlive &&
+          !this._context._isDemoMode &&
+          !this._context._player.getData("isAlive")
+        ) {
+          this._context._runStats.playerEnemyCollisions += 1;
+        }
 
         if (!enemy.isAlive) {
           this._context._achievements?.onEnemyDestroyed({
@@ -127,6 +137,22 @@ class CollisionSystem implements CollisionSystemInstance {
             this._context._player.getData()
           );
         }
+      } else {
+        const enemyData = enemy.getData() as EnemyData;
+        const levelData =
+          levels[this._context._level].enemies[enemyData.type] ??
+          levels[this._context._level].enemies.basic;
+        const enemyDistanceSquared = this.getDistanceSquared(
+          enemyData.posX - playerData.posX,
+          enemyData.posY - playerData.posY
+        );
+
+        this._trackNearMiss(
+          enemy,
+          this._nearMissedEnemies,
+          enemyDistanceSquared,
+          player.hitRadius + levelData.hitRadius
+        );
       }
 
       bullets.forEach((bullet) => {
@@ -150,6 +176,9 @@ class CollisionSystem implements CollisionSystemInstance {
           const enemyData = enemy.getData() as EnemyData;
           bullet.removeMe = true;
           enemy.kill();
+          if (!this._context._isDemoMode) {
+            this._context._runStats.shotsHit += 1;
+          }
 
           if (!enemy.isAlive) {
             this._context._achievements?.onEnemyDestroyed({
@@ -219,6 +248,10 @@ class CollisionSystem implements CollisionSystemInstance {
         ) {
           bullet.removeMe = true;
           enemyBullet.explode();
+          if (!this._context._isDemoMode) {
+            this._context._runStats.shotsHit += 1;
+            this._context._runStats.shootableProjectilesDestroyed += 1;
+          }
           this._context._achievements?.onShootableProjectileDestroyed();
         }
       });
@@ -231,6 +264,29 @@ class CollisionSystem implements CollisionSystemInstance {
       this._context._gameTicker.getTicks() < this._context._levelIntroUntilTick
     );
   };
+
+  private _trackNearMiss = <T extends object>(
+    entity: T,
+    seen: WeakSet<T>,
+    distanceSquared: number,
+    hitRadius: number
+  ): void => {
+    const nearMissRadius = hitRadius + nearMissClearance;
+
+    if (
+      this._context._isDemoMode ||
+      seen.has(entity) ||
+      distanceSquared > nearMissRadius ** 2
+    ) {
+      return;
+    }
+
+    seen.add(entity);
+    this._context._runStats.nearMisses += 1;
+  };
+
+  private getDistanceSquared = (deltaX: number, deltaY: number): number =>
+    deltaX * deltaX + deltaY * deltaY;
 }
 
 export default CollisionSystem;

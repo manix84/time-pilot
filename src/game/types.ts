@@ -289,6 +289,7 @@ export interface BulletFactoryInstance {
 export interface PlayerInstance {
   getData(): PlayerData;
   getData<K extends keyof PlayerData>(key: K): PlayerData[K] | undefined;
+  onScoreChanged?: (previousScore: number, nextScore: number) => void;
   setData: <K extends keyof PlayerData>(
     key: K,
     value: PlayerData[K],
@@ -335,6 +336,25 @@ export interface LevelProgressState {
   bossKillThreshold: number;
   bossSpawned: boolean;
   standardEnemyKills: number;
+}
+
+export interface RunStats {
+  bonusesCollected: number;
+  bossesDefeated: number;
+  continuesUsed: number;
+  enemiesDestroyed: number;
+  highestLevelReached: number;
+  levelsCompleted: number;
+  livesLost: number;
+  loops: number;
+  nearMisses: number;
+  playerEnemyCollisions: number;
+  playerProjectileHits: number;
+  restarts: number;
+  shootableProjectilesDestroyed: number;
+  shotsFired: number;
+  shotsHit: number;
+  startedAtTick: number;
 }
 
 export interface TimeWarpTransitionState {
@@ -451,6 +471,9 @@ export interface ControllerInterfaceInstance {
 export interface GameDataStore {
   _level: number;
   _levelProgress: LevelProgressState;
+  _runStats: RunStats;
+  _hasReachedHighScore: boolean;
+  _scoreTrophyRank: ScoreTrophyRank;
   _formations: Record<string, FormationState>;
   _demoFadeStartedAtTick?: number;
   _demoFadeUntilTick?: number;
@@ -474,6 +497,10 @@ export interface GameDataStore {
   _currentController: Controller[];
   _achievements?: AchievementSystem;
 }
+
+export type ScoreTrophyRank = 1 | 2 | 3 | null;
+
+export type HighScoreSyncStatus = "error" | "waiting" | "syncing" | "success";
 
 export interface CollisionSystemInstance {
   detectCollisions: () => void;
@@ -505,16 +532,21 @@ export interface MenuSystemCommands {
   canUseScreenWakeLock?: () => boolean;
   clearLevelPreview?: () => void;
   continueGame?: () => void;
+  discardHighScore?: () => void;
   exitApp?: () => void;
   exitToRoot?: () => void;
   getContinues?: () => number;
   getAchievements?: () => AchievementStatus[];
+  getHighScores?: () => HighScoreEntry[];
+  getPendingHighScore?: () => PendingHighScoreEntry | null;
+  getHighScoreSyncStatus?: () => HighScoreSyncStatus | null;
   getLevel?: () => number;
   previewLevel?: (level: number) => void;
   playPreroll?: () => void;
   onNavigationChanged?: (state: MenuNavigationState) => void;
   resetStoredData?: (scope: StoredDataResetScope) => void;
   restart?: () => void;
+  saveHighScore?: (name: string) => void;
   selectLevel?: (level: number) => void;
   setDebugContinues?: (continues: number) => void;
   setDebugLives?: (lives: number) => void;
@@ -539,6 +571,19 @@ export interface MenuNavigationState {
   isPausedRoot: boolean;
   isRoot: boolean;
   isWatchingDemo: boolean;
+}
+
+export interface HighScoreEntry {
+  createdAt: number;
+  id: string;
+  name: string;
+  score: number;
+  stats: string[];
+}
+
+export interface PendingHighScoreEntry {
+  score: number;
+  stats: string[];
 }
 
 export interface MenuRenderOptions {
@@ -764,6 +809,7 @@ export interface TimePilotConstants {
     enemyShoot: SoundAsset;
     extraLife: SoundAsset;
     gameStart: SoundAsset;
+    highScore: SoundAsset;
     music: {
       levels: Partial<Record<number, SoundAsset>>;
       menu: SoundAsset;

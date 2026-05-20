@@ -1,6 +1,7 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import AchievementSystem, { achievementDefinitions } from "../achievements";
 import { gameFps } from "../game-timing";
+import { createRunStats } from "../run-stats";
 import type {
   BonusFactoryInstance,
   BulletFactoryInstance,
@@ -98,6 +99,9 @@ const createContext = (
       bossSpawned: false,
       standardEnemyKills: 0,
     },
+    _runStats: createRunStats(0, data.level),
+    _hasReachedHighScore: false,
+    _scoreTrophyRank: null,
     _formations: {},
     _isDemoMode: false,
     _controlInputState: {
@@ -227,6 +231,13 @@ const createContext = (
 describe("AchievementSystem", () => {
   beforeEach(() => {
     localStorage.clear();
+    vi.spyOn(Date, "now").mockReturnValue(
+      Date.parse("2026-05-19T10:30:00.000Z")
+    );
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
   });
 
   it("unlocks first mission, repeat run, and continue achievements", () => {
@@ -287,6 +298,10 @@ describe("AchievementSystem", () => {
     const restored = new AchievementSystem(context);
 
     expect(restored.hasUnlocked("quarter-master")).toBe(true);
+    expect(
+      restored.getStatuses().find((achievement) => achievement.id === "quarter-master")
+        ?.unlockedAt
+    ).toBe(Date.parse("2026-05-19T10:30:00.000Z"));
     expect(
       restored.getStatuses().find((achievement) => achievement.id === "quarter-master")
         ?.progress

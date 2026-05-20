@@ -2,6 +2,13 @@
 
 **Time Pilot** is a modernized React + TypeScript rebuild of an older browser-game prototype. The game still renders through a pixel-art canvas engine, but it now lives inside a Vite application with typed game modules, React lifecycle integration, CI checks, GitHub Pages deployment, and release automation.
 
+## 🕰️ Project History
+
+Time Pilot started as a browser-game experiment on **September 13, 2012**. Work
+paused on **November 3, 2013**, leaving the prototype unfinished for more than a
+decade. I picked it back up on **May 11, 2026**, with the goal of finishing the
+game properly while preserving the original canvas-era feel.
+
 ## ✨ Highlights
 
 - 🎮 Canvas-based arcade gameplay hosted inside React.
@@ -15,6 +22,8 @@
 - 🏆 Achievement tracking with an achievements page, progress counters, and unlock popups.
 - 🎬 Startup preroll with the author logo, Time Pilot flyby, menu-logo handoff, and instant skip input.
 - 💾 Session restore that skips the preroll and returns interrupted runs to a paused Continue menu.
+- 🏅 Local-first high scores with optional remote sync through PostgreSQL or JSON-backed API storage.
+- 📊 High-score stat cards track accuracy, enemies, loops, near misses, restarts, bonuses, and survival time.
 - ℹ️ Public about page with version, host, privacy, source, and sponsorship links.
 - 🛠️ Debug tools for level select, preroll replay, runtime logging, and stored-data resets.
 - 📱 Installable offline PWA mode that launches as a standalone app and enters fullscreen play from Start/Continue.
@@ -61,6 +70,45 @@ Preview the production build:
 ```bash
 npm run preview
 ```
+
+Run the optional high-score API:
+
+```bash
+npm run api
+```
+
+During local development, Vite proxies `/api/*` to
+`http://localhost:8787` by default. Set `HIGH_SCORE_API_URL` before
+`npm run dev` if the API is running somewhere else.
+
+## 🏅 High Score Storage
+
+High scores are local-first. The game immediately saves submitted scores to
+`localStorage`, so score entry works offline and without any backend. When the
+high-score API is reachable, scores from online player runs are synced to the
+remote table and merged back into the local leaderboard.
+
+The API uses PostgreSQL when `DATABASE_URL` is configured:
+
+```bash
+DATABASE_URL=postgres://user:password@localhost:5432/time_pilot \
+HIGH_SCORE_SECRET=replace-with-a-long-secret \
+npm run api
+```
+
+If PostgreSQL is unavailable or not configured, the API falls back to
+`data/high-scores.json`. That fallback is useful for local development and small
+self-hosted installs; production deployments should use PostgreSQL and a stable
+`HIGH_SCORE_SECRET`. Optional environment variables include `PORT` and
+`CORS_ORIGIN`.
+
+Remote score submission is best-effort secure. The client asks the API for a
+single-use signed run receipt at the start of an online run, then includes that
+receipt when a score is submitted. The server checks the receipt, expiry,
+single-use status, score shape, and basic score/stat plausibility before storing
+the score. Offline runs still save locally, but they do not receive a remote run
+receipt and are treated as local-only rather than trusted remote submissions.
+See [PRIVACY.md](PRIVACY.md) for the backend data-storage breakdown.
 
 ## 📱 Installable PWA
 
@@ -325,3 +373,9 @@ TIME_PILOT_VERSION_BUMP=none git commit
 ## 🗒️ Milestones
 
 See [WHATSNEW.md](./WHATSNEW.md) for major project milestones and migration history.
+
+## 📄 Licence
+
+See [LICENSE.md](./LICENSE.md). In short: play it, learn from it, and tinker
+with it privately; do not publish, host, distribute, or re-release it without
+permission.

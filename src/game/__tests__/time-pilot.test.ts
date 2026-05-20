@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { sounds } from "../constants";
+import { saveHighScore } from "../high-scores";
 import TimePilot from "../index";
 import userOptions from "../user-options";
 
@@ -493,7 +494,7 @@ describe("TimePilot engine", () => {
     await new Promise((resolve) => window.setTimeout(resolve, 5));
 
     pilot.context._menus.showStart();
-    for (let i = 0; i < 3; i++) {
+    for (let i = 0; i < 4; i++) {
       pilot.context._menus.next();
     }
     pilot.context._menus.activate();
@@ -594,7 +595,7 @@ describe("TimePilot engine", () => {
     pilot.context._player.setData("posX", 64);
     pilot.context._player.setData("posY", -12);
     pilot.context._menus.showStart({ startLabel: "Continue" });
-    for (let i = 0; i < 3; i++) {
+    for (let i = 0; i < 4; i++) {
       pilot.context._menus.next();
     }
     pilot.context._menus.activate();
@@ -672,6 +673,99 @@ describe("TimePilot engine", () => {
 
     expect(playedSources).not.toContain(sounds.gameStart.src);
     expect(playedSources).toContain(sounds.music.levels[1]?.src);
+
+    game.destroyGame();
+  });
+
+  it("plays the high-score sound once when crossing the known top score", async () => {
+    const playedSources = getPlayedSources();
+    const game = new TimePilot(host, { debug: true, gamepadEnabled: false });
+    const pilot = game as unknown as {
+      beginGame: () => void;
+      context: {
+        _hasReachedHighScore: boolean;
+        _scoreTrophyRank: 1 | 2 | 3 | null;
+        _player: {
+          setData: (key: "score", value: number) => void;
+        };
+      };
+    };
+
+    await waitForAudioTimer();
+
+    pilot.beginGame();
+    playedSources.length = 0;
+
+    pilot.context._player.setData("score", 1000000);
+    pilot.context._player.setData("score", 1000001);
+    pilot.context._player.setData("score", 1000200);
+
+    expect(
+      playedSources.filter((source) => source === sounds.highScore.src)
+    ).toHaveLength(1);
+    expect(pilot.context._hasReachedHighScore).toBe(true);
+    expect(pilot.context._scoreTrophyRank).toBe(1);
+
+    game.destroyGame();
+  });
+
+  it("awards lower score trophies without playing the high-score sound", async () => {
+    const playedSources = getPlayedSources();
+    const game = new TimePilot(host, { debug: true, gamepadEnabled: false });
+    const pilot = game as unknown as {
+      beginGame: () => void;
+      context: {
+        _hasReachedHighScore: boolean;
+        _scoreTrophyRank: 1 | 2 | 3 | null;
+        _player: {
+          setData: (key: "score", value: number) => void;
+        };
+      };
+    };
+
+    await waitForAudioTimer();
+
+    pilot.beginGame();
+    playedSources.length = 0;
+
+    pilot.context._player.setData("score", 742251);
+
+    expect(pilot.context._scoreTrophyRank).toBe(3);
+    expect(pilot.context._hasReachedHighScore).toBe(false);
+    expect(playedSources).not.toContain(sounds.highScore.src);
+
+    pilot.context._player.setData("score", 875501);
+
+    expect(pilot.context._scoreTrophyRank).toBe(2);
+    expect(pilot.context._hasReachedHighScore).toBe(false);
+    expect(playedSources).not.toContain(sounds.highScore.src);
+
+    game.destroyGame();
+  });
+
+  it("uses sorted leaderboard thresholds for trophies when local scores are lower", async () => {
+    saveHighScore("Local Pilot", 1200, ["Era: 1910"]);
+    const playedSources = getPlayedSources();
+    const game = new TimePilot(host, { debug: true, gamepadEnabled: false });
+    const pilot = game as unknown as {
+      beginGame: () => void;
+      context: {
+        _scoreTrophyRank: 1 | 2 | 3 | null;
+        _player: {
+          setData: (key: "score", value: number) => void;
+        };
+      };
+    };
+
+    await waitForAudioTimer();
+
+    pilot.beginGame();
+    playedSources.length = 0;
+
+    pilot.context._player.setData("score", 1201);
+
+    expect(pilot.context._scoreTrophyRank).toBeNull();
+    expect(playedSources).not.toContain(sounds.highScore.src);
 
     game.destroyGame();
   });
@@ -886,6 +980,61 @@ describe("TimePilot engine", () => {
     expect(localStorage.getItem("timePilot.gameSession")).toBeNull();
     expect(pilot.context._gameTicker.isRunning).toBe(true);
     expect(pilot.context._level).toBe(1);
+
+    game.destroyGame();
+  });
+
+  it("restores an active high-score run receipt from a saved session", async () => {
+    vi.stubGlobal(
+      "Image",
+      class {
+        complete = true;
+        onerror: (() => void) | null = null;
+        onload: (() => void) | null = null;
+
+        set src(_value: string) {
+          window.setTimeout(() => this.onload?.(), 0);
+        }
+      }
+    );
+    localStorage.setItem(
+      "timePilot.gameSession",
+      JSON.stringify({
+        level: 2,
+        highScoreRunReceipt: {
+          issuedAt: 1000,
+          runId: "restored-run",
+          token: "restored-token",
+        },
+        player: {
+          continues: 1,
+          heading: 90,
+          lives: 2,
+          nextExtraLifeScore: 50000,
+          posX: 0,
+          posY: 0,
+          score: 12345,
+        },
+        savedAt: Date.now(),
+        version: 1,
+      })
+    );
+
+    const game = new TimePilot(host, { debug: true });
+    const pilot = game as unknown as {
+      highScoreRunReceipt: {
+        issuedAt: number;
+        runId: string;
+        token: string;
+      } | null;
+    };
+
+    await new Promise((resolve) => window.setTimeout(resolve, 5));
+
+    expect(pilot.highScoreRunReceipt).toMatchObject({
+      runId: "restored-run",
+      token: "restored-token",
+    });
 
     game.destroyGame();
   });

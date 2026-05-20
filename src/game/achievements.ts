@@ -84,6 +84,10 @@ export interface AchievementStatus extends AchievementDefinition {
    * Whether this achievement has been unlocked.
    */
   unlocked: boolean;
+  /**
+   * Millisecond timestamp for when the achievement was unlocked.
+   */
+  unlockedAt?: number;
 }
 
 const achievementIcon = (fileName: string): AchievementDefinition["icon"] => ({
@@ -99,10 +103,40 @@ const achievementIcon = (fileName: string): AchievementDefinition["icon"] => ({
  */
 export const achievementDefinitions: AchievementDefinition[] = [
   {
-    id: "this-is-fine",
-    name: "This Is Fine",
-    description: "Survive for 30 seconds with only 1 life remaining.",
-    icon: achievementIcon("achievement_thisIsFine.png"),
+    id: "we-have-lift-off",
+    name: "We Have Lift Off",
+    description: "Begin your first mission.",
+    icon: achievementIcon("achievement_weHaveLiftOff.png"),
+  },
+  {
+    id: "pilot-error",
+    name: "Pilot Error",
+    description: "Lose a life by flying directly into an enemy.",
+    icon: achievementIcon("achievement_pilotError.png"),
+  },
+  {
+    id: "not-again",
+    name: "Not Again",
+    description: "Lose a life within 3 seconds of respawning.",
+    icon: achievementIcon("achievement_notAgain.png"),
+  },
+  {
+    id: "insert-coin",
+    name: "Insert Coin",
+    description: "Use your first continue.",
+    icon: achievementIcon("achievement_insertCoin.png"),
+  },
+  {
+    id: "one-more-run",
+    name: "One More Run",
+    description: "Start another game immediately after a game over.",
+    icon: achievementIcon("achievement_oneMoreRun.png"),
+  },
+  {
+    id: "you-can-do-that",
+    name: "You Can Do That?!",
+    description: "Discover a hidden mechanic or unexpected interaction.",
+    icon: achievementIcon("achievement_youCanDoThat.png"),
   },
   {
     id: "i-meant-to-do-that",
@@ -117,40 +151,16 @@ export const achievementDefinitions: AchievementDefinition[] = [
     icon: achievementIcon("achievement_professionalCloudDodger.png"),
   },
   {
-    id: "we-have-lift-off",
-    name: "We Have Lift Off",
-    description: "Begin your first mission.",
-    icon: achievementIcon("achievement_weHaveLiftOff.png"),
-  },
-  {
-    id: "not-again",
-    name: "Not Again",
-    description: "Lose a life within 3 seconds of respawning.",
-    icon: achievementIcon("achievement_notAgain.png"),
-  },
-  {
     id: "oops-all-missiles",
     name: "Oops, All Missiles",
     description: "Survive a wave filled with missile attacks.",
     icon: achievementIcon("achievement_oopsAllMissiles.png"),
   },
   {
-    id: "the-wright-stuff",
-    name: "The Wright Stuff",
-    description: "Complete the 1910 era without losing a life.",
-    icon: achievementIcon("achievement_theWrightStuff.png"),
-  },
-  {
-    id: "pilot-error",
-    name: "Pilot Error",
-    description: "Lose a life by flying directly into an enemy.",
-    icon: achievementIcon("achievement_pilotError.png"),
-  },
-  {
-    id: "insert-coin",
-    name: "Insert Coin",
-    description: "Use your first continue.",
-    icon: achievementIcon("achievement_insertCoin.png"),
+    id: "this-is-fine",
+    name: "This Is Fine",
+    description: "Survive for 30 seconds with only 1 life remaining.",
+    icon: achievementIcon("achievement_thisIsFine.png"),
   },
   {
     id: "still-alive-somehow",
@@ -159,28 +169,10 @@ export const achievementDefinitions: AchievementDefinition[] = [
     icon: achievementIcon("achievement_stillAliveSomehow.png"),
   },
   {
-    id: "you-can-do-that",
-    name: "You Can Do That?!",
-    description: "Discover a hidden mechanic or unexpected interaction.",
-    icon: achievementIcon("achievement_youCanDoThat.png"),
-  },
-  {
-    id: "one-more-run",
-    name: "One More Run",
-    description: "Start another game immediately after a game over.",
-    icon: achievementIcon("achievement_oneMoreRun.png"),
-  },
-  {
-    id: "just-one-more-run",
-    name: "Just One More Run",
-    description: "Use all continues and still start another game.",
-    icon: achievementIcon("achievement_justOneMoreRun.png"),
-  },
-  {
-    id: "seriously-one-more-run",
-    name: "Seriously, One More Run",
-    description: "Play for over an hour in a single session.",
-    icon: achievementIcon("achievement_seriouslyOneMoreRun.png"),
+    id: "three-strikes",
+    name: "Three Strikes",
+    description: "Lose all 3 lives in under a minute.",
+    icon: achievementIcon("achievement_threeStrikes.png"),
   },
   {
     id: "last-chance",
@@ -189,10 +181,28 @@ export const achievementDefinitions: AchievementDefinition[] = [
     icon: achievementIcon("achievement_lastChance.png"),
   },
   {
+    id: "back-in-the-fight",
+    name: "Back In The Fight",
+    description: "Continue a game and immediately defeat a boss.",
+    icon: achievementIcon("achievement_backInTheFight.png"),
+  },
+  {
     id: "credit-feeder",
     name: "Credit Feeder",
     description: "Use every continue in a single run.",
     icon: achievementIcon("achievement_creditFeeder.png"),
+  },
+  {
+    id: "just-one-more-run",
+    name: "Just One More Run",
+    description: "Use all continues and still start another game.",
+    icon: achievementIcon("achievement_justOneMoreRun.png"),
+  },
+  {
+    id: "the-wright-stuff",
+    name: "The Wright Stuff",
+    description: "Complete the 1910 era without losing a life.",
+    icon: achievementIcon("achievement_theWrightStuff.png"),
   },
   {
     id: "against-all-odds",
@@ -201,28 +211,23 @@ export const achievementDefinitions: AchievementDefinition[] = [
     icon: achievementIcon("achievement_againstAllOdds.png"),
   },
   {
-    id: "back-in-the-fight",
-    name: "Back In The Fight",
-    description: "Continue a game and immediately defeat a boss.",
-    icon: achievementIcon("achievement_backInTheFight.png"),
-  },
-  {
     id: "phoenix-pilot",
     name: "Phoenix Pilot",
     description: "Lose all lives except one, then survive an entire era.",
     icon: achievementIcon("achievement_phoenixPilot.png"),
   },
   {
-    id: "final-continue",
-    name: "Final Continue",
-    description: "Win the game after using your last continue.",
-    icon: achievementIcon("achievement_finalContinue.png"),
+    id: "quarter-master",
+    name: "Quarter Master",
+    description: "Use continues 25 times total.",
+    icon: achievementIcon("achievement_quarterMaster.png"),
+    progressGoal: 25,
   },
   {
-    id: "three-strikes",
-    name: "Three Strikes",
-    description: "Lose all 3 lives in under a minute.",
-    icon: achievementIcon("achievement_threeStrikes.png"),
+    id: "seriously-one-more-run",
+    name: "Seriously, One More Run",
+    description: "Play for over an hour in a single session.",
+    icon: achievementIcon("achievement_seriouslyOneMoreRun.png"),
   },
   {
     id: "arcade-spirit",
@@ -237,11 +242,10 @@ export const achievementDefinitions: AchievementDefinition[] = [
     icon: achievementIcon("achievement_noSafetyNet.png"),
   },
   {
-    id: "quarter-master",
-    name: "Quarter Master",
-    description: "Use continues 25 times total.",
-    icon: achievementIcon("achievement_quarterMaster.png"),
-    progressGoal: 25,
+    id: "final-continue",
+    name: "Final Continue",
+    description: "Win the game after using your last continue.",
+    icon: achievementIcon("achievement_finalContinue.png"),
   },
 ];
 
@@ -250,6 +254,7 @@ type PlayerHitCause = "enemy" | "projectile";
 interface AchievementStorageState {
   counters?: Partial<Record<"continuesUsed", number>>;
   unlocked?: AchievementId[];
+  unlockedAt?: Partial<Record<AchievementId, number>>;
 }
 
 interface RunState {
@@ -355,6 +360,7 @@ class AchievementSystem {
   private era: EraState | undefined;
   private run: RunState = createDefaultRunState();
   private readonly unlocked: Set<AchievementId>;
+  private readonly unlockedAt: Partial<Record<AchievementId, number>>;
   private readonly waves = new Map<string, WaveState>();
 
   constructor(context: GameDataStore) {
@@ -365,6 +371,7 @@ class AchievementSystem {
       continuesUsed: storage.counters?.continuesUsed ?? 0,
     };
     this.unlocked = new Set(storage.unlocked ?? []);
+    this.unlockedAt = { ...storage.unlockedAt };
   }
 
   getUnlocked = (): AchievementId[] => [...this.unlocked];
@@ -385,6 +392,7 @@ class AchievementSystem {
         ...achievement,
         progress,
         unlocked: this.hasUnlocked(achievement.id),
+        unlockedAt: this.unlockedAt[achievement.id],
       };
     });
 
@@ -685,6 +693,9 @@ class AchievementSystem {
     this.era = undefined;
     this.run = createDefaultRunState();
     this.unlocked.clear();
+    Object.keys(this.unlockedAt).forEach((id) => {
+      delete this.unlockedAt[id as AchievementId];
+    });
     this.waves.clear();
 
     try {
@@ -754,6 +765,7 @@ class AchievementSystem {
     }
 
     this.unlocked.add(id);
+    this.unlockedAt[id] = Date.now();
     logger.info("Achievement unlocked", { id });
     this.persist();
     window.dispatchEvent(
@@ -776,6 +788,7 @@ class AchievementSystem {
         JSON.stringify({
           counters: this.counters,
           unlocked: this.getUnlocked(),
+          unlockedAt: this.unlockedAt,
         } satisfies AchievementStorageState)
       );
     } catch {

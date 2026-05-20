@@ -1,9 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { achievementDefinitions } from "../../achievements";
+import { levels } from "../../constants";
 import CollisionSystem from "../collision";
 import RenderingSystem from "../rendering";
 import SpawningSystem from "../spawning";
 import userOptions from "../../user-options";
+import { createRunStats } from "../../run-stats";
 import type {
   BonusFactoryInstance,
   BonusInstance,
@@ -175,6 +177,7 @@ const createContext = ({
   demoMode = false,
   enemyAlive = true,
   enemyCollides = true,
+  enemyDataOverrides = {},
   enemyLimitAvailable = true,
   levelIntroUntilTick = 0,
   playerOverrides = {},
@@ -189,6 +192,7 @@ const createContext = ({
   demoMode?: boolean;
   enemyAlive?: boolean;
   enemyCollides?: boolean;
+  enemyDataOverrides?: Partial<EnemyData>;
   enemyLimitAvailable?: boolean;
   levelIntroUntilTick?: number;
   playerOverrides?: Partial<PlayerData>;
@@ -206,6 +210,7 @@ const createContext = ({
     posY: 100,
     tickOffset: 0,
     type: "basic",
+    ...enemyDataOverrides,
   };
   const enemy: EnemyInstance = {
     isAlive: enemyAlive,
@@ -239,6 +244,9 @@ const createContext = ({
       bossSpawned: false,
       standardEnemyKills: 0,
     },
+    _runStats: createRunStats(0, level),
+    _hasReachedHighScore: false,
+    _scoreTrophyRank: null,
     _demoFadeStartedAtTick: demoFadeStartedAtTick,
     _demoFadeUntilTick: demoFadeUntilTick,
     _isDemoMode: demoMode,
@@ -373,6 +381,8 @@ describe("game systems", () => {
     const [enemy] = context._enemies.getEntities();
     expect(enemy.kill).toHaveBeenCalled();
     expect(context._player.kill).toHaveBeenCalled();
+    expect(context._runStats.playerEnemyCollisions).toBe(1);
+    expect(context._runStats.shotsHit).toBe(1);
   });
 
   it("collects bonuses through player collision only", () => {
@@ -396,6 +406,38 @@ describe("game systems", () => {
 
     expect(context._player.kill).toHaveBeenCalled();
     expect(enemyBullet.removeMe).toBe(true);
+    expect(context._runStats.playerProjectileHits).toBe(1);
+  });
+
+  it("counts near misses once when threats pass close to the player", () => {
+    const context = createContext({ enemyCollides: false });
+    const enemyBullet = createEnemyBullet({ posX: 30, posY: 20 });
+    vi.mocked(context._enemyBullets.getEntities).mockReturnValue([enemyBullet]);
+    const system = new CollisionSystem(context);
+
+    system.detectCollisions();
+    system.detectCollisions();
+
+    expect(context._player.kill).not.toHaveBeenCalled();
+    expect(context._runStats.nearMisses).toBe(1);
+  });
+
+  it("counts enemy near misses outside the full collision radius", () => {
+    const context = createContext({
+      enemyCollides: false,
+      enemyDataOverrides: {
+        hitPoints: 7,
+        posX: 58,
+        posY: 20,
+        type: "boss",
+      },
+    });
+    vi.mocked(context._enemyBullets.getEntities).mockReturnValue([]);
+    const system = new CollisionSystem(context);
+
+    system.detectCollisions();
+
+    expect(context._runStats.nearMisses).toBe(1);
   });
 
   it("lets player bullets shoot down shootable enemy projectiles", () => {
@@ -418,6 +460,8 @@ describe("game systems", () => {
     expect(playerBullet.removeMe).toBe(true);
     expect(enemyBullet.removeMe).toBe(true);
     expect(context._player.kill).not.toHaveBeenCalled();
+    expect(context._runStats.shotsHit).toBe(1);
+    expect(context._runStats.shootableProjectilesDestroyed).toBe(1);
   });
 
   it("allows demo collisions to kill the player while still resolving bullets", () => {
@@ -475,7 +519,7 @@ describe("game systems", () => {
     expect(context._enemyBullets.create).toHaveBeenCalledWith(
       100,
       100,
-      expect.any(Number),
+      180,
       6,
       5.5,
       "#FF9",
@@ -494,6 +538,22 @@ describe("game systems", () => {
       undefined
     );
     expect(context._bonuses.create).not.toHaveBeenCalled();
+  });
+
+  it("keeps basic enemy shots facing-only until UFOs", () => {
+    expect(levels[1].enemies.basic.projectile.initialAim).toBe("facing");
+    expect(levels[2].enemies.basic.projectile.initialAim).toBe("facing");
+    expect(levels[3].enemies.basic.projectile.initialAim).toBe("facing");
+    expect(levels[4].enemies.basic.projectile.initialAim).toBe("facing");
+    expect(levels[5].enemies.basic.projectile.initialAim).toBe("player");
+  });
+
+  it("lets bosses fire omnidirectionally at the player", () => {
+    expect(levels[1].enemies.boss.projectile.initialAim).toBe("player");
+    expect(levels[2].enemies.boss.projectile.initialAim).toBe("player");
+    expect(levels[3].enemies.boss.projectile.initialAim).toBe("player");
+    expect(levels[4].enemies.boss.projectile.initialAim).toBe("player");
+    expect(levels[5].enemies.boss.projectile.initialAim).toBe("player");
   });
 
   it("plays the wave-start sound when a formation spawns", () => {

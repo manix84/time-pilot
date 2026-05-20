@@ -1,4 +1,5 @@
 /* Converted from TimePilot.Menu.js (AMD) to ESM TypeScript. */
+import { assetPath } from "./asset-path";
 import { levels, player } from "./constants";
 import {
   defaultFilterMode,
@@ -10,6 +11,7 @@ import {
   filterPresets,
   normalizeFilterIntensity,
 } from "./filter-settings";
+import { fakeHighScores } from "./high-scores";
 import i18n, {
   availableLanguages,
   getCurrentLanguage,
@@ -29,6 +31,7 @@ import type {
   EnemyConfig,
   GameArenaInstance,
   GameLanguage,
+  HighScoreEntry,
   KeyboardBindings,
   MenuRenderOptions,
   MenuNavigationState,
@@ -36,6 +39,8 @@ import type {
   MenuSystemCommands,
   MenuSystemInstance,
   ProjectileConfig,
+  HighScoreSyncStatus,
+  ScoreTrophyRank,
   ShowStartMenuOptions,
 } from "./types";
 import type { StoredDataResetScope } from "./storage-reset";
@@ -54,6 +59,8 @@ import userOptions from "./user-options";
 type MenuScreen =
   | "start"
   | "achievements"
+  | "high-score-entry"
+  | "high-scores"
   | "options"
   | "controls"
   | "filters"
@@ -67,6 +74,29 @@ type MenuScreen =
   | "restart-confirm"
   | "level";
 type MenuItemKind = "action" | "enum" | "slider" | "key" | "toggle";
+const highScoreTrophyFrameSize = 32;
+const highScoreTrophyFrameCount = 8;
+const highScoreTrophyFrameDurationMs = 480;
+const syncIndicatorFrameSize = 32;
+const syncIndicatorFrameCount = 8;
+const syncIndicatorFrameDurationMs: Record<HighScoreSyncStatus, number> = {
+  error: 420,
+  waiting: 480,
+  syncing: 160,
+  success: 260,
+};
+const syncIndicatorStateRows: Record<HighScoreSyncStatus, number> = {
+  error: 0,
+  waiting: 1,
+  syncing: 2,
+  success: 3,
+};
+const highScoreTrophySpritePaths: Record<Exclude<ScoreTrophyRank, null>, string> = {
+  1: "sprites/achievements/trophy_gold_32.png",
+  2: "sprites/achievements/trophy_silver_32.png",
+  3: "sprites/achievements/trophy_bronze_32.png",
+};
+
 type ToggleDebugOption =
   | "invincible"
   | "showHeadingVectors"
@@ -87,6 +117,7 @@ interface MenuItem {
   languageFlag?: GameLanguage;
   isCurrent?: () => boolean;
   achievement?: AchievementStatus;
+  highScore?: HighScoreEntry;
   levelIcon?: number;
   onAdjust?: (direction: -1 | 1) => void;
   onSetValue?: (value: number) => void;
@@ -223,7 +254,9 @@ class Menus implements MenuSystemInstance {
   private _demoWatchStartedAt = 0;
   private _gameArena: GameArenaInstance;
   private _items: MenuItem[] = [];
+  private _highScoreName = "PILOT";
   private _konamiIndex = 0;
+  private readonly _syncIndicatorSprite: HTMLImageElement;
   private _achievementIconSprites: Partial<Record<string, HTMLImageElement>> = {};
   private _achievementLayoutSignature = "";
   private _levelIconSprites: Partial<Record<number, HTMLImageElement>> = {};
@@ -232,6 +265,10 @@ class Menus implements MenuSystemInstance {
   private _povPreviewSprites: Partial<Record<string, HTMLImageElement>> = {};
   private _logoLanguage?: GameLanguage;
   private _logoCanvas?: HTMLCanvasElement;
+  private readonly _highScoreTrophySprites: Record<
+    Exclude<ScoreTrophyRank, null>,
+    HTMLImageElement
+  >;
   private readonly _logoHeight = 96;
   private readonly _logoWidth = 420;
   private _povPreviewAlpha = 0;
@@ -258,6 +295,13 @@ class Menus implements MenuSystemInstance {
     this._gameArena = gameArena;
     this._commands = commands;
     this._debugUnlocked = userOptions.enableDebug;
+    this._highScoreTrophySprites = {
+      1: this._createHighScoreTrophySprite(highScoreTrophySpritePaths[1]),
+      2: this._createHighScoreTrophySprite(highScoreTrophySpritePaths[2]),
+      3: this._createHighScoreTrophySprite(highScoreTrophySpritePaths[3]),
+    };
+    this._syncIndicatorSprite = new Image();
+    this._syncIndicatorSprite.src = assetPath("sprites/ui/satelite.png");
   }
 
   isActive = (): boolean => {
@@ -336,10 +380,14 @@ class Menus implements MenuSystemInstance {
   };
 
   showGameOver = (): void => {
+    const canContinue = (this._commands.getContinues?.() ?? 0) > 0;
+
     this._active = true;
     this._awaitingBinding = null;
     this._bindingWarning = "";
-    this._screen = "game-over";
+    this._screen = !canContinue && this._commands.getPendingHighScore?.()
+      ? "high-score-entry"
+      : "game-over";
     this._screenHistory = [];
     this._pressedItemIndex = null;
     this._pressedItemDragged = false;
@@ -512,6 +560,10 @@ class Menus implements MenuSystemInstance {
   captureKey = (keyCode: number): boolean => {
     if (!this._active) {
       return false;
+    }
+
+    if (this._screen === "high-score-entry") {
+      return this._captureHighScoreNameKey(keyCode);
     }
 
     if (this.isWatchingDemo()) {
@@ -835,6 +887,11 @@ class Menus implements MenuSystemInstance {
         return;
       }
 
+      if (this._screen === "high-scores" && item.highScore) {
+        this._renderHighScoreItem(item, index === this._selectedIndex, index + 1);
+        return;
+      }
+
       this._renderItem(item, index === this._selectedIndex);
     });
 
@@ -857,6 +914,16 @@ class Menus implements MenuSystemInstance {
 
     if (this._screen === "debug-reset-confirm") {
       this._renderResetWarning();
+    }
+
+    if (this._screen === "high-score-entry") {
+      this._renderHighScoreEntry();
+      this._renderHighScoreSyncIndicator();
+    }
+
+    if (this._screen === "high-scores") {
+      this._renderHighScoreStats();
+      this._renderHighScoreSyncIndicator();
     }
   };
 
@@ -956,6 +1023,10 @@ class Menus implements MenuSystemInstance {
       this._items = this._createOptionsItems();
     } else if (this._screen === "achievements") {
       this._items = this._createAchievementItems();
+    } else if (this._screen === "high-score-entry") {
+      this._items = this._createHighScoreEntryItems();
+    } else if (this._screen === "high-scores") {
+      this._items = this._createHighScoreItems();
     } else if (this._screen === "filters") {
       this._items = this._createFilterItems();
     } else if (this._screen === "filter-custom") {
@@ -1013,6 +1084,14 @@ class Menus implements MenuSystemInstance {
     items.push(
       this._createItem(i18n.menu.achievements, "action", itemY, {
         action: () => this._goToScreen("achievements"),
+        opensSubmenu: true,
+      })
+    );
+    itemY += 50;
+
+    items.push(
+      this._createItem(i18n.menu.highScores, "action", itemY, {
+        action: () => this._goToScreen("high-scores"),
         opensSubmenu: true,
       })
     );
@@ -1097,6 +1176,50 @@ class Menus implements MenuSystemInstance {
       ),
     ];
   };
+
+  private _createHighScoreItems = (): MenuItem[] => {
+    const scores = this._commands.getHighScores?.() ?? fakeHighScores;
+    const viewport = this._getItemsViewport();
+    const hasStatsPanel = this._canShowHighScoreSideStats(viewport);
+    const cardWidth = hasStatsPanel
+      ? Math.min(320, Math.max(250, viewport.width * 0.42))
+      : Math.min(360, Math.max(250, viewport.width - 28));
+    const cardHeight = 32;
+    const gap = 6;
+    const cardX = hasStatsPanel ? 8 : -cardWidth / 2;
+    const startY = -54;
+
+    return [
+      ...scores.map((score, index) =>
+        this._createItem(score.name, "action", startY + index * (cardHeight + gap), {
+          highScore: score,
+          rect: {
+            x: cardX,
+            y: startY + index * (cardHeight + gap),
+            width: cardWidth,
+            height: cardHeight,
+          },
+        })
+      ),
+      this._createItem(
+        i18n.menu.back,
+        "action",
+        startY + scores.length * (cardHeight + gap) + 10,
+        {
+          action: () => this.goBack(),
+        }
+      ),
+    ];
+  };
+
+  private _createHighScoreEntryItems = (): MenuItem[] => [
+    this._createItem(i18n.menu.saveScore, "action", 100, {
+      action: () => this._completeHighScoreEntry(true),
+    }),
+    this._createItem(i18n.menu.skip, "action", 150, {
+      action: () => this._completeHighScoreEntry(false),
+    }),
+  ];
 
   private _createOptionsItems = (): MenuItem[] => {
     const showControlType = this._shouldShowControlTypeOption();
@@ -1763,6 +1886,20 @@ class Menus implements MenuSystemInstance {
       });
     });
 
+    if (achievement.unlocked && achievement.unlockedAt) {
+      this._gameArena.renderText(
+        this._formatAchievementUnlockDate(achievement.unlockedAt),
+        textX,
+        item.rect.y + item.rect.height - 10,
+        {
+          size: 7,
+          align: "left",
+          valign: "middle",
+          color: palette.menu.mutedText,
+        }
+      );
+    }
+
     if (!achievement.progress || progress === null) {
       return;
     }
@@ -1791,6 +1928,26 @@ class Menus implements MenuSystemInstance {
         ? palette.menu.itemText
         : palette.menu.disabledText,
     });
+  };
+
+  private _formatAchievementUnlockDate = (unlockedAt: number): string => {
+    const date = new Date(unlockedAt);
+
+    if (Number.isNaN(date.getTime())) {
+      return "";
+    }
+
+    const datePart = [
+      date.getFullYear(),
+      `${date.getMonth() + 1}`.padStart(2, "0"),
+      `${date.getDate()}`.padStart(2, "0"),
+    ].join("-");
+    const hours24 = date.getHours();
+    const hours12 = hours24 % 12 || 12;
+    const minutes = `${date.getMinutes()}`.padStart(2, "0");
+    const meridiem = hours24 < 12 ? "am" : "pm";
+
+    return `${datePart} ${hours12}:${minutes} ${meridiem}`;
   };
 
   private _renderAchievementIcon = (
@@ -1866,6 +2023,280 @@ class Menus implements MenuSystemInstance {
     this._achievementIconSprites[achievement.icon.src] = sprite;
 
     return sprite;
+  };
+
+  private _renderHighScoreItem = (
+    item: MenuItem,
+    isSelected: boolean,
+    rank: number
+  ): void => {
+    const highScore = item.highScore;
+
+    if (!highScore) {
+      return;
+    }
+
+    const context = this._gameArena.getContext() as CanvasRenderingContext2D;
+    const padding = 8;
+    const rankWidth = 52;
+    const scoreWidth = 92;
+    const textX = item.rect.x + padding + rankWidth;
+    const scoreText = this._formatScore(highScore.score);
+    const nameWidth = item.rect.width - padding * 2 - rankWidth - scoreWidth;
+    const displayName = this._truncateText(highScore.name, Math.max(8, nameWidth / 7));
+    const rowY = item.rect.y + item.rect.height / 2;
+
+    context.fillStyle = isSelected
+      ? palette.menu.selectedBackground
+      : palette.menu.itemBackground;
+    context.fillRect(
+      item.rect.x,
+      item.rect.y,
+      item.rect.width,
+      item.rect.height
+    );
+    context.strokeStyle = isSelected
+      ? palette.menu.selectedBorder
+      : palette.menu.itemBorder;
+    context.lineWidth = 2;
+    context.strokeRect(
+      item.rect.x,
+      item.rect.y,
+      item.rect.width,
+      item.rect.height
+    );
+
+    this._gameArena.renderText(`#${rank}`, item.rect.x + padding, rowY, {
+      size: 12,
+      align: "left",
+      valign: "middle",
+      color: isSelected ? palette.menu.selectedText : palette.menu.mutedText,
+    });
+    this._renderHighScoreTrophy(rank, item.rect.x + padding + 24, rowY);
+    this._gameArena.renderText(displayName, textX, rowY, {
+      size: 13,
+      align: "left",
+      valign: "middle",
+      color: isSelected ? palette.menu.selectedText : palette.menu.itemText,
+    });
+    this._gameArena.renderText(
+      scoreText,
+      item.rect.x + item.rect.width - padding,
+      rowY,
+      {
+        size: 13,
+        align: "right",
+        valign: "middle",
+        color: isSelected ? palette.menu.selectedText : palette.menu.waitingText,
+      }
+    );
+  };
+
+  private _renderHighScoreTrophy = (
+    rank: number,
+    posX: number,
+    rowY: number
+  ): void => {
+    const trophySprite = this._getHighScoreTrophySprite(rank);
+
+    if (
+      !trophySprite ||
+      !trophySprite.complete ||
+      trophySprite.naturalWidth <= 0
+    ) {
+      return;
+    }
+
+    const context = this._gameArena.getContext() as CanvasRenderingContext2D;
+    const trophySize = 18;
+    const frameX =
+      Math.floor(performance.now() / highScoreTrophyFrameDurationMs) %
+      highScoreTrophyFrameCount;
+
+    context.drawImage(
+      trophySprite,
+      frameX * highScoreTrophyFrameSize,
+      0,
+      highScoreTrophyFrameSize,
+      highScoreTrophyFrameSize,
+      posX,
+      rowY - trophySize / 2,
+      trophySize,
+      trophySize
+    );
+  };
+
+  private _createHighScoreTrophySprite = (path: string): HTMLImageElement => {
+    const sprite = new Image();
+
+    sprite.src = assetPath(path);
+
+    return sprite;
+  };
+
+  private _getHighScoreTrophySprite = (
+    rank: number
+  ): HTMLImageElement | undefined => {
+    if (rank !== 1 && rank !== 2 && rank !== 3) {
+      return undefined;
+    }
+
+    return this._highScoreTrophySprites[rank];
+  };
+
+  private _renderHighScoreStats = (): void => {
+    const item = this._items[this._selectedIndex];
+    const highScore = item?.highScore;
+
+    if (!highScore) {
+      return;
+    }
+
+    const rank = this._items
+      .slice(0, this._selectedIndex + 1)
+      .filter((candidate) => candidate.highScore).length;
+    const viewport = this._getItemsViewport();
+    const hasSideStatsPanel = this._canShowHighScoreSideStats(viewport);
+    const statsPanelWidth = Math.min(viewport.width, this._gameArena.width);
+    const x = hasSideStatsPanel ? -260 : -(statsPanelWidth / 2) + 14;
+    let y = hasSideStatsPanel
+      ? -54
+      : item.rect.y + item.rect.height + this._scrollY + 12;
+    const wrapWidth = hasSideStatsPanel
+      ? 30
+      : Math.max(24, Math.floor((statsPanelWidth - 28) / 7));
+
+    this._gameArena.renderText(`#${rank} ${highScore.name}`, x, y, {
+      size: 15,
+      align: "left",
+      valign: "top",
+      color: palette.menu.selectedBackground,
+    });
+    y += 24;
+
+    this._gameArena.renderText(this._formatScore(highScore.score), x, y, {
+      size: 16,
+      align: "left",
+      valign: "top",
+      color: palette.menu.waitingText,
+    });
+    y += 30;
+
+    highScore.stats.slice(0, 12).forEach((stat) => {
+      this._wrapText(stat, wrapWidth).forEach((line) => {
+        this._gameArena.renderText(line, x, y, {
+          size: 10,
+          align: "left",
+          valign: "top",
+          color: palette.menu.itemText,
+        });
+        y += 14;
+      });
+      y += 3;
+    });
+
+    y += 8;
+    this._gameArena.renderText(this._formatHighScoreDate(highScore.createdAt), x, y, {
+      size: 9,
+      align: "left",
+      valign: "top",
+      color: palette.menu.mutedText,
+    });
+  };
+
+  private _canShowHighScoreSideStats = (viewport: MenuViewport): boolean =>
+    Math.min(viewport.width, this._gameArena.width) >= 560;
+
+  private _formatHighScoreDate = (createdAt: number): string => {
+    const date = new Date(createdAt);
+
+    if (Number.isNaN(date.getTime())) {
+      return "Date: unknown";
+    }
+
+    return `Date: ${date.toISOString().slice(0, 10)}`;
+  };
+
+  private _renderHighScoreSyncIndicator = (): void => {
+    const status = this._commands.getHighScoreSyncStatus?.();
+
+    if (!status || !this._syncIndicatorSprite.complete) {
+      return;
+    }
+
+    const viewport = this._getItemsViewport();
+    const frameDuration = syncIndicatorFrameDurationMs[status];
+    const frameX =
+      Math.floor(performance.now() / frameDuration) % syncIndicatorFrameCount;
+    const frameY = syncIndicatorStateRows[status];
+    const renderSize = 24;
+
+    this._gameArena.renderSprite(this._syncIndicatorSprite, {
+      frameWidth: syncIndicatorFrameSize,
+      frameHeight: syncIndicatorFrameSize,
+      frameX,
+      frameY,
+      renderWidth: renderSize,
+      renderHeight: renderSize,
+      posX: viewport.x + viewport.width - renderSize - 4,
+      posY: viewport.y + 4,
+    });
+  };
+
+  private _truncateText = (text: string, maxLength: number): string => {
+    const limit = Math.max(1, Math.floor(maxLength));
+
+    if (text.length <= limit) {
+      return text;
+    }
+
+    if (limit <= 1) {
+      return text.slice(0, limit);
+    }
+
+    return `${text.slice(0, limit - 1)}…`;
+  };
+
+  private _renderHighScoreEntry = (): void => {
+    const pendingScore = this._commands.getPendingHighScore?.();
+    const context = this._gameArena.getContext() as CanvasRenderingContext2D;
+    const boxWidth = 320;
+    const boxX = -boxWidth / 2;
+    const boxY = -54;
+
+    context.fillStyle = palette.menu.itemBackground;
+    context.fillRect(boxX, boxY, boxWidth, 94);
+    context.strokeStyle = palette.menu.selectedBorder;
+    context.lineWidth = 2;
+    context.strokeRect(boxX, boxY, boxWidth, 94);
+
+    this._gameArena.renderText(i18n.menu.highScoreName, boxX + 14, boxY + 14, {
+      size: 10,
+      align: "left",
+      valign: "top",
+      color: palette.menu.mutedText,
+    });
+    this._gameArena.renderText(this._highScoreName || "_", 0, boxY + 40, {
+      size: 18,
+      align: "center",
+      valign: "middle",
+      color: palette.menu.itemText,
+    });
+    this._gameArena.renderText(i18n.menu.highScoreNameHint, 0, boxY + 68, {
+      size: 8,
+      align: "center",
+      valign: "middle",
+      color: palette.menu.mutedText,
+    });
+
+    if (pendingScore) {
+      this._gameArena.renderText(this._formatScore(pendingScore.score), 0, 58, {
+        size: 18,
+        align: "center",
+        valign: "middle",
+        color: palette.menu.waitingText,
+      });
+    }
   };
 
   private _renderLevelBlurb = (): void => {
@@ -3411,6 +3842,14 @@ class Menus implements MenuSystemInstance {
       return i18n.menu.achievements;
     }
 
+    if (this._screen === "high-scores") {
+      return i18n.menu.highScores;
+    }
+
+    if (this._screen === "high-score-entry") {
+      return i18n.menu.highScoreEntryTitle;
+    }
+
     if (this._screen === "controls") {
       return i18n.menu.controls;
     }
@@ -3566,6 +4005,79 @@ class Menus implements MenuSystemInstance {
   private _cancelReset = (): void => {
     this._pendingResetScope = null;
     this._goBack();
+  };
+
+  private _captureHighScoreNameKey = (keyCode: number): boolean => {
+    if (keyCode === 13) {
+      if (this._items[this._selectedIndex]?.label === i18n.menu.saveScore) {
+        this._completeHighScoreEntry(true);
+        return true;
+      }
+
+      this.activate();
+      return true;
+    }
+
+    if (keyCode === 27) {
+      this._completeHighScoreEntry(false);
+      return true;
+    }
+
+    if (keyCode === 8) {
+      this._highScoreName = this._highScoreName.slice(0, -1);
+      return true;
+    }
+
+    const character = this._getHighScoreNameCharacter(keyCode);
+
+    if (!character) {
+      return false;
+    }
+
+    if (this._highScoreName.length >= 16) {
+      return true;
+    }
+
+    this._highScoreName += character;
+    return true;
+  };
+
+  private _completeHighScoreEntry = (saveScore: boolean): void => {
+    if (saveScore) {
+      this._commands.saveHighScore?.(this._highScoreName);
+    } else {
+      this._commands.discardHighScore?.();
+    }
+
+    const previousScreen = this._screen;
+    this._screen = "game-over";
+    this._screenHistory = [];
+    this._selectedIndex = 0;
+    this._scrollY = 0;
+    this._shouldRevealSelected = true;
+    this._buildItems();
+    this._startTransition(previousScreen, "game-over");
+    this._notifyNavigationChanged();
+  };
+
+  private _getHighScoreNameCharacter = (keyCode: number): string => {
+    if (keyCode >= 65 && keyCode <= 90) {
+      return String.fromCharCode(keyCode);
+    }
+
+    if (keyCode >= 48 && keyCode <= 57) {
+      return String.fromCharCode(keyCode);
+    }
+
+    if (keyCode === 32) {
+      return " ";
+    }
+
+    if (keyCode === 189) {
+      return "-";
+    }
+
+    return "";
   };
 
   private _adjustControllerType = (direction: -1 | 1): void => {
@@ -3749,6 +4261,10 @@ class Menus implements MenuSystemInstance {
     };
 
     return namedKeys[keyCode] ?? `${keyCode}`;
+  };
+
+  private _formatScore = (score: number): string => {
+    return Math.max(0, Math.floor(score)).toLocaleString("en-GB");
   };
 
   private _formatBindingLabel = (binding: BindingAction): string => {

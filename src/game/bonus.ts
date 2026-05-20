@@ -122,6 +122,9 @@ class Bonus implements BonusInstance {
     const value = this._context._nextParachuteScore ?? parachuteScoring.min;
 
     this._player.setData("score", this._player.getData("score") + value);
+    if (!this._context._isDemoMode) {
+      this._context._runStats.bonusesCollected += 1;
+    }
     this._context._nextParachuteScore = Math.min(
       value + parachuteScoring.step,
       parachuteScoring.max

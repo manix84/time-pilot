@@ -674,6 +674,13 @@ class Enemy implements EnemyInstance {
       "score",
       this._player.getData("score") + this.getLevelData("deathValue")!
     );
+    if (!this._context._isDemoMode) {
+      this._context._runStats.enemiesDestroyed += 1;
+
+      if (this._data.type === "boss") {
+        this._context._runStats.bossesDefeated += 1;
+      }
+    }
     this._trackBossKillProgress();
     this._trackBossDefeat();
     this._trackFormationKill();

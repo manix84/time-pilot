@@ -1,4 +1,5 @@
 /* Converted from TimePilot.Hud.js (AMD) to ESM TypeScript. */
+import { assetPath } from "./asset-path";
 import { levels, player } from "./constants";
 import i18n from "./i18n";
 import palette from "./palette";
@@ -10,6 +11,7 @@ import type {
   GameArenaInstance,
   GameDataStore,
   HudInstance,
+  ScoreTrophyRank,
   SpriteImage,
 } from "./types";
 
@@ -25,6 +27,16 @@ const directionalEnemyVisibleHeight = 8;
 const touchSteeringOriginOuterRadius = 28;
 const touchSteeringOriginRadius = 18;
 const touchSteeringThumbRadius = 24;
+const highScoreTrophySize = 24;
+const highScoreTrophyGap = 8;
+const highScoreTrophyFrameSize = 32;
+const highScoreTrophyFrameCount = 8;
+const highScoreTrophyFrameDurationMs = 480;
+const trophySpritePaths: Record<Exclude<ScoreTrophyRank, null>, string> = {
+  1: "sprites/achievements/trophy_gold_32.png",
+  2: "sprites/achievements/trophy_silver_32.png",
+  3: "sprites/achievements/trophy_bronze_32.png",
+};
 
 /**
  * Heads-up display renderer for score, lives, boss progress, credits, and overlays.
@@ -34,6 +46,7 @@ class Hud implements HudInstance {
   private _enemySprites: Partial<Record<number, SpriteImage>> = {};
   private _gameArena: GameArenaInstance;
   private _playerSprite: SpriteImage;
+  private _trophySprites: Record<Exclude<ScoreTrophyRank, null>, SpriteImage>;
 
   constructor(context: GameDataStore) {
     this._context = context;
@@ -45,6 +58,12 @@ class Hud implements HudInstance {
     this._playerSprite.frameHeight = player.frameHeight;
     this._playerSprite.frameX = 0;
     this._playerSprite.frameY = 0;
+
+    this._trophySprites = {
+      1: this.createTrophySprite(trophySpritePaths[1]),
+      2: this.createTrophySprite(trophySpritePaths[2]),
+      3: this.createTrophySprite(trophySpritePaths[3]),
+    };
   }
 
   render = (): void => {
@@ -59,12 +78,7 @@ class Hud implements HudInstance {
     context.save();
     context.scale(uiScale, uiScale);
 
-    this._gameArena.renderText(
-      playerData.score,
-      -(uiWidth / 2) + 20,
-      -(uiHeight / 2) + 10,
-      { size: 30 }
-    );
+    this.renderScore(playerData.score, uiWidth, uiHeight);
 
     if (userOptions.enableDebug && userOptions.debug.showPlayerCoordinates) {
       this._gameArena.renderText(
@@ -109,6 +123,54 @@ class Hud implements HudInstance {
       }
     );
   };
+
+  private renderScore = (
+    score: number,
+    uiWidth: number,
+    uiHeight: number
+  ): void => {
+    const scoreX = -(uiWidth / 2) + 20;
+    const scoreY = -(uiHeight / 2) + 10;
+    const trophyRank = this._context._scoreTrophyRank;
+    const trophySprite = trophyRank ? this._trophySprites[trophyRank] : null;
+
+    if (trophySprite) {
+      this._gameArena.renderSprite(trophySprite, {
+        frameWidth: trophySprite.frameWidth ?? highScoreTrophyFrameSize,
+        frameHeight: trophySprite.frameHeight ?? highScoreTrophyFrameSize,
+        frameX: this.getHighScoreTrophyFrame(),
+        frameY: trophySprite.frameY ?? 0,
+        renderWidth: highScoreTrophySize,
+        renderHeight: highScoreTrophySize,
+        posX: scoreX,
+        posY: scoreY + 2,
+      });
+    }
+
+    this._gameArena.renderText(
+      score,
+      scoreX +
+        (trophySprite ? highScoreTrophySize + highScoreTrophyGap : 0),
+      scoreY,
+      { size: 30 }
+    );
+  };
+
+  private createTrophySprite = (path: string): SpriteImage => {
+    const sprite = new Image() as SpriteImage;
+
+    sprite.src = assetPath(path);
+    sprite.frameWidth = highScoreTrophyFrameSize;
+    sprite.frameHeight = highScoreTrophyFrameSize;
+    sprite.frameX = 0;
+    sprite.frameY = 0;
+
+    return sprite;
+  };
+
+  private getHighScoreTrophyFrame = (): number =>
+    Math.floor(performance.now() / highScoreTrophyFrameDurationMs) %
+    highScoreTrophyFrameCount;
 
   private formatCredits = (continues: number): string => {
     if (!Number.isFinite(continues) || continues < 0) {

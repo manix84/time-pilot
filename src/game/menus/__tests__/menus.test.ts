@@ -29,6 +29,15 @@ const createArena = (): GameArenaInstance => ({
   getElement: vi.fn(() => document.createElement("canvas")),
 });
 
+const createArenaWithSize = (
+  width: number,
+  height: number
+): GameArenaInstance => ({
+  ...createArena(),
+  width,
+  height,
+});
+
 describe("menu definitions", () => {
   afterEach(() => {
     vi.restoreAllMocks();
@@ -117,7 +126,7 @@ describe("menu definitions", () => {
 
     vi.mocked(arena.renderText).mockClear();
     pwaMenus.showStart();
-    for (let i = 0; i < 3; i++) {
+    for (let i = 0; i < 4; i++) {
       pwaMenus.next();
     }
     pwaMenus.render();
@@ -187,6 +196,7 @@ describe("menu definitions", () => {
     menus.next();
     menus.next();
     menus.next();
+    menus.next();
     menus.activate();
 
     expect(applyUpdate).toHaveBeenCalled();
@@ -252,6 +262,7 @@ describe("menu definitions", () => {
     );
 
     vi.mocked(arena.renderText).mockClear();
+    menus.next();
     menus.next();
     menus.next();
     menus.next();
@@ -330,6 +341,7 @@ describe("menu definitions", () => {
           description: "Reach a new era on your final life.",
           icon: icon("achievement_lastChance.png"),
           unlocked: true,
+          unlockedAt: Date.UTC(2026, 4, 19, 8, 30),
         },
         {
           id: "quarter-master",
@@ -393,6 +405,12 @@ describe("menu definitions", () => {
       expect.any(Number),
       expect.objectContaining({ align: "left" })
     );
+    expect(arena.renderText).toHaveBeenCalledWith(
+      expect.stringMatching(/^2026-05-19 \d{1,2}:30 (am|pm)$/),
+      expect.any(Number),
+      expect.any(Number),
+      expect.objectContaining({ align: "left" })
+    );
 
     const fillRectCalls = vi
       .mocked(arena.getContext)
@@ -401,6 +419,209 @@ describe("menu definitions", () => {
       );
 
     expect(fillRectCalls.length).toBeGreaterThan(0);
+  });
+
+  it("opens the high-score page from the root menu below achievements", () => {
+    const arena = createArena();
+    const menus = new Menus(arena, {
+      getHighScores: () => [
+        {
+          createdAt: Date.UTC(2012, 8, 13),
+          id: "shooty",
+          name: "Shooty McShootface",
+          score: 1000000,
+          stats: ["Era: 2001", "Bosses: 5", "Continues: 0"],
+        },
+      ],
+      start: vi.fn(),
+    });
+
+    menus.showStart();
+    menus.render();
+
+    const achievementsY = vi
+      .mocked(arena.renderText)
+      .mock.calls.find((call) => call[0] === "Achievements")?.[2];
+    const highScoresY = vi
+      .mocked(arena.renderText)
+      .mock.calls.find((call) => call[0] === "High Scores")?.[2];
+
+    expect(achievementsY).toBeLessThan(
+      typeof highScoresY === "number" ? highScoresY : Number.NaN
+    );
+
+    vi.mocked(arena.renderText).mockClear();
+    menus.next();
+    menus.next();
+    menus.next();
+    menus.activate();
+    menus.render();
+
+    expect(arena.renderText).toHaveBeenCalledWith(
+      "High Scores",
+      expect.any(Number),
+      expect.any(Number),
+      expect.objectContaining({ align: "center" })
+    );
+    expect(arena.renderText).toHaveBeenCalledWith(
+      "Shooty McShootface",
+      expect.any(Number),
+      expect.any(Number),
+      expect.objectContaining({ align: "left" })
+    );
+    expect(arena.renderText).toHaveBeenCalledWith(
+      "1,000,000",
+      expect.any(Number),
+      expect.any(Number),
+      expect.objectContaining({ align: "right" })
+    );
+    expect(arena.renderText).toHaveBeenCalledWith(
+      "Era: 2001",
+      expect.any(Number),
+      expect.any(Number),
+      expect.objectContaining({ align: "left" })
+    );
+    expect(arena.renderText).toHaveBeenCalledWith(
+      "Date: 2012-09-13",
+      expect.any(Number),
+      expect.any(Number),
+      expect.objectContaining({ align: "left" })
+    );
+  });
+
+  it("renders selected high-score stats below the list on narrow screens", () => {
+    const arena = createArenaWithSize(420, 600);
+    const menus = new Menus(arena, {
+      getHighScores: () => [
+        {
+          createdAt: Date.UTC(2012, 8, 13),
+          id: "shooty",
+          name: "Shooty McShootface",
+          score: 1000000,
+          stats: ["Era: 2001", "Bosses: 5", "Continues: 0"],
+        },
+      ],
+      start: vi.fn(),
+    });
+
+    menus.showStart();
+    menus.next();
+    menus.next();
+    menus.next();
+    menus.activate();
+    menus.render();
+
+    const statCall = vi
+      .mocked(arena.renderText)
+      .mock.calls.find((call) => call[0] === "#1 Shooty McShootface");
+
+    expect(statCall?.[1]).toBeGreaterThan(-220);
+    expect(statCall?.[2]).toBeGreaterThan(-30);
+  });
+
+  it("renders the high-score sync satellite indicator", () => {
+    vi.stubGlobal(
+      "Image",
+      class {
+        complete = true;
+        naturalWidth = 256;
+        src = "";
+      }
+    );
+    const arena = createArena();
+    const menus = new Menus(arena, {
+      getHighScoreSyncStatus: () => "syncing",
+      getHighScores: () => [
+        {
+          createdAt: Date.UTC(2012, 8, 13),
+          id: "shooty",
+          name: "Shooty McShootface",
+          score: 1000000,
+          stats: ["Era: 2001"],
+        },
+      ],
+      start: vi.fn(),
+    });
+
+    menus.showStart();
+    menus.next();
+    menus.next();
+    menus.next();
+    menus.activate();
+    menus.render();
+
+    expect(arena.renderSprite).toHaveBeenCalledWith(
+      expect.objectContaining({ src: expect.stringContaining("satelite.png") }),
+      expect.objectContaining({
+        frameHeight: 32,
+        frameWidth: 32,
+        frameY: 2,
+        renderHeight: 24,
+        renderWidth: 24,
+      })
+    );
+  });
+
+  it("captures a pilot name before saving a game-over high score", () => {
+    const arena = createArena();
+    const saveHighScore = vi.fn();
+    const menus = new Menus(arena, {
+      getPendingHighScore: () => ({
+        score: 12345,
+        stats: ["Era: 1910", "Continues: 0"],
+      }),
+      getContinues: () => 0,
+      saveHighScore,
+      start: vi.fn(),
+    });
+
+    menus.showGameOver();
+    menus.render();
+
+    expect(arena.renderText).toHaveBeenCalledWith(
+      "Save Score",
+      expect.any(Number),
+      expect.any(Number),
+      expect.objectContaining({ align: "center" })
+    );
+    expect(arena.renderText).toHaveBeenCalledWith(
+      "12,345",
+      expect.any(Number),
+      expect.any(Number),
+      expect.objectContaining({ align: "center" })
+    );
+
+    for (let i = 0; i < 5; i++) {
+      expect(menus.captureKey(8)).toBe(true);
+    }
+    expect(menus.captureKey(65)).toBe(true);
+    expect(menus.captureKey(66)).toBe(true);
+    expect(menus.captureKey(13)).toBe(true);
+
+    expect(saveHighScore).toHaveBeenCalledWith("AB");
+  });
+
+  it("lets enter activate skip on the high-score entry screen", () => {
+    const arena = createArena();
+    const discardHighScore = vi.fn();
+    const saveHighScore = vi.fn();
+    const menus = new Menus(arena, {
+      discardHighScore,
+      getPendingHighScore: () => ({
+        score: 12345,
+        stats: ["Era: 1910"],
+      }),
+      getContinues: () => 0,
+      saveHighScore,
+      start: vi.fn(),
+    });
+
+    menus.showGameOver();
+    menus.next();
+
+    expect(menus.captureKey(13)).toBe(true);
+    expect(discardHighScore).toHaveBeenCalled();
+    expect(saveHighScore).not.toHaveBeenCalled();
   });
 
   it("does not crash the achievements page while icon art is missing", () => {
@@ -514,6 +735,39 @@ describe("menu definitions", () => {
     menus.next();
     menus.activate();
     expect(exitToRoot).toHaveBeenCalled();
+  });
+
+  it("does not interrupt continues with high-score entry", () => {
+    const continueGame = vi.fn();
+    const arena = createArena();
+    const menus = new Menus(arena, {
+      continueGame,
+      getContinues: () => 1,
+      getPendingHighScore: () => ({
+        score: 12345,
+        stats: ["Era: 1910", "Continues: 0"],
+      }),
+      start: vi.fn(),
+    });
+
+    menus.showGameOver();
+    menus.render();
+
+    expect(arena.renderText).toHaveBeenCalledWith(
+      "Continue",
+      expect.any(Number),
+      expect.any(Number),
+      expect.objectContaining({ align: "left" })
+    );
+    expect(arena.renderText).not.toHaveBeenCalledWith(
+      "Save Score",
+      expect.any(Number),
+      expect.any(Number),
+      expect.any(Object)
+    );
+
+    menus.activate();
+    expect(continueGame).toHaveBeenCalled();
   });
 
   it("shows restart on game over when no continues remain", () => {
@@ -1345,6 +1599,7 @@ describe("menu definitions", () => {
     menus.next();
     menus.next();
     menus.next();
+    menus.next();
     menus.activate();
 
     for (let i = 0; i < 9; i++) {
@@ -1439,6 +1694,7 @@ describe("menu definitions", () => {
     menus.next();
     menus.next();
     menus.next();
+    menus.next();
     menus.activate();
     menus.render();
 
@@ -1529,6 +1785,7 @@ describe("menu definitions", () => {
       menus.captureKey(keyCode);
     }
 
+    menus.next();
     menus.next();
     menus.next();
     menus.next();
@@ -1783,6 +2040,7 @@ describe("menu definitions", () => {
       menus.captureKey(keyCode);
     }
 
+    menus.next();
     menus.next();
     menus.next();
     menus.next();
