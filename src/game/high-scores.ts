@@ -132,6 +132,14 @@ export const getHighScores = (): HighScoreEntry[] =>
   ].slice(0, maxStoredHighScores);
 
 /**
+ * Returns true leaderboard entries sorted by score for award thresholds.
+ */
+export const getHighScoreThresholds = (limit: number): HighScoreEntry[] =>
+  [...loadStoredHighScores(), ...fakeHighScores]
+    .sort(sortHighScores)
+    .slice(0, Math.max(0, Math.floor(limit)));
+
+/**
  * Starts a remotely verifiable high-score run when the API is available.
  */
 export const startHighScoreRun = async (): Promise<HighScoreRunReceipt | null> => {

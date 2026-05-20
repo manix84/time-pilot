@@ -16,6 +16,7 @@ import Ticker from "./engine/Ticker";
 import { gameFps } from "./game-timing";
 import {
   getHighScores,
+  getHighScoreThresholds,
   getHighScoreSyncStatus,
   saveHighScore,
   startHighScoreRun,
@@ -1932,8 +1933,7 @@ export class TimePilot {
   };
 
   private prepareHighScoreTarget = (currentScore = 0): void => {
-    this.highScoreTrophyTargets = getHighScores()
-      .slice(0, 3)
+    this.highScoreTrophyTargets = getHighScoreThresholds(3)
       .map((score) => score.score);
     this.highScoreTarget = this.highScoreTrophyTargets[0] ?? 0;
     this.context._scoreTrophyRank = this.getScoreTrophyRank(currentScore);

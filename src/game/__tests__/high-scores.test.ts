@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
+  getHighScoreThresholds,
   getHighScoreSyncStatus,
   getHighScores,
   loadStoredHighScores,
@@ -150,6 +151,11 @@ describe("high score storage", () => {
       name: "New Pilot",
       score: 1200,
     });
+    expect(getHighScoreThresholds(3).map((score) => score.score)).toEqual([
+      1000000,
+      875500,
+      742250,
+    ]);
   });
 
   it("keeps gameplay-safe score saves best effort when storage writes fail", () => {

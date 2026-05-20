@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { sounds } from "../constants";
+import { saveHighScore } from "../high-scores";
 import TimePilot from "../index";
 import userOptions from "../user-options";
 
@@ -737,6 +738,33 @@ describe("TimePilot engine", () => {
 
     expect(pilot.context._scoreTrophyRank).toBe(2);
     expect(pilot.context._hasReachedHighScore).toBe(false);
+    expect(playedSources).not.toContain(sounds.highScore.src);
+
+    game.destroyGame();
+  });
+
+  it("uses sorted leaderboard thresholds for trophies when local scores are lower", async () => {
+    saveHighScore("Local Pilot", 1200, ["Era: 1910"]);
+    const playedSources = getPlayedSources();
+    const game = new TimePilot(host, { debug: true, gamepadEnabled: false });
+    const pilot = game as unknown as {
+      beginGame: () => void;
+      context: {
+        _scoreTrophyRank: 1 | 2 | 3 | null;
+        _player: {
+          setData: (key: "score", value: number) => void;
+        };
+      };
+    };
+
+    await waitForAudioTimer();
+
+    pilot.beginGame();
+    playedSources.length = 0;
+
+    pilot.context._player.setData("score", 1201);
+
+    expect(pilot.context._scoreTrophyRank).toBeNull();
     expect(playedSources).not.toContain(sounds.highScore.src);
 
     game.destroyGame();

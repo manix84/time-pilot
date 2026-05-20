@@ -54,12 +54,12 @@ class CollisionSystem implements CollisionSystemInstance {
             };
 
         const bulletHitRadius = bulletData.size + player.hitRadius;
-        const bulletDistance = Math.hypot(
+        const bulletDistanceSquared = this.getDistanceSquared(
           bulletPosition.posX - playerData.posX,
           bulletPosition.posY - playerData.posY
         );
 
-        if (bulletDistance <= bulletHitRadius) {
+        if (bulletDistanceSquared <= bulletHitRadius ** 2) {
           const wasAlive = playerData.isAlive;
           bullet.explode();
           this._context._player.kill();
@@ -77,7 +77,7 @@ class CollisionSystem implements CollisionSystemInstance {
           this._trackNearMiss(
             bullet,
             this._nearMissedEnemyBullets,
-            bulletDistance,
+            bulletDistanceSquared,
             bulletHitRadius
           );
         }
@@ -142,7 +142,7 @@ class CollisionSystem implements CollisionSystemInstance {
         const levelData =
           levels[this._context._level].enemies[enemyData.type] ??
           levels[this._context._level].enemies.basic;
-        const enemyDistance = Math.hypot(
+        const enemyDistanceSquared = this.getDistanceSquared(
           enemyData.posX - playerData.posX,
           enemyData.posY - playerData.posY
         );
@@ -150,7 +150,7 @@ class CollisionSystem implements CollisionSystemInstance {
         this._trackNearMiss(
           enemy,
           this._nearMissedEnemies,
-          enemyDistance,
+          enemyDistanceSquared,
           player.hitRadius + levelData.hitRadius
         );
       }
@@ -268,13 +268,15 @@ class CollisionSystem implements CollisionSystemInstance {
   private _trackNearMiss = <T extends object>(
     entity: T,
     seen: WeakSet<T>,
-    distance: number,
+    distanceSquared: number,
     hitRadius: number
   ): void => {
+    const nearMissRadius = hitRadius + nearMissClearance;
+
     if (
       this._context._isDemoMode ||
       seen.has(entity) ||
-      distance > hitRadius + nearMissClearance
+      distanceSquared > nearMissRadius ** 2
     ) {
       return;
     }
@@ -282,6 +284,9 @@ class CollisionSystem implements CollisionSystemInstance {
     seen.add(entity);
     this._context._runStats.nearMisses += 1;
   };
+
+  private getDistanceSquared = (deltaX: number, deltaY: number): number =>
+    deltaX * deltaX + deltaY * deltaY;
 }
 
 export default CollisionSystem;

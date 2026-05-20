@@ -12,6 +12,12 @@ const { Pool } = pg;
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const jsonStorePath = resolve(__dirname, "../data/high-scores.json");
 const maxBodyBytes = 64 * 1024;
+const maxGameEra = 5;
+const maxPlausibleAccuracy = 100;
+const maxPlausibleBonuses = 200;
+const maxPlausibleBosses = 5;
+const maxPlausibleEnemies = 2000;
+const maxPlausibleShots = 10000;
 const maxScoreStats = 12;
 const maxScores = 100;
 const maxPublicScores = 25;
@@ -377,7 +383,7 @@ const isPlausibleScore = (entry) => {
     return false;
   }
 
-  if (parsed.accuracy > 100) {
+  if (parsed.accuracy > maxPlausibleAccuracy) {
     return false;
   }
 
@@ -397,19 +403,36 @@ const parseStats = (stats) => {
 
   return {
     accuracy: readNumberStat(joined, "Accuracy"),
-    bonuses: readNumberStat(joined, "Bonuses"),
-    bosses: readNumberStat(joined, "Bosses"),
-    enemies: readNumberStat(joined, "Enemies"),
-    levels: readNumberStat(joined, "Era"),
-    shotsFired: shots ? Number.parseInt(shots[2], 10) : 0,
-    shotsHit: shots ? Number.parseInt(shots[1], 10) : 0,
+    bonuses: readNumberStat(joined, "Bonuses", 0, maxPlausibleBonuses),
+    bosses: readNumberStat(joined, "Bosses", 0, maxPlausibleBosses),
+    enemies: readNumberStat(joined, "Enemies", 0, maxPlausibleEnemies),
+    levels: readNumberStat(joined, "Era", 1, maxGameEra),
+    shotsFired: shots
+      ? clampNumber(Number.parseInt(shots[2], 10), 0, maxPlausibleShots)
+      : 0,
+    shotsHit: shots
+      ? clampNumber(Number.parseInt(shots[1], 10), 0, maxPlausibleShots)
+      : 0,
   };
 };
 
-const readNumberStat = (text, label) => {
+const readNumberStat = (text, label, min = 0, max = Number.MAX_SAFE_INTEGER) => {
   const match = new RegExp(`${label}:\\s*(\\d+)`, "i").exec(text);
 
-  return match ? Number.parseInt(match[1], 10) : 0;
+  return match ? clampNumber(Number.parseInt(match[1], 10), min, max) : 0;
+};
+
+const clampNumber = (value, min, max) => {
+  if (!Number.isFinite(value)) {
+    return min;
+  }
+
+  return Math.max(min, Math.min(max, value));
+};
+
+export const __testHooks = {
+  isPlausibleScore,
+  parseStats,
 };
 
 const readJsonBody = async (request, response) => {
