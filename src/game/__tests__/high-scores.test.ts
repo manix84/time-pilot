@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
+  getHighScoreSyncStatus,
   getHighScores,
   loadStoredHighScores,
   saveHighScore,
@@ -26,7 +27,7 @@ describe("high score storage", () => {
     vi.restoreAllMocks();
   });
 
-  it("keeps scores local-only when no remote run receipt exists", () => {
+  it("keeps scores local-only when no remote run receipt exists", async () => {
     vi.spyOn(globalThis, "fetch").mockRejectedValue(new Error("offline"));
 
     saveHighScore(" Ace Pilot! ", 1200, ["Era: 1910"]);
@@ -41,6 +42,11 @@ describe("high score storage", () => {
       score: 1200,
     });
     expect(storedScores[0]?.syncState).toBe("local");
+    expect(getHighScoreSyncStatus()).toBe("syncing");
+
+    await new Promise((resolve) => window.setTimeout(resolve, 0));
+
+    expect(getHighScoreSyncStatus()).toBe("error");
   });
 
   it("submits receipt-backed pending scores and stores remote results", async () => {
@@ -103,6 +109,7 @@ describe("high score storage", () => {
       receivedAt: 123456,
       syncState: "synced",
     });
+    expect(getHighScoreSyncStatus()).toBe("success");
   });
 
   it("sorts matching scores by the first creation timestamp", () => {
@@ -165,10 +172,16 @@ describe("high score storage", () => {
   });
 
   it("downgrades terminal sync rejections to local scores", async () => {
-    vi.spyOn(globalThis, "fetch").mockResolvedValue({
-      ok: false,
-      status: 401,
-    } as Response);
+    vi.spyOn(globalThis, "fetch").mockImplementation((input, init) => {
+      if (input === "/api/high-scores" && init?.method === "POST") {
+        return Promise.resolve({
+          ok: false,
+          status: 401,
+        } as Response);
+      }
+
+      return Promise.resolve(createJsonResponse([]));
+    });
 
     localStorage.setItem(
       highScoreStorageKey,
@@ -198,6 +211,7 @@ describe("high score storage", () => {
 
     expect(storedScores[0]).toMatchObject({ syncState: "local" });
     expect(storedScores[0]?.run).toBeUndefined();
+    expect(getHighScoreSyncStatus()).toBe("success");
   });
 
   it("persists successful pending sync updates before a later submit fails", async () => {
@@ -277,5 +291,6 @@ describe("high score storage", () => {
         }),
       ])
     );
+    expect(getHighScoreSyncStatus()).toBe("error");
   });
 });

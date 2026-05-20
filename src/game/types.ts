@@ -500,6 +500,8 @@ export interface GameDataStore {
 
 export type ScoreTrophyRank = 1 | 2 | 3 | null;
 
+export type HighScoreSyncStatus = "error" | "waiting" | "syncing" | "success";
+
 export interface CollisionSystemInstance {
   detectCollisions: () => void;
 }
@@ -537,6 +539,7 @@ export interface MenuSystemCommands {
   getAchievements?: () => AchievementStatus[];
   getHighScores?: () => HighScoreEntry[];
   getPendingHighScore?: () => PendingHighScoreEntry | null;
+  getHighScoreSyncStatus?: () => HighScoreSyncStatus | null;
   getLevel?: () => number;
   previewLevel?: (level: number) => void;
   playPreroll?: () => void;

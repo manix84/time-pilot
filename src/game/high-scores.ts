@@ -1,4 +1,4 @@
-import type { HighScoreEntry } from "./types";
+import type { HighScoreEntry, HighScoreSyncStatus } from "./types";
 
 type HighScoreSyncState = "local" | "pending" | "synced";
 
@@ -21,6 +21,17 @@ const fakeHighScoreBaseCreatedAt = Date.UTC(2012, 8, 13);
 const maxHighScoreStats = 12;
 const maxStoredHighScores = 10;
 const maxCachedHighScores = 50;
+let highScoreSyncStatus: HighScoreSyncStatus | null = "waiting";
+
+/**
+ * Returns the latest high-score save/sync status for menu indicators.
+ */
+export const getHighScoreSyncStatus = (): HighScoreSyncStatus | null =>
+  highScoreSyncStatus;
+
+const setHighScoreSyncStatus = (status: HighScoreSyncStatus | null): void => {
+  highScoreSyncStatus = status;
+};
 
 /**
  * Placeholder high-score table used until remote score storage exists.
@@ -124,6 +135,8 @@ export const getHighScores = (): HighScoreEntry[] =>
  * Starts a remotely verifiable high-score run when the API is available.
  */
 export const startHighScoreRun = async (): Promise<HighScoreRunReceipt | null> => {
+  setHighScoreSyncStatus("syncing");
+
   try {
     const response = await fetch(`${highScoreApiBasePath}/runs`, {
       method: "POST",
@@ -137,17 +150,21 @@ export const startHighScoreRun = async (): Promise<HighScoreRunReceipt | null> =
     });
 
     if (!response.ok) {
+      setHighScoreSyncStatus("error");
       return null;
     }
 
     const receipt = (await response.json()) as Partial<HighScoreRunReceipt>;
 
     if (!isHighScoreRunReceipt(receipt)) {
+      setHighScoreSyncStatus("error");
       return null;
     }
 
+    setHighScoreSyncStatus("success");
     return receipt;
   } catch {
+    setHighScoreSyncStatus("error");
     return null;
   }
 };
@@ -161,6 +178,7 @@ export const saveHighScore = (
   stats: string[],
   run?: HighScoreRunReceipt | null
 ): HighScoreEntry => {
+  setHighScoreSyncStatus(run ? "syncing" : "waiting");
   const createdAt = Date.now();
   const entry: StoredHighScoreEntry = {
     createdAt,
@@ -186,8 +204,13 @@ export const saveHighScore = (
  * Best-effort two-way sync between local high scores and the remote API.
  */
 export const syncHighScores = async (): Promise<void> => {
-  await submitPendingScores();
-  await pullRemoteScores();
+  setHighScoreSyncStatus("syncing");
+  const submitted = await submitPendingScores();
+  const pulled = await pullRemoteScores();
+
+  setHighScoreSyncStatus(
+    submitted && pulled && !hasPendingScores() ? "success" : "error"
+  );
 };
 
 /**
@@ -244,9 +267,10 @@ const saveStoredScoreRecords = (entries: StoredHighScoreEntry[]): void => {
   }
 };
 
-const submitPendingScores = async (): Promise<void> => {
+const submitPendingScores = async (): Promise<boolean> => {
   const records = loadStoredScoreRecords();
   let changed = false;
+  let completed = true;
 
   for (const record of records) {
     if (record.syncState !== "pending") {
@@ -281,7 +305,8 @@ const submitPendingScores = async (): Promise<void> => {
       }
 
       if (!response.ok) {
-        continue;
+        completed = false;
+        break;
       }
 
       const remoteEntry = (await response.json()) as Partial<StoredHighScoreEntry>;
@@ -302,6 +327,7 @@ const submitPendingScores = async (): Promise<void> => {
       record.syncState = "synced";
       changed = true;
     } catch {
+      completed = false;
       break;
     }
   }
@@ -309,20 +335,22 @@ const submitPendingScores = async (): Promise<void> => {
   if (changed) {
     saveStoredScoreRecords(records);
   }
+
+  return completed;
 };
 
-const pullRemoteScores = async (): Promise<void> => {
+const pullRemoteScores = async (): Promise<boolean> => {
   try {
     const response = await fetch(highScoreApiBasePath);
 
     if (!response.ok) {
-      return;
+      return false;
     }
 
     const remoteScores = (await response.json()) as unknown;
 
     if (!Array.isArray(remoteScores)) {
-      return;
+      return false;
     }
 
     const remoteRecords = remoteScores
@@ -348,10 +376,16 @@ const pullRemoteScores = async (): Promise<void> => {
     saveStoredScoreRecords(
       upsertScoreRecords(loadStoredScoreRecords(), remoteRecords)
     );
+
+    return true;
   } catch {
     // Offline-first sync is intentionally best effort.
+    return false;
   }
 };
+
+const hasPendingScores = (): boolean =>
+  loadStoredScoreRecords().some((record) => record.syncState === "pending");
 
 const upsertScoreRecords = (
   current: StoredHighScoreEntry[],

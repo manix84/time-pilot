@@ -39,6 +39,7 @@ import type {
   MenuSystemCommands,
   MenuSystemInstance,
   ProjectileConfig,
+  HighScoreSyncStatus,
   ScoreTrophyRank,
   ShowStartMenuOptions,
 } from "./types";
@@ -76,6 +77,20 @@ type MenuItemKind = "action" | "enum" | "slider" | "key" | "toggle";
 const highScoreTrophyFrameSize = 32;
 const highScoreTrophyFrameCount = 8;
 const highScoreTrophyFrameDurationMs = 480;
+const syncIndicatorFrameSize = 32;
+const syncIndicatorFrameCount = 8;
+const syncIndicatorFrameDurationMs: Record<HighScoreSyncStatus, number> = {
+  error: 420,
+  waiting: 480,
+  syncing: 160,
+  success: 260,
+};
+const syncIndicatorStateRows: Record<HighScoreSyncStatus, number> = {
+  error: 0,
+  waiting: 1,
+  syncing: 2,
+  success: 3,
+};
 const highScoreTrophySpritePaths: Record<Exclude<ScoreTrophyRank, null>, string> = {
   1: "sprites/achievements/trophy_gold_32.png",
   2: "sprites/achievements/trophy_silver_32.png",
@@ -241,6 +256,7 @@ class Menus implements MenuSystemInstance {
   private _items: MenuItem[] = [];
   private _highScoreName = "PILOT";
   private _konamiIndex = 0;
+  private readonly _syncIndicatorSprite: HTMLImageElement;
   private _achievementIconSprites: Partial<Record<string, HTMLImageElement>> = {};
   private _achievementLayoutSignature = "";
   private _levelIconSprites: Partial<Record<number, HTMLImageElement>> = {};
@@ -284,6 +300,8 @@ class Menus implements MenuSystemInstance {
       2: this._createHighScoreTrophySprite(highScoreTrophySpritePaths[2]),
       3: this._createHighScoreTrophySprite(highScoreTrophySpritePaths[3]),
     };
+    this._syncIndicatorSprite = new Image();
+    this._syncIndicatorSprite.src = assetPath("sprites/ui/satelite.png");
   }
 
   isActive = (): boolean => {
@@ -900,10 +918,12 @@ class Menus implements MenuSystemInstance {
 
     if (this._screen === "high-score-entry") {
       this._renderHighScoreEntry();
+      this._renderHighScoreSyncIndicator();
     }
 
     if (this._screen === "high-scores") {
       this._renderHighScoreStats();
+      this._renderHighScoreSyncIndicator();
     }
   };
 
@@ -2195,6 +2215,32 @@ class Menus implements MenuSystemInstance {
     }
 
     return `Date: ${date.toISOString().slice(0, 10)}`;
+  };
+
+  private _renderHighScoreSyncIndicator = (): void => {
+    const status = this._commands.getHighScoreSyncStatus?.();
+
+    if (!status || !this._syncIndicatorSprite.complete) {
+      return;
+    }
+
+    const viewport = this._getItemsViewport();
+    const frameDuration = syncIndicatorFrameDurationMs[status];
+    const frameX =
+      Math.floor(performance.now() / frameDuration) % syncIndicatorFrameCount;
+    const frameY = syncIndicatorStateRows[status];
+    const renderSize = 24;
+
+    this._gameArena.renderSprite(this._syncIndicatorSprite, {
+      frameWidth: syncIndicatorFrameSize,
+      frameHeight: syncIndicatorFrameSize,
+      frameX,
+      frameY,
+      renderWidth: renderSize,
+      renderHeight: renderSize,
+      posX: viewport.x + viewport.width - renderSize - 4,
+      posY: viewport.y + 4,
+    });
   };
 
   private _truncateText = (text: string, maxLength: number): string => {

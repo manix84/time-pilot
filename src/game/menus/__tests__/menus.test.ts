@@ -519,6 +519,49 @@ describe("menu definitions", () => {
     expect(statCall?.[2]).toBeGreaterThan(-30);
   });
 
+  it("renders the high-score sync satellite indicator", () => {
+    vi.stubGlobal(
+      "Image",
+      class {
+        complete = true;
+        naturalWidth = 256;
+        src = "";
+      }
+    );
+    const arena = createArena();
+    const menus = new Menus(arena, {
+      getHighScoreSyncStatus: () => "syncing",
+      getHighScores: () => [
+        {
+          createdAt: Date.UTC(2012, 8, 13),
+          id: "shooty",
+          name: "Shooty McShootface",
+          score: 1000000,
+          stats: ["Era: 2001"],
+        },
+      ],
+      start: vi.fn(),
+    });
+
+    menus.showStart();
+    menus.next();
+    menus.next();
+    menus.next();
+    menus.activate();
+    menus.render();
+
+    expect(arena.renderSprite).toHaveBeenCalledWith(
+      expect.objectContaining({ src: expect.stringContaining("satelite.png") }),
+      expect.objectContaining({
+        frameHeight: 32,
+        frameWidth: 32,
+        frameY: 2,
+        renderHeight: 24,
+        renderWidth: 24,
+      })
+    );
+  });
+
   it("captures a pilot name before saving a game-over high score", () => {
     const arena = createArena();
     const saveHighScore = vi.fn();

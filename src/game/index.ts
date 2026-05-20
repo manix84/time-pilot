@@ -16,6 +16,7 @@ import Ticker from "./engine/Ticker";
 import { gameFps } from "./game-timing";
 import {
   getHighScores,
+  getHighScoreSyncStatus,
   saveHighScore,
   startHighScoreRun,
   syncHighScores,
@@ -480,6 +481,7 @@ export class TimePilot {
       getAchievements: () => this.context._achievements?.getStatuses() ?? [],
       getHighScores: () => getHighScores(),
       getPendingHighScore: () => this.pendingHighScore,
+      getHighScoreSyncStatus: () => getHighScoreSyncStatus(),
       getLevel: () => this.selectedStartLevel,
       onNavigationChanged: (state) => {
         this.syncBrowserHistory(state.depth + (state.active ? 1 : 0));
@@ -601,6 +603,7 @@ export class TimePilot {
       assetPath("sprites/achievements/trophy_gold_32.png"),
       assetPath("sprites/achievements/trophy_silver_32.png"),
       assetPath("sprites/achievements/trophy_bronze_32.png"),
+      assetPath("sprites/ui/satelite.png"),
     ]);
 
     this.context._gameArena.preloadAssets((progress: AssetProgress) => {
