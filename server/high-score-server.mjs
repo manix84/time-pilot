@@ -291,7 +291,12 @@ const handleCreateRun = async (response) => {
 };
 
 const handleSubmitScore = async (request, response) => {
-  const payload = await readJsonBody(request);
+  const payload = await readJsonBody(request, response);
+
+  if (payload === undefined) {
+    return;
+  }
+
   const validation = await validateScoreSubmission(payload);
 
   if (!validation.accepted) {
@@ -407,7 +412,7 @@ const readNumberStat = (text, label) => {
   return match ? Number.parseInt(match[1], 10) : 0;
 };
 
-const readJsonBody = async (request) => {
+const readJsonBody = async (request, response) => {
   let body = "";
 
   for await (const chunk of request) {
@@ -418,7 +423,12 @@ const readJsonBody = async (request) => {
     }
   }
 
-  return JSON.parse(body || "{}");
+  try {
+    return JSON.parse(body || "{}");
+  } catch {
+    sendJson(response, 400, { error: "invalid_json" });
+    return undefined;
+  }
 };
 
 const sendJson = (response, status, body) => {

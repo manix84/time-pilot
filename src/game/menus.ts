@@ -4009,7 +4009,12 @@ class Menus implements MenuSystemInstance {
 
   private _captureHighScoreNameKey = (keyCode: number): boolean => {
     if (keyCode === 13) {
-      this._completeHighScoreEntry(true);
+      if (this._items[this._selectedIndex]?.label === i18n.menu.saveScore) {
+        this._completeHighScoreEntry(true);
+        return true;
+      }
+
+      this.activate();
       return true;
     }
 

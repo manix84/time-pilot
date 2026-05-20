@@ -601,6 +601,29 @@ describe("menu definitions", () => {
     expect(saveHighScore).toHaveBeenCalledWith("AB");
   });
 
+  it("lets enter activate skip on the high-score entry screen", () => {
+    const arena = createArena();
+    const discardHighScore = vi.fn();
+    const saveHighScore = vi.fn();
+    const menus = new Menus(arena, {
+      discardHighScore,
+      getPendingHighScore: () => ({
+        score: 12345,
+        stats: ["Era: 1910"],
+      }),
+      getContinues: () => 0,
+      saveHighScore,
+      start: vi.fn(),
+    });
+
+    menus.showGameOver();
+    menus.next();
+
+    expect(menus.captureKey(13)).toBe(true);
+    expect(discardHighScore).toHaveBeenCalled();
+    expect(saveHighScore).not.toHaveBeenCalled();
+  });
+
   it("does not crash the achievements page while icon art is missing", () => {
     const arena = createArena();
     const menus = new Menus(arena, {
