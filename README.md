@@ -80,13 +80,17 @@ npm run api
 During local development, Vite proxies `/api/*` to
 `http://localhost:8787` by default. Set `HIGH_SCORE_API_URL` before
 `npm run dev` if the API is running somewhere else.
+Set `VITE_API_MODE=offline` when building a static/local-only release that
+should not try to contact backend APIs.
 
 ## 🏅 High Score Storage
 
 High scores are local-first. The game immediately saves submitted scores to
 `localStorage`, so score entry works offline and without any backend. When the
 high-score API is reachable, scores from online player runs are synced to the
-remote table and merged back into the local leaderboard.
+remote table and merged back into the local leaderboard. If the API is absent,
+blocked, or offline, the game falls back to local scores, shows the offline sync
+indicator, and periodically probes for the API to return.
 
 The API uses PostgreSQL when `DATABASE_URL` is configured:
 
@@ -106,8 +110,11 @@ Remote score submission is best-effort secure. The client asks the API for a
 single-use signed run receipt at the start of an online run, then includes that
 receipt when a score is submitted. The server checks the receipt, expiry,
 single-use status, score shape, and basic score/stat plausibility before storing
-the score. Offline runs still save locally, but they do not receive a remote run
-receipt and are treated as local-only rather than trusted remote submissions.
+the score. Pending local submissions also carry a lightweight integrity envelope
+so casual local-storage edits are downgraded to local-only before sync, and the
+API rejects submissions whose envelope no longer matches the score payload.
+Offline runs still save locally, but they do not receive a remote run receipt and
+are treated as local-only rather than trusted remote submissions.
 See [PRIVACY.md](PRIVACY.md) for the backend data-storage breakdown.
 
 ## 📱 Installable PWA

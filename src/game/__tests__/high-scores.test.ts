@@ -26,6 +26,8 @@ describe("high score storage", () => {
 
   afterEach(() => {
     vi.restoreAllMocks();
+    vi.unstubAllGlobals();
+    vi.unstubAllEnvs();
   });
 
   it("keeps scores local-only when no remote run receipt exists", async () => {
@@ -177,6 +179,35 @@ describe("high score storage", () => {
     expect(getHighScores()).toHaveLength(10);
   });
 
+  it("skips remote sync when API access is configured offline", async () => {
+    const fetchMock = vi
+      .spyOn(globalThis, "fetch")
+      .mockResolvedValue(createJsonResponse([]));
+    vi.stubEnv("VITE_API_MODE", "offline");
+
+    await syncHighScores();
+
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(getHighScoreSyncStatus()).toBe("error");
+  });
+
+  it("stores receipt-backed scores locally when API access is configured offline", () => {
+    vi.stubEnv("VITE_API_MODE", "offline");
+
+    saveHighScore("Static Pilot", 5000, ["Era: 1910"], {
+      issuedAt: 1000,
+      runId: "run-static",
+      token: "receipt-token",
+    });
+
+    const storedScores = JSON.parse(
+      localStorage.getItem(highScoreStorageKey) ?? "[]"
+    ) as Array<{ run?: unknown; syncState: string }>;
+
+    expect(storedScores[0]).toMatchObject({ syncState: "local" });
+    expect(storedScores[0]?.run).toBeUndefined();
+  });
+
   it("downgrades terminal sync rejections to local scores", async () => {
     vi.spyOn(globalThis, "fetch").mockImplementation((input, init) => {
       if (input === "/api/high-scores" && init?.method === "POST") {
@@ -218,6 +249,135 @@ describe("high score storage", () => {
     expect(storedScores[0]).toMatchObject({ syncState: "local" });
     expect(storedScores[0]?.run).toBeUndefined();
     expect(getHighScoreSyncStatus()).toBe("success");
+  });
+
+  it("caches remote high-score tables without resubmitting cached rows", async () => {
+    const remoteEntry = {
+      id: "remote-cached-score",
+      createdAt: 2000,
+      name: "Remote Pilot",
+      receivedAt: 3000,
+      score: 8000,
+      stats: ["Era: 1910"],
+    };
+    const fetchMock = vi
+      .spyOn(globalThis, "fetch")
+      .mockResolvedValue(createJsonResponse([remoteEntry]));
+
+    await syncHighScores();
+    await syncHighScores();
+
+    const storedScores = JSON.parse(
+      localStorage.getItem(highScoreStorageKey) ?? "[]"
+    ) as Array<{ id: string; syncState: string }>;
+
+    expect(storedScores[0]).toMatchObject({
+      id: "remote-cached-score",
+      syncState: "synced",
+    });
+    expect(fetchMock).not.toHaveBeenCalledWith(
+      "/api/high-scores",
+      expect.objectContaining({ method: "POST" })
+    );
+  });
+
+  it("keeps pending local submissions when caching a full remote table", async () => {
+    const remoteScores = Array.from({ length: 60 }, (_, index) => ({
+      id: `remote-score-${index}`,
+      createdAt: 1000 + index,
+      name: `Remote ${index}`,
+      receivedAt: 2000 + index,
+      score: 100000 - index,
+      stats: ["Era: 1910"],
+    }));
+
+    vi.spyOn(globalThis, "fetch").mockImplementation((input, init) => {
+      if (input === "/api/high-scores" && init?.method === "POST") {
+        return Promise.reject(new Error("offline"));
+      }
+
+      return Promise.resolve(createJsonResponse(remoteScores));
+    });
+
+    localStorage.setItem(
+      highScoreStorageKey,
+      JSON.stringify([
+        {
+          id: "low-pending-score",
+          createdAt: 5000,
+          name: "Pending Pilot",
+          run: {
+            issuedAt: 1000,
+            runId: "run-pending",
+            token: "receipt-token",
+          },
+          score: 1,
+          stats: ["Era: 1910"],
+          submittedAt: 5000,
+          syncState: "pending",
+        },
+      ])
+    );
+
+    await syncHighScores();
+
+    const storedScores = JSON.parse(
+      localStorage.getItem(highScoreStorageKey) ?? "[]"
+    ) as Array<{ id: string; syncState: string }>;
+
+    expect(storedScores).toContainEqual(
+      expect.objectContaining({
+        id: "low-pending-score",
+        syncState: "pending",
+      })
+    );
+  });
+
+  it("does not submit pending scores with invalid local integrity", async () => {
+    const fetchMock = vi
+      .spyOn(globalThis, "fetch")
+      .mockResolvedValue(createJsonResponse([]));
+
+    localStorage.setItem(
+      highScoreStorageKey,
+      JSON.stringify([
+        {
+          id: "tampered-score",
+          createdAt: 2000,
+          integrity: {
+            checksum: "bad",
+            multiplier: 101,
+            scoreProduct: 1,
+            statsProduct: 1,
+            version: 1,
+          },
+          name: "Tampered",
+          run: {
+            issuedAt: 1000,
+            runId: "run-tampered",
+            token: "receipt-token",
+          },
+          score: 999999,
+          stats: ["Era: 1910"],
+          submittedAt: 2000,
+          syncState: "pending",
+        },
+      ])
+    );
+
+    await syncHighScores();
+
+    const storedScores = JSON.parse(
+      localStorage.getItem(highScoreStorageKey) ?? "[]"
+    ) as Array<{ integrity?: unknown; run?: unknown; syncState: string }>;
+
+    expect(fetchMock).not.toHaveBeenCalledWith(
+      "/api/high-scores",
+      expect.objectContaining({ method: "POST" })
+    );
+    expect(storedScores[0]).toMatchObject({ syncState: "local" });
+    expect(storedScores[0]?.integrity).toBeUndefined();
+    expect(storedScores[0]?.run).toBeUndefined();
   });
 
   it("persists successful pending sync updates before a later submit fails", async () => {

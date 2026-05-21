@@ -9,25 +9,68 @@ interface HighScoreRunReceipt {
 }
 
 interface StoredHighScoreEntry extends HighScoreEntry {
+  integrity?: HighScoreIntegrity;
   receivedAt?: number;
   run?: HighScoreRunReceipt;
   submittedAt: number;
   syncState: HighScoreSyncState;
 }
 
+interface HighScoreIntegrity {
+  checksum: string;
+  multiplier: number;
+  scoreProduct: number;
+  statsProduct: number;
+  version: 1;
+}
+
 const highScoreStorageKey = "timePilot.highScores";
 const highScoreApiBasePath = "/api/high-scores";
+const highScoreApiTimeoutMs = 2500;
+const highScoreApiProbeIntervalMs = 30000;
 const fakeHighScoreBaseCreatedAt = Date.UTC(2012, 8, 13);
+const highScoreIntegrityVersion = 1;
+const highScoreIntegrityHashModulo = 1000003;
+const highScoreIntegrityMinMultiplier = 101;
+const highScoreIntegrityMultiplierRange = 897;
 const maxHighScoreStats = 12;
 const maxStoredHighScores = 10;
 const maxCachedHighScores = 50;
+let highScoreApiOffline = false;
+let highScoreApiProbeInFlight = false;
+let highScoreApiLastProbeAt = 0;
 let highScoreSyncStatus: HighScoreSyncStatus | null = "waiting";
 
 /**
  * Returns the latest high-score save/sync status for menu indicators.
  */
-export const getHighScoreSyncStatus = (): HighScoreSyncStatus | null =>
-  highScoreSyncStatus;
+export const getHighScoreSyncStatus = (): HighScoreSyncStatus | null => {
+  queueHighScoreApiProbe();
+  return highScoreSyncStatus;
+};
+
+const queueHighScoreApiProbe = (): void => {
+  if (
+    highScoreSyncStatus !== "error" ||
+    !highScoreApiOffline ||
+    highScoreApiProbeInFlight ||
+    isApiDisabledByConfig()
+  ) {
+    return;
+  }
+
+  const now = Date.now();
+
+  if (now - highScoreApiLastProbeAt < highScoreApiProbeIntervalMs) {
+    return;
+  }
+
+  highScoreApiLastProbeAt = now;
+  highScoreApiProbeInFlight = true;
+  void syncHighScores().finally(() => {
+    highScoreApiProbeInFlight = false;
+  });
+};
 
 const setHighScoreSyncStatus = (status: HighScoreSyncStatus | null): void => {
   highScoreSyncStatus = status;
@@ -143,10 +186,15 @@ export const getHighScoreThresholds = (limit: number): HighScoreEntry[] =>
  * Starts a remotely verifiable high-score run when the API is available.
  */
 export const startHighScoreRun = async (): Promise<HighScoreRunReceipt | null> => {
+  if (!canUseHighScoreApi()) {
+    setHighScoreSyncStatus("error");
+    return null;
+  }
+
   setHighScoreSyncStatus("syncing");
 
   try {
-    const response = await fetch(`${highScoreApiBasePath}/runs`, {
+    const response = await fetchHighScoreApi("/runs", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -157,7 +205,8 @@ export const startHighScoreRun = async (): Promise<HighScoreRunReceipt | null> =
       }),
     });
 
-    if (!response.ok) {
+    if (!response?.ok) {
+      markHighScoreApiOffline();
       setHighScoreSyncStatus("error");
       return null;
     }
@@ -165,13 +214,16 @@ export const startHighScoreRun = async (): Promise<HighScoreRunReceipt | null> =
     const receipt = (await response.json()) as Partial<HighScoreRunReceipt>;
 
     if (!isHighScoreRunReceipt(receipt)) {
+      markHighScoreApiOffline();
       setHighScoreSyncStatus("error");
       return null;
     }
 
+    highScoreApiOffline = false;
     setHighScoreSyncStatus("success");
     return receipt;
   } catch {
+    markHighScoreApiOffline();
     setHighScoreSyncStatus("error");
     return null;
   }
@@ -186,21 +238,28 @@ export const saveHighScore = (
   stats: string[],
   run?: HighScoreRunReceipt | null
 ): HighScoreEntry => {
-  setHighScoreSyncStatus(run ? "syncing" : "waiting");
+  const shouldSync = Boolean(run && canUseHighScoreApi());
+
+  setHighScoreSyncStatus(shouldSync ? "syncing" : "waiting");
   const createdAt = Date.now();
   const entry: StoredHighScoreEntry = {
     createdAt,
     id: `local-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
     name: normalizeHighScoreName(name),
-    run: run ?? undefined,
+    run: shouldSync ? run ?? undefined : undefined,
     score: Math.max(0, Math.floor(score)),
     stats: stats.slice(0, maxHighScoreStats),
     submittedAt: createdAt,
-    syncState: run ? "pending" : "local",
+    syncState: shouldSync ? "pending" : "local",
   };
-  const storedScores = upsertScoreRecords(loadStoredScoreRecords(), [entry])
-    .sort(sortHighScores)
-    .slice(0, maxCachedHighScores);
+
+  if (shouldSync && entry.run) {
+    entry.integrity = createHighScoreIntegrity(entry, entry.run);
+  }
+
+  const storedScores = trimStoredScoreRecords(
+    upsertScoreRecords(loadStoredScoreRecords(), [entry])
+  );
 
   saveStoredScoreRecords(storedScores);
   void syncHighScores();
@@ -212,13 +271,23 @@ export const saveHighScore = (
  * Best-effort two-way sync between local high scores and the remote API.
  */
 export const syncHighScores = async (): Promise<void> => {
+  if (!canUseHighScoreApi()) {
+    markHighScoreApiOffline();
+    setHighScoreSyncStatus("error");
+    return;
+  }
+
   setHighScoreSyncStatus("syncing");
   const submitted = await submitPendingScores();
   const pulled = await pullRemoteScores();
+  const synced = submitted && pulled && !hasPendingScores();
 
-  setHighScoreSyncStatus(
-    submitted && pulled && !hasPendingScores() ? "success" : "error"
-  );
+  if (synced) {
+    highScoreApiOffline = false;
+  } else {
+    markHighScoreApiOffline();
+  }
+  setHighScoreSyncStatus(synced ? "success" : "error");
 };
 
 /**
@@ -268,7 +337,7 @@ const saveStoredScoreRecords = (entries: StoredHighScoreEntry[]): void => {
   try {
     getStorage()?.setItem(
       highScoreStorageKey,
-      JSON.stringify(entries.sort(sortHighScores).slice(0, maxCachedHighScores))
+      JSON.stringify(trimStoredScoreRecords(entries))
     );
   } catch {
     // High-score persistence is best effort; gameplay should keep running.
@@ -276,6 +345,10 @@ const saveStoredScoreRecords = (entries: StoredHighScoreEntry[]): void => {
 };
 
 const submitPendingScores = async (): Promise<boolean> => {
+  if (!canUseHighScoreApi()) {
+    return !hasPendingScores();
+  }
+
   const records = loadStoredScoreRecords();
   let changed = false;
   let completed = true;
@@ -291,8 +364,19 @@ const submitPendingScores = async (): Promise<boolean> => {
       continue;
     }
 
+    if (!record.integrity) {
+      record.integrity = createHighScoreIntegrity(record, record.run);
+      changed = true;
+    } else if (!isValidHighScoreIntegrity(record, record.run)) {
+      record.integrity = undefined;
+      record.run = undefined;
+      record.syncState = "local";
+      changed = true;
+      continue;
+    }
+
     try {
-      const response = await fetch(highScoreApiBasePath, {
+      const response = await fetchHighScoreApi("", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -300,12 +384,19 @@ const submitPendingScores = async (): Promise<boolean> => {
         body: JSON.stringify({
           entry: toHighScoreEntry(record),
           gameVersion: getGameVersion(),
+          integrity: record.integrity,
           run: record.run,
           submittedAt: record.submittedAt,
         }),
       });
 
+      if (!response) {
+        completed = false;
+        break;
+      }
+
       if (isTerminalSyncRejection(response.status)) {
+        record.integrity = undefined;
         record.syncState = "local";
         record.run = undefined;
         changed = true;
@@ -331,7 +422,9 @@ const submitPendingScores = async (): Promise<boolean> => {
       record.name = storedRemoteEntry.name;
       record.score = Math.max(0, Math.floor(storedRemoteEntry.score));
       record.stats = storedRemoteEntry.stats.slice(0, maxHighScoreStats);
+      record.integrity = undefined;
       record.receivedAt = storedRemoteEntry.receivedAt ?? Date.now();
+      record.run = undefined;
       record.syncState = "synced";
       changed = true;
     } catch {
@@ -348,10 +441,14 @@ const submitPendingScores = async (): Promise<boolean> => {
 };
 
 const pullRemoteScores = async (): Promise<boolean> => {
-  try {
-    const response = await fetch(highScoreApiBasePath);
+  if (!canUseHighScoreApi()) {
+    return true;
+  }
 
-    if (!response.ok) {
+  try {
+    const response = await fetchHighScoreApi();
+
+    if (!response?.ok) {
       return false;
     }
 
@@ -408,6 +505,20 @@ const upsertScoreRecords = (
   return [...byId.values()];
 };
 
+const trimStoredScoreRecords = (
+  entries: StoredHighScoreEntry[]
+): StoredHighScoreEntry[] => {
+  const pending = entries
+    .filter((entry) => entry.syncState === "pending")
+    .sort(sortHighScores);
+  const cached = entries
+    .filter((entry) => entry.syncState !== "pending")
+    .sort(sortHighScores)
+    .slice(0, Math.max(0, maxCachedHighScores - pending.length));
+
+  return [...pending, ...cached].slice(0, maxCachedHighScores);
+};
+
 const normalizeStoredEntry = (
   entry: HighScoreEntry | StoredHighScoreEntry
 ): StoredHighScoreEntry => {
@@ -427,6 +538,9 @@ const normalizeStoredEntry = (
     run: isHighScoreRunReceipt(stored.run) ? stored.run : undefined,
     score: Math.max(0, Math.floor(entry.score)),
     stats: entry.stats.slice(0, maxHighScoreStats),
+    integrity: isHighScoreIntegrity(stored.integrity)
+      ? stored.integrity
+      : undefined,
     submittedAt:
       typeof stored.submittedAt === "number" ? stored.submittedAt : Date.now(),
     syncState: normalizeSyncState(stored.syncState, stored.run),
@@ -450,6 +564,140 @@ const normalizeSyncState = (
 
 const isTerminalSyncRejection = (status: number): boolean =>
   status === 401 || status === 422;
+
+const createHighScoreIntegrity = (
+  entry: HighScoreEntry & Pick<StoredHighScoreEntry, "submittedAt">,
+  run: HighScoreRunReceipt
+): HighScoreIntegrity => {
+  const multiplier =
+    highScoreIntegrityMinMultiplier +
+    Math.floor(Math.random() * highScoreIntegrityMultiplierRange);
+  const scoreProduct = Math.max(0, Math.floor(entry.score)) * multiplier;
+  const statsProduct =
+    (hashText(entry.stats.join("\n")) % highScoreIntegrityHashModulo) *
+    multiplier;
+
+  return {
+    checksum: createHighScoreIntegrityChecksum(
+      entry,
+      run,
+      multiplier,
+      scoreProduct,
+      statsProduct
+    ),
+    multiplier,
+    scoreProduct,
+    statsProduct,
+    version: highScoreIntegrityVersion,
+  };
+};
+
+const isValidHighScoreIntegrity = (
+  entry: HighScoreEntry & Pick<StoredHighScoreEntry, "integrity" | "submittedAt">,
+  run: HighScoreRunReceipt
+): boolean => {
+  if (!isHighScoreIntegrity(entry.integrity)) {
+    return false;
+  }
+
+  const expectedScoreProduct =
+    Math.max(0, Math.floor(entry.score)) * entry.integrity.multiplier;
+  const expectedStatsProduct =
+    (hashText(entry.stats.join("\n")) % highScoreIntegrityHashModulo) *
+    entry.integrity.multiplier;
+
+  return (
+    entry.integrity.scoreProduct === expectedScoreProduct &&
+    entry.integrity.statsProduct === expectedStatsProduct &&
+    entry.integrity.checksum ===
+      createHighScoreIntegrityChecksum(
+        entry,
+        run,
+        entry.integrity.multiplier,
+        entry.integrity.scoreProduct,
+        entry.integrity.statsProduct
+      )
+  );
+};
+
+const createHighScoreIntegrityChecksum = (
+  entry: HighScoreEntry & Pick<StoredHighScoreEntry, "submittedAt">,
+  run: HighScoreRunReceipt,
+  multiplier: number,
+  scoreProduct: number,
+  statsProduct: number
+): string =>
+  hashText(
+    [
+      highScoreIntegrityVersion,
+      run.runId,
+      run.token,
+      run.issuedAt,
+      entry.id,
+      entry.name,
+      Math.max(0, Math.floor(entry.score)),
+      entry.stats.join("\n"),
+      entry.submittedAt,
+      multiplier,
+      scoreProduct,
+      statsProduct,
+    ].join("|")
+  ).toString(36);
+
+const hashText = (text: string): number => {
+  let hash = 2166136261;
+
+  for (let index = 0; index < text.length; index += 1) {
+    hash ^= text.charCodeAt(index);
+    hash = Math.imul(hash, 16777619);
+  }
+
+  return hash >>> 0;
+};
+
+const markHighScoreApiOffline = (): void => {
+  highScoreApiOffline = true;
+  highScoreApiLastProbeAt = Date.now();
+};
+
+const canUseHighScoreApi = (): boolean => !isApiDisabledByConfig();
+
+const isApiDisabledByConfig = (): boolean => getApiMode() === "offline";
+
+const getApiMode = (): "auto" | "offline" => {
+  const configuredMode = import.meta.env.VITE_API_MODE;
+
+  return configuredMode === "offline" ? "offline" : "auto";
+};
+
+const fetchHighScoreApi = async (
+  path = "",
+  init?: RequestInit
+): Promise<Response | null> => {
+  if (!canUseHighScoreApi()) {
+    return null;
+  }
+
+  const controller =
+    typeof AbortController === "undefined" ? null : new AbortController();
+  const timeout =
+    controller === null
+      ? undefined
+      : setTimeout(() => controller.abort(), highScoreApiTimeoutMs);
+
+  try {
+    return await fetch(`${highScoreApiBasePath}${path}`, {
+      ...init,
+      signal: controller?.signal ?? init?.signal,
+    });
+  } catch {
+    return null;
+  } finally {
+    if (timeout !== undefined) {
+      clearTimeout(timeout);
+    }
+  }
+};
 
 const toHighScoreEntry = (entry: HighScoreEntry): HighScoreEntry => ({
   createdAt: entry.createdAt,
@@ -488,6 +736,28 @@ const isHighScoreRunReceipt = (
     typeof receipt.issuedAt === "number" &&
     typeof receipt.runId === "string" &&
     typeof receipt.token === "string"
+  );
+};
+
+const isHighScoreIntegrity = (value: unknown): value is HighScoreIntegrity => {
+  if (!value || typeof value !== "object") {
+    return false;
+  }
+
+  const integrity = value as Partial<HighScoreIntegrity>;
+
+  return (
+    integrity.version === highScoreIntegrityVersion &&
+    typeof integrity.multiplier === "number" &&
+    Number.isInteger(integrity.multiplier) &&
+    integrity.multiplier >= highScoreIntegrityMinMultiplier &&
+    integrity.multiplier <
+      highScoreIntegrityMinMultiplier + highScoreIntegrityMultiplierRange &&
+    typeof integrity.scoreProduct === "number" &&
+    Number.isInteger(integrity.scoreProduct) &&
+    typeof integrity.statsProduct === "number" &&
+    Number.isInteger(integrity.statsProduct) &&
+    typeof integrity.checksum === "string"
   );
 };
 
