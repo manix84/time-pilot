@@ -13,6 +13,10 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const jsonStorePath = resolve(__dirname, "../data/high-scores.json");
 const maxBodyBytes = 64 * 1024;
 const maxGameEra = 5;
+const highScoreIntegrityVersion = 1;
+const highScoreIntegrityHashModulo = 1000003;
+const highScoreIntegrityMinMultiplier = 101;
+const highScoreIntegrityMultiplierRange = 897;
 const maxPlausibleAccuracy = 100;
 const maxPlausibleBonuses = 200;
 const maxPlausibleBosses = 5;
@@ -340,7 +344,7 @@ const validateScoreSubmission = async (payload) => {
     return reject("invalid_payload");
   }
 
-  const { entry, gameVersion, run, submittedAt } = payload;
+  const { entry, gameVersion, integrity, run, submittedAt } = payload;
 
   if (!isPublicScore(entry) || typeof submittedAt !== "number") {
     return reject("invalid_score");
@@ -348,6 +352,10 @@ const validateScoreSubmission = async (payload) => {
 
   if (!isRunReceipt(run)) {
     return reject("missing_run_receipt", 401);
+  }
+
+  if (!isValidHighScoreIntegrity(entry, integrity, run, submittedAt)) {
+    return reject("invalid_score_integrity", 422);
   }
 
   if (!isPlausibleScore(entry)) {
@@ -427,6 +435,85 @@ const clampNumber = (value, min, max) => {
   }
 
   return Math.max(min, Math.min(max, value));
+};
+
+const isValidHighScoreIntegrity = (entry, integrity, run, submittedAt) => {
+  if (!isHighScoreIntegrity(integrity)) {
+    return false;
+  }
+
+  const expectedScoreProduct =
+    Math.max(0, Math.floor(entry.score)) * integrity.multiplier;
+  const expectedStatsProduct =
+    (hashText(entry.stats.join("\n")) % highScoreIntegrityHashModulo) *
+    integrity.multiplier;
+
+  return (
+    integrity.scoreProduct === expectedScoreProduct &&
+    integrity.statsProduct === expectedStatsProduct &&
+    integrity.checksum ===
+      createHighScoreIntegrityChecksum(
+        entry,
+        run,
+        submittedAt,
+        integrity.multiplier,
+        integrity.scoreProduct,
+        integrity.statsProduct
+      )
+  );
+};
+
+const isHighScoreIntegrity = (value) => {
+  if (!value || typeof value !== "object") {
+    return false;
+  }
+
+  return (
+    value.version === highScoreIntegrityVersion &&
+    Number.isInteger(value.multiplier) &&
+    value.multiplier >= highScoreIntegrityMinMultiplier &&
+    value.multiplier <
+      highScoreIntegrityMinMultiplier + highScoreIntegrityMultiplierRange &&
+    Number.isInteger(value.scoreProduct) &&
+    Number.isInteger(value.statsProduct) &&
+    typeof value.checksum === "string"
+  );
+};
+
+const createHighScoreIntegrityChecksum = (
+  entry,
+  run,
+  submittedAt,
+  multiplier,
+  scoreProduct,
+  statsProduct
+) =>
+  hashText(
+    [
+      highScoreIntegrityVersion,
+      run.runId,
+      run.token,
+      run.issuedAt,
+      entry.id,
+      entry.name,
+      Math.max(0, Math.floor(entry.score)),
+      entry.stats.join("\n"),
+      submittedAt,
+      multiplier,
+      scoreProduct,
+      statsProduct,
+    ].join("|")
+  ).toString(36);
+
+const hashText = (text) => {
+  let hash = 2166136261;
+
+  for (let index = 0; index < text.length; index += 1) {
+    hash ^= text.charCodeAt(index);
+    hash = Math.imul(hash, 16777619);
+  }
+
+  return hash >>> 0;
 };
 
 export const __testHooks = {

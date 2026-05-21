@@ -110,8 +110,11 @@ Remote score submission is best-effort secure. The client asks the API for a
 single-use signed run receipt at the start of an online run, then includes that
 receipt when a score is submitted. The server checks the receipt, expiry,
 single-use status, score shape, and basic score/stat plausibility before storing
-the score. Offline runs still save locally, but they do not receive a remote run
-receipt and are treated as local-only rather than trusted remote submissions.
+the score. Pending local submissions also carry a lightweight integrity envelope
+so casual local-storage edits are downgraded to local-only before sync, and the
+API rejects submissions whose envelope no longer matches the score payload.
+Offline runs still save locally, but they do not receive a remote run receipt and
+are treated as local-only rather than trusted remote submissions.
 See [PRIVACY.md](PRIVACY.md) for the backend data-storage breakdown.
 
 ## 📱 Installable PWA

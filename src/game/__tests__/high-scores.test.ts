@@ -333,6 +333,53 @@ describe("high score storage", () => {
     );
   });
 
+  it("does not submit pending scores with invalid local integrity", async () => {
+    const fetchMock = vi
+      .spyOn(globalThis, "fetch")
+      .mockResolvedValue(createJsonResponse([]));
+
+    localStorage.setItem(
+      highScoreStorageKey,
+      JSON.stringify([
+        {
+          id: "tampered-score",
+          createdAt: 2000,
+          integrity: {
+            checksum: "bad",
+            multiplier: 101,
+            scoreProduct: 1,
+            statsProduct: 1,
+            version: 1,
+          },
+          name: "Tampered",
+          run: {
+            issuedAt: 1000,
+            runId: "run-tampered",
+            token: "receipt-token",
+          },
+          score: 999999,
+          stats: ["Era: 1910"],
+          submittedAt: 2000,
+          syncState: "pending",
+        },
+      ])
+    );
+
+    await syncHighScores();
+
+    const storedScores = JSON.parse(
+      localStorage.getItem(highScoreStorageKey) ?? "[]"
+    ) as Array<{ integrity?: unknown; run?: unknown; syncState: string }>;
+
+    expect(fetchMock).not.toHaveBeenCalledWith(
+      "/api/high-scores",
+      expect.objectContaining({ method: "POST" })
+    );
+    expect(storedScores[0]).toMatchObject({ syncState: "local" });
+    expect(storedScores[0]?.integrity).toBeUndefined();
+    expect(storedScores[0]?.run).toBeUndefined();
+  });
+
   it("persists successful pending sync updates before a later submit fails", async () => {
     const remoteEntry = {
       id: "remote-score",
