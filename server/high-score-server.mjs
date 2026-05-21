@@ -313,7 +313,7 @@ const handleSubmitScore = async (request, response) => {
   const receivedAt = Date.now();
   const scoreRecord = {
     ...validation.score,
-    createdAt: validation.createdAt,
+    createdAt: receivedAt,
     gameVersion: validation.gameVersion,
     receivedAt,
     runId: validation.run.runId,
@@ -367,7 +367,6 @@ const validateScoreSubmission = async (payload) => {
       score: Math.max(0, Math.floor(entry.score)),
       stats: entry.stats.slice(0, maxScoreStats),
     },
-    createdAt: Math.max(0, Math.floor(entry.createdAt ?? submittedAt)),
     submittedAt: Math.max(0, Math.floor(submittedAt)),
   };
 };

@@ -17,17 +17,47 @@ interface StoredHighScoreEntry extends HighScoreEntry {
 
 const highScoreStorageKey = "timePilot.highScores";
 const highScoreApiBasePath = "/api/high-scores";
+const highScoreApiTimeoutMs = 2500;
+const highScoreApiProbeIntervalMs = 30000;
 const fakeHighScoreBaseCreatedAt = Date.UTC(2012, 8, 13);
 const maxHighScoreStats = 12;
 const maxStoredHighScores = 10;
 const maxCachedHighScores = 50;
+let highScoreApiOffline = false;
+let highScoreApiProbeInFlight = false;
+let highScoreApiLastProbeAt = 0;
 let highScoreSyncStatus: HighScoreSyncStatus | null = "waiting";
 
 /**
  * Returns the latest high-score save/sync status for menu indicators.
  */
-export const getHighScoreSyncStatus = (): HighScoreSyncStatus | null =>
-  highScoreSyncStatus;
+export const getHighScoreSyncStatus = (): HighScoreSyncStatus | null => {
+  queueHighScoreApiProbe();
+  return highScoreSyncStatus;
+};
+
+const queueHighScoreApiProbe = (): void => {
+  if (
+    highScoreSyncStatus !== "error" ||
+    !highScoreApiOffline ||
+    highScoreApiProbeInFlight ||
+    isApiDisabledByConfig()
+  ) {
+    return;
+  }
+
+  const now = Date.now();
+
+  if (now - highScoreApiLastProbeAt < highScoreApiProbeIntervalMs) {
+    return;
+  }
+
+  highScoreApiLastProbeAt = now;
+  highScoreApiProbeInFlight = true;
+  void syncHighScores().finally(() => {
+    highScoreApiProbeInFlight = false;
+  });
+};
 
 const setHighScoreSyncStatus = (status: HighScoreSyncStatus | null): void => {
   highScoreSyncStatus = status;
@@ -143,10 +173,15 @@ export const getHighScoreThresholds = (limit: number): HighScoreEntry[] =>
  * Starts a remotely verifiable high-score run when the API is available.
  */
 export const startHighScoreRun = async (): Promise<HighScoreRunReceipt | null> => {
+  if (!canUseHighScoreApi()) {
+    setHighScoreSyncStatus("error");
+    return null;
+  }
+
   setHighScoreSyncStatus("syncing");
 
   try {
-    const response = await fetch(`${highScoreApiBasePath}/runs`, {
+    const response = await fetchHighScoreApi("/runs", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -157,7 +192,8 @@ export const startHighScoreRun = async (): Promise<HighScoreRunReceipt | null> =
       }),
     });
 
-    if (!response.ok) {
+    if (!response?.ok) {
+      markHighScoreApiOffline();
       setHighScoreSyncStatus("error");
       return null;
     }
@@ -165,13 +201,16 @@ export const startHighScoreRun = async (): Promise<HighScoreRunReceipt | null> =
     const receipt = (await response.json()) as Partial<HighScoreRunReceipt>;
 
     if (!isHighScoreRunReceipt(receipt)) {
+      markHighScoreApiOffline();
       setHighScoreSyncStatus("error");
       return null;
     }
 
+    highScoreApiOffline = false;
     setHighScoreSyncStatus("success");
     return receipt;
   } catch {
+    markHighScoreApiOffline();
     setHighScoreSyncStatus("error");
     return null;
   }
@@ -186,21 +225,23 @@ export const saveHighScore = (
   stats: string[],
   run?: HighScoreRunReceipt | null
 ): HighScoreEntry => {
-  setHighScoreSyncStatus(run ? "syncing" : "waiting");
+  const shouldSync = Boolean(run && canUseHighScoreApi());
+
+  setHighScoreSyncStatus(shouldSync ? "syncing" : "waiting");
   const createdAt = Date.now();
   const entry: StoredHighScoreEntry = {
     createdAt,
     id: `local-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
     name: normalizeHighScoreName(name),
-    run: run ?? undefined,
+    run: shouldSync ? run ?? undefined : undefined,
     score: Math.max(0, Math.floor(score)),
     stats: stats.slice(0, maxHighScoreStats),
     submittedAt: createdAt,
-    syncState: run ? "pending" : "local",
+    syncState: shouldSync ? "pending" : "local",
   };
-  const storedScores = upsertScoreRecords(loadStoredScoreRecords(), [entry])
-    .sort(sortHighScores)
-    .slice(0, maxCachedHighScores);
+  const storedScores = trimStoredScoreRecords(
+    upsertScoreRecords(loadStoredScoreRecords(), [entry])
+  );
 
   saveStoredScoreRecords(storedScores);
   void syncHighScores();
@@ -212,13 +253,23 @@ export const saveHighScore = (
  * Best-effort two-way sync between local high scores and the remote API.
  */
 export const syncHighScores = async (): Promise<void> => {
+  if (!canUseHighScoreApi()) {
+    markHighScoreApiOffline();
+    setHighScoreSyncStatus("error");
+    return;
+  }
+
   setHighScoreSyncStatus("syncing");
   const submitted = await submitPendingScores();
   const pulled = await pullRemoteScores();
+  const synced = submitted && pulled && !hasPendingScores();
 
-  setHighScoreSyncStatus(
-    submitted && pulled && !hasPendingScores() ? "success" : "error"
-  );
+  if (synced) {
+    highScoreApiOffline = false;
+  } else {
+    markHighScoreApiOffline();
+  }
+  setHighScoreSyncStatus(synced ? "success" : "error");
 };
 
 /**
@@ -268,7 +319,7 @@ const saveStoredScoreRecords = (entries: StoredHighScoreEntry[]): void => {
   try {
     getStorage()?.setItem(
       highScoreStorageKey,
-      JSON.stringify(entries.sort(sortHighScores).slice(0, maxCachedHighScores))
+      JSON.stringify(trimStoredScoreRecords(entries))
     );
   } catch {
     // High-score persistence is best effort; gameplay should keep running.
@@ -276,6 +327,10 @@ const saveStoredScoreRecords = (entries: StoredHighScoreEntry[]): void => {
 };
 
 const submitPendingScores = async (): Promise<boolean> => {
+  if (!canUseHighScoreApi()) {
+    return !hasPendingScores();
+  }
+
   const records = loadStoredScoreRecords();
   let changed = false;
   let completed = true;
@@ -292,7 +347,7 @@ const submitPendingScores = async (): Promise<boolean> => {
     }
 
     try {
-      const response = await fetch(highScoreApiBasePath, {
+      const response = await fetchHighScoreApi("", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -304,6 +359,11 @@ const submitPendingScores = async (): Promise<boolean> => {
           submittedAt: record.submittedAt,
         }),
       });
+
+      if (!response) {
+        completed = false;
+        break;
+      }
 
       if (isTerminalSyncRejection(response.status)) {
         record.syncState = "local";
@@ -348,10 +408,14 @@ const submitPendingScores = async (): Promise<boolean> => {
 };
 
 const pullRemoteScores = async (): Promise<boolean> => {
-  try {
-    const response = await fetch(highScoreApiBasePath);
+  if (!canUseHighScoreApi()) {
+    return true;
+  }
 
-    if (!response.ok) {
+  try {
+    const response = await fetchHighScoreApi();
+
+    if (!response?.ok) {
       return false;
     }
 
@@ -408,6 +472,20 @@ const upsertScoreRecords = (
   return [...byId.values()];
 };
 
+const trimStoredScoreRecords = (
+  entries: StoredHighScoreEntry[]
+): StoredHighScoreEntry[] => {
+  const pending = entries
+    .filter((entry) => entry.syncState === "pending")
+    .sort(sortHighScores);
+  const cached = entries
+    .filter((entry) => entry.syncState !== "pending")
+    .sort(sortHighScores)
+    .slice(0, Math.max(0, maxCachedHighScores - pending.length));
+
+  return [...pending, ...cached].slice(0, maxCachedHighScores);
+};
+
 const normalizeStoredEntry = (
   entry: HighScoreEntry | StoredHighScoreEntry
 ): StoredHighScoreEntry => {
@@ -450,6 +528,50 @@ const normalizeSyncState = (
 
 const isTerminalSyncRejection = (status: number): boolean =>
   status === 401 || status === 422;
+
+const markHighScoreApiOffline = (): void => {
+  highScoreApiOffline = true;
+  highScoreApiLastProbeAt = Date.now();
+};
+
+const canUseHighScoreApi = (): boolean => !isApiDisabledByConfig();
+
+const isApiDisabledByConfig = (): boolean => getApiMode() === "offline";
+
+const getApiMode = (): "auto" | "offline" => {
+  const configuredMode = import.meta.env.VITE_API_MODE;
+
+  return configuredMode === "offline" ? "offline" : "auto";
+};
+
+const fetchHighScoreApi = async (
+  path = "",
+  init?: RequestInit
+): Promise<Response | null> => {
+  if (!canUseHighScoreApi()) {
+    return null;
+  }
+
+  const controller =
+    typeof AbortController === "undefined" ? null : new AbortController();
+  const timeout =
+    controller === null
+      ? undefined
+      : setTimeout(() => controller.abort(), highScoreApiTimeoutMs);
+
+  try {
+    return await fetch(`${highScoreApiBasePath}${path}`, {
+      ...init,
+      signal: controller?.signal ?? init?.signal,
+    });
+  } catch {
+    return null;
+  } finally {
+    if (timeout !== undefined) {
+      clearTimeout(timeout);
+    }
+  }
+};
 
 const toHighScoreEntry = (entry: HighScoreEntry): HighScoreEntry => ({
   createdAt: entry.createdAt,

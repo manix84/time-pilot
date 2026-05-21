@@ -1890,6 +1890,7 @@ export class TimePilot {
       `Loops: ${stats.loops}`,
       `Restarts: ${stats.restarts}`,
       `Enemies: ${stats.enemiesDestroyed}`,
+      `Bosses: ${stats.bossesDefeated}`,
       `Shots: ${stats.shotsHit}/${stats.shotsFired}`,
       `Bonuses: ${stats.bonusesCollected}`,
       `Lives lost: ${stats.livesLost}`,

@@ -80,13 +80,17 @@ npm run api
 During local development, Vite proxies `/api/*` to
 `http://localhost:8787` by default. Set `HIGH_SCORE_API_URL` before
 `npm run dev` if the API is running somewhere else.
+Set `VITE_API_MODE=offline` when building a static/local-only release that
+should not try to contact backend APIs.
 
 ## 🏅 High Score Storage
 
 High scores are local-first. The game immediately saves submitted scores to
 `localStorage`, so score entry works offline and without any backend. When the
 high-score API is reachable, scores from online player runs are synced to the
-remote table and merged back into the local leaderboard.
+remote table and merged back into the local leaderboard. If the API is absent,
+blocked, or offline, the game falls back to local scores, shows the offline sync
+indicator, and periodically probes for the API to return.
 
 The API uses PostgreSQL when `DATABASE_URL` is configured:
 
