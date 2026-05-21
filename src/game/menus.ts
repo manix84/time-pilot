@@ -789,12 +789,22 @@ class Menus implements MenuSystemInstance {
       context.save();
       context.globalAlpha *= titleOpacity;
       if (titleOpacity > 0.01) {
-        this._gameArena.renderText(this._getRenderedScreenTitle(), 0, layout.titleY, {
+        const title = this._getRenderedScreenTitle();
+
+        this._gameArena.renderText(title, 0, layout.titleY, {
           size: 18,
           align: "center",
           valign: "middle",
           color: palette.menu.mutedText,
         });
+
+        if (this._screen === "high-scores") {
+          this._renderHighScoreSyncIndicator({
+            posX: this._getCenteredTitleWidth(context, title) / 2 + 8,
+            posY: layout.titleY - 12,
+            renderSize: 24,
+          });
+        }
       }
       context.restore();
     } else if (this._isPausedRootMenu()) {
@@ -923,7 +933,6 @@ class Menus implements MenuSystemInstance {
 
     if (this._screen === "high-scores") {
       this._renderHighScoreStats();
-      this._renderHighScoreSyncIndicator();
     }
   };
 
@@ -2217,19 +2226,23 @@ class Menus implements MenuSystemInstance {
     return `Date: ${date.toISOString().slice(0, 10)}`;
   };
 
-  private _renderHighScoreSyncIndicator = (): void => {
+  private _renderHighScoreSyncIndicator = (position?: {
+    posX: number;
+    posY: number;
+    renderSize?: number;
+  }): void => {
     const status = this._commands.getHighScoreSyncStatus?.();
 
     if (!status || !this._syncIndicatorSprite.complete) {
       return;
     }
 
-    const viewport = this._getItemsViewport();
     const frameDuration = syncIndicatorFrameDurationMs[status];
     const frameX =
       Math.floor(performance.now() / frameDuration) % syncIndicatorFrameCount;
     const frameY = syncIndicatorStateRows[status];
-    const renderSize = 24;
+    const renderSize = position?.renderSize ?? 24;
+    const viewport = this._getItemsViewport();
 
     this._gameArena.renderSprite(this._syncIndicatorSprite, {
       frameWidth: syncIndicatorFrameSize,
@@ -2238,9 +2251,22 @@ class Menus implements MenuSystemInstance {
       frameY,
       renderWidth: renderSize,
       renderHeight: renderSize,
-      posX: viewport.x + viewport.width - renderSize - 4,
-      posY: viewport.y + 4,
+      posX: position?.posX ?? viewport.x + viewport.width - renderSize - 4,
+      posY: position?.posY ?? viewport.y + 4,
     });
+  };
+
+  private _getCenteredTitleWidth = (
+    context: CanvasRenderingContext2D,
+    title: string
+  ): number => {
+    const runs = title.split(/(\s+)/).filter((run) => run.length > 0);
+
+    return runs.reduce((width, run) => {
+      const measured = context.measureText(run).width;
+
+      return width + (/^\s+$/.test(run) ? measured * 2 : measured);
+    }, 0);
   };
 
   private _truncateText = (text: string, maxLength: number): string => {
