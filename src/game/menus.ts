@@ -1258,7 +1258,7 @@ class Menus implements MenuSystemInstance {
       }),
       this._createItem(i18n.menu.uiZoom, "slider", nextItemY(), {
         getValue: () => formatUiZoom(),
-        onAdjust: (direction) => this.adjustUiZoom(direction),
+        onAdjust: (direction) => this._adjustUiZoom(direction),
         onSetValue: (value) => this._setUiZoom(this._getZoomValueFromStep(value)),
         sliderSteps: this._getZoomSliderSteps(),
       }),
@@ -4197,12 +4197,18 @@ class Menus implements MenuSystemInstance {
     this._commands.selectLevel?.(level);
   };
 
-  adjustUiZoom = (direction: -1 | 1): void => {
+  adjustZoom = (direction: -1 | 1): void => {
     this._setUiZoom(userOptions.uiZoom + direction * zoomStepPercent);
+    this._setGameZoom(userOptions.gameZoom + direction * zoomStepPercent);
   };
 
-  resetUiZoom = (): void => {
+  resetZoom = (): void => {
     this._setUiZoom(zoomDefaultPercent);
+    this._setGameZoom(zoomDefaultPercent);
+  };
+
+  private _adjustUiZoom = (direction: -1 | 1): void => {
+    this._setUiZoom(userOptions.uiZoom + direction * zoomStepPercent);
   };
 
   private _setUiZoom = (value: number): void => {

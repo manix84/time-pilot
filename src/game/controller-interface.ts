@@ -287,12 +287,12 @@ class ControllerInterface implements ControllerInterfaceInstance {
     return this._menus.isActive();
   };
 
-  adjustUiZoom = (direction: -1 | 1): void => {
-    this._menus.adjustUiZoom(direction);
+  adjustZoom = (direction: -1 | 1): void => {
+    this._menus.adjustZoom(direction);
   };
 
-  resetUiZoom = (): void => {
-    this._menus.resetUiZoom();
+  resetZoom = (): void => {
+    this._menus.resetZoom();
   };
 
   private _quantizeHeading = (heading: Heading): Heading => {

@@ -444,8 +444,8 @@ export interface HudInstance {
 }
 
 export interface ControllerInterfaceInstance {
-  adjustUiZoom?: (direction: -1 | 1) => void;
-  resetUiZoom?: () => void;
+  adjustZoom?: (direction: -1 | 1) => void;
+  resetZoom?: () => void;
   requestRestartConfirmation?: () => void;
   rotateToHeading: (desiredHeading: Heading) => void;
   rotateClockwise: () => void;
@@ -591,8 +591,8 @@ export interface MenuRenderOptions {
 }
 
 export interface MenuSystemInstance {
-  adjustUiZoom: (direction: -1 | 1) => void;
-  resetUiZoom: () => void;
+  adjustZoom: (direction: -1 | 1) => void;
+  resetZoom: () => void;
   adjust: (direction: -1 | 1) => void;
   captureKey: (keyCode: number) => boolean;
   getNavigationState: () => MenuNavigationState;

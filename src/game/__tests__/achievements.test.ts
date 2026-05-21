@@ -198,8 +198,8 @@ const createContext = (
     } satisfies HudInstance,
     _menus: {
       adjust: vi.fn(),
-      adjustUiZoom: vi.fn(),
-      resetUiZoom: vi.fn(),
+      adjustZoom: vi.fn(),
+      resetZoom: vi.fn(),
       captureKey: vi.fn(() => false),
       getNavigationState: vi.fn(() => ({
         active: false,
