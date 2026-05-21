@@ -78,8 +78,11 @@ npm run api
 ```
 
 During local development, Vite proxies `/api/*` to
-`http://localhost:8787` by default. Set `HIGH_SCORE_API_URL` before
-`npm run dev` if the API is running somewhere else.
+`http://localhost:8787` by default. If the default API port is busy,
+`npm run api` will automatically try the next available port and write the URL
+for Vite to use, so `/api/*` keeps working without manual setup. Set
+`HIGH_SCORE_API_URL` before `npm run dev` only if the API is running somewhere
+outside the local helper server.
 Set `VITE_API_MODE=offline` when building a static/local-only release that
 should not try to contact backend APIs.
 

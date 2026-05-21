@@ -47,13 +47,13 @@ class Keyboard1 implements Controller {
           this._controllerInterface.openMainMenu?.();
         } else if (event.keyCode === 187 || event.keyCode === 107) {
           event.preventDefault();
-          this._controllerInterface.adjustUiZoom?.(1);
+          this._controllerInterface.adjustZoom?.(1);
         } else if (event.keyCode === 189 || event.keyCode === 109) {
           event.preventDefault();
-          this._controllerInterface.adjustUiZoom?.(-1);
+          this._controllerInterface.adjustZoom?.(-1);
         } else if (event.keyCode === 48 || event.keyCode === 96) {
           event.preventDefault();
-          this._controllerInterface.resetUiZoom?.();
+          this._controllerInterface.resetZoom?.();
         } else if (bindings.fullscreen.includes(event.keyCode)) {
           event.preventDefault();
           this._controllerInterface.toggleFullScreen();

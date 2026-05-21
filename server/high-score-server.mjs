@@ -10,6 +10,7 @@ import pg from "pg";
 const { Pool } = pg;
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
+const apiRuntimeFilePath = resolve(__dirname, "../.time-pilot/high-score-api.json");
 const jsonStorePath = resolve(__dirname, "../data/high-scores.json");
 const maxBodyBytes = 64 * 1024;
 const maxGameEra = 5;
@@ -25,8 +26,9 @@ const maxPlausibleShots = 10000;
 const maxScoreStats = 12;
 const maxScores = 100;
 const maxPublicScores = 25;
+const maxPortAttempts = 20;
 const runReceiptTtlMs = 6 * 60 * 60 * 1000;
-const port = Number.parseInt(process.env.PORT ?? "8787", 10);
+const preferredPort = Number.parseInt(process.env.PORT ?? "8787", 10);
 const serverSecret =
   process.env.HIGH_SCORE_SECRET ?? `dev-secret-${process.pid}-${Date.now()}`;
 const corsOrigin = process.env.CORS_ORIGIN ?? "";
@@ -621,6 +623,60 @@ const reject = (error, status = 400) => ({
   status,
 });
 
-server.listen(port, () => {
-  console.log(`High score API listening on http://localhost:${port}`);
-});
+const getListenPort = () =>
+  Number.isInteger(preferredPort) && preferredPort >= 0 ? preferredPort : 8787;
+
+const writeApiRuntimeFile = async (activePort) => {
+  try {
+    await mkdir(dirname(apiRuntimeFilePath), { recursive: true });
+    await writeFile(
+      apiRuntimeFilePath,
+      JSON.stringify(
+        {
+          port: activePort,
+          updatedAt: Date.now(),
+          url: `http://localhost:${activePort}`,
+        },
+        null,
+        2
+      )
+    );
+  } catch (error) {
+    console.warn("Unable to write high score API runtime file", error);
+  }
+};
+
+const listen = (nextPort, attemptsRemaining = maxPortAttempts) => {
+  const onError = (error) => {
+    server.off("listening", onListening);
+
+    if (error.code === "EADDRINUSE" && nextPort > 0 && attemptsRemaining > 0) {
+      const fallbackPort = nextPort + 1;
+
+      console.warn(
+        `High score API port ${nextPort} is busy; trying ${fallbackPort}`
+      );
+      listen(fallbackPort, attemptsRemaining - 1);
+      return;
+    }
+
+    console.error("High score API failed to start", error);
+    process.exitCode = 1;
+  };
+
+  const onListening = () => {
+    server.off("error", onError);
+    const address = server.address();
+    const activePort =
+      typeof address === "object" && address !== null ? address.port : nextPort;
+
+    void writeApiRuntimeFile(activePort);
+    console.log(`High score API listening on http://localhost:${activePort}`);
+  };
+
+  server.once("error", onError);
+  server.once("listening", onListening);
+  server.listen(nextPort);
+};
+
+listen(getListenPort());

@@ -9,8 +9,8 @@ import userOptions from "../../user-options";
 
 const createControls = (): ControllerInterfaceInstance => {
   return {
-    adjustUiZoom: vi.fn(),
-    resetUiZoom: vi.fn(),
+    adjustZoom: vi.fn(),
+    resetZoom: vi.fn(),
     requestRestartConfirmation: vi.fn(),
     rotateToHeading: vi.fn(),
     rotateClockwise: vi.fn(),
@@ -251,7 +251,7 @@ describe("controller modules", () => {
     expect(inputState.right).toBe(false);
   });
 
-  it("maps plus, minus, and zero keys to UI zoom controls", () => {
+  it("maps plus, minus, and zero keys to combined zoom controls", () => {
     const controls = createControls();
     const inputState = createInputState();
     const keyboard = new Keyboard1(controls, inputState);
@@ -263,9 +263,9 @@ describe("controller modules", () => {
     document.documentElement.dispatchEvent(new KeyboardEvent("keydown", { keyCode: 109 }));
     document.documentElement.dispatchEvent(new KeyboardEvent("keydown", { keyCode: 96 }));
 
-    expect(controls.adjustUiZoom).toHaveBeenCalledWith(1);
-    expect(controls.adjustUiZoom).toHaveBeenCalledWith(-1);
-    expect(controls.resetUiZoom).toHaveBeenCalledTimes(2);
+    expect(controls.adjustZoom).toHaveBeenCalledWith(1);
+    expect(controls.adjustZoom).toHaveBeenCalledWith(-1);
+    expect(controls.resetZoom).toHaveBeenCalledTimes(2);
     expect(controls.rotateToHeading).not.toHaveBeenCalled();
 
     keyboard.disconnect?.();
