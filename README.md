@@ -26,6 +26,7 @@ game properly while preserving the original canvas-era feel.
 - 📊 High-score stat cards track accuracy, enemies, loops, near misses, restarts, bonuses, and survival time.
 - ℹ️ Public about page with version, host, privacy, source, and sponsorship links.
 - 🛠️ Debug tools for level select, preroll replay, runtime logging, and stored-data resets.
+- 📚 Production Storybook reference under `/stories/`, including a sprite gallery.
 - 📱 Installable offline PWA mode that launches as a standalone app and enters fullscreen play from Start/Continue.
 - 🔆 Optional PWA keep-awake mode, on by default, for active or paused player runs.
 - 👆 Touch steering guide, enabled by default, that appears only while the active gameplay touch is held.
@@ -85,6 +86,10 @@ for Vite to use, so `/api/*` keeps working without manual setup. Set
 outside the local helper server.
 Set `VITE_API_MODE=offline` when building a static/local-only release that
 should not try to contact backend APIs.
+
+Builds also publish the Storybook reference site to `dist/stories`, so the
+deployed site exposes it under `/stories/`. The showcase page links to that
+route for sprite, menu, preroll, achievement, audio, and UI reference views.
 
 ## 🏅 High Score Storage
 
@@ -254,6 +259,11 @@ The root menu also includes an achievements page. It lays out achievement cards
 responsively, shows locked or unlocked sprite frames where icons exist, and
 renders persistent counter progress for achievements such as `Quarter Master`.
 Unlock notifications slide in above the credits line during play.
+
+Storybook includes a sprite gallery that renders the real sprite sheets with a
+live animation preview beside the highlighted source frames. The gallery can
+switch between animation, direction, damage, death-flash, state, and static
+views for sheets that support those rows.
 
 Game over now uses a canvas dialogue. If continues remain, the primary action
 is `Continue`; otherwise it becomes `Restart`. `Exit` returns to the root menu.

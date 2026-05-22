@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef } from "react";
+import type { CSSProperties } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import AchievementNotifications from "../game/achievement-notifications";
 import {
@@ -19,6 +20,7 @@ const achievementsPageCanvasWidth = 1100;
 const achievementsPageCanvasHeight = 760;
 const achievementPopupCanvasWidth = 1000;
 const achievementPopupCanvasHeight = 560;
+const achievementIconPreviewScale = 1.5;
 
 const getAchievementStatuses = (): AchievementStatus[] =>
   achievementDefinitions.map((achievement, index) => ({
@@ -133,6 +135,54 @@ const AchievementPopupDemo = () => {
   );
 };
 
+const AchievementIconFrame = ({
+  frameX,
+  icon,
+}: {
+  frameX: number;
+  icon: AchievementStatus["icon"];
+}) => {
+  const style = {
+    "--sprite-background-x": `${frameX * icon.frameWidth * achievementIconPreviewScale * -1}px`,
+    "--sprite-background-y": "0px",
+    "--sprite-frame-render-height": `${icon.frameHeight * achievementIconPreviewScale}px`,
+    "--sprite-frame-render-width": `${icon.frameWidth * achievementIconPreviewScale}px`,
+    "--sprite-sheet-render-height": `${icon.frameHeight * achievementIconPreviewScale}px`,
+    "--sprite-sheet-render-width": `${2 * icon.frameWidth * achievementIconPreviewScale}px`,
+    backgroundImage: `url("${icon.src}")`,
+  } as CSSProperties;
+
+  return <span className={"sprite-frame-view"} style={style} />;
+};
+
+const AchievementSpriteGallery = () => {
+  return (
+    <div className={"achievement-sprite-gallery"}>
+      {achievementDefinitions.map((achievement) => (
+        <article className={"achievement-sprite-card"} key={achievement.id}>
+          <h3>{achievement.name}</h3>
+          <div className={"achievement-sprite-states"}>
+            <div>
+              <span>Disabled</span>
+              <AchievementIconFrame
+                frameX={achievement.icon.lockedFrameX}
+                icon={achievement.icon}
+              />
+            </div>
+            <div>
+              <span>Enabled</span>
+              <AchievementIconFrame
+                frameX={achievement.icon.unlockedFrameX}
+                icon={achievement.icon}
+              />
+            </div>
+          </div>
+        </article>
+      ))}
+    </div>
+  );
+};
+
 const AchievementsDemo = () => {
   const drawAchievements = useCallback(
     (context: CanvasRenderingContext2D, canvas: HTMLCanvasElement) => {
@@ -158,6 +208,10 @@ const AchievementsDemo = () => {
           <article className={"storybook-card"}>
             <h2>Unlock Popup</h2>
             <AchievementPopupDemo />
+          </article>
+          <article className={"storybook-card storybook-wide-card"}>
+            <h2>Achievement Icons</h2>
+            <AchievementSpriteGallery />
           </article>
         </div>
       </section>

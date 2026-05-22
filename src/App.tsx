@@ -10,6 +10,7 @@ const authorLogo = `${import.meta.env.BASE_URL}logos/author-128-light.png`;
 const authorUrl = "https://github.com/manix84";
 const sourceUrl = "https://github.com/manix84/time-pilot";
 const sponsorUrl = "https://github.com/sponsors/manix84";
+const storiesUrl = `${import.meta.env.BASE_URL}stories/`;
 
 const controlGroups = [
   {
@@ -268,6 +269,7 @@ function App() {
             <div className={"hero-actions"}>
               <a href={"#play"}>Play now</a>
               <a href={"pwa/"}>Open app view</a>
+              <a href={storiesUrl}>Stories</a>
               <a href={"about/"}>About</a>
             </div>
           </div>

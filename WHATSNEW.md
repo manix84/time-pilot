@@ -45,6 +45,8 @@
   misses, and mid-run restarts after pauses or restored sessions.
 - Added a public about page with build, host, privacy, source, and sponsorship
   details.
+- Added a production Storybook reference route under `/stories/`, linked from
+  the public showcase page.
 - Added installed-PWA back navigation for menu backtracking, paused-game resume,
   and root-menu exit.
 - Added in-app controller configuration support for keyboard layout selection
@@ -115,6 +117,9 @@
   being cleared.
 - Added a Storybook preroll preview for the author card, flyby, and menu
   handoff.
+- Added a Storybook sprite gallery that uses the real sprite sheets and can
+  switch between animation, direction, damage, death-flash, state, and static
+  previews.
 - Added localized era blurbs to the debug level select screen.
 - Added Spanish to the supported menu languages.
 - Added animated level select previews for basic enemies, special enemies, bosses, and bonuses.
