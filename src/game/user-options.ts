@@ -29,6 +29,7 @@ const zoomMaxPercent = 250;
 const zoomMinPercent = 25;
 const oldZoomBasePercent = 75;
 const oldZoomStepPercent = 5;
+const userOptionsVersion = 2;
 
 type PersistedUserOptions = Pick<
   UserOptions,
@@ -50,7 +51,9 @@ type PersistedUserOptions = Pick<
   | "touchSteeringOverlay"
   | "uiZoom"
   | "videoFilterMode"
->;
+> & {
+  optionsVersion?: number;
+};
 
 /**
  * Local storage key for persisted user options.
@@ -223,6 +226,10 @@ const storedFilterMode = filterModes.includes(storedOptions.videoFilterMode as F
 const storedLogLevel = isLogLevel(storedOptions.logLevel)
   ? storedOptions.logLevel
   : defaultPersistedOptions.logLevel;
+const storedTouchSteeringOverlay =
+  storedOptions.optionsVersion === userOptionsVersion
+    ? storedOptions.touchSteeringOverlay
+    : undefined;
 
 const dispatchUserOptionsChanged = (): void => {
   window.dispatchEvent(new CustomEvent("timePilot:userOptionsChanged"));
@@ -255,6 +262,7 @@ const writeUserOptions = (): void => {
         logLevel: userOptions.logLevel,
         masterVolume: userOptions.masterVolume,
         musicVolume: userOptions.musicVolume,
+        optionsVersion: userOptionsVersion,
         touchSteeringOverlay: userOptions.touchSteeringOverlay,
         uiZoom: userOptions.uiZoom,
         videoFilterMode: userOptions.videoFilterMode,
@@ -386,8 +394,7 @@ var userOptions: UserOptions = {
    * Display a live touch steering guide during gameplay.
    */
   touchSteeringOverlay:
-    storedOptions.touchSteeringOverlay ??
-    defaultPersistedOptions.touchSteeringOverlay,
+    storedTouchSteeringOverlay ?? defaultPersistedOptions.touchSteeringOverlay,
   uiZoom: normalizeZoomOption(storedOptions.uiZoom),
   videoFilterMode: storedFilterMode,
 

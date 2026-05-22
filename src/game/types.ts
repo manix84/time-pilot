@@ -541,6 +541,7 @@ export interface MenuSystemCommands {
   getPendingHighScore?: () => PendingHighScoreEntry | null;
   getHighScoreSyncStatus?: () => HighScoreSyncStatus | null;
   getLevel?: () => number;
+  onDebugEnabled?: () => void;
   previewLevel?: (level: number) => void;
   playPreroll?: () => void;
   onNavigationChanged?: (state: MenuNavigationState) => void;

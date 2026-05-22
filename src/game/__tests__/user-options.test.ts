@@ -79,6 +79,39 @@ describe("user options persistence", () => {
     expect(userOptions.logLevel).toBe("off");
   });
 
+  it("migrates old touch steering overlay preferences to the enabled default", async () => {
+    vi.resetModules();
+    Object.defineProperty(globalThis, "localStorage", {
+      configurable: true,
+      value: createStorageMock({
+        "timePilot.userOptions": JSON.stringify({
+          touchSteeringOverlay: false,
+        }),
+      }),
+    });
+
+    const { default: userOptions } = await import("../user-options");
+
+    expect(userOptions.touchSteeringOverlay).toBe(true);
+  });
+
+  it("preserves a deliberate versioned touch steering overlay preference", async () => {
+    vi.resetModules();
+    Object.defineProperty(globalThis, "localStorage", {
+      configurable: true,
+      value: createStorageMock({
+        "timePilot.userOptions": JSON.stringify({
+          optionsVersion: 2,
+          touchSteeringOverlay: false,
+        }),
+      }),
+    });
+
+    const { default: userOptions } = await import("../user-options");
+
+    expect(userOptions.touchSteeringOverlay).toBe(false);
+  });
+
   it("ignores corrupted persisted keyboard bindings", async () => {
     vi.resetModules();
     Object.defineProperty(globalThis, "localStorage", {

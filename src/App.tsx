@@ -10,6 +10,7 @@ const authorLogo = `${import.meta.env.BASE_URL}logos/author-128-light.png`;
 const authorUrl = "https://github.com/manix84";
 const sourceUrl = "https://github.com/manix84/time-pilot";
 const sponsorUrl = "https://github.com/sponsors/manix84";
+const storiesUrl = `${import.meta.env.BASE_URL}stories/`;
 
 const controlGroups = [
   {
@@ -29,7 +30,7 @@ const controlGroups = [
   {
     title: "Touch",
     details:
-      "Touch and drag from where your thumb lands to steer and fire, with an optional live steering guide. Pinch adjusts UI and game zoom together.",
+      "Touch and drag from where your thumb lands to steer and fire, with the live steering guide enabled by default. Pinch adjusts UI and game zoom together.",
   },
 ];
 
@@ -57,7 +58,7 @@ const featureHighlights = [
   {
     title: "High scores",
     details:
-      "Scores save locally first, sync when available, and show run stats like loops, near misses, and restarts.",
+      "Scores save locally first, sync when available, show satellite connection state, and include run stats like loops and near misses.",
   },
   {
     title: "About page",
@@ -93,8 +94,8 @@ const systemUpdates = [
   "Skippable author and Time Pilot preroll before cold-start root-menu entry.",
   "Page-lifecycle session snapshots that restore interrupted player runs without per-frame storage writes.",
   "Standalone PWA launch with fullscreen, landscape, keep-awake, and installed-app exit requests from player actions.",
-  "Local-first high scores with optional remote sync and single-use run receipts for submitted scores.",
-  "Touch steering guide that follows the active fire thumb from its initial touch point.",
+  "Local-first high scores with optional remote sync, satellite connection states, and single-use run receipts for submitted scores.",
+  "Default-on touch steering guide that follows the active fire thumb from its initial touch point.",
   "Achievement subsystem with page rendering, counter progress, and unlock popups.",
   "Watch Demo mode with a mortal autopilot that scores, dodges, shoots, continues, and collects bonuses.",
   "Debug-menu runtime logging and confirmed reset actions for stored preferences, scores, and achievements.",
@@ -268,6 +269,7 @@ function App() {
             <div className={"hero-actions"}>
               <a href={"#play"}>Play now</a>
               <a href={"pwa/"}>Open app view</a>
+              <a href={storiesUrl}>Stories</a>
               <a href={"about/"}>About</a>
             </div>
           </div>

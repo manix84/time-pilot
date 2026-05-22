@@ -184,3 +184,227 @@
   color: #111927;
   background: #f2b84b;
 }
+
+.storybook-sprites-section {
+  width: min(1600px, 100%);
+}
+
+.sprite-gallery-copy {
+  max-width: 56rem;
+  margin: 0 0 1.2rem;
+  color: #c7d5eb;
+  line-height: 1.55;
+}
+
+.sprite-gallery-controls {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  align-items: end;
+  margin: 0 0 1.2rem;
+  border: 1px solid rgba(126, 219, 211, 0.22);
+  border-radius: 8px;
+  padding: 0.75rem;
+  background: rgba(5, 12, 22, 0.96);
+  backdrop-filter: blur(8px);
+}
+
+.sprite-gallery-controls label {
+  display: grid;
+  gap: 0.35rem;
+  color: #7edbd3;
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.sprite-gallery-controls select,
+.sprite-gallery-controls input {
+  min-height: 2.25rem;
+}
+
+.sprite-gallery-controls select {
+  min-width: 12rem;
+  border: 1px solid #466485;
+  border-radius: 8px;
+  padding: 0 0.65rem;
+  color: #e9f3ff;
+  background: #08111d;
+}
+
+.sprite-gallery-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.75rem;
+}
+
+.sprite-card {
+  display: grid;
+  grid-template-columns: minmax(11rem, 0.5fr) minmax(0, 1.5fr);
+  gap: 1rem;
+  align-items: center;
+  border: 1px solid rgba(126, 219, 211, 0.22);
+  border-radius: 8px;
+  padding: 0.85rem;
+  background: rgba(5, 12, 22, 0.72);
+}
+
+.sprite-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+
+.sprite-card-header h2 {
+  margin: 0;
+  color: #ffd400;
+  font-size: 0.92rem;
+}
+
+.sprite-card-header p,
+.sprite-card-header span,
+.sprite-mode-note {
+  margin: 0.25rem 0 0;
+  color: #c7d5eb;
+  font-size: 0.75rem;
+  line-height: 1.35;
+}
+
+.sprite-card-header span {
+  flex: 0 0 auto;
+  color: #7edbd3;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+.sprite-preview-grid {
+  display: grid;
+  grid-template-columns: minmax(8rem, 0.8fr) minmax(0, 1.2fr);
+  gap: 0.75rem;
+}
+
+.sprite-preview-grid > div {
+  display: grid;
+  justify-items: center;
+  gap: 0.5rem;
+  min-height: 9rem;
+  border: 1px solid rgba(126, 219, 211, 0.12);
+  border-radius: 6px;
+  padding: 0.65rem;
+  background:
+    linear-gradient(45deg, rgba(255, 255, 255, 0.055) 25%, transparent 25%),
+    linear-gradient(-45deg, rgba(255, 255, 255, 0.055) 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, rgba(255, 255, 255, 0.055) 75%),
+    linear-gradient(-45deg, transparent 75%, rgba(255, 255, 255, 0.055) 75%);
+  background-position: 0 0, 0 6px, 6px -6px, -6px 0;
+  background-size: 12px 12px;
+}
+
+.sprite-preview-grid h3 {
+  margin: 0;
+  color: #e9f3ff;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+}
+
+.sprite-frame-view {
+  display: block;
+  width: var(--sprite-frame-render-width);
+  height: var(--sprite-frame-render-height);
+  background-position: var(--sprite-background-x) var(--sprite-background-y);
+  background-repeat: no-repeat;
+  background-size:
+    var(--sprite-sheet-render-width)
+    var(--sprite-sheet-render-height);
+  image-rendering: pixelated;
+}
+
+.sprite-frame-strip-panel {
+  display: grid;
+  align-content: start;
+  gap: 0.5rem;
+  min-height: 9rem;
+  border: 1px solid rgba(126, 219, 211, 0.12);
+  border-radius: 6px;
+  padding: 0.65rem;
+  background: rgba(0, 0, 0, 0.16);
+}
+
+.sprite-frame-strip {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.45rem;
+  overflow: visible;
+  padding: 0.15rem 0.15rem 0.4rem;
+}
+
+.sprite-frame-strip-item {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  min-height: 2.25rem;
+  border: 1px solid rgba(126, 219, 211, 0.22);
+  border-radius: 5px;
+  padding: 0.25rem;
+  background: rgba(6, 16, 29, 0.72);
+}
+
+.sprite-frame-strip-item[data-active="true"] {
+  border-color: #ffd400;
+  box-shadow: 0 0 0 2px rgba(255, 212, 0, 0.28);
+}
+
+.achievement-sprite-gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(18rem, 1fr));
+  gap: 0.85rem;
+}
+
+.achievement-sprite-card {
+  border: 1px solid rgba(126, 219, 211, 0.16);
+  border-radius: 8px;
+  padding: 0.8rem;
+  background: rgba(0, 0, 0, 0.16);
+}
+
+.achievement-sprite-card h3 {
+  min-height: 2.2rem;
+  margin: 0 0 0.7rem;
+  color: #ffd400;
+  font-size: 0.86rem;
+}
+
+.achievement-sprite-states {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.65rem;
+}
+
+.achievement-sprite-states > div {
+  display: grid;
+  justify-items: center;
+  gap: 0.45rem;
+  border: 1px solid rgba(126, 219, 211, 0.12);
+  border-radius: 6px;
+  padding: 0.55rem;
+  background: rgba(6, 16, 29, 0.72);
+}
+
+.achievement-sprite-states span {
+  color: #c7d5eb;
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+@media (max-width: 760px) {
+  .sprite-card,
+  .sprite-preview-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .sprite-card {
+    align-items: stretch;
+  }
+}

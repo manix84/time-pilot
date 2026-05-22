@@ -26,9 +26,10 @@ game properly while preserving the original canvas-era feel.
 - 📊 High-score stat cards track accuracy, enemies, loops, near misses, restarts, bonuses, and survival time.
 - ℹ️ Public about page with version, host, privacy, source, and sponsorship links.
 - 🛠️ Debug tools for level select, preroll replay, runtime logging, and stored-data resets.
+- 📚 Production Storybook reference under `/stories/`, including a sprite gallery.
 - 📱 Installable offline PWA mode that launches as a standalone app and enters fullscreen play from Start/Continue.
 - 🔆 Optional PWA keep-awake mode, on by default, for active or paused player runs.
-- 👆 Optional touch steering guide that appears only while the active gameplay touch is held.
+- 👆 Touch steering guide, enabled by default, that appears only while the active gameplay touch is held.
 - 🎵 Looping menu and era music with faded track transitions, routed through the music volume channel.
 - 🔁 Root-menu update flow that applies waiting PWA updates without interrupting play.
 - 📺 Optional CRT/VHS filter presets with custom sliders.
@@ -86,14 +87,20 @@ outside the local helper server.
 Set `VITE_API_MODE=offline` when building a static/local-only release that
 should not try to contact backend APIs.
 
+Builds also publish the Storybook reference site to `dist/stories`, so the
+deployed site exposes it under `/stories/`. The showcase page links to that
+route for sprite, menu, preroll, achievement, audio, and UI reference views.
+
 ## 🏅 High Score Storage
 
 High scores are local-first. The game immediately saves submitted scores to
 `localStorage`, so score entry works offline and without any backend. When the
 high-score API is reachable, scores from online player runs are synced to the
 remote table and merged back into the local leaderboard. If the API is absent,
-blocked, or offline, the game falls back to local scores, shows the offline sync
-indicator, and periodically probes for the API to return.
+blocked, or offline, the game falls back to local scores, shows the satellite
+connection indicator in its offline state, and periodically probes for the API
+to return. The same indicator also shows waiting, syncing, and brief success
+states while the score table is checked or updated.
 
 The API uses PostgreSQL when `DATABASE_URL` is configured:
 
@@ -117,7 +124,9 @@ the score. Pending local submissions also carry a lightweight integrity envelope
 so casual local-storage edits are downgraded to local-only before sync, and the
 API rejects submissions whose envelope no longer matches the score payload.
 Offline runs still save locally, but they do not receive a remote run receipt and
-are treated as local-only rather than trusted remote submissions.
+are treated as local-only rather than trusted remote submissions. Runs that use
+debug mode are also kept local-only, even if debug is enabled part way through
+the session.
 See [PRIVACY.md](PRIVACY.md) for the backend data-storage breakdown.
 
 ## 📱 Installable PWA
@@ -219,10 +228,10 @@ React owns mounting and cleanup. The game engine owns simulation, rendering, inp
 - **Touch**: steering is relative to where the thumb first touches the screen,
   firing happens while touching, two-finger taps open the menu, three-finger
   taps request restart, and pinch gestures adjust UI and game zoom together.
-  On touch-capable devices, Options includes a `Touch Steering Guide` toggle.
-  When enabled, gameplay draws a guide from the initial touch point to the
-  player thumb's current fire button position, and it disappears as soon as
-  that touch is released.
+  On touch-capable devices, the `Touch Steering Guide` is enabled by default
+  and can be disabled from Options. During gameplay it draws a guide from the
+  initial touch point to the player thumb's current fire button position, and it
+  disappears as soon as that touch is released.
 
 The game also renders its start and options menus inside the canvas. Keyboard
 and gamepad commands move, adjust, and activate menu items through the same
@@ -250,6 +259,11 @@ The root menu also includes an achievements page. It lays out achievement cards
 responsively, shows locked or unlocked sprite frames where icons exist, and
 renders persistent counter progress for achievements such as `Quarter Master`.
 Unlock notifications slide in above the credits line during play.
+
+Storybook includes a sprite gallery that renders the real sprite sheets with a
+live animation preview beside the highlighted source frames. The gallery can
+switch between animation, direction, damage, death-flash, state, and static
+views for sheets that support those rows.
 
 Game over now uses a canvas dialogue. If continues remain, the primary action
 is `Continue`; otherwise it becomes `Restart`. `Exit` returns to the root menu.

@@ -113,6 +113,12 @@ describe("high score storage", () => {
       syncState: "synced",
     });
     expect(getHighScoreSyncStatus()).toBe("success");
+
+    vi.mocked(Date.now).mockReturnValue(
+      Date.parse("2026-05-19T10:00:03.000Z")
+    );
+
+    expect(getHighScoreSyncStatus()).toBe("waiting");
   });
 
   it("sorts matching scores by the first creation timestamp", () => {

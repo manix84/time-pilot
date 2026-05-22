@@ -28,6 +28,7 @@ const highScoreStorageKey = "timePilot.highScores";
 const highScoreApiBasePath = "/api/high-scores";
 const highScoreApiTimeoutMs = 2500;
 const highScoreApiProbeIntervalMs = 30000;
+const highScoreSyncSuccessDisplayMs = 2500;
 const fakeHighScoreBaseCreatedAt = Date.UTC(2012, 8, 13);
 const highScoreIntegrityVersion = 1;
 const highScoreIntegrityHashModulo = 1000003;
@@ -40,12 +41,21 @@ let highScoreApiOffline = false;
 let highScoreApiProbeInFlight = false;
 let highScoreApiLastProbeAt = 0;
 let highScoreSyncStatus: HighScoreSyncStatus | null = "waiting";
+let highScoreSyncStatusChangedAt = Date.now();
 
 /**
  * Returns the latest high-score save/sync status for menu indicators.
  */
 export const getHighScoreSyncStatus = (): HighScoreSyncStatus | null => {
   queueHighScoreApiProbe();
+
+  if (
+    highScoreSyncStatus === "success" &&
+    Date.now() - highScoreSyncStatusChangedAt >= highScoreSyncSuccessDisplayMs
+  ) {
+    return "waiting";
+  }
+
   return highScoreSyncStatus;
 };
 
@@ -73,7 +83,12 @@ const queueHighScoreApiProbe = (): void => {
 };
 
 const setHighScoreSyncStatus = (status: HighScoreSyncStatus | null): void => {
+  if (highScoreSyncStatus === status) {
+    return;
+  }
+
   highScoreSyncStatus = status;
+  highScoreSyncStatusChangedAt = Date.now();
 };
 
 /**

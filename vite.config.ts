@@ -14,6 +14,8 @@ const dirname =
     : path.dirname(fileURLToPath(import.meta.url));
 const apiRuntimeFilePath = path.resolve(dirname, ".time-pilot/high-score-api.json");
 const defaultHighScoreApiUrl = "http://localhost:8787";
+const apiPortScanStart = 8787;
+const apiPortScanAttempts = 20;
 
 const getHighScoreApiUrl = (): string => {
   if (process.env.HIGH_SCORE_API_URL) {
@@ -35,6 +37,16 @@ const getHighScoreApiUrl = (): string => {
   return defaultHighScoreApiUrl;
 };
 
+const getHighScoreApiCandidates = (): string[] => {
+  const urls = new Set<string>([getHighScoreApiUrl(), defaultHighScoreApiUrl]);
+
+  for (let offset = 0; offset < apiPortScanAttempts; offset += 1) {
+    urls.add(`http://localhost:${apiPortScanStart + offset}`);
+  }
+
+  return [...urls];
+};
+
 const readRequestBody = async (
   request: import("node:http").IncomingMessage
 ): Promise<Buffer | undefined> => {
@@ -45,6 +57,33 @@ const readRequestBody = async (
   }
 
   return chunks.length > 0 ? Buffer.concat(chunks) : undefined;
+};
+
+const createProxyHeaders = (
+  request: import("node:http").IncomingMessage
+): Headers => {
+  const headers = new Headers();
+
+  Object.entries(request.headers).forEach(([key, value]) => {
+    if (key.toLowerCase() === "host" || value === undefined) {
+      return;
+    }
+
+    if (Array.isArray(value)) {
+      value.forEach((entry) => headers.append(key, entry));
+      return;
+    }
+
+    headers.set(key, value);
+  });
+
+  return headers;
+};
+
+const isLikelyApiResponse = (response: Response): boolean => {
+  const contentType = response.headers.get("content-type") ?? "";
+
+  return response.status !== 404 && contentType.includes("application/json");
 };
 
 // More info at: https://storybook.js.org/docs/next/writing-tests/integrations/vitest-addon
@@ -68,15 +107,33 @@ export default defineConfig({
             return;
           }
 
+          const body = await readRequestBody(request);
+          const headers = createProxyHeaders(request);
+
           try {
-            const targetUrl = new URL(request.url, getHighScoreApiUrl());
-            const body = await readRequestBody(request);
-            const proxiedResponse = await fetch(targetUrl, {
-              body,
-              headers: request.headers as HeadersInit,
-              method: request.method,
-              redirect: "manual",
-            });
+            let proxiedResponse: Response | null = null;
+
+            for (const candidate of getHighScoreApiCandidates()) {
+              try {
+                const candidateResponse = await fetch(new URL(request.url, candidate), {
+                  body,
+                  headers,
+                  method: request.method,
+                  redirect: "manual",
+                });
+
+                if (isLikelyApiResponse(candidateResponse)) {
+                  proxiedResponse = candidateResponse;
+                  break;
+                }
+              } catch {
+                proxiedResponse = null;
+              }
+            }
+
+            if (!proxiedResponse) {
+              throw new Error("High score API unavailable");
+            }
 
             response.statusCode = proxiedResponse.status;
             proxiedResponse.headers.forEach((value, key) => {

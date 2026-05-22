@@ -770,6 +770,42 @@ describe("TimePilot engine", () => {
     game.destroyGame();
   });
 
+  it("saves debug-run high scores locally even when a run receipt exists", async () => {
+    const game = new TimePilot(host, { debug: true, gamepadEnabled: false });
+    const pilot = game as unknown as {
+      highScoreRunReceipt: {
+        issuedAt: number;
+        runId: string;
+        token: string;
+      } | null;
+      pendingHighScore: { score: number; stats: string[] } | null;
+      savePendingHighScore: (name: string) => void;
+    };
+
+    await waitForAudioTimer();
+
+    pilot.highScoreRunReceipt = {
+      issuedAt: 1000,
+      runId: "debug-run",
+      token: "debug-token",
+    };
+    pilot.pendingHighScore = {
+      score: 5000,
+      stats: ["Era: 1910", "Bosses: 0"],
+    };
+
+    pilot.savePendingHighScore("Debug Pilot");
+
+    const storedScores = JSON.parse(
+      localStorage.getItem("timePilot.highScores") ?? "[]"
+    ) as Array<{ run?: unknown; syncState: string }>;
+
+    expect(storedScores[0]).toMatchObject({ syncState: "local" });
+    expect(storedScores[0]?.run).toBeUndefined();
+
+    game.destroyGame();
+  });
+
   it("does not show root-menu app exit when no app exit handler is available", async () => {
     const game = new TimePilot(host, { gamepadEnabled: false });
     const pilot = game as unknown as {
@@ -984,7 +1020,7 @@ describe("TimePilot engine", () => {
     game.destroyGame();
   });
 
-  it("restores an active high-score run receipt from a saved session", async () => {
+  it("ignores restored high-score run receipts while debug is enabled", async () => {
     vi.stubGlobal(
       "Image",
       class {
@@ -1031,10 +1067,7 @@ describe("TimePilot engine", () => {
 
     await new Promise((resolve) => window.setTimeout(resolve, 5));
 
-    expect(pilot.highScoreRunReceipt).toMatchObject({
-      runId: "restored-run",
-      token: "restored-token",
-    });
+    expect(pilot.highScoreRunReceipt).toBeNull();
 
     game.destroyGame();
   });
