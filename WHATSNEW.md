@@ -37,6 +37,10 @@
   setups.
 - Added single-use signed run receipts and server-side plausibility checks for
   best-effort protection against fake remote high score submissions.
+- Added a satellite connection indicator for high-score API state, covering
+  offline/error, waiting, syncing, and short success confirmation states.
+- Kept debug-mode runs local-only so scores from debug-assisted sessions are
+  not submitted to the remote high-score API.
 - Added extra run statistics for high-score cards, including loops, near
   misses, and mid-run restarts after pauses or restored sessions.
 - Added a public about page with build, host, privacy, source, and sponsorship
@@ -150,9 +154,9 @@
 - Added touch gameplay affordances: two-finger menu access, three-finger
   restart confirmation, pinch zoom for UI and game scale together, and
   touch-relative steering.
-- Added a touch-screen-only Touch Steering Guide option that draws a live line
+- Enabled the touch-screen Touch Steering Guide by default. It draws a live line
   from the initial gameplay touch to the thumb-controlled fire button until
-  that touch is released.
+  that touch is released, and can still be disabled from Options.
 - Added root-menu update availability. When a PWA update is waiting, the
   non-playing root menu shows Update, applies the waiting worker, plays a
   no-delay player time-warp overlay, and reloads into the updated files.
