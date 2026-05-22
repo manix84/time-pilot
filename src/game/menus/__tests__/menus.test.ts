@@ -556,8 +556,10 @@ describe("menu definitions", () => {
         frameHeight: 32,
         frameWidth: 32,
         frameY: 2,
-        renderHeight: 24,
-        renderWidth: 24,
+        posX: expect.any(Number),
+        posY: expect.any(Number),
+        renderHeight: 72,
+        renderWidth: 72,
       })
     );
   });

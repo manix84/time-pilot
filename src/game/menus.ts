@@ -79,6 +79,8 @@ const highScoreTrophyFrameCount = 8;
 const highScoreTrophyFrameDurationMs = 480;
 const syncIndicatorFrameSize = 32;
 const syncIndicatorFrameCount = 8;
+const syncIndicatorRenderSize = 72;
+const syncIndicatorEdgeInset = 8;
 const syncIndicatorFrameDurationMs: Record<HighScoreSyncStatus, number> = {
   error: 420,
   waiting: 480,
@@ -789,22 +791,12 @@ class Menus implements MenuSystemInstance {
       context.save();
       context.globalAlpha *= titleOpacity;
       if (titleOpacity > 0.01) {
-        const title = this._getRenderedScreenTitle();
-
-        this._gameArena.renderText(title, 0, layout.titleY, {
+        this._gameArena.renderText(this._getRenderedScreenTitle(), 0, layout.titleY, {
           size: 18,
           align: "center",
           valign: "middle",
           color: palette.menu.mutedText,
         });
-
-        if (this._screen === "high-scores") {
-          this._renderHighScoreSyncIndicator({
-            posX: this._getCenteredTitleWidth(context, title) / 2 + 8,
-            posY: layout.titleY - 12,
-            renderSize: 24,
-          });
-        }
       }
       context.restore();
     } else if (this._isPausedRootMenu()) {
@@ -933,6 +925,7 @@ class Menus implements MenuSystemInstance {
 
     if (this._screen === "high-scores") {
       this._renderHighScoreStats();
+      this._renderHighScoreSyncIndicator();
     }
   };
 
@@ -2226,11 +2219,7 @@ class Menus implements MenuSystemInstance {
     return `Date: ${date.toISOString().slice(0, 10)}`;
   };
 
-  private _renderHighScoreSyncIndicator = (position?: {
-    posX: number;
-    posY: number;
-    renderSize?: number;
-  }): void => {
+  private _renderHighScoreSyncIndicator = (): void => {
     const status = this._commands.getHighScoreSyncStatus?.();
 
     if (!status || !this._syncIndicatorSprite.complete) {
@@ -2241,32 +2230,22 @@ class Menus implements MenuSystemInstance {
     const frameX =
       Math.floor(performance.now() / frameDuration) % syncIndicatorFrameCount;
     const frameY = syncIndicatorStateRows[status];
-    const renderSize = position?.renderSize ?? 24;
-    const viewport = this._getItemsViewport();
+    const viewport = this._getMenuViewport();
 
     this._gameArena.renderSprite(this._syncIndicatorSprite, {
       frameWidth: syncIndicatorFrameSize,
       frameHeight: syncIndicatorFrameSize,
       frameX,
       frameY,
-      renderWidth: renderSize,
-      renderHeight: renderSize,
-      posX: position?.posX ?? viewport.x + viewport.width - renderSize - 4,
-      posY: position?.posY ?? viewport.y + 4,
+      renderWidth: syncIndicatorRenderSize,
+      renderHeight: syncIndicatorRenderSize,
+      posX:
+        viewport.x +
+        viewport.width -
+        syncIndicatorRenderSize -
+        syncIndicatorEdgeInset,
+      posY: viewport.y + syncIndicatorEdgeInset,
     });
-  };
-
-  private _getCenteredTitleWidth = (
-    context: CanvasRenderingContext2D,
-    title: string
-  ): number => {
-    const runs = title.split(/(\s+)/).filter((run) => run.length > 0);
-
-    return runs.reduce((width, run) => {
-      const measured = context.measureText(run).width;
-
-      return width + (/^\s+$/.test(run) ? measured * 2 : measured);
-    }, 0);
   };
 
   private _truncateText = (text: string, maxLength: number): string => {
