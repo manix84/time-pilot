@@ -311,7 +311,6 @@
   display: block;
   width: var(--sprite-frame-render-width);
   height: var(--sprite-frame-render-height);
-  max-width: 100%;
   background-position: var(--sprite-background-x) var(--sprite-background-y);
   background-repeat: no-repeat;
   background-size:
@@ -333,17 +332,17 @@
 
 .sprite-frame-strip {
   display: flex;
-  flex-wrap: nowrap;
+  flex-wrap: wrap;
   align-items: center;
   gap: 0.45rem;
-  overflow-x: auto;
+  overflow: visible;
   padding: 0.15rem 0.15rem 0.4rem;
 }
 
 .sprite-frame-strip-item {
+  flex: 0 0 auto;
   display: grid;
   place-items: center;
-  min-width: 2.25rem;
   min-height: 2.25rem;
   border: 1px solid rgba(126, 219, 211, 0.22);
   border-radius: 5px;

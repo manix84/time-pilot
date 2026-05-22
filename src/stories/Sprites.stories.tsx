@@ -500,7 +500,12 @@ const SpriteFrameView = ({
     backgroundImage: `url("${sprite.src}")`,
   } as CSSProperties;
 
-  return <span className={"sprite-frame-view"} style={style} />;
+  return (
+    <span
+      className={"sprite-frame-view"}
+      style={style}
+    />
+  );
 };
 
 const SpriteCard = ({
