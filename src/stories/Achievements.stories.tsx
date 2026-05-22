@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef } from "react";
+import { useEffect, useRef } from "react";
 import type { CSSProperties } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import AchievementNotifications from "../game/achievement-notifications";
@@ -8,7 +8,6 @@ import {
 } from "../game/achievements";
 import Menus from "../game/menus";
 import palette from "../game/palette";
-import { CanvasDemo } from "./canvas-demo";
 import { createCanvasArena } from "./menu-arena";
 import "./storybook.css";
 
@@ -39,28 +38,58 @@ const getAchievementStatuses = (): AchievementStatus[] =>
         : undefined,
   }));
 
-const renderAchievementsPage = (
-  context: CanvasRenderingContext2D,
-  canvas: HTMLCanvasElement
-): void => {
-  const arena = createCanvasArena(canvas, context);
-  const menu = new Menus(arena, {
-    getAchievements: getAchievementStatuses,
-    start: () => {},
-  });
+const AchievementPageCanvas = () => {
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
-  menu.showStart();
-  menu.next();
-  menu.next();
-  menu.activate();
-  (menu as unknown as TransitionInspectableMenu)._transition = null;
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    const context = canvas?.getContext("2d");
 
-  context.fillStyle = palette.level.sky1910;
-  context.fillRect(0, 0, canvas.width, canvas.height);
-  context.save();
-  context.translate(canvas.width / 2, canvas.height / 2);
-  menu.render();
-  context.restore();
+    if (!canvas || !context) {
+      return;
+    }
+
+    const arena = createCanvasArena(canvas, context);
+    const menu = new Menus(arena, {
+      getAchievements: getAchievementStatuses,
+      start: () => {},
+    });
+    let animationFrame = 0;
+
+    menu.showStart();
+    menu.next();
+    menu.next();
+    menu.activate();
+    (menu as unknown as TransitionInspectableMenu)._transition = null;
+
+    const animate = (): void => {
+      context.setTransform(1, 0, 0, 1, 0, 0);
+      context.clearRect(0, 0, canvas.width, canvas.height);
+      context.fillStyle = palette.level.sky1910;
+      context.fillRect(0, 0, canvas.width, canvas.height);
+      context.save();
+      context.translate(canvas.width / 2, canvas.height / 2);
+      menu.render();
+      context.restore();
+
+      animationFrame = window.requestAnimationFrame(animate);
+    };
+
+    animate();
+
+    return () => {
+      window.cancelAnimationFrame(animationFrame);
+    };
+  }, []);
+
+  return (
+    <canvas
+      className={"storybook-canvas"}
+      height={achievementsPageCanvasHeight}
+      ref={canvasRef}
+      width={achievementsPageCanvasWidth}
+    />
+  );
 };
 
 const AchievementPopupDemo = () => {
@@ -183,45 +212,47 @@ const AchievementSpriteGallery = () => {
   );
 };
 
-const AchievementsDemo = () => {
-  const drawAchievements = useCallback(
-    (context: CanvasRenderingContext2D, canvas: HTMLCanvasElement) => {
-      renderAchievementsPage(context, canvas);
-    },
-    []
-  );
-
+const AchievementPageDemo = () => {
   return (
     <main className={"storybook-surface"}>
       <section className={"storybook-section storybook-achievements-section"}>
         <p className={"storybook-eyebrow"}>Game UI</p>
-        <h1 className={"storybook-title"}>Achievements</h1>
-        <div className={"storybook-demo-grid storybook-achievements-grid"}>
-          <article className={"storybook-card"}>
-            <h2>Achievement Page</h2>
-            <CanvasDemo
-              draw={drawAchievements}
-              height={achievementsPageCanvasHeight}
-              width={achievementsPageCanvasWidth}
-            />
-          </article>
-          <article className={"storybook-card"}>
-            <h2>Unlock Popup</h2>
-            <AchievementPopupDemo />
-          </article>
-          <article className={"storybook-card storybook-wide-card"}>
-            <h2>Achievement Icons</h2>
-            <AchievementSpriteGallery />
-          </article>
-        </div>
+        <h1 className={"storybook-title"}>Achievement Page</h1>
+        <article className={"storybook-card"}>
+          <AchievementPageCanvas />
+        </article>
       </section>
     </main>
   );
 };
 
+const AchievementPopupStory = () => (
+  <main className={"storybook-surface"}>
+    <section className={"storybook-section storybook-achievements-section"}>
+      <p className={"storybook-eyebrow"}>Game UI</p>
+      <h1 className={"storybook-title"}>Achievement Unlock Popup</h1>
+      <article className={"storybook-card"}>
+        <AchievementPopupDemo />
+      </article>
+    </section>
+  </main>
+);
+
+const AchievementIconsStory = () => (
+  <main className={"storybook-surface"}>
+    <section className={"storybook-section storybook-achievements-section"}>
+      <p className={"storybook-eyebrow"}>Game UI</p>
+      <h1 className={"storybook-title"}>Achievement Icons</h1>
+      <article className={"storybook-card"}>
+        <AchievementSpriteGallery />
+      </article>
+    </section>
+  </main>
+);
+
 const meta = {
   title: "Game/Achievements",
-  component: AchievementsDemo,
+  component: AchievementPageDemo,
   parameters: {
     docs: {
       description: {
@@ -230,9 +261,17 @@ const meta = {
       },
     },
   },
-} satisfies Meta<typeof AchievementsDemo>;
+} satisfies Meta<typeof AchievementPageDemo>;
 
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const Examples: Story = {};
+export const Page: Story = {};
+
+export const UnlockPopup: Story = {
+  render: () => <AchievementPopupStory />,
+};
+
+export const Icons: Story = {
+  render: () => <AchievementIconsStory />,
+};
