@@ -3832,6 +3832,7 @@ class Menus implements MenuSystemInstance {
     if (this._konamiIndex === konamiCode.length) {
       this._debugUnlocked = true;
       userOptions.setOption("enableDebug", true);
+      this._commands.onDebugEnabled?.();
       this._konamiIndex = 0;
       this._shouldRevealSelected = true;
       this._buildItems();

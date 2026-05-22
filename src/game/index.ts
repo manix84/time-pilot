@@ -135,6 +135,7 @@ type GameSessionSnapshot = {
     | "score"
   >;
   highScoreRunReceipt?: NonNullable<HighScoreRunReceipt>;
+  highScoreRemoteDisqualified?: boolean;
   runStats?: RunStats;
   savedAt: number;
   version: typeof gameSessionSnapshotVersion;
@@ -253,6 +254,7 @@ export class TimePilot {
   private isDestroyed = false;
   private isDemoMode = false;
   private isDebugLevelPreviewLocked = false;
+  private isRemoteHighScoreDisqualified = false;
   private pendingHighScore: { score: number; stats: string[] } | null = null;
   private highScoreRunReceipt: HighScoreRunReceipt = null;
   private highScoreRunRequestId = 0;
@@ -418,6 +420,15 @@ export class TimePilot {
     }
   };
 
+  private canSubmitRemoteHighScore = (): boolean =>
+    !userOptions.enableDebug && !this.isRemoteHighScoreDisqualified;
+
+  private disableRemoteHighScoreSubmission = (): void => {
+    this.isRemoteHighScoreDisqualified = true;
+    this.highScoreRunReceipt = null;
+    this.highScoreRunRequestId += 1;
+  };
+
   private init = (): void => {
     userOptions.setOption("enableDebug", this.options.debug);
     userOptions.setOption("controllerType", this.options.controllerType);
@@ -484,6 +495,9 @@ export class TimePilot {
       getPendingHighScore: () => this.pendingHighScore,
       getHighScoreSyncStatus: () => getHighScoreSyncStatus(),
       getLevel: () => this.selectedStartLevel,
+      onDebugEnabled: () => {
+        this.disableRemoteHighScoreSubmission();
+      },
       onNavigationChanged: (state) => {
         this.syncBrowserHistory(state.depth + (state.active ? 1 : 0));
       },
@@ -503,13 +517,16 @@ export class TimePilot {
         this.savePendingHighScore(name);
       },
       selectLevel: (level) => {
+        this.disableRemoteHighScoreSubmission();
         this.selectDebugLevel(level);
         this.beginGame();
       },
       setDebugContinues: (continues) => {
+        this.disableRemoteHighScoreSubmission();
         this.context._player.setData("continues", continues, true);
       },
       setDebugLives: (lives) => {
+        this.disableRemoteHighScoreSubmission();
         this.context._player.setData("lives", lives, true);
       },
       syncScreenWakeLock: () => {
@@ -1037,7 +1054,10 @@ export class TimePilot {
         bossSpawned: levelProgress.bossSpawned,
         standardEnemyKills: levelProgress.standardEnemyKills,
       },
-      highScoreRunReceipt: this.highScoreRunReceipt ?? undefined,
+      highScoreRunReceipt: this.canSubmitRemoteHighScore()
+        ? this.highScoreRunReceipt ?? undefined
+        : undefined,
+      highScoreRemoteDisqualified: this.isRemoteHighScoreDisqualified,
       player: {
         continues: playerData.continues,
         heading: playerData.heading,
@@ -1138,7 +1158,11 @@ export class TimePilot {
     this.context._player.setData("isAlive", true);
     this.context._player.setData("deathTick", false);
     this.context._player.stopShooting();
-    this.highScoreRunReceipt = snapshot.highScoreRunReceipt ?? null;
+    this.isRemoteHighScoreDisqualified =
+      snapshot.highScoreRemoteDisqualified === true || userOptions.enableDebug;
+    this.highScoreRunReceipt = this.canSubmitRemoteHighScore()
+      ? snapshot.highScoreRunReceipt ?? null
+      : null;
     if (!this.highScoreRunReceipt) {
       void this.prepareHighScoreRunReceipt();
     }
@@ -1202,6 +1226,9 @@ export class TimePilot {
     this.pendingHighScore = null;
 
     if (shouldStartFreshGame) {
+      this.isRemoteHighScoreDisqualified = userOptions.enableDebug;
+      this.highScoreRunReceipt = null;
+      this.highScoreRunRequestId += 1;
       this.coinDropSound.stop();
       this.coinDropSound.play();
       void this.prepareHighScoreRunReceipt();
@@ -1316,6 +1343,9 @@ export class TimePilot {
     this.hasSeededInitialProps = false;
     this.hasShownGameOver = false;
     this.hasStartedGame = false;
+    this.isRemoteHighScoreDisqualified = false;
+    this.highScoreRunReceipt = null;
+    this.highScoreRunRequestId += 1;
     this.selectedStartLevel = 1;
 
     this.configureGameLoop();
@@ -1336,6 +1366,9 @@ export class TimePilot {
     this.isDemoMode = true;
     this.context._isDemoMode = true;
     this.isDebugLevelPreviewLocked = false;
+    this.isRemoteHighScoreDisqualified = false;
+    this.highScoreRunReceipt = null;
+    this.highScoreRunRequestId += 1;
     SoundEngine.setMuted(true);
     this.resetWorld(this.getRandomDemoLevel(), { skipIntro: true });
     this.configureDemoPlayerData();
@@ -1913,7 +1946,7 @@ export class TimePilot {
       name,
       this.pendingHighScore.score,
       this.pendingHighScore.stats,
-      this.highScoreRunReceipt
+      this.canSubmitRemoteHighScore() ? this.highScoreRunReceipt : null
     );
     logger.info("Saved high score", {
       name,
@@ -1926,9 +1959,14 @@ export class TimePilot {
     const requestId = ++this.highScoreRunRequestId;
 
     this.highScoreRunReceipt = null;
+
+    if (!this.canSubmitRemoteHighScore()) {
+      return;
+    }
+
     const receipt = await startHighScoreRun();
 
-    if (requestId === this.highScoreRunRequestId) {
+    if (requestId === this.highScoreRunRequestId && this.canSubmitRemoteHighScore()) {
       this.highScoreRunReceipt = receipt;
     }
   };
