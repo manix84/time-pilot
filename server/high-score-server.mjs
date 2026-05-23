@@ -1,10 +1,10 @@
 /* global Buffer, console, process */
 
 import { createHmac, randomUUID, timingSafeEqual } from "node:crypto";
-import { existsSync, readFileSync } from "node:fs";
-import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { createReadStream, existsSync, readFileSync } from "node:fs";
+import { mkdir, readFile, stat, writeFile } from "node:fs/promises";
 import { createServer } from "node:http";
-import { dirname, resolve } from "node:path";
+import { dirname, extname, resolve, sep } from "node:path";
 import { fileURLToPath, URL } from "node:url";
 import pg from "pg";
 
@@ -16,6 +16,7 @@ const envFilePaths = [
   resolve(__dirname, "../.env"),
 ];
 const apiRuntimeFilePath = resolve(__dirname, "../.time-pilot/high-score-api.json");
+const staticRootPath = resolve(__dirname, "../dist");
 const jsonStorePath = resolve(__dirname, "../data/high-scores.json");
 const maxBodyBytes = 64 * 1024;
 const maxGameEra = 5;
@@ -83,6 +84,18 @@ const preferredPort = Number.parseInt(process.env.PORT ?? "8787", 10);
 const serverSecret =
   process.env.HIGH_SCORE_SECRET ?? `dev-secret-${process.pid}-${Date.now()}`;
 const corsOrigin = process.env.CORS_ORIGIN ?? "";
+const contentTypes = {
+  ".css": "text/css; charset=utf-8",
+  ".html": "text/html; charset=utf-8",
+  ".ico": "image/x-icon",
+  ".js": "text/javascript; charset=utf-8",
+  ".json": "application/json; charset=utf-8",
+  ".ogg": "audio/ogg",
+  ".png": "image/png",
+  ".svg": "image/svg+xml",
+  ".webmanifest": "application/manifest+json; charset=utf-8",
+  ".woff2": "font/woff2",
+};
 
 const jsonState = {
   runs: [],
@@ -372,12 +385,106 @@ const server = createServer(async (request, response) => {
       return;
     }
 
+    if (request.method === "GET" || request.method === "HEAD") {
+      await handleStaticRequest(request, response);
+      return;
+    }
+
     sendJson(response, 404, { error: "not_found" });
   } catch (error) {
     console.error("High score API error", error);
     sendJson(response, 500, { error: "server_error" });
   }
 });
+
+const handleStaticRequest = async (request, response) => {
+  const filePath = getStaticFilePath(request.url ?? "/");
+
+  if (!filePath) {
+    sendJson(response, 404, { error: "not_found" });
+    return;
+  }
+
+  try {
+    const fileStat = await stat(filePath);
+
+    if (!fileStat.isFile()) {
+      sendJson(response, 404, { error: "not_found" });
+      return;
+    }
+
+    response.writeHead(200, {
+      "Cache-Control": getStaticCacheControl(filePath),
+      "Content-Length": fileStat.size,
+      "Content-Type": getContentType(filePath),
+    });
+
+    if (request.method === "HEAD") {
+      response.end();
+      return;
+    }
+
+    createReadStream(filePath)
+      .on("error", (error) => {
+        console.error("Static file response failed", error);
+
+        if (!response.headersSent) {
+          sendJson(response, 500, { error: "server_error" });
+          return;
+        }
+
+        response.destroy(error);
+      })
+      .pipe(response);
+  } catch {
+    sendJson(response, 404, { error: "not_found" });
+  }
+};
+
+const getStaticFilePath = (requestUrl) => {
+  const url = new URL(requestUrl, "http://localhost");
+  const pathname = decodeURIComponent(url.pathname);
+  const routePath = getStaticRoutePath(pathname);
+  const filePath = resolve(staticRootPath, routePath);
+
+  return isStaticFilePath(filePath) ? filePath : undefined;
+};
+
+const getStaticRoutePath = (pathname) => {
+  if (pathname === "/" || pathname === "") {
+    return "index.html";
+  }
+
+  if (pathname === "/about" || pathname === "/about/") {
+    return "about/index.html";
+  }
+
+  if (pathname === "/pwa" || pathname === "/pwa/") {
+    return "pwa/index.html";
+  }
+
+  if (pathname === "/stories" || pathname === "/stories/") {
+    return "stories/index.html";
+  }
+
+  if (pathname.endsWith("/")) {
+    return `${pathname.slice(1)}index.html`;
+  }
+
+  return pathname.slice(1);
+};
+
+const isStaticFilePath = (filePath) =>
+  filePath === staticRootPath || filePath.startsWith(`${staticRootPath}${sep}`);
+
+const getContentType = (filePath) =>
+  contentTypes[extname(filePath).toLowerCase()] ??
+  "application/octet-stream";
+
+const getStaticCacheControl = (filePath) =>
+  filePath.includes(`${sep}assets${sep}`)
+    ? "public, max-age=31536000, immutable"
+    : "public, max-age=300";
 
 const handleListScores = async (response) => {
   const store = await getStore();

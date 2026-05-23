@@ -1,11 +1,12 @@
 {
   "name": "time-pilot",
   "private": true,
-  "version": "22.12.1",
+  "version": "22.13.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build && npm run build:storybook && node scripts/prune-release-assets.mjs",
+    "start": "node server/high-score-server.mjs",
     "preview": "vite preview",
     "api": "node server/high-score-server.mjs",
     "typecheck": "tsc --noEmit --noImplicitAny true",

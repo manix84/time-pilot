@@ -38,6 +38,8 @@
 - Added local `.env` loading and hosted-PostgreSQL SSL handling for the
   high-score API, including DigitalOcean-style URLs that already carry their
   own SSL mode.
+- Added a production `npm start` server that serves the built game, Storybook
+  showcase, and high-score API from one DigitalOcean web service.
 - Added single-use signed run receipts and server-side plausibility checks for
   best-effort protection against fake remote high score submissions.
 - Added a satellite connection indicator for high-score API state, covering
