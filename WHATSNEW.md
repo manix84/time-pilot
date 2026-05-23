@@ -35,6 +35,9 @@
 - Added local-first high score storage with optional remote sync through a
   PostgreSQL-backed API, plus JSON-file fallback storage for local/self-hosted
   setups.
+- Added local `.env` loading and hosted-PostgreSQL SSL handling for the
+  high-score API, including DigitalOcean-style URLs that already carry their
+  own SSL mode.
 - Added single-use signed run receipts and server-side plausibility checks for
   best-effort protection against fake remote high score submissions.
 - Added a satellite connection indicator for high-score API state, covering

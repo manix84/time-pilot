@@ -1,15 +1,20 @@
 /* global Buffer, console, process */
 
 import { createHmac, randomUUID, timingSafeEqual } from "node:crypto";
+import { existsSync, readFileSync } from "node:fs";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { createServer } from "node:http";
 import { dirname, resolve } from "node:path";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, URL } from "node:url";
 import pg from "pg";
 
 const { Pool } = pg;
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
+const envFilePaths = [
+  resolve(__dirname, "../.env.local"),
+  resolve(__dirname, "../.env"),
+];
 const apiRuntimeFilePath = resolve(__dirname, "../.time-pilot/high-score-api.json");
 const jsonStorePath = resolve(__dirname, "../data/high-scores.json");
 const maxBodyBytes = 64 * 1024;
@@ -28,6 +33,52 @@ const maxScores = 100;
 const maxPublicScores = 25;
 const maxPortAttempts = 20;
 const runReceiptTtlMs = 6 * 60 * 60 * 1000;
+
+const loadEnvFiles = () => {
+  for (const filePath of envFilePaths) {
+    if (!existsSync(filePath)) {
+      continue;
+    }
+
+    const contents = readFileSync(filePath, "utf8");
+
+    for (const line of contents.split(/\r?\n/)) {
+      const trimmed = line.trim();
+
+      if (!trimmed || trimmed.startsWith("#")) {
+        continue;
+      }
+
+      const match = /^(?:export\s+)?([A-Z_][A-Z0-9_]*)=(.*)$/i.exec(trimmed);
+
+      if (!match || process.env[match[1]] !== undefined) {
+        continue;
+      }
+
+      process.env[match[1]] = parseEnvValue(match[2]);
+    }
+  }
+};
+
+const parseEnvValue = (value) => {
+  const trimmed = value.trim();
+  const quote = trimmed[0];
+
+  if (
+    (quote === "\"" || quote === "'") &&
+    trimmed.endsWith(quote) &&
+    trimmed.length >= 2
+  ) {
+    return trimmed.slice(1, -1);
+  }
+
+  const commentIndex = trimmed.indexOf(" #");
+
+  return commentIndex >= 0 ? trimmed.slice(0, commentIndex).trim() : trimmed;
+};
+
+loadEnvFiles();
+
 const preferredPort = Number.parseInt(process.env.PORT ?? "8787", 10);
 const serverSecret =
   process.env.HIGH_SCORE_SECRET ?? `dev-secret-${process.pid}-${Date.now()}`;
@@ -50,7 +101,7 @@ const createStore = async () => {
 
   if (databaseUrl) {
     try {
-      const pool = new Pool({ connectionString: databaseUrl });
+      const pool = new Pool(createPostgresPoolConfig(databaseUrl));
       await pool.query("select 1");
       await ensurePostgresSchema(pool);
       console.log("High score API using PostgreSQL storage");
@@ -63,6 +114,56 @@ const createStore = async () => {
   await loadJsonState();
   console.log(`High score API using JSON storage at ${jsonStorePath}`);
   return createJsonStore();
+};
+
+const createPostgresPoolConfig = (databaseUrl) => {
+  const config = { connectionString: databaseUrl };
+
+  if (databaseUrlHasSslOptions(databaseUrl)) {
+    return config;
+  }
+
+  const ssl = parseDatabaseSslFlag(process.env.DATABASE_SSL);
+
+  if (ssl !== undefined) {
+    config.ssl = ssl;
+  }
+
+  return config;
+};
+
+const databaseUrlHasSslOptions = (databaseUrl) => {
+  try {
+    const url = new URL(databaseUrl);
+
+    return Array.from(url.searchParams.keys()).some((key) =>
+      key.toLowerCase().startsWith("ssl")
+    );
+  } catch {
+    return /[?&]ssl(?:mode|cert|key|rootcert)?=/i.test(databaseUrl);
+  }
+};
+
+const parseDatabaseSslFlag = (value) => {
+  if (value === undefined) {
+    return undefined;
+  }
+
+  const normalized = value.trim().toLowerCase();
+
+  if (["0", "false", "no", "off", "disable", "disabled"].includes(normalized)) {
+    return false;
+  }
+
+  if (["strict", "verify", "verify-full"].includes(normalized)) {
+    return { rejectUnauthorized: true };
+  }
+
+  if (["1", "true", "yes", "on", "require", "required"].includes(normalized)) {
+    return { rejectUnauthorized: false };
+  }
+
+  return undefined;
 };
 
 const ensurePostgresSchema = async (pool) => {
