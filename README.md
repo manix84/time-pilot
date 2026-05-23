@@ -134,6 +134,18 @@ If `DATABASE_URL` already contains an SSL option, that URL wins and
 `DATABASE_SSL` is ignored. This avoids accidentally overriding hosted-provider
 connection strings that already include their SSL requirements.
 
+For a single DigitalOcean Web Service that hosts both the game and the
+high-score API, use:
+
+```bash
+Build command: npm run build
+Run command: npm start
+```
+
+`npm start` serves the built `dist/` site and the `/api/high-scores` endpoints
+from the same Node process, so visiting the DigitalOcean app root should open
+the Time Pilot site rather than the JSON API fallback.
+
 If PostgreSQL is unavailable or not configured, the API falls back to
 `data/high-scores.json`. That fallback is useful for local development and small
 self-hosted installs; production deployments should use PostgreSQL and a stable
