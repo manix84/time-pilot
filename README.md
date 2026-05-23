@@ -110,6 +110,30 @@ HIGH_SCORE_SECRET=replace-with-a-long-secret \
 npm run api
 ```
 
+`npm run api` loads `.env.local` and `.env` before it starts, without
+overwriting variables already provided by the shell or host platform. A typical
+local setup is:
+
+```dotenv
+DATABASE_URL=postgres://time_pilot:time_pilot@localhost:5432/time_pilot
+HIGH_SCORE_SECRET=replace-with-a-long-random-secret
+# DATABASE_SSL=true
+```
+
+For DigitalOcean App Platform, set these app-level environment variables:
+
+| Variable | Required | Purpose |
+| --- | --- | --- |
+| `DATABASE_URL` | Yes | PostgreSQL connection string for the Time Pilot database/user. If DigitalOcean includes `sslmode=require` or another `ssl*` URL option, leave it in the URL. |
+| `HIGH_SCORE_SECRET` | Yes | Stable long random secret used to sign high-score run receipts. Changing it invalidates outstanding receipts. |
+| `CORS_ORIGIN` | Recommended | Public Time Pilot site origin, such as `https://manix84.github.io`, when the API is hosted on a different origin. |
+| `PORT` | Platform-provided | The API listens on this when provided, otherwise it starts at `8787` locally and auto-tries later ports if busy. |
+| `DATABASE_SSL` | Only if needed | Set to `true` when the hosted database requires TLS but the URL does not contain `sslmode=require` or another `ssl*` option. Set to `strict` only when Node can verify the provider certificate chain. |
+
+If `DATABASE_URL` already contains an SSL option, that URL wins and
+`DATABASE_SSL` is ignored. This avoids accidentally overriding hosted-provider
+connection strings that already include their SSL requirements.
+
 If PostgreSQL is unavailable or not configured, the API falls back to
 `data/high-scores.json`. That fallback is useful for local development and small
 self-hosted installs; production deployments should use PostgreSQL and a stable
