@@ -1,3 +1,15 @@
+$cyan: #7edbd3;
+$cream: #fff4c1;
+$gold: #ffd400;
+$panel-border: rgba(126, 219, 211, 0.22);
+$panel-bg: rgba(5, 12, 22, 0.72);
+
+@mixin panel($radius: 8px, $background: $panel-bg) {
+  border: 1px solid $panel-border;
+  border-radius: $radius;
+  background: $background;
+}
+
 .storybook-surface {
   min-height: 100vh;
   padding: 2rem;
@@ -12,7 +24,7 @@
 
 .storybook-eyebrow {
   margin: 0 0 0.6rem;
-  color: #7edbd3;
+  color: $cyan;
   font-size: 0.78rem;
   font-weight: 800;
   letter-spacing: 0.16em;
@@ -21,20 +33,20 @@
 
 .storybook-title {
   margin: 0 0 1rem;
-  color: #fff4c1;
+  color: $cream;
   font-size: 2rem;
   line-height: 1.08;
 }
 
 .palette-group {
   margin-top: 2rem;
-}
 
-.palette-group h2 {
-  margin: 0 0 0.8rem;
-  color: #e9f3ff;
-  font-size: 1rem;
-  text-transform: capitalize;
+  h2 {
+    margin: 0 0 0.8rem;
+    color: #e9f3ff;
+    font-size: 1rem;
+    text-transform: capitalize;
+  }
 }
 
 .palette-grid {
@@ -44,10 +56,9 @@
 }
 
 .palette-swatch {
+  @include panel;
+
   overflow: hidden;
-  border: 1px solid rgba(126, 219, 211, 0.22);
-  border-radius: 8px;
-  background: rgba(5, 12, 22, 0.72);
 }
 
 .palette-color {
@@ -109,35 +120,33 @@
 }
 
 .storybook-card {
-  border: 1px solid rgba(126, 219, 211, 0.22);
-  border-radius: 8px;
+  @include panel;
+
   padding: 1rem;
-  background: rgba(5, 12, 22, 0.72);
+
+  h2 {
+    margin: 0 0 0.7rem;
+    color: $gold;
+    font-size: 1rem;
+  }
+
+  p {
+    margin: 0.7rem 0 0;
+    color: #c7d5eb;
+    line-height: 1.5;
+  }
 }
 
 .storybook-wide-card {
   grid-column: 1 / -1;
 }
 
-.storybook-card h2 {
-  margin: 0 0 0.7rem;
-  color: #ffd400;
-  font-size: 1rem;
-}
-
-.storybook-card p {
-  margin: 0.7rem 0 0;
-  color: #c7d5eb;
-  line-height: 1.5;
-}
-
 .storybook-canvas {
+  @include panel($background: #06101d);
+
   display: block;
   width: 100%;
   max-width: 100%;
-  border: 1px solid rgba(126, 219, 211, 0.22);
-  border-radius: 8px;
-  background: #06101d;
 }
 
 .storybook-pixel-canvas {
@@ -149,18 +158,18 @@
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 0.75rem;
   margin-top: 1rem;
-}
 
-.ticker-readout div {
-  padding: 0.8rem;
-  border-left: 3px solid #54c18a;
-  background: rgba(255, 255, 255, 0.055);
-}
+  div {
+    padding: 0.8rem;
+    border-left: 3px solid #54c18a;
+    background: rgba(255, 255, 255, 0.055);
+  }
 
-.ticker-readout strong {
-  display: block;
-  color: #fff4c1;
-  font-size: 1.4rem;
+  strong {
+    display: block;
+    color: $cream;
+    font-size: 1.4rem;
+  }
 }
 
 .storybook-controls {
@@ -168,21 +177,21 @@
   flex-wrap: wrap;
   gap: 0.5rem;
   margin: 1rem 0;
-}
 
-.storybook-controls button {
-  min-height: 2.25rem;
-  border: 1px solid #466485;
-  border-radius: 8px;
-  padding: 0 0.8rem;
-  color: #e9f3ff;
-  background: #08111d;
-  cursor: pointer;
-}
+  button {
+    min-height: 2.25rem;
+    border: 1px solid #466485;
+    border-radius: 8px;
+    padding: 0 0.8rem;
+    color: #e9f3ff;
+    background: #08111d;
+    cursor: pointer;
 
-.storybook-controls button[aria-pressed="true"] {
-  color: #111927;
-  background: #f2b84b;
+    &[aria-pressed="true"] {
+      color: #111927;
+      background: #f2b84b;
+    }
+  }
 }
 
 .storybook-sprites-section {
@@ -197,39 +206,38 @@
 }
 
 .sprite-gallery-controls {
+  @include panel($background: rgba(5, 12, 22, 0.96));
+
   position: sticky;
   top: 0;
   z-index: 5;
   align-items: end;
   margin: 0 0 1.2rem;
-  border: 1px solid rgba(126, 219, 211, 0.22);
-  border-radius: 8px;
   padding: 0.75rem;
-  background: rgba(5, 12, 22, 0.96);
   backdrop-filter: blur(8px);
-}
 
-.sprite-gallery-controls label {
-  display: grid;
-  gap: 0.35rem;
-  color: #7edbd3;
-  font-size: 0.72rem;
-  font-weight: 800;
-  text-transform: uppercase;
-}
+  label {
+    display: grid;
+    gap: 0.35rem;
+    color: $cyan;
+    font-size: 0.72rem;
+    font-weight: 800;
+    text-transform: uppercase;
+  }
 
-.sprite-gallery-controls select,
-.sprite-gallery-controls input {
-  min-height: 2.25rem;
-}
+  select,
+  input {
+    min-height: 2.25rem;
+  }
 
-.sprite-gallery-controls select {
-  min-width: 12rem;
-  border: 1px solid #466485;
-  border-radius: 8px;
-  padding: 0 0.65rem;
-  color: #e9f3ff;
-  background: #08111d;
+  select {
+    min-width: 12rem;
+    border: 1px solid #466485;
+    border-radius: 8px;
+    padding: 0 0.65rem;
+    color: #e9f3ff;
+    background: #08111d;
+  }
 }
 
 .sprite-gallery-grid {
@@ -239,14 +247,13 @@
 }
 
 .sprite-card {
+  @include panel;
+
   display: grid;
   grid-template-columns: minmax(11rem, 0.5fr) minmax(0, 1.5fr);
   gap: 1rem;
   align-items: center;
-  border: 1px solid rgba(126, 219, 211, 0.22);
-  border-radius: 8px;
   padding: 0.85rem;
-  background: rgba(5, 12, 22, 0.72);
 }
 
 .sprite-card-header {
@@ -254,16 +261,28 @@
   justify-content: space-between;
   align-items: flex-start;
   gap: 0.75rem;
+
+  h2 {
+    margin: 0;
+    color: $gold;
+    font-size: 0.92rem;
+  }
+
+  p,
+  span {
+    margin: 0.25rem 0 0;
+    color: #c7d5eb;
+    font-size: 0.75rem;
+    line-height: 1.35;
+  }
+
+  span {
+    flex: 0 0 auto;
+    color: $cyan;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  }
 }
 
-.sprite-card-header h2 {
-  margin: 0;
-  color: #ffd400;
-  font-size: 0.92rem;
-}
-
-.sprite-card-header p,
-.sprite-card-header span,
 .sprite-mode-note {
   margin: 0.25rem 0 0;
   color: #c7d5eb;
@@ -271,40 +290,34 @@
   line-height: 1.35;
 }
 
-.sprite-card-header span {
-  flex: 0 0 auto;
-  color: #7edbd3;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-}
-
 .sprite-preview-grid {
   display: grid;
   grid-template-columns: minmax(8rem, 0.8fr) minmax(0, 1.2fr);
   gap: 0.75rem;
-}
 
-.sprite-preview-grid > div {
-  display: grid;
-  justify-items: center;
-  gap: 0.5rem;
-  min-height: 9rem;
-  border: 1px solid rgba(126, 219, 211, 0.12);
-  border-radius: 6px;
-  padding: 0.65rem;
-  background:
-    linear-gradient(45deg, rgba(255, 255, 255, 0.055) 25%, transparent 25%),
-    linear-gradient(-45deg, rgba(255, 255, 255, 0.055) 25%, transparent 25%),
-    linear-gradient(45deg, transparent 75%, rgba(255, 255, 255, 0.055) 75%),
-    linear-gradient(-45deg, transparent 75%, rgba(255, 255, 255, 0.055) 75%);
-  background-position: 0 0, 0 6px, 6px -6px, -6px 0;
-  background-size: 12px 12px;
-}
+  > div {
+    display: grid;
+    justify-items: center;
+    gap: 0.5rem;
+    min-height: 9rem;
+    border: 1px solid rgba(126, 219, 211, 0.12);
+    border-radius: 6px;
+    padding: 0.65rem;
+    background:
+      linear-gradient(45deg, rgba(255, 255, 255, 0.055) 25%, transparent 25%),
+      linear-gradient(-45deg, rgba(255, 255, 255, 0.055) 25%, transparent 25%),
+      linear-gradient(45deg, transparent 75%, rgba(255, 255, 255, 0.055) 75%),
+      linear-gradient(-45deg, transparent 75%, rgba(255, 255, 255, 0.055) 75%);
+    background-position: 0 0, 0 6px, 6px -6px, -6px 0;
+    background-size: 12px 12px;
+  }
 
-.sprite-preview-grid h3 {
-  margin: 0;
-  color: #e9f3ff;
-  font-size: 0.72rem;
-  text-transform: uppercase;
+  h3 {
+    margin: 0;
+    color: #e9f3ff;
+    font-size: 0.72rem;
+    text-transform: uppercase;
+  }
 }
 
 .sprite-frame-view {
@@ -320,14 +333,13 @@
 }
 
 .sprite-frame-strip-panel {
+  @include panel(6px, rgba(0, 0, 0, 0.16));
+
   display: grid;
   align-content: start;
   gap: 0.5rem;
   min-height: 9rem;
-  border: 1px solid rgba(126, 219, 211, 0.12);
-  border-radius: 6px;
   padding: 0.65rem;
-  background: rgba(0, 0, 0, 0.16);
 }
 
 .sprite-frame-strip {
@@ -348,11 +360,11 @@
   border-radius: 5px;
   padding: 0.25rem;
   background: rgba(6, 16, 29, 0.72);
-}
 
-.sprite-frame-strip-item[data-active="true"] {
-  border-color: #ffd400;
-  box-shadow: 0 0 0 2px rgba(255, 212, 0, 0.28);
+  &[data-active="true"] {
+    border-color: $gold;
+    box-shadow: 0 0 0 2px rgba(255, 212, 0, 0.28);
+  }
 }
 
 .achievement-sprite-gallery {
@@ -362,40 +374,40 @@
 }
 
 .achievement-sprite-card {
-  border: 1px solid rgba(126, 219, 211, 0.16);
-  border-radius: 8px;
-  padding: 0.8rem;
-  background: rgba(0, 0, 0, 0.16);
-}
+  @include panel(8px, rgba(0, 0, 0, 0.16));
 
-.achievement-sprite-card h3 {
-  min-height: 2.2rem;
-  margin: 0 0 0.7rem;
-  color: #ffd400;
-  font-size: 0.86rem;
+  border: 1px solid rgba(126, 219, 211, 0.16);
+  padding: 0.8rem;
+
+  h3 {
+    min-height: 2.2rem;
+    margin: 0 0 0.7rem;
+    color: $gold;
+    font-size: 0.86rem;
+  }
 }
 
 .achievement-sprite-states {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0.65rem;
-}
 
-.achievement-sprite-states > div {
-  display: grid;
-  justify-items: center;
-  gap: 0.45rem;
-  border: 1px solid rgba(126, 219, 211, 0.12);
-  border-radius: 6px;
-  padding: 0.55rem;
-  background: rgba(6, 16, 29, 0.72);
-}
+  > div {
+    display: grid;
+    justify-items: center;
+    gap: 0.45rem;
+    border: 1px solid rgba(126, 219, 211, 0.12);
+    border-radius: 6px;
+    padding: 0.55rem;
+    background: rgba(6, 16, 29, 0.72);
+  }
 
-.achievement-sprite-states span {
-  color: #c7d5eb;
-  font-size: 0.72rem;
-  font-weight: 800;
-  text-transform: uppercase;
+  span {
+    color: #c7d5eb;
+    font-size: 0.72rem;
+    font-weight: 800;
+    text-transform: uppercase;
+  }
 }
 
 @media (max-width: 760px) {

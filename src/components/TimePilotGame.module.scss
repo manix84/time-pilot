@@ -1,3 +1,17 @@
+$screen-blend: screen;
+$soft-blend: soft-light;
+
+@mixin full-overlay($z-index: 1) {
+  position: absolute;
+  inset: 0;
+  z-index: $z-index;
+  pointer-events: none;
+}
+
+@mixin animated-filter($name, $duration, $timing) {
+  animation: $name $duration $timing infinite;
+}
+
 .game {
   --filter-scanlines: 0;
   --filter-crt-mask: 0;
@@ -137,10 +151,7 @@
 }
 
 .filterLayer {
-  position: absolute;
-  inset: 0;
-  z-index: 1;
-  pointer-events: none;
+  @include full-overlay;
 
   .game[data-filter-mode="off"] & {
     content: none;
@@ -153,7 +164,7 @@
   background:
     radial-gradient(circle at 50% 50%, rgba(132, 245, 255, 0.22), transparent 36%),
     radial-gradient(circle at 50% 50%, rgba(255, 198, 82, 0.18), transparent 54%);
-  mix-blend-mode: screen;
+  mix-blend-mode: $screen-blend;
 }
 
 .filterDither {
@@ -165,7 +176,7 @@
     0 0,
     2px 2px;
   background-size: 4px 4px;
-  mix-blend-mode: soft-light;
+  mix-blend-mode: $soft-blend;
 }
 
 .filterBurnIn {
@@ -174,7 +185,7 @@
     radial-gradient(ellipse at 50% 45%, rgba(255, 196, 64, 0.28), transparent 30%),
     radial-gradient(ellipse at 50% 55%, transparent 32%, rgba(6, 12, 16, 0.62) 76%),
     linear-gradient(90deg, rgba(255, 255, 255, 0.08), transparent 16% 84%, rgba(0, 0, 0, 0.22));
-  mix-blend-mode: soft-light;
+  mix-blend-mode: $soft-blend;
 }
 
 .filterInterference {
@@ -187,8 +198,9 @@
       rgba(0, 0, 0, 0.2) 21px,
       transparent 24px
     );
-  animation: filter-interference 0.28s steps(2) infinite;
-  mix-blend-mode: screen;
+  @include animated-filter(filter-interference, 0.28s, steps(2));
+
+  mix-blend-mode: $screen-blend;
 }
 
 .filterTracking {
@@ -201,8 +213,9 @@
       rgba(0, 0, 0, 0.34) 49%,
       transparent 55% 100%
     );
-  animation: filter-tracking 1.1s linear infinite;
-  mix-blend-mode: screen;
+  @include animated-filter(filter-tracking, 1.1s, linear);
+
+  mix-blend-mode: $screen-blend;
 }
 
 .filterReflection {
@@ -215,7 +228,7 @@
       rgba(255, 255, 255, 0.18) 28%,
       transparent 36% 100%
     );
-  mix-blend-mode: screen;
+  mix-blend-mode: $screen-blend;
 }
 
 .filterDistortion {
@@ -224,13 +237,13 @@
     radial-gradient(circle at 50% 50%, transparent 0 30%, rgba(112, 226, 255, 0.14) 42%, transparent 56%),
     repeating-radial-gradient(circle at 50% 50%, transparent 0 10px, rgba(255, 255, 255, 0.13) 11px, transparent 13px);
   animation: filter-distortion 0.9s ease-in-out infinite alternate;
-  mix-blend-mode: screen;
+  mix-blend-mode: $screen-blend;
 }
 
 .filterFlicker {
   opacity: calc(var(--filter-flicker) / 280);
   background: rgba(255, 255, 255, 0.72);
-  animation: filter-flicker 0.16s steps(2) infinite;
+  @include animated-filter(filter-flicker, 0.16s, steps(2));
 }
 
 .exitFallback {
