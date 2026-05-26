@@ -4,7 +4,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { assetPath } from "../game/asset-path";
 import { levels, player } from "../game/constants";
 import type { EnemyConfig } from "../game/types";
-import "./storybook.css";
+import "./storybook.scss";
 
 type SpriteGalleryMode =
   | "animation"

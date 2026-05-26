@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import Ticker from "../game/engine/Ticker";
 import palette from "../game/palette";
-import "./storybook.css";
+import "./storybook.scss";
 
 const GeneralTickerDemo = () => {
   const [counts, setCounts] = useState({

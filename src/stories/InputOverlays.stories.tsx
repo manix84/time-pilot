@@ -3,7 +3,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import palette from "../game/palette";
 import type { ControlInputName, ControlInputState } from "../game/types";
 import { CanvasDemo } from "./canvas-demo";
-import "./storybook.css";
+import "./storybook.scss";
 
 type OverlayControlInputName = Exclude<keyof ControlInputState, "activeController">;
 

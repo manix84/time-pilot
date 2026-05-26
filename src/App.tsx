@@ -1,6 +1,8 @@
 import type { CSSProperties } from "react";
+import classNames from "classnames";
 import coverArt from "../art/cover.png";
 import { isAboutRoute, isPwaMode, isPwaRoute, isShowcaseMode } from "./app-routing";
+import styles from "./App.module.scss";
 import titleBanner from "../art/titleBanner.png";
 import TimePilotGame from "./components/TimePilotGame";
 
@@ -133,26 +135,26 @@ function AboutPage() {
   ];
 
   return (
-    <main className={"app-shell about-shell"}>
-      <section className={"about-page"} aria-labelledby={"about-title"}>
-        <div className={"about-brand"}>
-          <div className={"about-logo-stack"}>
+    <main className={classNames(styles.appShell, styles.aboutShell)}>
+      <section className={styles.aboutPage} aria-labelledby={"about-title"}>
+        <div className={styles.aboutBrand}>
+          <div className={styles.aboutLogoStack}>
             <img
-              className={"about-game-logo"}
+              className={styles.aboutGameLogo}
               src={titleBanner}
               alt={"Time Pilot"}
               width={574}
               height={154}
             />
             <a
-              className={"about-author-link"}
+              className={styles.aboutAuthorLink}
               href={authorUrl}
               rel={"noreferrer"}
               target={"_blank"}
               aria-label={"Open Rob's GitHub profile"}
             >
               <img
-                className={"about-author-logo"}
+                className={styles.aboutAuthorLogo}
                 src={authorLogo}
                 alt={"Rob"}
                 width={128}
@@ -164,7 +166,7 @@ function AboutPage() {
           <p>A free, privacy-minded arcade rebuild for the web.</p>
         </div>
 
-        <dl className={"about-facts"}>
+        <dl className={styles.aboutFacts}>
           {facts.map(([label, value]) => (
             <div key={label}>
               <dt>{label}</dt>
@@ -173,7 +175,7 @@ function AboutPage() {
           ))}
         </dl>
 
-        <div className={"about-copy"}>
+        <div className={styles.aboutCopy}>
           <p>
             Time Pilot is a modern React and TypeScript rebuild of an older
             browser-game prototype. It keeps the fast canvas arcade loop at the
@@ -193,7 +195,7 @@ function AboutPage() {
           </p>
         </div>
 
-        <div className={"about-actions"}>
+        <div className={styles.aboutActions}>
           <a href={sourceUrl} rel={"noreferrer"} target={"_blank"}>
             View Source
           </a>
@@ -201,7 +203,7 @@ function AboutPage() {
             Sponsor Rob
           </a>
         </div>
-        <p className={"about-sponsor-note"}>
+        <p className={styles.aboutSponsorNote}>
           Donations and sponsorships support hosting, maintenance, and continued
           free access.
         </p>
@@ -213,13 +215,17 @@ function AboutPage() {
 function App() {
   if (!isShowcaseMode() && isPwaRoute()) {
     return (
-      <main className={"app-shell app-shell--pwa"} aria-label={"Time Pilot"}>
+      <main
+        className={classNames(styles.appShell, styles.pwaShell)}
+        aria-label={"Time Pilot"}
+      >
         <TimePilotGame
           enableAppExit={isPwaMode()}
           enableHistoryNavigation={isPwaMode()}
           enableImmersiveMode
           enableScreenWakeLock={isPwaMode()}
           enableUpdates={isPwaMode()}
+          fillViewport
         />
       </main>
     );
@@ -230,34 +236,34 @@ function App() {
   }
 
   return (
-    <main className={"app-shell"}>
+    <main className={styles.appShell}>
       <section
-        className={"showcase-hero"}
+        className={styles.showcaseHero}
         style={{ "--cover-art": `url(${coverArt})` } as CSSProperties}
       >
-        <div className={"hero-inner"}>
-          <div className={"hero-copy"}>
+        <div className={styles.heroInner}>
+          <div className={styles.heroCopy}>
             <img
-              className={"title-banner"}
+              className={styles.titleBanner}
               src={titleBanner}
               alt={"Time Pilot"}
               width={574}
               height={154}
             />
-            <p className={"hero-kicker"}>
+            <p className={styles.heroKicker}>
               Arcade prototype rebuilt for the web
             </p>
             <h1>
               Fly through time, survive the sky, and keep the screen moving.
             </h1>
-            <p className={"hero-summary"}>
+            <p className={styles.heroSummary}>
               A modern React + TypeScript port of a canvas arcade game, packaged
               as a playable browser demo and installable standalone PWA with
               typed engine modules, achievements, skippable startup preroll,
               fullscreen play entry, paused session restore, configurable
               controls, and automated release checks.
             </p>
-            <div className={"hero-status"} aria-label={"Current build features"}>
+            <div className={styles.heroStatus} aria-label={"Current build features"}>
               <span>Offline PWA</span>
               <span>Touch controls</span>
               <span>Achievements</span>
@@ -266,7 +272,7 @@ function App() {
               <span>About page</span>
               <span>Manual updates</span>
             </div>
-            <div className={"hero-actions"}>
+            <div className={styles.heroActions}>
               <a href={"#play"}>Play now</a>
               <a href={"pwa/"}>Open app view</a>
               <a href={storiesUrl}>Stories</a>
@@ -276,10 +282,10 @@ function App() {
 
           <section
             id={"play"}
-            className={"game-panel"}
+            className={styles.gamePanel}
             aria-label={"Playable Time Pilot demo"}
           >
-            <div className={"game-panel-header"}>
+            <div className={styles.gamePanelHeader}>
               <span>Live build</span>
               <span>Canvas engine</span>
             </div>
@@ -288,10 +294,10 @@ function App() {
         </div>
       </section>
 
-      <section className={"showcase-band"}>
-        <div className={"section-inner intro-grid"}>
+      <section className={styles.showcaseBand}>
+        <div className={classNames(styles.sectionInner, styles.introGrid)}>
           <div>
-            <p className={"section-kicker"}>Mission</p>
+            <p className={styles.sectionKicker}>Mission</p>
             <h2>Classic arcade pressure in a small, readable web build.</h2>
           </div>
           <p>
@@ -304,15 +310,15 @@ function App() {
         </div>
       </section>
 
-      <section className={"showcase-band features-band"}>
-        <div className={"section-inner"}>
-          <div className={"section-heading"}>
-            <p className={"section-kicker"}>Current Build</p>
+      <section className={classNames(styles.showcaseBand, styles.featuresBand)}>
+        <div className={styles.sectionInner}>
+          <div className={styles.sectionHeading}>
+            <p className={styles.sectionKicker}>Current Build</p>
             <h2>More than a browser embed.</h2>
           </div>
-          <div className={"feature-grid"}>
+          <div className={styles.featureGrid}>
             {featureHighlights.map((feature) => (
-              <article className={"feature-tile"} key={feature.title}>
+              <article className={styles.featureTile} key={feature.title}>
                 <h3>{feature.title}</h3>
                 <p>{feature.details}</p>
               </article>
@@ -321,15 +327,15 @@ function App() {
         </div>
       </section>
 
-      <section className={"showcase-band controls-band"}>
-        <div className={"section-inner"}>
-          <div className={"section-heading"}>
-            <p className={"section-kicker"}>Controls</p>
+      <section className={classNames(styles.showcaseBand, styles.controlsBand)}>
+        <div className={styles.sectionInner}>
+          <div className={styles.sectionHeading}>
+            <p className={styles.sectionKicker}>Controls</p>
             <h2>Pick the flight style that feels right.</h2>
           </div>
-          <div className={"info-grid"}>
+          <div className={styles.infoGrid}>
             {controlGroups.map((group) => (
-              <article className={"info-card"} key={group.title}>
+              <article className={styles.infoCard} key={group.title}>
                 <h3>{group.title}</h3>
                 <p>{group.details}</p>
               </article>
@@ -338,13 +344,13 @@ function App() {
         </div>
       </section>
 
-      <section className={"showcase-band goals-band"}>
-        <div className={"section-inner split-section"}>
+      <section className={classNames(styles.showcaseBand, styles.goalsBand)}>
+        <div className={classNames(styles.sectionInner, styles.splitSection)}>
           <div>
-            <p className={"section-kicker"}>Goals</p>
+            <p className={styles.sectionKicker}>Goals</p>
             <h2>Stay alive, make space, and chase the next wave.</h2>
           </div>
-          <ol className={"goal-list"}>
+          <ol className={styles.goalList}>
             {goals.map((goal) => (
               <li key={goal}>{goal}</li>
             ))}
@@ -352,13 +358,13 @@ function App() {
         </div>
       </section>
 
-      <section className={"showcase-band systems-band"}>
-        <div className={"section-inner split-section"}>
+      <section className={classNames(styles.showcaseBand, styles.systemsBand)}>
+        <div className={classNames(styles.sectionInner, styles.splitSection)}>
           <div>
-            <p className={"section-kicker"}>Under The Hood</p>
+            <p className={styles.sectionKicker}>Under The Hood</p>
             <h2>Small systems that keep the arcade loop readable.</h2>
           </div>
-          <ul className={"system-list"}>
+          <ul className={styles.systemList}>
             {systemUpdates.map((item) => (
               <li key={item}>{item}</li>
             ))}
@@ -366,13 +372,13 @@ function App() {
         </div>
       </section>
 
-      <section className={"showcase-band progress-band"}>
-        <div className={"section-inner"}>
-          <div className={"section-heading"}>
-            <p className={"section-kicker"}>Project Progress</p>
+      <section className={classNames(styles.showcaseBand, styles.progressBand)}>
+        <div className={styles.sectionInner}>
+          <div className={styles.sectionHeading}>
+            <p className={styles.sectionKicker}>Project Progress</p>
             <h2>What is already in place.</h2>
           </div>
-          <ul className={"progress-list"}>
+          <ul className={styles.progressList}>
             {progress.map((item) => (
               <li key={item}>{item}</li>
             ))}

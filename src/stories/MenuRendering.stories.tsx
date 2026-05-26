@@ -5,7 +5,7 @@ import Menus from "../game/menus";
 import palette from "../game/palette";
 import type { HighScoreEntry, MenuSystemCommands } from "../game/types";
 import { createCanvasArena } from "./menu-arena";
-import "./storybook.css";
+import "./storybook.scss";
 
 type MenuScreenDemo =
   | "start"

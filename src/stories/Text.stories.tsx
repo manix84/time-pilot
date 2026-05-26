@@ -4,7 +4,7 @@ import i18n from "../game/i18n";
 import palette from "../game/palette";
 import { CanvasDemo } from "./canvas-demo";
 import { drawLabel } from "./canvas-label";
-import "./storybook.css";
+import "./storybook.scss";
 
 const drawGameText = (context: CanvasRenderingContext2D, message: string, x: number, y: number, size: number, color: string, align: CanvasTextAlign = "left"): void => {
   context.fillStyle = color;
