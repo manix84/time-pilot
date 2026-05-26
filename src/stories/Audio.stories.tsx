@@ -3,7 +3,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { assetPath } from "../game/asset-path";
 import SoundEngine from "../game/engine/Sound";
 import palette from "../game/palette";
-import "./storybook.css";
+import "./storybook.scss";
 
 type AudioMode = "global" | "spatial";
 

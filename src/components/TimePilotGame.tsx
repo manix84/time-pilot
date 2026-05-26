@@ -7,6 +7,7 @@ import {
   useState,
   type CSSProperties,
 } from "react";
+import classNames from "classnames";
 import { appExitBlockedEvent, exitInstalledApp } from "../game/app-exit";
 import { getFilterSettingsForMode } from "../game/filter-settings";
 import { enterGameFullscreen } from "../game/immersive-mode";
@@ -16,6 +17,7 @@ import {
 } from "../game/screen-wake-lock";
 import { useTimePilot } from "../game/use-time-pilot";
 import userOptions from "../game/user-options";
+import styles from "./TimePilotGame.module.scss";
 import UpdateOverlay from "./UpdateOverlay";
 
 /**
@@ -54,6 +56,11 @@ type TimePilotGameProps = {
    * Shows the PWA keep-awake option and manages screen wake lock requests.
    */
   enableScreenWakeLock?: boolean;
+
+  /**
+   * Expands the canvas stage to fill the surrounding shell.
+   */
+  fillViewport?: boolean;
 };
 
 /**
@@ -70,6 +77,7 @@ function TimePilotGame({
   enableImmersiveMode = false,
   enableScreenWakeLock = false,
   enableUpdates = false,
+  fillViewport = false,
 }: TimePilotGameProps) {
   const [filterVersion, setFilterVersion] = useState(0);
   const [isUpdateAvailable, setIsUpdateAvailable] = useState(false);
@@ -246,14 +254,15 @@ function TimePilotGame({
 
   return (
     <div
-      className={"time-pilot-game"}
+      className={classNames(styles.game, fillViewport && styles.fillViewport)}
+      data-time-pilot-game
       data-rgb-split={activeFilterSettings.colourBleed > 0 ? "on" : "off"}
       data-filter-mode={userOptions.videoFilterMode}
       style={filterStyle}
     >
       <svg
         aria-hidden={"true"}
-        className={"time-pilot-svg-filters"}
+        className={styles.svgFilters}
         focusable={"false"}
         height={0}
         width={0}
@@ -286,15 +295,43 @@ function TimePilotGame({
           <feBlend in={"red"} in2={"cyan"} mode={"screen"} result={"color-split"} />
         </filter>
       </svg>
-      <div ref={setContainerElement} className={"time-pilot-stage"}>
-        <span className={"time-pilot-filter-bloom"} aria-hidden={"true"} />
-        <span className={"time-pilot-filter-dither"} aria-hidden={"true"} />
-        <span className={"time-pilot-filter-burn-in"} aria-hidden={"true"} />
-        <span className={"time-pilot-filter-interference"} aria-hidden={"true"} />
-        <span className={"time-pilot-filter-tracking"} aria-hidden={"true"} />
-        <span className={"time-pilot-filter-reflection"} aria-hidden={"true"} />
-        <span className={"time-pilot-filter-distortion"} aria-hidden={"true"} />
-        <span className={"time-pilot-filter-flicker"} aria-hidden={"true"} />
+      <div
+        ref={setContainerElement}
+        className={styles.stage}
+        data-time-pilot-stage
+      >
+        <span
+          className={classNames(styles.filterLayer, styles.filterBloom)}
+          aria-hidden={"true"}
+        />
+        <span
+          className={classNames(styles.filterLayer, styles.filterDither)}
+          aria-hidden={"true"}
+        />
+        <span
+          className={classNames(styles.filterLayer, styles.filterBurnIn)}
+          aria-hidden={"true"}
+        />
+        <span
+          className={classNames(styles.filterLayer, styles.filterInterference)}
+          aria-hidden={"true"}
+        />
+        <span
+          className={classNames(styles.filterLayer, styles.filterTracking)}
+          aria-hidden={"true"}
+        />
+        <span
+          className={classNames(styles.filterLayer, styles.filterReflection)}
+          aria-hidden={"true"}
+        />
+        <span
+          className={classNames(styles.filterLayer, styles.filterDistortion)}
+          aria-hidden={"true"}
+        />
+        <span
+          className={classNames(styles.filterLayer, styles.filterFlicker)}
+          aria-hidden={"true"}
+        />
       </div>
       {enableUpdates && updateOverlayState !== "idle" ? (
         <UpdateOverlay
@@ -306,10 +343,11 @@ function TimePilotGame({
         <div
           aria-labelledby={"time-pilot-exit-fallback-title"}
           aria-modal={"true"}
-          className={"time-pilot-exit-fallback"}
+          className={styles.exitFallback}
+          data-time-pilot-exit-fallback
           role={"dialog"}
         >
-          <div className={"time-pilot-exit-fallback-panel"}>
+          <div className={styles.exitFallbackPanel}>
             <h2 id={"time-pilot-exit-fallback-title"}>Game Saved</h2>
             <p>
               Android has kept the app open. Use your device Home or Back button

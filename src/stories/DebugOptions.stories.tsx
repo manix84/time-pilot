@@ -2,7 +2,7 @@ import { useEffect, useRef } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { drawDebugVectors } from "../game/debug-vectors";
 import palette from "../game/palette";
-import "./storybook.css";
+import "./storybook.scss";
 
 type DebugVectorSceneProps = {
   collisionOffset?: number;

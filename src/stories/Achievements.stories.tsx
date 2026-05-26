@@ -9,7 +9,7 @@ import {
 import Menus from "../game/menus";
 import palette from "../game/palette";
 import { createCanvasArena } from "./menu-arena";
-import "./storybook.css";
+import "./storybook.scss";
 
 type TransitionInspectableMenu = {
   _transition: null;

@@ -1,7 +1,7 @@
 {
   "name": "time-pilot",
   "private": true,
-  "version": "22.13.0",
+  "version": "24.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -19,6 +19,7 @@
     "lint:fix": "eslint . --fix"
   },
   "dependencies": {
+    "classnames": "^2.5.1",
     "pg": "^8.21.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"
@@ -41,6 +42,7 @@
     "globals": "^17.6.0",
     "jsdom": "^29.1.1",
     "playwright": "^1.60.0",
+    "sass": "^1.100.0",
     "storybook": "^10.3.6",
     "typescript": "^5.6.3",
     "typescript-eslint": "^8.59.2",

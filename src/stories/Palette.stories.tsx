@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import helpers from "../game/engine/helpers";
 import palette from "../game/palette";
-import "./storybook.css";
+import "./storybook.scss";
 
 type PaletteGroup = Record<string, string>;
 

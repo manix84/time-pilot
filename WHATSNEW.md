@@ -6,6 +6,8 @@
 - Added React as the host application layer.
 - Moved runtime assets into Vite-served public paths.
 - Introduced TypeScript across the game source.
+- Replaced the single global CSS app stylesheet with component-scoped SCSS
+  modules, shared global reset SCSS, and SCSS-powered Storybook styling.
 
 ## 🧹 Module Cleanup
 

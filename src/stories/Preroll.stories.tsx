@@ -3,7 +3,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import Preroll from "../game/preroll";
 import palette from "../game/palette";
 import { createCanvasArena } from "./menu-arena";
-import "./storybook.css";
+import "./storybook.scss";
 
 const prerollCanvasWidth = 1100;
 const prerollCanvasHeight = 720;
