@@ -8,6 +8,7 @@ import {
   timeWarpFrameHeight,
   timeWarpFrameWidth,
 } from "../game/time-warp";
+import styles from "./UpdateOverlay.module.scss";
 
 /**
  * Props for the update overlay animation.
@@ -258,8 +259,13 @@ function UpdateOverlay({ onWarpComplete, state }: UpdateOverlayProps) {
   }, []);
 
   return (
-    <div className={"time-pilot-update-overlay"} role={"status"} aria-live={"polite"}>
-      <span className={"time-pilot-update-status-text"}>{statusLabel}</span>
+    <div
+      className={styles.overlay}
+      data-time-pilot-update-overlay
+      role={"status"}
+      aria-live={"polite"}
+    >
+      <span className={styles.statusText}>{statusLabel}</span>
       <canvas aria-hidden={"true"} ref={canvasRef} />
     </div>
   );

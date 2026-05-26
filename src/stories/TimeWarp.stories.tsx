@@ -13,7 +13,7 @@ import {
   timeWarpRenderScale,
   type TimeWarpPlayerMode,
 } from "../game/time-warp";
-import "./storybook.css";
+import "./storybook.scss";
 
 type TimeWarpSceneProps = {
   frameDurationMs?: number;

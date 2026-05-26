@@ -37,7 +37,7 @@ describe("TimePilotGame", () => {
       await new Promise((resolve) => window.setTimeout(resolve, 5));
     });
 
-    expect(container.querySelector(".time-pilot-stage")).toBeTruthy();
+    expect(container.querySelector("[data-time-pilot-stage]")).toBeTruthy();
     expect(container.querySelector("canvas")).toBeInstanceOf(HTMLCanvasElement);
   });
 
@@ -59,7 +59,9 @@ describe("TimePilotGame", () => {
     });
 
     expect(
-      container.querySelector(".time-pilot-game")?.getAttribute("data-filter-mode")
+      container
+        .querySelector("[data-time-pilot-game]")
+        ?.getAttribute("data-filter-mode")
     ).toBe("off");
 
     await act(async () => {
@@ -68,7 +70,9 @@ describe("TimePilotGame", () => {
     });
 
     expect(
-      container.querySelector(".time-pilot-game")?.getAttribute("data-filter-mode")
+      container
+        .querySelector("[data-time-pilot-game]")
+        ?.getAttribute("data-filter-mode")
     ).toBe("arcade-crt");
   });
 
@@ -121,7 +125,7 @@ describe("TimePilotGame", () => {
       await Promise.resolve();
     });
 
-    expect(container.querySelector(".time-pilot-update-overlay")).toBeNull();
+    expect(container.querySelector("[data-time-pilot-update-overlay]")).toBeNull();
   });
 
   it("shows a saved fallback when installed app exit is blocked", async () => {
@@ -135,7 +139,7 @@ describe("TimePilotGame", () => {
       await Promise.resolve();
     });
 
-    const dialog = container.querySelector(".time-pilot-exit-fallback");
+    const dialog = container.querySelector("[data-time-pilot-exit-fallback]");
 
     expect(dialog?.getAttribute("role")).toBe("dialog");
     expect(dialog?.getAttribute("aria-modal")).toBe("true");
@@ -150,6 +154,6 @@ describe("TimePilotGame", () => {
       await Promise.resolve();
     });
 
-    expect(container.querySelector(".time-pilot-exit-fallback")).toBeNull();
+    expect(container.querySelector("[data-time-pilot-exit-fallback]")).toBeNull();
   });
 });

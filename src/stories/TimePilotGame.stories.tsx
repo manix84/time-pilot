@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import TimePilotGame from "../components/TimePilotGame";
-import "./storybook.css";
+import "./storybook.scss";
 
 const GameSandbox = () => {
   return (
@@ -9,7 +9,7 @@ const GameSandbox = () => {
         <p className={"storybook-eyebrow"}>Game Sandbox</p>
         <h1 className={"storybook-title"}>Playable Time Pilot</h1>
         <div className={"storybook-game-frame"}>
-          <section className={"game-panel"}>
+          <section className={"storybook-card"}>
             <TimePilotGame debug />
           </section>
         </div>

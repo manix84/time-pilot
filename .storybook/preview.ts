@@ -1,7 +1,7 @@
 import type { Preview } from "@storybook/react-vite";
 import { assetPath } from "../src/game/asset-path";
 import userOptions from "../src/game/user-options";
-import "../src/styles.css";
+import "../src/styles/global.scss";
 
 if (typeof document !== "undefined") {
   const style = document.createElement("style");
