@@ -1,4 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import {
+  drawDebugVectors,
+  getScaledViewportLimit,
+  getViewportAreaScale,
+  getViewportPaddedRadius,
+  getViewportRadius,
+} from "../index";
 import GameArena from "../arena";
 import Sound from "../Sound";
 import Ticker from "../Ticker";
@@ -212,6 +219,56 @@ describe("engine modules", () => {
 
     expect(arena.isFullScreenLocked()).toBe(false);
     expect(arena.canToggleFullScreen()).toBe(true);
+  });
+
+  it("calculates viewport radii and scaled limits", () => {
+    const viewport = { width: 800, height: 600 };
+
+    expect(getViewportRadius(viewport)).toBe(500);
+    expect(
+      getViewportPaddedRadius(viewport, {
+        minRadius: 700,
+        padding: 96,
+      })
+    ).toBe(700);
+    expect(getViewportPaddedRadius(viewport, { padding: 96 })).toBe(596);
+    expect(getViewportAreaScale({ width: 1600, height: 1200 })).toBe(4);
+    expect(getScaledViewportLimit(3, { width: 1200, height: 800 })).toBe(6);
+  });
+
+  it("draws debug heading and steering vectors with caller-provided colors", () => {
+    const host = document.createElement("div");
+    const arena = new GameArena(host);
+    const context = arena.getContext() as CanvasRenderingContext2D;
+    const beginPath = vi.spyOn(context, "beginPath");
+    const fill = vi.spyOn(context, "fill");
+    const lineTo = vi.spyOn(context, "lineTo");
+    const stroke = vi.spyOn(context, "stroke");
+
+    drawDebugVectors(
+      context,
+      0,
+      0,
+      0,
+      90,
+      {
+        heading: "#111",
+        steering: "#222",
+        steeringArcFill: "#333",
+      },
+      { fillTurnArc: true, length: 10 }
+    );
+
+    const lineToCalls = lineTo.mock.calls;
+
+    expect(beginPath).toHaveBeenCalled();
+    expect(lineTo).toHaveBeenCalledWith(0, -10);
+    expect(lineToCalls[1]?.[0]).toBeCloseTo(10);
+    expect(lineToCalls[1]?.[1]).toBeCloseTo(0);
+    expect(stroke).toHaveBeenCalledTimes(2);
+    expect(fill).toHaveBeenCalledTimes(1);
+    expect(context.strokeStyle).toBe("#222");
+    expect(context.fillStyle).toBe("#333");
   });
 
   it("runs scheduled ticker callbacks and stop callbacks", async () => {

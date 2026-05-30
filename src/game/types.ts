@@ -19,6 +19,13 @@ export type {
   SpriteFrame,
   TickerInstance,
 } from "./engine/types";
+export type {
+  DebugVectorColors,
+  DebugVectorOptions,
+  ViewportAreaScaleOptions,
+  ViewportDimensions,
+  ViewportRadiusOptions,
+} from "./engine";
 
 /**
  * Mutable player state stored in the game data context.
