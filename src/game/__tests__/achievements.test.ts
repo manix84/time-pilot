@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import AchievementSystem, { achievementDefinitions } from "../achievements";
-import { gameFps } from "../game-timing";
+import { gameTickRate } from "../game-timing";
 import { createRunStats } from "../run-stats";
 import type {
   BonusFactoryInstance,
@@ -496,7 +496,7 @@ describe("AchievementSystem", () => {
     achievements.onShootableProjectileDestroyed();
     achievements.onLevelCompleted(5, 1, context._player.getData());
     achievements.onLevelStarted(5);
-    ticks = 60 * 60 * gameFps;
+    ticks = 60 * 60 * gameTickRate;
     achievements.update();
 
     expect(achievements.getUnlocked()).toEqual([]);

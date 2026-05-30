@@ -13,7 +13,7 @@ import EnemyFactory from "./enemy-factory";
 import GameArena from "./engine/arena";
 import SoundEngine from "./engine/Sound";
 import Ticker from "./engine/Ticker";
-import { gameFps } from "./game-timing";
+import { gameTickRate, renderFps } from "./game-timing";
 import {
   getHighScores,
   getHighScoreThresholds,
@@ -81,19 +81,19 @@ export const LEVEL_INTRO_DURATION_MS = 5000;
 export const TIME_WARP_DELAY_MS = timeWarpDelayMs;
 const demoLevelDurationFrames = Math.max(
   1,
-  Math.round((DEMO_LEVEL_DURATION_MS / 1000) * gameFps)
+  Math.round((DEMO_LEVEL_DURATION_MS / 1000) * gameTickRate)
 );
 const demoLevelFadeFrames = Math.max(
   1,
-  Math.round((DEMO_LEVEL_FADE_MS / 1000) * gameFps)
+  Math.round((DEMO_LEVEL_FADE_MS / 1000) * gameTickRate)
 );
 const levelIntroDurationFrames = Math.max(
   1,
-  Math.round((LEVEL_INTRO_DURATION_MS / 1000) * gameFps)
+  Math.round((LEVEL_INTRO_DURATION_MS / 1000) * gameTickRate)
 );
 const timeWarpDelayFrames = Math.max(
   1,
-  Math.round((TIME_WARP_DELAY_MS / 1000) * gameFps)
+  Math.round((TIME_WARP_DELAY_MS / 1000) * gameTickRate)
 );
 const musicFadeDurationMs = 700;
 const levelStartMusicFallbackMs = 12000;
@@ -450,8 +450,8 @@ export class TimePilot {
     this.context._timeWarpTransition = undefined;
     this.context._nextParachuteScore = scoring.parachute.min;
     this.context._gameArena = new GameArena(this.container);
-    this.context._renderTicker = new Ticker();
-    this.context._gameTicker = new Ticker({ fps: gameFps });
+    this.context._renderTicker = new Ticker({ fps: renderFps });
+    this.context._gameTicker = new Ticker({ fixedStepFps: gameTickRate });
     this.context._bullets = new BulletFactory(this.context);
     this.context._enemyBullets = new BulletFactory(this.context);
     this.context._player = new Player(this.context);
@@ -1912,7 +1912,8 @@ export class TimePilot {
     const survivedSeconds = Math.max(
       0,
       Math.floor(
-        (this.context._gameTicker.getTicks() - stats.startedAtTick) / gameFps
+        (this.context._gameTicker.getTicks() - stats.startedAtTick) /
+          gameTickRate
       )
     );
 

@@ -91,7 +91,7 @@ const goals = [
 ];
 
 const systemUpdates = [
-  "50fps simulation with separate animation-frame rendering.",
+  "50Hz fixed-step simulation with separately capped rendering.",
   "Spatial entity audio for bosses, rockets, bullets, bombs, and explosions.",
   "Skippable author and Time Pilot preroll before cold-start root-menu entry.",
   "Page-lifecycle session snapshots that restore interrupted player runs without per-frame storage writes.",

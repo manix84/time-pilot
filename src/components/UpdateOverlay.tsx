@@ -28,8 +28,8 @@ type UpdateOverlayProps = {
   state: "updating" | "warping";
 };
 
-const gameFps = 50;
-const frameDurationMs = 1000 / gameFps;
+const animationTickRate = 50;
+const frameDurationMs = 1000 / animationTickRate;
 const playerRenderSize = 64;
 const statusTextOffsetY = 96;
 const warpRenderScale = 4;

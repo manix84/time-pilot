@@ -224,6 +224,38 @@ describe("engine modules", () => {
     ticker.stop();
   });
 
+  it("runs fixed-step schedules at a stable simulation rate across render frames", () => {
+    const animationFrames: FrameRequestCallback[] = [];
+    const requestAnimationFrameSpy = vi.mocked(window.requestAnimationFrame);
+    requestAnimationFrameSpy.mockImplementation((callback) => {
+      animationFrames.push(callback);
+      return animationFrames.length;
+    });
+    const ticker = new Ticker({ fixedStepFps: 50 });
+    const scheduled = vi.fn();
+
+    ticker.addSchedule(scheduled, 1);
+    ticker.start();
+
+    animationFrames.shift()?.(0);
+    animationFrames.shift()?.(16);
+    expect(scheduled).not.toHaveBeenCalled();
+
+    animationFrames.shift()?.(40);
+    expect(scheduled).toHaveBeenCalledTimes(2);
+    expect(scheduled).toHaveBeenNthCalledWith(1, 1);
+    expect(scheduled).toHaveBeenNthCalledWith(2, 2);
+
+    animationFrames.shift()?.(56);
+    expect(scheduled).toHaveBeenCalledTimes(2);
+
+    animationFrames.shift()?.(60);
+    expect(scheduled).toHaveBeenCalledTimes(3);
+    expect(scheduled).toHaveBeenLastCalledWith(3);
+
+    ticker.stop();
+  });
+
   it("creates playable sounds", () => {
     const sound = new Sound("/sounds/player/bullet.ogg", { autoplay: false });
 

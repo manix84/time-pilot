@@ -16,7 +16,9 @@ interface TickerScheduleItem {
 }
 
 interface TickerOptions {
+  fixedStepFps?: number;
   fps?: number;
+  maxCatchUpFrames?: number;
 }
 
 const animationWindow = window as LegacyAnimationWindow;
@@ -31,8 +33,11 @@ const requestAnimationFrame =
  */
 class Ticker implements TickerInstance {
   private _frame = 0;
+  private _accumulatedStepTime = 0;
+  private readonly _fixedStepInterval?: number;
   private readonly _frameInterval?: number;
   private _lastStepTime: number | null = null;
+  private readonly _maxCatchUpFrames: number;
   private _schedule: Record<number, TickerScheduleItem> = {};
   private _scheduleCount = 0;
   private killCallback?: () => void;
@@ -40,7 +45,15 @@ class Ticker implements TickerInstance {
   isRunning = false;
 
   constructor(options: TickerOptions = {}) {
+    if (options.fixedStepFps && options.fps) {
+      throw new Error("Ticker cannot use fixedStepFps and fps together.");
+    }
+
+    this._fixedStepInterval = options.fixedStepFps
+      ? 1000 / options.fixedStepFps
+      : undefined;
     this._frameInterval = options.fps ? 1000 / options.fps : undefined;
+    this._maxCatchUpFrames = options.maxCatchUpFrames ?? 10;
   }
 
   start = (): void => {
@@ -49,6 +62,7 @@ class Ticker implements TickerInstance {
     }
 
     this.isRunning = true;
+    this._accumulatedStepTime = 0;
     this._lastStepTime = null;
     this._step();
   };
@@ -65,21 +79,15 @@ class Ticker implements TickerInstance {
         return;
       }
 
-      if (!this.shouldRunFrame(timestamp)) {
+      const framesToRun = this.getFramesToRun(timestamp);
+
+      if (!framesToRun) {
         this._step();
         return;
       }
 
-      this._frame++;
-      this._lastStepTime = timestamp;
-
-      for (const eventId in this._schedule) {
-        if (
-          Object.prototype.hasOwnProperty.call(this._schedule, eventId) &&
-          this._frame % this._schedule[eventId].nthFrame === 0
-        ) {
-          this._schedule[eventId].callback(this._frame);
-        }
+      for (let frame = 0; frame < framesToRun && this.isRunning; frame++) {
+        this.runScheduledFrame();
       }
 
       if (this.isRunning) {
@@ -97,7 +105,48 @@ class Ticker implements TickerInstance {
     }
   };
 
-  private shouldRunFrame = (timestamp: number): boolean => {
+  private getFramesToRun = (timestamp: number): number => {
+    if (this._fixedStepInterval) {
+      return this.getFixedStepFrameCount(timestamp);
+    }
+
+    return this.shouldRunRenderFrame(timestamp) ? 1 : 0;
+  };
+
+  private getFixedStepFrameCount = (timestamp: number): number => {
+    if (this._lastStepTime === null) {
+      this._lastStepTime = timestamp;
+      return 0;
+    }
+
+    const elapsedMs = timestamp - this._lastStepTime;
+    this._lastStepTime = timestamp;
+
+    if (elapsedMs <= 0) {
+      return 0;
+    }
+
+    this._accumulatedStepTime += elapsedMs;
+
+    const elapsedFrames = Math.floor(
+      this._accumulatedStepTime / this._fixedStepInterval
+    );
+
+    if (!elapsedFrames) {
+      return 0;
+    }
+
+    const framesToRun = Math.min(elapsedFrames, this._maxCatchUpFrames);
+    this._accumulatedStepTime -= framesToRun * this._fixedStepInterval;
+
+    if (elapsedFrames > this._maxCatchUpFrames) {
+      this._accumulatedStepTime %= this._fixedStepInterval;
+    }
+
+    return framesToRun;
+  };
+
+  private shouldRunRenderFrame = (timestamp: number): boolean => {
     if (!this._frameInterval) {
       return true;
     }
@@ -107,7 +156,25 @@ class Ticker implements TickerInstance {
       return false;
     }
 
-    return timestamp - this._lastStepTime >= this._frameInterval;
+    if (timestamp - this._lastStepTime < this._frameInterval) {
+      return false;
+    }
+
+    this._lastStepTime = timestamp;
+    return true;
+  };
+
+  private runScheduledFrame = (): void => {
+    this._frame++;
+
+    for (const eventId in this._schedule) {
+      if (
+        Object.prototype.hasOwnProperty.call(this._schedule, eventId) &&
+        this._frame % this._schedule[eventId].nthFrame === 0
+      ) {
+        this._schedule[eventId].callback(this._frame);
+      }
+    }
   };
 
   addSchedule = (callback: TickerScheduleCallback, nthFrame: number): number => {
