@@ -31,7 +31,10 @@ const engineSourceFiles = import.meta.glob<string>(
 );
 
 const getStaticImportSpecifiers = (source: string): string[] =>
-  Array.from(source.matchAll(/\bfrom\s+["']([^"']+)["']/g), (match) => match[1]);
+  Array.from(
+    source.matchAll(/\bimport\s+(?:[^"';]+?\s+from\s+)?["']([^"']+)["']/g),
+    (match) => match[1]
+  );
 
 describe("game module imports", () => {
   it("loads every game module", () => {

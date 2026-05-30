@@ -3,9 +3,8 @@ import {
   getScaledViewportLimit,
   getViewportAreaScale as getEngineViewportAreaScale,
   getViewportPaddedRadius,
-  getViewportRadius,
 } from "@time-pilot/arcade-engine";
-import type { GameArenaInstance, ViewportDimensions } from "./types";
+import type { ViewportDimensions } from "./types";
 
 const spawnPadding = 96;
 const despawnPadding = 160;
@@ -53,7 +52,7 @@ export const getScaledEntityLimit = (
  * @returns Despawn radius using the larger of the configured minimum and viewport size.
  */
 export const getDespawnRadius = (
-  gameArena: Pick<GameArenaInstance, "height" | "width">
+  gameArena: ViewportDimensions
 ): number => {
   return getViewportPaddedRadius(gameArena, {
     minRadius: limits.despawnRadius,
