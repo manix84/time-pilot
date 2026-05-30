@@ -10,7 +10,11 @@ import Keyboard2 from "./controller/keyboard2";
 import Mouse from "./controller/mouse";
 import Touch from "./controller/touch";
 import EnemyFactory from "./enemy-factory";
-import { GameArena, Sound as SoundEngine, Ticker } from "./engine";
+import {
+  GameArena,
+  Sound as SoundEngine,
+  Ticker,
+} from "@time-pilot/arcade-engine";
 import { gameTickRate } from "./game-timing";
 import {
   getHighScores,

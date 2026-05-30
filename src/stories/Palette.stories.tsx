@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import helpers from "../game/engine/helpers";
+import { helpers } from "@time-pilot/arcade-engine";
 import palette from "../game/palette";
 import "./storybook.scss";
 

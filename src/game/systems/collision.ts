@@ -1,5 +1,5 @@
 import { levels, player } from "../constants";
-import { helpers } from "../engine";
+import { helpers } from "@time-pilot/arcade-engine";
 import type {
   BulletData,
   BulletInstance,

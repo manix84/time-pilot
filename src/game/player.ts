@@ -2,7 +2,7 @@
 import { levels, player, scoring, sounds } from "./constants";
 import userOptions from "./user-options";
 import { drawDebugVectors } from "./debug-vectors";
-import { helpers, Sound as SoundEngine } from "./engine";
+import { helpers, Sound as SoundEngine } from "@time-pilot/arcade-engine";
 import palette from "./palette";
 import type {
   BulletFactoryInstance,

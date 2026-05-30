@@ -21,11 +21,14 @@ import Prop from "../prop";
 import PropFactory from "../prop-factory";
 import userOptions from "../user-options";
 
-const engineSourceFiles = import.meta.glob<string>("../engine/**/*.ts", {
-  eager: true,
-  import: "default",
-  query: "?raw",
-});
+const engineSourceFiles = import.meta.glob<string>(
+  "../../../packages/arcade-engine/src/**/*.ts",
+  {
+    eager: true,
+    import: "default",
+    query: "?raw",
+  }
+);
 
 const getStaticImportSpecifiers = (source: string): string[] =>
   Array.from(source.matchAll(/\bfrom\s+["']([^"']+)["']/g), (match) => match[1]);

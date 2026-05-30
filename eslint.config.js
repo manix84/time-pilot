@@ -83,7 +83,7 @@ export default tseslint.config(
     },
   },
   {
-    files: ["src/game/**/*.ts"],
+    files: ["src/game/**/*.ts", "packages/arcade-engine/src/**/*.ts"],
     rules: {
       "@typescript-eslint/ban-ts-comment": "off",
       "@typescript-eslint/no-this-alias": "off",
