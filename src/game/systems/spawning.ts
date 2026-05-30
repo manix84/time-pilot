@@ -1,6 +1,5 @@
 import { levels, limits, sounds } from "../constants";
-import { Sound as SoundEngine } from "../engine";
-import helpers from "../engine/helpers";
+import { helpers, Sound as SoundEngine } from "../engine";
 import type {
   Coordinates,
   EnemyData,

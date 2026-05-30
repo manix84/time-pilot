@@ -1,5 +1,5 @@
 import { levels, player } from "../constants";
-import helpers from "../engine/helpers";
+import { helpers } from "../engine";
 import type {
   BulletData,
   BulletInstance,

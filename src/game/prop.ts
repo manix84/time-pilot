@@ -1,6 +1,6 @@
 /* Converted from TimePilot.Prop.js (AMD) to ESM TypeScript. */
 import { levels } from "./constants";
-import helpers from "./engine/helpers";
+import { helpers } from "./engine";
 import { getDespawnRadius } from "./viewport";
 import type {
   GameArenaInstance,

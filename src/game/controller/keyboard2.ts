@@ -1,5 +1,5 @@
 /* Converted from TimePilot.Controller.Keyboard2.js (AMD) to ESM TypeScript. */
-import helpers from "../engine/helpers";
+import { helpers } from "../engine";
 import userOptions from "../user-options";
 import type {
   ControlInputName,

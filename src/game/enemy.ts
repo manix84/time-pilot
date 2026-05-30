@@ -2,8 +2,7 @@
 import { levels, scoring } from "./constants";
 import userOptions from "./user-options";
 import { drawDebugVectors } from "./debug-vectors";
-import { Sound as SoundEngine } from "./engine";
-import helpers from "./engine/helpers";
+import { helpers, Sound as SoundEngine } from "./engine";
 import palette from "./palette";
 import { getDespawnRadius } from "./viewport";
 import type {

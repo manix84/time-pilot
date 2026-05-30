@@ -1,5 +1,5 @@
 /* Converted from TimePilot.Controller.Gamepad.js (AMD) to ESM TypeScript. */
-import helpers from "../engine/helpers";
+import { helpers } from "../engine";
 import type {
   ControlInputName,
   ControlInputState,
