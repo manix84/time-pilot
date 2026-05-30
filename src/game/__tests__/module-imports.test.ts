@@ -21,6 +21,21 @@ import Prop from "../prop";
 import PropFactory from "../prop-factory";
 import userOptions from "../user-options";
 
+const engineSourceFiles = import.meta.glob<string>(
+  "../../../packages/arcade-engine/src/**/*.ts",
+  {
+    eager: true,
+    import: "default",
+    query: "?raw",
+  }
+);
+
+const getStaticImportSpecifiers = (source: string): string[] =>
+  Array.from(
+    source.matchAll(/\bimport\s+(?:[^"';]+?\s+from\s+)?["']([^"']+)["']/g),
+    (match) => match[1]
+  );
+
 describe("game module imports", () => {
   it("loads every game module", () => {
     expect(Bonus).toBeTypeOf("function");
@@ -94,5 +109,17 @@ describe("game module imports", () => {
   it("lists Spanish between French and German", () => {
     expect(availableLanguages).toEqual(["en", "fr", "es", "de", "it", "nl", "ro"]);
     expect(getLanguageName("es")).toBe("Espanol");
+  });
+
+  it("keeps production engine modules independent from game modules", () => {
+    const invalidImports = Object.entries(engineSourceFiles)
+      .filter(([file]) => !file.includes("/__tests__/"))
+      .flatMap(([file, source]) =>
+        getStaticImportSpecifiers(source)
+          .filter((specifier) => specifier.startsWith("../"))
+          .map((specifier) => `${file} -> ${specifier}`)
+      );
+
+    expect(invalidImports).toEqual([]);
   });
 });

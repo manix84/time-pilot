@@ -1,4 +1,4 @@
-import helpers from "../engine/helpers";
+import { helpers } from "@time-pilot/arcade-engine";
 import { clampZoomPercent, zoomStepPercent } from "../ui-scale";
 import type {
   ControlInputName,

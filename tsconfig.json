@@ -11,7 +11,11 @@
     "allowJs": false,
     "jsx": "react-jsx",
     "noEmit": true,
+    "baseUrl": ".",
+    "paths": {
+      "@time-pilot/arcade-engine": ["packages/arcade-engine/src/index.ts"]
+    },
     "types": ["vite/client"]
   },
-  "include": ["src", ".storybook"]
+  "include": ["src", "packages", ".storybook"]
 }

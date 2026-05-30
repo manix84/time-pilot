@@ -1,13 +1,12 @@
 /* Converted from engine/GameArena.js (AMD) to ESM TypeScript. */
-import { assetPath } from "../asset-path";
-import palette from "../palette";
 import type {
   AssetProgress,
   CircleOptions,
   GameArenaInstance,
+  GameArenaOptions,
   RenderTextOptions,
   SpriteFrame,
-} from "../types";
+} from "./types";
 
 type CanvasContext = CanvasRenderingContext2D | WebGLRenderingContext;
 type CanvasWithDebugGrid = HTMLCanvasElement & {
@@ -35,6 +34,12 @@ type FullscreenDocument = Document & {
 type TextAlign = CanvasRenderingContext2D["textAlign"];
 
 const spaceAdvanceMultiplier = 2;
+const defaultArenaOptions: Required<GameArenaOptions> = {
+  debugGridColor: "#777777",
+  defaultTextColor: "#ffffff",
+  fontFamily: "sans-serif",
+  fontUrl: "",
+};
 
 /**
  * Canvas arena wrapper responsible for sizing, assets, text, sprites, and fullscreen.
@@ -47,6 +52,7 @@ class GameArena implements GameArenaInstance {
   private _isInFullScreen = false;
   private _oldHeight: number;
   private _oldWidth: number;
+  private readonly _options: Required<GameArenaOptions>;
   private _styles?: HTMLStyleElement;
   private readonly _handleFullscreenChange = (): void => {
     this._isInFullScreen = this.isFullScreen();
@@ -73,8 +79,12 @@ class GameArena implements GameArenaInstance {
   posY = 0;
   width = 0;
 
-  constructor(containerElement: HTMLElement) {
+  constructor(containerElement: HTMLElement, options: GameArenaOptions = {}) {
     this._containerElement = containerElement;
+    this._options = {
+      ...defaultArenaOptions,
+      ...options,
+    };
     this._canvas = document.createElement("canvas");
     this.resize();
 
@@ -100,16 +110,19 @@ class GameArena implements GameArenaInstance {
   }
 
   private _init = (): void => {
-    this._styles = document.createElement("style");
-    this._styles.innerText =
-      "@font-face {" +
-      "font-family: 'theFont';" +
-      `src: url('${assetPath("fonts/font.ttf")}');` +
-      " }";
+    if (this._options.fontUrl) {
+      this._styles = document.createElement("style");
+      this._styles.innerText =
+        "@font-face {" +
+        `font-family: '${this._options.fontFamily}';` +
+        `src: url('${this._options.fontUrl}');` +
+        " }";
+      this._containerElement.appendChild(this._styles);
+    }
+
     this._canvas.tabIndex = 0;
     this._canvas.style.outline = "none";
 
-    this._containerElement.appendChild(this._styles);
     this._containerElement.appendChild(this._canvas);
   };
 
@@ -306,8 +319,8 @@ class GameArena implements GameArenaInstance {
       size: newOptions.size || 12,
       align: newOptions.align || "left",
       valign: newOptions.valign || "top",
-      color: newOptions.color || palette.text.white,
-      font: newOptions.font || "theFont",
+      color: newOptions.color || this._options.defaultTextColor,
+      font: newOptions.font || this._options.fontFamily,
       stroke: newOptions.stroke || false,
       strokeWidth: newOptions.strokeWidth || 1,
     };
@@ -468,7 +481,7 @@ class GameArena implements GameArenaInstance {
       context.lineTo(this.width, 0.5 + x);
     }
 
-    context.strokeStyle = palette.menu.disabledText;
+    context.strokeStyle = this._options.debugGridColor;
     context.stroke();
   };
 

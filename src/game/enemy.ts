@@ -2,8 +2,7 @@
 import { levels, scoring } from "./constants";
 import userOptions from "./user-options";
 import { drawDebugVectors } from "./debug-vectors";
-import SoundEngine from "./engine/Sound";
-import helpers from "./engine/helpers";
+import { helpers, Sound as SoundEngine } from "@time-pilot/arcade-engine";
 import palette from "./palette";
 import { getDespawnRadius } from "./viewport";
 import type {

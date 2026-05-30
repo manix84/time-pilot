@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import { Sound as SoundEngine } from "@time-pilot/arcade-engine";
 import { assetPath } from "../game/asset-path";
-import SoundEngine from "../game/engine/Sound";
 import palette from "../game/palette";
 import "./storybook.scss";
 

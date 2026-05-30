@@ -1,6 +1,5 @@
 import { levels, limits, sounds } from "../constants";
-import SoundEngine from "../engine/Sound";
-import helpers from "../engine/helpers";
+import { helpers, Sound as SoundEngine } from "@time-pilot/arcade-engine";
 import type {
   Coordinates,
   EnemyData,
