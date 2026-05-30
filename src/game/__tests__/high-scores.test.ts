@@ -16,6 +16,55 @@ const createJsonResponse = (body: unknown) =>
     ok: true,
   }) as unknown as Response;
 
+const hashText = (text: string): number => {
+  let hash = 2166136261;
+
+  for (let index = 0; index < text.length; index += 1) {
+    hash ^= text.charCodeAt(index);
+    hash = Math.imul(hash, 16777619);
+  }
+
+  return hash >>> 0;
+};
+
+const createLegacyIntegrity = (
+  entry: {
+    id: string;
+    name: string;
+    score: number;
+    stats: string[];
+    submittedAt: number;
+  },
+  run: { issuedAt: number; runId: string; token: string }
+) => {
+  const multiplier = 101;
+  const scoreProduct = Math.max(0, Math.floor(entry.score)) * multiplier;
+  const statsProduct = (hashText(entry.stats.join("\n")) % 1000003) * multiplier;
+
+  return {
+    checksum: hashText(
+      [
+        1,
+        run.runId,
+        run.token,
+        run.issuedAt,
+        entry.id,
+        entry.name,
+        Math.max(0, Math.floor(entry.score)),
+        entry.stats.join("\n"),
+        entry.submittedAt,
+        multiplier,
+        scoreProduct,
+        statsProduct,
+      ].join("|")
+    ).toString(36),
+    multiplier,
+    scoreProduct,
+    statsProduct,
+    version: 1,
+  };
+};
+
 describe("high score storage", () => {
   beforeEach(() => {
     localStorage.clear();
@@ -153,17 +202,81 @@ describe("high score storage", () => {
   });
 
   it("keeps saved scores visible ahead of placeholder scores", () => {
-    saveHighScore("New Pilot", 1200, ["Era: 1910"]);
+    saveHighScore("New Pilot", 1200, ["Era: 1910"], null, {
+      gameSpeed: 1.25,
+      renderFps: 50,
+    });
 
     expect(getHighScores()[0]).toMatchObject({
       name: "New Pilot",
       score: 1200,
+      settings: {
+        gameSpeed: 1.25,
+        renderFps: 50,
+      },
     });
     expect(getHighScoreThresholds(3).map((score) => score.score)).toEqual([
-      1000000,
-      875500,
-      742250,
+      120000,
+      90000,
+      70000,
     ]);
+  });
+
+  it("syncs receipt-backed score timing settings", async () => {
+    const remoteEntry = {
+      id: "remote-settings-score",
+      createdAt: 2000,
+      name: "Settings Pilot",
+      receivedAt: 3000,
+      score: 5000,
+      settings: {
+        gameSpeed: 0.9,
+        renderFps: "max",
+      },
+      stats: ["Era: 1910"],
+    };
+    const fetchMock = vi.spyOn(globalThis, "fetch").mockImplementation(
+      (input, init) => {
+        if (input === "/api/high-scores" && init?.method === "POST") {
+          return Promise.resolve(createJsonResponse(remoteEntry));
+        }
+
+        return Promise.resolve(createJsonResponse([remoteEntry]));
+      }
+    );
+
+    saveHighScore(
+      "Settings Pilot",
+      5000,
+      ["Era: 1910"],
+      {
+        issuedAt: 1000,
+        runId: "run-settings",
+        token: "receipt-token",
+      },
+      {
+        gameSpeed: 0.9,
+        renderFps: "max",
+      }
+    );
+
+    await syncHighScores();
+
+    const postCall = fetchMock.mock.calls.find(
+      ([input, init]) => input === "/api/high-scores" && init?.method === "POST"
+    );
+    const body = JSON.parse(String(postCall?.[1]?.body ?? "{}")) as {
+      entry?: { settings?: unknown };
+    };
+
+    expect(body.entry?.settings).toEqual({
+      gameSpeed: 0.9,
+      renderFps: "max",
+    });
+    expect(loadStoredHighScores()[0]?.settings).toEqual({
+      gameSpeed: 0.9,
+      renderFps: "max",
+    });
   });
 
   it("keeps gameplay-safe score saves best effort when storage writes fail", () => {
@@ -384,6 +497,64 @@ describe("high score storage", () => {
     expect(storedScores[0]).toMatchObject({ syncState: "local" });
     expect(storedScores[0]?.integrity).toBeUndefined();
     expect(storedScores[0]?.run).toBeUndefined();
+  });
+
+  it("submits legacy pending scores whose v1 integrity predates timing settings", async () => {
+    const fetchMock = vi.spyOn(globalThis, "fetch").mockImplementation(
+      (input, init) => {
+        if (input === "/api/high-scores" && init?.method === "POST") {
+          return Promise.resolve(
+            createJsonResponse({
+              id: "legacy-remote-score",
+              createdAt: 2000,
+              name: "Legacy",
+              receivedAt: 3000,
+              score: 5000,
+              stats: ["Era: 1910"],
+            })
+          );
+        }
+
+        return Promise.resolve(createJsonResponse([]));
+      }
+    );
+    const run = {
+      issuedAt: 1000,
+      runId: "run-legacy",
+      token: "receipt-token",
+    };
+    const entry = {
+      id: "legacy-score",
+      createdAt: 2000,
+      name: "Legacy",
+      run,
+      score: 5000,
+      stats: ["Era: 1910"],
+      submittedAt: 2000,
+      syncState: "pending",
+    };
+
+    localStorage.setItem(
+      highScoreStorageKey,
+      JSON.stringify([
+        {
+          ...entry,
+          integrity: createLegacyIntegrity(entry, run),
+        },
+      ])
+    );
+
+    await syncHighScores();
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      "/api/high-scores",
+      expect.objectContaining({ method: "POST" })
+    );
+    expect(loadStoredHighScores()[0]).toMatchObject({
+      id: "legacy-remote-score",
+      name: "Legacy",
+      score: 5000,
+    });
   });
 
   it("persists successful pending sync updates before a later submit fails", async () => {

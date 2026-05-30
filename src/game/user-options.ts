@@ -13,6 +13,12 @@ import {
   normalizeFilterIntensity,
   normalizeFilterSettings,
 } from "./filter-settings";
+import {
+  defaultGameSpeed,
+  defaultRenderFps,
+  normalizeGameSpeed,
+  normalizeRenderFps,
+} from "./game-timing";
 import { isLogLevel } from "./log-levels";
 
 const supportedLanguages: GameLanguage[] = [
@@ -40,6 +46,7 @@ type PersistedUserOptions = Pick<
   | "enableDebug"
   | "effectsVolume"
   | "gamepadEnabled"
+  | "gameSpeed"
   | "gameZoom"
   | "filterSettings"
   | "keyboardBindings"
@@ -48,6 +55,7 @@ type PersistedUserOptions = Pick<
   | "logLevel"
   | "masterVolume"
   | "musicVolume"
+  | "renderFps"
   | "touchSteeringOverlay"
   | "uiZoom"
   | "videoFilterMode"
@@ -94,6 +102,7 @@ const defaultPersistedOptions: PersistedUserOptions = {
   controllerType: "keyboard1" as ControllerType,
   gameZoom: zoomDefaultPercent,
   gamepadEnabled: true,
+  gameSpeed: defaultGameSpeed,
   filterSettings: defaultCustomFilterSettings,
   keyboardBindings: defaultKeyboardBindings,
   keepScreenAwake: true,
@@ -101,6 +110,7 @@ const defaultPersistedOptions: PersistedUserOptions = {
   logLevel: "off",
   masterVolume: 8,
   musicVolume: 2,
+  renderFps: defaultRenderFps,
   effectsVolume: 8,
   touchSteeringOverlay: true,
   uiZoom: zoomDefaultPercent,
@@ -254,6 +264,7 @@ const writeUserOptions = (): void => {
         enableDebug: userOptions.enableDebug,
         effectsVolume: userOptions.effectsVolume,
         gamepadEnabled: userOptions.gamepadEnabled,
+        gameSpeed: userOptions.gameSpeed,
         gameZoom: userOptions.gameZoom,
         filterSettings: userOptions.filterSettings,
         keyboardBindings: userOptions.keyboardBindings,
@@ -262,6 +273,7 @@ const writeUserOptions = (): void => {
         logLevel: userOptions.logLevel,
         masterVolume: userOptions.masterVolume,
         musicVolume: userOptions.musicVolume,
+        renderFps: userOptions.renderFps,
         optionsVersion: userOptionsVersion,
         touchSteeringOverlay: userOptions.touchSteeringOverlay,
         uiZoom: userOptions.uiZoom,
@@ -374,6 +386,7 @@ var userOptions: UserOptions = {
    */
   gamepadEnabled:
     storedOptions.gamepadEnabled ?? defaultPersistedOptions.gamepadEnabled,
+  gameSpeed: normalizeGameSpeed(storedOptions.gameSpeed),
 
   filterSettings: normalizeFilterSettings(storedOptions.filterSettings),
 
@@ -389,6 +402,7 @@ var userOptions: UserOptions = {
   logLevel: storedLogLevel,
   masterVolume: storedOptions.masterVolume ?? defaultPersistedOptions.masterVolume,
   musicVolume: storedOptions.musicVolume ?? defaultPersistedOptions.musicVolume,
+  renderFps: normalizeRenderFps(storedOptions.renderFps),
   effectsVolume: storedOptions.effectsVolume ?? defaultPersistedOptions.effectsVolume,
   /**
    * Display a live touch steering guide during gameplay.
@@ -438,6 +452,7 @@ export const resetUserOptions = (): void => {
   userOptions.controllerType = defaults.controllerType;
   userOptions.gameZoom = defaults.gameZoom;
   userOptions.gamepadEnabled = defaults.gamepadEnabled;
+  userOptions.gameSpeed = defaults.gameSpeed;
   userOptions.filterSettings = defaults.filterSettings;
   userOptions.keyboardBindings = defaults.keyboardBindings;
   userOptions.keepScreenAwake = defaults.keepScreenAwake;
@@ -445,6 +460,7 @@ export const resetUserOptions = (): void => {
   userOptions.logLevel = defaults.logLevel;
   userOptions.masterVolume = defaults.masterVolume;
   userOptions.musicVolume = defaults.musicVolume;
+  userOptions.renderFps = defaults.renderFps;
   userOptions.effectsVolume = defaults.effectsVolume;
   userOptions.touchSteeringOverlay = defaults.touchSteeringOverlay;
   userOptions.uiZoom = defaults.uiZoom;

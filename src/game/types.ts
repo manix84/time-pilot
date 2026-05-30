@@ -154,6 +154,7 @@ import type {
 } from "./filter-settings";
 import type AchievementSystem from "./achievements";
 import type { AchievementStatus } from "./achievements";
+import type { RenderFps } from "./game-timing";
 import type { LogLevel } from "./log-levels";
 import type { StoredDataResetScope } from "./storage-reset";
 export type GameLanguage = "de" | "en" | "es" | "fr" | "it" | "nl" | "ro";
@@ -239,6 +240,8 @@ export interface TickerInstance {
   isRunning: boolean;
   start: () => void;
   stop: (callback?: () => void) => void;
+  setFixedStepFps: (fps: number) => void;
+  setFps: (fps?: number) => void;
   addSchedule: (callback: (frame: number) => void, nthFrame: number) => number;
   removeSchedule: (eventId: number) => boolean;
   clearSchedule: () => void;
@@ -579,10 +582,17 @@ export interface HighScoreEntry {
   id: string;
   name: string;
   score: number;
+  settings?: HighScoreSettings;
   stats: string[];
 }
 
+export interface HighScoreSettings {
+  gameSpeed: number;
+  renderFps: RenderFps;
+}
+
 export interface PendingHighScoreEntry {
+  settings?: HighScoreSettings;
   score: number;
   stats: string[];
 }
@@ -862,6 +872,7 @@ export interface UserOptions {
   controllerType: ControllerType;
   debugContinues: number;
   debugLives: number;
+  gameSpeed: number;
   gameZoom: number;
   gamepadEnabled: boolean;
   /**
@@ -879,6 +890,7 @@ export interface UserOptions {
   masterVolume: number;
   musicVolume: number;
   effectsVolume: number;
+  renderFps: RenderFps;
   uiZoom: number;
   setKeyboardBinding: <K extends keyof KeyboardBindings>(
     key: K,

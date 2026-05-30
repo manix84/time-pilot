@@ -50,11 +50,13 @@ describe("TimePilot engine", () => {
     userOptions.setDebugOption("invincible", true);
     localStorage.clear();
     userOptions.setOption("controllerType", "keyboard1");
+    userOptions.setOption("gameSpeed", 1);
     userOptions.setOption("gameZoom", 100);
     userOptions.setOption("gamepadEnabled", true);
     userOptions.setOption("keepScreenAwake", true);
     userOptions.setOption("language", "en");
     userOptions.setOption("logLevel", "off");
+    userOptions.setOption("renderFps", "max");
     userOptions.setOption("uiZoom", 100);
     Object.defineProperty(HTMLMediaElement.prototype, "canPlay", {
       configurable: true,
@@ -728,13 +730,13 @@ describe("TimePilot engine", () => {
     pilot.beginGame();
     playedSources.length = 0;
 
-    pilot.context._player.setData("score", 742251);
+    pilot.context._player.setData("score", 70001);
 
     expect(pilot.context._scoreTrophyRank).toBe(3);
     expect(pilot.context._hasReachedHighScore).toBe(false);
     expect(playedSources).not.toContain(sounds.highScore.src);
 
-    pilot.context._player.setData("score", 875501);
+    pilot.context._player.setData("score", 90001);
 
     expect(pilot.context._scoreTrophyRank).toBe(2);
     expect(pilot.context._hasReachedHighScore).toBe(false);
@@ -778,7 +780,11 @@ describe("TimePilot engine", () => {
         runId: string;
         token: string;
       } | null;
-      pendingHighScore: { score: number; stats: string[] } | null;
+      pendingHighScore: {
+        score: number;
+        settings?: { gameSpeed: number; renderFps: "max" | number };
+        stats: string[];
+      } | null;
       savePendingHighScore: (name: string) => void;
     };
 

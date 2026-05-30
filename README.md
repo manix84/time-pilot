@@ -368,8 +368,8 @@ The current design keeps React out of the game loop. This is deliberate.
 - Entities, factories, controllers, HUD, and engine wrappers are class-based modules.
 - Collision, spawning, and frame rendering live in dedicated systems under `src/game/systems`.
 - Entities and factories receive explicit context instead of reading a global singleton.
-- Simulation uses a fixed-step ticker at 50fps for movement, spawning, collisions, cleanup, and player actions.
-- Rendering uses a separate animation-frame ticker to paint the latest entity locations and orientations as often as the browser can display them.
+- Simulation uses a fixed-step 50Hz ticker for movement, spawning, collisions, cleanup, and player actions.
+- Rendering uses a separate FPS-capped animation-frame ticker to paint the latest entity locations and orientations without changing gameplay speed.
 - Game rendering applies pixelated POV scaling separately from HUD and menu UI scaling.
 - Rendering stays canvas-based for predictable paint ordering and frame-by-frame control.
 - Public game utilities, engine entry points, systems, controllers, and React

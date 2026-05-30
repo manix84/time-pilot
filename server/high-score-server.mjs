@@ -29,11 +29,13 @@ const maxPlausibleBonuses = 200;
 const maxPlausibleBosses = 5;
 const maxPlausibleEnemies = 2000;
 const maxPlausibleShots = 10000;
-const maxScoreStats = 12;
+const maxScoreStats = 16;
 const maxScores = 100;
 const maxPublicScores = 25;
 const maxPortAttempts = 20;
 const runReceiptTtlMs = 6 * 60 * 60 * 1000;
+const supportedGameSpeeds = [0.5, 0.75, 0.9, 1, 1.1, 1.25, 1.5, 2];
+const supportedRenderFps = [30, 40, 50, 60, 75, 90, 120, 144, "max"];
 
 const loadEnvFiles = () => {
   for (const filePath of envFilePaths) {
@@ -195,6 +197,7 @@ const ensurePostgresSchema = async (pool) => {
       created_at bigint,
       name text not null,
       score integer not null,
+      settings jsonb,
       stats jsonb not null,
       game_version text not null,
       submitted_at bigint not null,
@@ -204,6 +207,9 @@ const ensurePostgresSchema = async (pool) => {
   `);
   await pool.query(
     "alter table time_pilot_high_scores add column if not exists created_at bigint"
+  );
+  await pool.query(
+    "alter table time_pilot_high_scores add column if not exists settings jsonb"
   );
 };
 
@@ -240,14 +246,15 @@ const createPostgresStore = (pool) => ({
 
       await client.query(
         `insert into time_pilot_high_scores
-          (id, created_at, name, score, stats, game_version, submitted_at, received_at, run_id)
-          values ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+          (id, created_at, name, score, settings, stats, game_version, submitted_at, received_at, run_id)
+          values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
           on conflict (id) do nothing`,
         [
           score.id,
           score.createdAt,
           score.name,
           score.score,
+          JSON.stringify(score.settings ?? null),
           JSON.stringify(score.stats),
           score.gameVersion,
           score.submittedAt,
@@ -273,7 +280,7 @@ const createPostgresStore = (pool) => ({
   },
   async listScores(limit = maxPublicScores) {
     const result = await pool.query(
-      `select id, created_at, name, score, stats, received_at
+      `select id, created_at, name, score, settings, stats, received_at
         from time_pilot_high_scores
         order by score desc, coalesce(created_at, received_at) asc
         limit $1`,
@@ -286,6 +293,7 @@ const createPostgresStore = (pool) => ({
       name: row.name,
       receivedAt: Number(row.received_at),
       score: Number(row.score),
+      settings: normalizeScoreSettings(row.settings),
       stats: row.stats,
     }));
   },
@@ -583,6 +591,7 @@ const validateScoreSubmission = async (payload) => {
       id: randomUUID(),
       name: normalizeName(entry.name),
       score: Math.max(0, Math.floor(entry.score)),
+      settings: normalizeScoreSettings(entry.settings),
       stats: entry.stats.slice(0, maxScoreStats),
     },
     submittedAt: Math.max(0, Math.floor(submittedAt)),
@@ -661,7 +670,7 @@ const isValidHighScoreIntegrity = (entry, integrity, run, submittedAt) => {
   return (
     integrity.scoreProduct === expectedScoreProduct &&
     integrity.statsProduct === expectedStatsProduct &&
-    integrity.checksum ===
+    [
       createHighScoreIntegrityChecksum(
         entry,
         run,
@@ -669,7 +678,21 @@ const isValidHighScoreIntegrity = (entry, integrity, run, submittedAt) => {
         integrity.multiplier,
         integrity.scoreProduct,
         integrity.statsProduct
-      )
+      ),
+      ...(entry.settings
+        ? []
+        : [
+          createHighScoreIntegrityChecksum(
+            entry,
+            run,
+            submittedAt,
+            integrity.multiplier,
+            integrity.scoreProduct,
+            integrity.statsProduct,
+            { includeSettings: false }
+          ),
+        ]),
+    ].includes(integrity.checksum)
   );
 };
 
@@ -696,7 +719,8 @@ const createHighScoreIntegrityChecksum = (
   submittedAt,
   multiplier,
   scoreProduct,
-  statsProduct
+  statsProduct,
+  options = {}
 ) =>
   hashText(
     [
@@ -707,6 +731,9 @@ const createHighScoreIntegrityChecksum = (
       entry.id,
       entry.name,
       Math.max(0, Math.floor(entry.score)),
+      ...(options.includeSettings === false
+        ? []
+        : [formatScoreSettingsForIntegrity(entry.settings)]),
       entry.stats.join("\n"),
       submittedAt,
       multiplier,
@@ -798,8 +825,9 @@ const isPublicScore = (value) =>
   (value.createdAt === undefined || typeof value.createdAt === "number") &&
   typeof value.name === "string" &&
   typeof value.score === "number" &&
+  (value.settings === undefined || isSupportedScoreSettings(value.settings)) &&
   Array.isArray(value.stats) &&
-  value.stats.length <= 12 &&
+  value.stats.length <= maxScoreStats &&
   value.stats.every((stat) => typeof stat === "string" && stat.length <= 80);
 
 const toPublicScore = (score) => ({
@@ -808,8 +836,42 @@ const toPublicScore = (score) => ({
   name: normalizeName(score.name),
   receivedAt: score.receivedAt,
   score: Math.max(0, Math.floor(score.score)),
+  ...(score.settings ? { settings: normalizeScoreSettings(score.settings) } : {}),
   stats: score.stats.slice(0, maxScoreStats),
 });
+
+const normalizeScoreSettings = (value) => {
+  if (!value || typeof value !== "object") {
+    return undefined;
+  }
+
+  const gameSpeed =
+    typeof value.gameSpeed === "number" &&
+    supportedGameSpeeds.includes(value.gameSpeed)
+      ? value.gameSpeed
+      : 1;
+  const renderFps =
+    supportedRenderFps.includes(value.renderFps)
+      ? value.renderFps
+      : "max";
+
+  return { gameSpeed, renderFps };
+};
+
+const isSupportedScoreSettings = (value) =>
+  !!value &&
+  typeof value === "object" &&
+  typeof value.gameSpeed === "number" &&
+  supportedGameSpeeds.includes(value.gameSpeed) &&
+  supportedRenderFps.includes(value.renderFps);
+
+const formatScoreSettingsForIntegrity = (settings) =>
+  settings
+    ? JSON.stringify({
+      gameSpeed: settings.gameSpeed,
+      renderFps: settings.renderFps,
+    })
+    : "";
 
 const normalizeName = (name) => {
   const normalized = name

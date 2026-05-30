@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import AchievementSystem, { achievementDefinitions } from "../achievements";
-import { gameFps } from "../game-timing";
+import { gameTickRate } from "../game-timing";
 import { createRunStats } from "../run-stats";
 import type {
   BonusFactoryInstance,
@@ -22,6 +22,8 @@ const createTicker = (getTicks: () => number): TickerInstance => ({
   isRunning: true,
   start: vi.fn(),
   stop: vi.fn(),
+  setFixedStepFps: vi.fn(),
+  setFps: vi.fn(),
   addSchedule: vi.fn(() => 1),
   removeSchedule: vi.fn(() => true),
   clearSchedule: vi.fn(),
@@ -496,7 +498,7 @@ describe("AchievementSystem", () => {
     achievements.onShootableProjectileDestroyed();
     achievements.onLevelCompleted(5, 1, context._player.getData());
     achievements.onLevelStarted(5);
-    ticks = 60 * 60 * gameFps;
+    ticks = 60 * 60 * gameTickRate;
     achievements.update();
 
     expect(achievements.getUnlocked()).toEqual([]);

@@ -29,7 +29,7 @@
 - Added `useTimePilot` as the React lifecycle bridge.
 - Converted the remaining prototype-style runtime modules into class-based entities, factories, controllers, engine wrappers, HUD, and menu systems.
 - Split collision handling, entity spawning, and frame rendering into dedicated systems.
-- Separated simulation ticking from rendering: game-state calculations run at 50fps, while canvas rendering runs every animation frame.
+- Separated simulation ticking from rendering: game-state calculations run on a 50Hz fixed step, while canvas rendering is independently capped.
 - Removed the old 50,000-tick gameplay pause failsafe so long sessions can keep
   running normally.
 - Added a page-lifecycle session snapshot so interrupted player runs can be

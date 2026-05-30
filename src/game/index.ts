@@ -13,7 +13,7 @@ import EnemyFactory from "./enemy-factory";
 import GameArena from "./engine/arena";
 import SoundEngine from "./engine/Sound";
 import Ticker from "./engine/Ticker";
-import { gameFps } from "./game-timing";
+import { gameTickRate } from "./game-timing";
 import {
   getHighScores,
   getHighScoreThresholds,
@@ -52,6 +52,7 @@ import type {
   EnemyInstance,
   GameDataStore,
   LevelProgressState,
+  PendingHighScoreEntry,
   PlayerData,
   RenderingSystemInstance,
   RunStats,
@@ -81,19 +82,19 @@ export const LEVEL_INTRO_DURATION_MS = 5000;
 export const TIME_WARP_DELAY_MS = timeWarpDelayMs;
 const demoLevelDurationFrames = Math.max(
   1,
-  Math.round((DEMO_LEVEL_DURATION_MS / 1000) * gameFps)
+  Math.round((DEMO_LEVEL_DURATION_MS / 1000) * gameTickRate)
 );
 const demoLevelFadeFrames = Math.max(
   1,
-  Math.round((DEMO_LEVEL_FADE_MS / 1000) * gameFps)
+  Math.round((DEMO_LEVEL_FADE_MS / 1000) * gameTickRate)
 );
 const levelIntroDurationFrames = Math.max(
   1,
-  Math.round((LEVEL_INTRO_DURATION_MS / 1000) * gameFps)
+  Math.round((LEVEL_INTRO_DURATION_MS / 1000) * gameTickRate)
 );
 const timeWarpDelayFrames = Math.max(
   1,
-  Math.round((TIME_WARP_DELAY_MS / 1000) * gameFps)
+  Math.round((TIME_WARP_DELAY_MS / 1000) * gameTickRate)
 );
 const musicFadeDurationMs = 700;
 const levelStartMusicFallbackMs = 12000;
@@ -255,7 +256,7 @@ export class TimePilot {
   private isDemoMode = false;
   private isDebugLevelPreviewLocked = false;
   private isRemoteHighScoreDisqualified = false;
-  private pendingHighScore: { score: number; stats: string[] } | null = null;
+  private pendingHighScore: PendingHighScoreEntry | null = null;
   private highScoreRunReceipt: HighScoreRunReceipt = null;
   private highScoreRunRequestId = 0;
   private hasPlayedHighScoreSound = false;
@@ -359,6 +360,10 @@ export class TimePilot {
     this.saveGameSessionSnapshot();
     this.removeSessionSnapshotListeners();
     this.removeBrowserHistoryNavigationListener();
+    window.removeEventListener(
+      "timePilot:userOptionsChanged",
+      this.syncTickerTiming
+    );
     this.releaseScreenWakeLock();
     this.isDestroyed = true;
     this.isDemoMode = false;
@@ -388,6 +393,25 @@ export class TimePilot {
     this.context._currentController = [];
     this.context._gameArena.destroy?.();
   };
+
+  private getRenderFpsCap = (): number | undefined =>
+    userOptions.renderFps === "max" ? undefined : userOptions.renderFps;
+
+  private getEffectiveGameTickRate = (): number =>
+    gameTickRate * userOptions.gameSpeed;
+
+  private syncTickerTiming = (): void => {
+    this.context._renderTicker.setFps(this.getRenderFpsCap());
+    this.context._gameTicker.setFixedStepFps(this.getEffectiveGameTickRate());
+  };
+
+  private getHighScoreSettings = () => ({
+    gameSpeed: userOptions.gameSpeed,
+    renderFps: userOptions.renderFps,
+  });
+
+  private formatHighScoreFps = (fps: typeof userOptions.renderFps): string =>
+    fps === "max" ? "Max" : `${fps}`;
 
   pauseGame = (forcePause?: boolean): void => {
     if (this.context._gameTicker.isRunning || !!forcePause) {
@@ -450,8 +474,12 @@ export class TimePilot {
     this.context._timeWarpTransition = undefined;
     this.context._nextParachuteScore = scoring.parachute.min;
     this.context._gameArena = new GameArena(this.container);
-    this.context._renderTicker = new Ticker();
-    this.context._gameTicker = new Ticker({ fps: gameFps });
+    this.context._renderTicker = new Ticker({
+      fps: this.getRenderFpsCap(),
+    });
+    this.context._gameTicker = new Ticker({
+      fixedStepFps: this.getEffectiveGameTickRate(),
+    });
     this.context._bullets = new BulletFactory(this.context);
     this.context._enemyBullets = new BulletFactory(this.context);
     this.context._player = new Player(this.context);
@@ -581,6 +609,10 @@ export class TimePilot {
 
     this.addSessionSnapshotListeners();
     this.addBrowserHistoryNavigationListener();
+    window.addEventListener(
+      "timePilot:userOptionsChanged",
+      this.syncTickerTiming
+    );
     this.context._player.setData("level", 1);
     this.context._gameArena.renderText("Loading", 20, 10, { size: 30 });
 
@@ -1889,6 +1921,7 @@ export class TimePilot {
     this.pendingHighScore =
       playerData.score > 0 && playerData.continues <= 0
         ? {
+          settings: this.getHighScoreSettings(),
           score: playerData.score,
           stats: this.createHighScoreStats(playerData),
         }
@@ -1912,13 +1945,16 @@ export class TimePilot {
     const survivedSeconds = Math.max(
       0,
       Math.floor(
-        (this.context._gameTicker.getTicks() - stats.startedAtTick) / gameFps
+        (this.context._gameTicker.getTicks() - stats.startedAtTick) /
+          gameTickRate
       )
     );
 
     return [
       `Era: ${Math.max(this.context._level, stats.highestLevelReached)}`,
       `Accuracy: ${accuracy}%`,
+      `Game speed: ${userOptions.gameSpeed.toFixed(2)}x`,
+      `FPS: ${this.formatHighScoreFps(userOptions.renderFps)}`,
       `Near misses: ${stats.nearMisses}`,
       `Loops: ${stats.loops}`,
       `Restarts: ${stats.restarts}`,
@@ -1946,7 +1982,8 @@ export class TimePilot {
       name,
       this.pendingHighScore.score,
       this.pendingHighScore.stats,
-      this.canSubmitRemoteHighScore() ? this.highScoreRunReceipt : null
+      this.canSubmitRemoteHighScore() ? this.highScoreRunReceipt : null,
+      this.pendingHighScore.settings
     );
     logger.info("Saved high score", {
       name,
@@ -1964,7 +2001,7 @@ export class TimePilot {
       return;
     }
 
-    const receipt = await startHighScoreRun();
+    const receipt = await startHighScoreRun(this.getHighScoreSettings());
 
     if (requestId === this.highScoreRunRequestId && this.canSubmitRemoteHighScore()) {
       this.highScoreRunReceipt = receipt;
