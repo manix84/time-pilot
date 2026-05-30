@@ -636,14 +636,27 @@ const isValidHighScoreIntegrity = (
   return (
     entry.integrity.scoreProduct === expectedScoreProduct &&
     entry.integrity.statsProduct === expectedStatsProduct &&
-    entry.integrity.checksum ===
+    [
       createHighScoreIntegrityChecksum(
         entry,
         run,
         entry.integrity.multiplier,
         entry.integrity.scoreProduct,
         entry.integrity.statsProduct
-      )
+      ),
+      ...(entry.settings
+        ? []
+        : [
+          createHighScoreIntegrityChecksum(
+            entry,
+            run,
+            entry.integrity.multiplier,
+            entry.integrity.scoreProduct,
+            entry.integrity.statsProduct,
+            { includeSettings: false }
+          ),
+        ]),
+    ].includes(entry.integrity.checksum)
   );
 };
 
@@ -652,7 +665,8 @@ const createHighScoreIntegrityChecksum = (
   run: HighScoreRunReceipt,
   multiplier: number,
   scoreProduct: number,
-  statsProduct: number
+  statsProduct: number,
+  options: { includeSettings?: boolean } = {}
 ): string =>
   hashText(
     [
@@ -663,7 +677,9 @@ const createHighScoreIntegrityChecksum = (
       entry.id,
       entry.name,
       Math.max(0, Math.floor(entry.score)),
-      formatHighScoreSettingsForIntegrity(entry.settings),
+      ...(options.includeSettings === false
+        ? []
+        : [formatHighScoreSettingsForIntegrity(entry.settings)]),
       entry.stats.join("\n"),
       entry.submittedAt,
       multiplier,
