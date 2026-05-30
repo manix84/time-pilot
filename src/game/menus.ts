@@ -2206,7 +2206,7 @@ class Menus implements MenuSystemInstance {
     });
     y += 30;
 
-    highScore.stats.slice(0, 12).forEach((stat) => {
+    highScore.stats.forEach((stat) => {
       this._wrapText(stat, wrapWidth).forEach((line) => {
         this._gameArena.renderText(line, x, y, {
           size: 10,

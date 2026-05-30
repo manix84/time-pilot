@@ -34,6 +34,8 @@ const maxScores = 100;
 const maxPublicScores = 25;
 const maxPortAttempts = 20;
 const runReceiptTtlMs = 6 * 60 * 60 * 1000;
+const supportedGameSpeeds = [0.5, 0.75, 0.9, 1, 1.1, 1.25, 1.5, 2];
+const supportedRenderFps = [30, 40, 50, 60, 75, 90, 120, 144, "max"];
 
 const loadEnvFiles = () => {
   for (const filePath of envFilePaths) {
@@ -668,7 +670,7 @@ const isValidHighScoreIntegrity = (entry, integrity, run, submittedAt) => {
   return (
     integrity.scoreProduct === expectedScoreProduct &&
     integrity.statsProduct === expectedStatsProduct &&
-    integrity.checksum ===
+    [
       createHighScoreIntegrityChecksum(
         entry,
         run,
@@ -676,7 +678,21 @@ const isValidHighScoreIntegrity = (entry, integrity, run, submittedAt) => {
         integrity.multiplier,
         integrity.scoreProduct,
         integrity.statsProduct
-      )
+      ),
+      ...(entry.settings
+        ? []
+        : [
+          createHighScoreIntegrityChecksum(
+            entry,
+            run,
+            submittedAt,
+            integrity.multiplier,
+            integrity.scoreProduct,
+            integrity.statsProduct,
+            { includeSettings: false }
+          ),
+        ]),
+    ].includes(integrity.checksum)
   );
 };
 
@@ -703,7 +719,8 @@ const createHighScoreIntegrityChecksum = (
   submittedAt,
   multiplier,
   scoreProduct,
-  statsProduct
+  statsProduct,
+  options = {}
 ) =>
   hashText(
     [
@@ -714,7 +731,9 @@ const createHighScoreIntegrityChecksum = (
       entry.id,
       entry.name,
       Math.max(0, Math.floor(entry.score)),
-      formatScoreSettingsForIntegrity(entry.settings),
+      ...(options.includeSettings === false
+        ? []
+        : [formatScoreSettingsForIntegrity(entry.settings)]),
       entry.stats.join("\n"),
       submittedAt,
       multiplier,
@@ -806,7 +825,7 @@ const isPublicScore = (value) =>
   (value.createdAt === undefined || typeof value.createdAt === "number") &&
   typeof value.name === "string" &&
   typeof value.score === "number" &&
-  (value.settings === undefined || normalizeScoreSettings(value.settings)) &&
+  (value.settings === undefined || isSupportedScoreSettings(value.settings)) &&
   Array.isArray(value.stats) &&
   value.stats.length <= maxScoreStats &&
   value.stats.every((stat) => typeof stat === "string" && stat.length <= 80);
@@ -827,17 +846,24 @@ const normalizeScoreSettings = (value) => {
   }
 
   const gameSpeed =
-    typeof value.gameSpeed === "number" && Number.isFinite(value.gameSpeed)
+    typeof value.gameSpeed === "number" &&
+    supportedGameSpeeds.includes(value.gameSpeed)
       ? value.gameSpeed
       : 1;
   const renderFps =
-    value.renderFps === "max" ||
-    (typeof value.renderFps === "number" && Number.isFinite(value.renderFps))
+    supportedRenderFps.includes(value.renderFps)
       ? value.renderFps
       : "max";
 
   return { gameSpeed, renderFps };
 };
+
+const isSupportedScoreSettings = (value) =>
+  !!value &&
+  typeof value === "object" &&
+  typeof value.gameSpeed === "number" &&
+  supportedGameSpeeds.includes(value.gameSpeed) &&
+  supportedRenderFps.includes(value.renderFps);
 
 const formatScoreSettingsForIntegrity = (settings) =>
   settings
