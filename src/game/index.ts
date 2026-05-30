@@ -52,6 +52,7 @@ import type {
   EnemyInstance,
   GameDataStore,
   LevelProgressState,
+  PendingHighScoreEntry,
   PlayerData,
   RenderingSystemInstance,
   RunStats,
@@ -255,7 +256,7 @@ export class TimePilot {
   private isDemoMode = false;
   private isDebugLevelPreviewLocked = false;
   private isRemoteHighScoreDisqualified = false;
-  private pendingHighScore: { score: number; stats: string[] } | null = null;
+  private pendingHighScore: PendingHighScoreEntry | null = null;
   private highScoreRunReceipt: HighScoreRunReceipt = null;
   private highScoreRunRequestId = 0;
   private hasPlayedHighScoreSound = false;
@@ -403,6 +404,14 @@ export class TimePilot {
     this.context._renderTicker.setFps(this.getRenderFpsCap());
     this.context._gameTicker.setFixedStepFps(this.getEffectiveGameTickRate());
   };
+
+  private getHighScoreSettings = () => ({
+    gameSpeed: userOptions.gameSpeed,
+    renderFps: userOptions.renderFps,
+  });
+
+  private formatHighScoreFps = (fps: typeof userOptions.renderFps): string =>
+    fps === "max" ? "Max" : `${fps}`;
 
   pauseGame = (forcePause?: boolean): void => {
     if (this.context._gameTicker.isRunning || !!forcePause) {
@@ -1912,6 +1921,7 @@ export class TimePilot {
     this.pendingHighScore =
       playerData.score > 0 && playerData.continues <= 0
         ? {
+          settings: this.getHighScoreSettings(),
           score: playerData.score,
           stats: this.createHighScoreStats(playerData),
         }
@@ -1943,6 +1953,8 @@ export class TimePilot {
     return [
       `Era: ${Math.max(this.context._level, stats.highestLevelReached)}`,
       `Accuracy: ${accuracy}%`,
+      `Game speed: ${userOptions.gameSpeed.toFixed(2)}x`,
+      `FPS: ${this.formatHighScoreFps(userOptions.renderFps)}`,
       `Near misses: ${stats.nearMisses}`,
       `Loops: ${stats.loops}`,
       `Restarts: ${stats.restarts}`,
@@ -1970,7 +1982,8 @@ export class TimePilot {
       name,
       this.pendingHighScore.score,
       this.pendingHighScore.stats,
-      this.canSubmitRemoteHighScore() ? this.highScoreRunReceipt : null
+      this.canSubmitRemoteHighScore() ? this.highScoreRunReceipt : null,
+      this.pendingHighScore.settings
     );
     logger.info("Saved high score", {
       name,
@@ -1988,7 +2001,7 @@ export class TimePilot {
       return;
     }
 
-    const receipt = await startHighScoreRun();
+    const receipt = await startHighScoreRun(this.getHighScoreSettings());
 
     if (requestId === this.highScoreRunRequestId && this.canSubmitRemoteHighScore()) {
       this.highScoreRunReceipt = receipt;

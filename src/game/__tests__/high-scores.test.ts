@@ -153,17 +153,81 @@ describe("high score storage", () => {
   });
 
   it("keeps saved scores visible ahead of placeholder scores", () => {
-    saveHighScore("New Pilot", 1200, ["Era: 1910"]);
+    saveHighScore("New Pilot", 1200, ["Era: 1910"], null, {
+      gameSpeed: 1.25,
+      renderFps: 50,
+    });
 
     expect(getHighScores()[0]).toMatchObject({
       name: "New Pilot",
       score: 1200,
+      settings: {
+        gameSpeed: 1.25,
+        renderFps: 50,
+      },
     });
     expect(getHighScoreThresholds(3).map((score) => score.score)).toEqual([
-      1000000,
-      875500,
-      742250,
+      120000,
+      90000,
+      70000,
     ]);
+  });
+
+  it("syncs receipt-backed score timing settings", async () => {
+    const remoteEntry = {
+      id: "remote-settings-score",
+      createdAt: 2000,
+      name: "Settings Pilot",
+      receivedAt: 3000,
+      score: 5000,
+      settings: {
+        gameSpeed: 0.9,
+        renderFps: "max",
+      },
+      stats: ["Era: 1910"],
+    };
+    const fetchMock = vi.spyOn(globalThis, "fetch").mockImplementation(
+      (input, init) => {
+        if (input === "/api/high-scores" && init?.method === "POST") {
+          return Promise.resolve(createJsonResponse(remoteEntry));
+        }
+
+        return Promise.resolve(createJsonResponse([remoteEntry]));
+      }
+    );
+
+    saveHighScore(
+      "Settings Pilot",
+      5000,
+      ["Era: 1910"],
+      {
+        issuedAt: 1000,
+        runId: "run-settings",
+        token: "receipt-token",
+      },
+      {
+        gameSpeed: 0.9,
+        renderFps: "max",
+      }
+    );
+
+    await syncHighScores();
+
+    const postCall = fetchMock.mock.calls.find(
+      ([input, init]) => input === "/api/high-scores" && init?.method === "POST"
+    );
+    const body = JSON.parse(String(postCall?.[1]?.body ?? "{}")) as {
+      entry?: { settings?: unknown };
+    };
+
+    expect(body.entry?.settings).toEqual({
+      gameSpeed: 0.9,
+      renderFps: "max",
+    });
+    expect(loadStoredHighScores()[0]?.settings).toEqual({
+      gameSpeed: 0.9,
+      renderFps: "max",
+    });
   });
 
   it("keeps gameplay-safe score saves best effort when storage writes fail", () => {

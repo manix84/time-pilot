@@ -582,10 +582,17 @@ export interface HighScoreEntry {
   id: string;
   name: string;
   score: number;
+  settings?: HighScoreSettings;
   stats: string[];
 }
 
+export interface HighScoreSettings {
+  gameSpeed: number;
+  renderFps: RenderFps;
+}
+
 export interface PendingHighScoreEntry {
+  settings?: HighScoreSettings;
   score: number;
   stats: string[];
 }

@@ -1,4 +1,9 @@
-import type { HighScoreEntry, HighScoreSyncStatus } from "./types";
+import { normalizeGameSpeed, normalizeRenderFps } from "./game-timing";
+import type {
+  HighScoreEntry,
+  HighScoreSettings,
+  HighScoreSyncStatus,
+} from "./types";
 
 type HighScoreSyncState = "local" | "pending" | "synced";
 
@@ -34,7 +39,7 @@ const highScoreIntegrityVersion = 1;
 const highScoreIntegrityHashModulo = 1000003;
 const highScoreIntegrityMinMultiplier = 101;
 const highScoreIntegrityMultiplierRange = 897;
-const maxHighScoreStats = 12;
+const maxHighScoreStats = 16;
 const maxStoredHighScores = 10;
 const maxCachedHighScores = 50;
 let highScoreApiOffline = false;
@@ -102,64 +107,64 @@ export const fakeHighScores: HighScoreEntry[] = [
     createdAt: fakeHighScoreBaseCreatedAt,
     id: "shooty-mcshootface",
     name: "Shooty McShootface",
-    score: 1000000,
-    stats: ["Era: 2001", "Bosses: 5", "Continues: 0", "Accuracy: suspicious"],
+    score: 120000,
+    stats: ["Era: 1970", "Bosses: 2", "Continues: 0", "Accuracy: suspicious"],
   },
   {
     createdAt: fakeHighScoreBaseCreatedAt + 86400000,
     id: "captain-definitely-real",
     name: "Captain Definitely Real",
-    score: 875500,
-    stats: ["Era: 1982", "Bosses: 4", "Lives left: 1", "Clouds dodged: all"],
+    score: 90000,
+    stats: ["Era: 1940", "Bosses: 1", "Lives left: 1", "Clouds dodged: many"],
   },
   {
     createdAt: fakeHighScoreBaseCreatedAt + 86400000 * 2,
     id: "pewpew-von-laser",
     name: "PewPew von Laser",
-    score: 742250,
-    stats: ["Era: 1970", "Missiles annoyed: 312", "Continues: 1"],
+    score: 70000,
+    stats: ["Era: 1940", "Missiles annoyed: 73", "Continues: 0"],
   },
   {
     createdAt: fakeHighScoreBaseCreatedAt + 86400000 * 3,
     id: "baron-von-biplane",
     name: "Baron von Biplane",
-    score: 501910,
-    stats: ["Era: 1940", "Loops: too many", "Near misses: 88"],
+    score: 55000,
+    stats: ["Era: 1910", "Loops: too many", "Near misses: 38"],
   },
   {
     createdAt: fakeHighScoreBaseCreatedAt + 86400000 * 4,
     id: "not-a-bot-9000",
     name: "Not A Bot 9000",
-    score: 404404,
+    score: 42000,
     stats: ["Era: 1910", "Inputs: perfectly normal", "Snacks: 3"],
   },
   {
     createdAt: fakeHighScoreBaseCreatedAt + 86400000 * 5,
     id: "debug-dave",
     name: "Debug Dave",
-    score: 123456,
+    score: 30000,
     stats: ["Era: 1910", "Hitboxes blamed: yes", "Restart count: private"],
   },
   {
     createdAt: fakeHighScoreBaseCreatedAt + 86400000 * 6,
     id: "loop-de-loop-lou",
     name: "Loop-de-Loop Lou",
-    score: 98765,
-    stats: ["Era: 1910", "Loops: 42", "Near misses: 0", "Dignity: optional"],
+    score: 22000,
+    stats: ["Era: 1910", "Loops: 12", "Near misses: 0", "Dignity: optional"],
   },
   {
     createdAt: fakeHighScoreBaseCreatedAt + 86400000 * 7,
     id: "captain-one-more",
     name: "Captain One More",
-    score: 76543,
+    score: 15000,
     stats: ["Era: 1910", "Restarts: 9", "Continues: 3", "Sleep: none"],
   },
   {
     createdAt: fakeHighScoreBaseCreatedAt + 86400000 * 8,
     id: "miss-by-a-mile",
     name: "Missed By A Pixel",
-    score: 54321,
-    stats: ["Era: 1910", "Near misses: 128", "Luck: suspicious"],
+    score: 9000,
+    stats: ["Era: 1910", "Near misses: 28", "Luck: suspicious"],
   },
   {
     createdAt: fakeHighScoreBaseCreatedAt + 86400000 * 9,
@@ -200,7 +205,9 @@ export const getHighScoreThresholds = (limit: number): HighScoreEntry[] =>
 /**
  * Starts a remotely verifiable high-score run when the API is available.
  */
-export const startHighScoreRun = async (): Promise<HighScoreRunReceipt | null> => {
+export const startHighScoreRun = async (
+  settings?: HighScoreSettings
+): Promise<HighScoreRunReceipt | null> => {
   if (!canUseHighScoreApi()) {
     setHighScoreSyncStatus("error");
     return null;
@@ -216,6 +223,7 @@ export const startHighScoreRun = async (): Promise<HighScoreRunReceipt | null> =
       },
       body: JSON.stringify({
         gameVersion: getGameVersion(),
+        settings: normalizeHighScoreSettings(settings),
         startedAt: Date.now(),
       }),
     });
@@ -251,7 +259,8 @@ export const saveHighScore = (
   name: string,
   score: number,
   stats: string[],
-  run?: HighScoreRunReceipt | null
+  run?: HighScoreRunReceipt | null,
+  settings?: HighScoreSettings
 ): HighScoreEntry => {
   const shouldSync = Boolean(run && canUseHighScoreApi());
 
@@ -263,6 +272,7 @@ export const saveHighScore = (
     name: normalizeHighScoreName(name),
     run: shouldSync ? run ?? undefined : undefined,
     score: Math.max(0, Math.floor(score)),
+    settings: normalizeHighScoreSettings(settings),
     stats: stats.slice(0, maxHighScoreStats),
     submittedAt: createdAt,
     syncState: shouldSync ? "pending" : "local",
@@ -436,6 +446,7 @@ const submitPendingScores = async (): Promise<boolean> => {
       record.createdAt = storedRemoteEntry.createdAt;
       record.name = storedRemoteEntry.name;
       record.score = Math.max(0, Math.floor(storedRemoteEntry.score));
+      record.settings = normalizeHighScoreSettings(storedRemoteEntry.settings);
       record.stats = storedRemoteEntry.stats.slice(0, maxHighScoreStats);
       record.integrity = undefined;
       record.receivedAt = storedRemoteEntry.receivedAt ?? Date.now();
@@ -552,6 +563,7 @@ const normalizeStoredEntry = (
       typeof stored.receivedAt === "number" ? stored.receivedAt : undefined,
     run: isHighScoreRunReceipt(stored.run) ? stored.run : undefined,
     score: Math.max(0, Math.floor(entry.score)),
+    settings: normalizeHighScoreSettings(stored.settings),
     stats: entry.stats.slice(0, maxHighScoreStats),
     integrity: isHighScoreIntegrity(stored.integrity)
       ? stored.integrity
@@ -651,6 +663,7 @@ const createHighScoreIntegrityChecksum = (
       entry.id,
       entry.name,
       Math.max(0, Math.floor(entry.score)),
+      formatHighScoreSettingsForIntegrity(entry.settings),
       entry.stats.join("\n"),
       entry.submittedAt,
       multiplier,
@@ -719,8 +732,34 @@ const toHighScoreEntry = (entry: HighScoreEntry): HighScoreEntry => ({
   id: entry.id,
   name: entry.name,
   score: entry.score,
+  ...(entry.settings ? { settings: entry.settings } : {}),
   stats: entry.stats,
 });
+
+const normalizeHighScoreSettings = (
+  value: unknown
+): HighScoreSettings | undefined => {
+  if (!value || typeof value !== "object") {
+    return undefined;
+  }
+
+  const settings = value as Partial<HighScoreSettings>;
+
+  return {
+    gameSpeed: normalizeGameSpeed(settings.gameSpeed),
+    renderFps: normalizeRenderFps(settings.renderFps),
+  };
+};
+
+const formatHighScoreSettingsForIntegrity = (
+  settings?: HighScoreSettings
+): string =>
+  settings
+    ? JSON.stringify({
+      gameSpeed: settings.gameSpeed,
+      renderFps: settings.renderFps,
+    })
+    : "";
 
 const getStorage = (): Storage | null => {
   try {
@@ -789,6 +828,8 @@ const isHighScoreEntry = (value: unknown): value is HighScoreEntry => {
     typeof candidate.id === "string" &&
     typeof candidate.name === "string" &&
     typeof candidate.score === "number" &&
+    (candidate.settings === undefined ||
+      normalizeHighScoreSettings(candidate.settings) !== undefined) &&
     Array.isArray(candidate.stats) &&
     candidate.stats.every((stat) => typeof stat === "string")
   );
