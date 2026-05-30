@@ -52,12 +52,14 @@ describe("menu definitions", () => {
     userOptions.setOption("controllerType", "keyboard1");
     userOptions.setOption("debugContinues", 3);
     userOptions.setOption("debugLives", 3);
+    userOptions.setOption("gameSpeed", 1);
     userOptions.setOption("language", "en");
     userOptions.setOption("logLevel", "off");
     userOptions.setOption("keepScreenAwake", true);
     userOptions.setOption("touchSteeringOverlay", true);
     userOptions.setOption("gameZoom", 100);
     userOptions.setOption("masterVolume", 10);
+    userOptions.setOption("renderFps", "max");
     userOptions.setOption("uiZoom", 100);
     userOptions.setOption("filterSettings", { ...filterPresets.off });
     userOptions.setOption("videoFilterMode", "off");
@@ -236,7 +238,7 @@ describe("menu definitions", () => {
 
     expect(fillRectCalls).toEqual(
       expect.arrayContaining([
-        [-137, 391, 3, 3],
+        [-137, 475, 3, 3],
       ])
     );
   });
@@ -958,7 +960,7 @@ describe("menu definitions", () => {
     menus.next();
     menus.activate();
 
-    for (let i = 0; i < 7; i++) {
+    for (let i = 0; i < 9; i++) {
       menus.next();
     }
 
@@ -1006,7 +1008,7 @@ describe("menu definitions", () => {
     pwaMenus.showStart();
     pwaMenus.next();
     pwaMenus.activate();
-    for (let i = 0; i < 7; i++) {
+    for (let i = 0; i < 9; i++) {
       pwaMenus.next();
     }
     pwaMenus.render();
@@ -1041,7 +1043,7 @@ describe("menu definitions", () => {
     menus.showStart();
     menus.next();
     menus.activate();
-    for (let i = 0; i < 7; i++) {
+    for (let i = 0; i < 9; i++) {
       menus.next();
     }
     menus.render();
@@ -1175,16 +1177,61 @@ describe("menu definitions", () => {
     );
   });
 
-  it("uses escape and backspace to return from submenus", () => {
+  it("adjusts render FPS and game speed from the options menu", () => {
     const arena = createArena();
     const menus = new Menus(arena, { start: vi.fn() });
+    userOptions.setOption("renderFps", "max");
+    userOptions.setOption("gameSpeed", 1);
 
     menus.showStart();
     menus.next();
     menus.activate();
 
-    expect(menus.captureKey(8)).toBe(true);
+    for (let i = 0; i < 7; i++) {
+      menus.next();
+    }
+
     menus.render();
+    expect(arena.renderText).toHaveBeenCalledWith(
+      "Max (60)",
+      expect.any(Number),
+      expect.any(Number),
+      expect.objectContaining({ align: "right" })
+    );
+
+    menus.adjust(-1);
+    expect(userOptions.renderFps).toBe(144);
+
+    menus.next();
+    menus.adjust(-1);
+    expect(userOptions.gameSpeed).toBe(0.9);
+
+    menus.render();
+
+    expect(arena.renderText).toHaveBeenCalledWith(
+      "144",
+      expect.any(Number),
+      expect.any(Number),
+      expect.objectContaining({ align: "right" })
+    );
+    expect(arena.renderText).toHaveBeenCalledWith(
+      "0.90x",
+      expect.any(Number),
+      expect.any(Number),
+      expect.objectContaining({ align: "right" })
+    );
+  });
+
+  it("uses escape and backspace to return from submenus", () => {
+    const arena = createArena();
+    const backspaceMenus = new Menus(arena, { start: vi.fn() });
+
+    backspaceMenus.showStart();
+    backspaceMenus.next();
+    backspaceMenus.activate();
+
+    expect(backspaceMenus.captureKey(8)).toBe(true);
+    backspaceMenus.render();
     expect(arena.renderText).toHaveBeenCalledWith(
       "Start",
       expect.any(Number),
@@ -1192,11 +1239,15 @@ describe("menu definitions", () => {
       expect.objectContaining({ align: "left" })
     );
 
+    const menus = new Menus(arena, { start: vi.fn() });
+    menus.showStart();
     menus.next();
     menus.activate();
-    for (let i = 0; i < 9; i++) {
+
+    for (let i = 0; i < 11; i++) {
       menus.next();
     }
+
     menus.activate();
 
     expect(menus.captureKey(27)).toBe(true);
@@ -1531,7 +1582,7 @@ describe("menu definitions", () => {
       expect.objectContaining({ align: "center" })
     );
 
-    for (let i = 0; i < 10; i++) {
+    for (let i = 0; i < 12; i++) {
       menus.next();
     }
 
@@ -1909,7 +1960,7 @@ describe("menu definitions", () => {
     menus.next();
     menus.next();
     menus.activate();
-    for (let i = 0; i < 8; i++) {
+    for (let i = 0; i < 10; i++) {
       menus.next();
     }
     menus.activate();
@@ -1955,7 +2006,7 @@ describe("menu definitions", () => {
     menus.next();
     menus.activate();
 
-    for (let i = 0; i < 9; i++) {
+    for (let i = 0; i < 11; i++) {
       menus.next();
     }
 
@@ -1975,7 +2026,7 @@ describe("menu definitions", () => {
     menus.next();
     menus.activate();
 
-    for (let i = 0; i < 8; i++) {
+    for (let i = 0; i < 10; i++) {
       menus.next();
     }
 
@@ -2007,7 +2058,7 @@ describe("menu definitions", () => {
     menus.next();
     menus.activate();
 
-    for (let i = 0; i < 9; i++) {
+    for (let i = 0; i < 11; i++) {
       menus.next();
     }
 

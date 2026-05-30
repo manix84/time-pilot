@@ -54,6 +54,8 @@ const createTicker = (): TickerInstance => ({
   isRunning: true,
   start: vi.fn(),
   stop: vi.fn(),
+  setFixedStepFps: vi.fn(),
+  setFps: vi.fn(),
   addSchedule: vi.fn(() => 1),
   removeSchedule: vi.fn(() => true),
   clearSchedule: vi.fn(),

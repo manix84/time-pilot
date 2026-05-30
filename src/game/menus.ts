@@ -11,6 +11,7 @@ import {
   filterPresets,
   normalizeFilterIntensity,
 } from "./filter-settings";
+import { gameSpeedOptions, renderFpsOptions } from "./game-timing";
 import { fakeHighScores } from "./high-scores";
 import i18n, {
   availableLanguages,
@@ -192,6 +193,8 @@ interface LevelShowcaseProjectile {
 }
 
 const controllerTypes: ControllerType[] = ["keyboard1", "keyboard2"];
+const gameSpeedStepCount = gameSpeedOptions.length - 1;
+const renderFpsStepCount = renderFpsOptions.length - 1;
 const menuEdgePadding = 24;
 const menuDesignHeight = 500;
 const menuDesignWidth = 660;
@@ -289,6 +292,11 @@ class Menus implements MenuSystemInstance {
   private _shouldRevealSelected = true;
   private _showRestartFromStart = false;
   private _sliderDragIndex: number | null = null;
+  private _browserMaxFpsEstimate = 60;
+  private _browserMaxFpsEstimateLocked = false;
+  private _browserMaxFpsSampleCount = 0;
+  private _browserMaxFpsSampleTotal = 0;
+  private _lastBrowserMaxFpsSampleAt: number | null = null;
   private _startLabel = i18n.menu.start;
   private _scrollY = 0;
   private _transition: MenuTransition | null = null;
@@ -758,6 +766,8 @@ class Menus implements MenuSystemInstance {
     if (!this._active) {
       return;
     }
+
+    this._sampleBrowserMaxFps();
 
     const renderLogo = options.renderLogo ?? true;
     const context = this._gameArena.getContext() as CanvasRenderingContext2D;
@@ -1273,6 +1283,18 @@ class Menus implements MenuSystemInstance {
         getValue: () =>
           this._gameArena.isFullScreen() ? i18n.menu.on : i18n.menu.off,
         onAdjust: () => this._gameArena.toggleFullScreen(),
+      }),
+      this._createItem(i18n.menu.fps, "slider", nextItemY(), {
+        getValue: () => this._formatRenderFps(),
+        onAdjust: (direction) => this._adjustRenderFps(direction),
+        onSetValue: (value) => this._setRenderFpsFromStep(value),
+        sliderSteps: renderFpsStepCount,
+      }),
+      this._createItem(i18n.menu.gameSpeed, "slider", nextItemY(), {
+        getValue: () => this._formatGameSpeed(),
+        onAdjust: (direction) => this._adjustGameSpeed(direction),
+        onSetValue: (value) => this._setGameSpeedFromStep(value),
+        sliderSteps: gameSpeedStepCount,
       }),
     ];
 
@@ -3259,7 +3281,11 @@ class Menus implements MenuSystemInstance {
         ? userOptions.uiZoom
         : item.label === i18n.menu.gameZoom
           ? userOptions.gameZoom
-          : Number(item.getValue());
+          : item.label === i18n.menu.fps
+            ? this._getRenderFpsStep()
+            : item.label === i18n.menu.gameSpeed
+              ? this._getGameSpeedStep()
+              : Number(item.getValue());
     if (!Number.isFinite(value)) {
       return null;
     }
@@ -3269,6 +3295,12 @@ class Menus implements MenuSystemInstance {
         0,
         Math.min(1, (value - zoomMinPercent) / (zoomMaxPercent - zoomMinPercent))
       );
+    }
+
+    if (item.label === i18n.menu.fps || item.label === i18n.menu.gameSpeed) {
+      const sliderMax = item.sliderSteps ?? 0;
+
+      return sliderMax > 0 ? Math.max(0, Math.min(1, value / sliderMax)) : 0;
     }
 
     const sliderMin = item.sliderMin ?? 0;
@@ -4207,6 +4239,102 @@ class Menus implements MenuSystemInstance {
       "gameZoom",
       Math.max(zoomMinPercent, Math.min(zoomMaxPercent, value))
     );
+  };
+
+  private _adjustRenderFps = (direction: -1 | 1): void => {
+    this._setRenderFpsFromStep(this._getRenderFpsStep() + direction);
+  };
+
+  private _setRenderFpsFromStep = (step: number): void => {
+    const nextStep = Math.max(0, Math.min(renderFpsStepCount, Math.round(step)));
+
+    userOptions.setOption("renderFps", renderFpsOptions[nextStep]);
+  };
+
+  private _getRenderFpsStep = (): number => {
+    const index = renderFpsOptions.indexOf(
+      userOptions.renderFps as (typeof renderFpsOptions)[number]
+    );
+
+    return index === -1 ? renderFpsOptions.indexOf("max") : index;
+  };
+
+  private _adjustGameSpeed = (direction: -1 | 1): void => {
+    this._setGameSpeedFromStep(this._getGameSpeedStep() + direction);
+  };
+
+  private _setGameSpeedFromStep = (step: number): void => {
+    const nextStep = Math.max(0, Math.min(gameSpeedStepCount, Math.round(step)));
+
+    userOptions.setOption("gameSpeed", gameSpeedOptions[nextStep]);
+  };
+
+  private _getGameSpeedStep = (): number => {
+    const index = gameSpeedOptions.indexOf(
+      userOptions.gameSpeed as (typeof gameSpeedOptions)[number]
+    );
+
+    return index === -1 ? gameSpeedOptions.indexOf(1) : index;
+  };
+
+  private _formatGameSpeed = (): string => `${userOptions.gameSpeed.toFixed(2)}x`;
+
+  private _formatRenderFps = (): string =>
+    userOptions.renderFps === "max"
+      ? `${i18n.menu.max} (${this._browserMaxFpsEstimate})`
+      : this._formatRenderFpsCap(userOptions.renderFps);
+
+  private _formatRenderFpsCap = (fps: number): string => {
+    if (fps === 50) {
+      return "50 (PAL)";
+    }
+
+    if (fps === 60) {
+      return "60 (NTSC)";
+    }
+
+    return `${fps}`;
+  };
+
+  private _sampleBrowserMaxFps = (): void => {
+    if (userOptions.renderFps !== "max") {
+      this._lastBrowserMaxFpsSampleAt = null;
+      return;
+    }
+
+    const now = performance.now();
+
+    if (this._lastBrowserMaxFpsSampleAt === null) {
+      this._lastBrowserMaxFpsSampleAt = now;
+      return;
+    }
+
+    const elapsedMs = now - this._lastBrowserMaxFpsSampleAt;
+    this._lastBrowserMaxFpsSampleAt = now;
+
+    if (elapsedMs <= 0 || elapsedMs > 250) {
+      return;
+    }
+
+    const measuredFps = 1000 / elapsedMs;
+    this._browserMaxFpsSampleCount += 1;
+    this._browserMaxFpsSampleTotal += measuredFps;
+
+    if (this._browserMaxFpsEstimateLocked || this._browserMaxFpsSampleCount < 20) {
+      return;
+    }
+
+    const averageFps =
+      this._browserMaxFpsSampleTotal / this._browserMaxFpsSampleCount;
+    const commonRefreshRates = [30, 50, 60, 75, 90, 100, 120, 144, 165, 240];
+    const nearestRefreshRate = commonRefreshRates.reduce((nearest, candidate) =>
+      Math.abs(candidate - averageFps) < Math.abs(nearest - averageFps)
+        ? candidate
+        : nearest
+    );
+
+    this._browserMaxFpsEstimate = nearestRefreshRate;
+    this._browserMaxFpsEstimateLocked = true;
   };
 
   private _toggleKeepScreenAwake = (): void => {

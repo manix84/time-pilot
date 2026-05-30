@@ -13,7 +13,7 @@ import EnemyFactory from "./enemy-factory";
 import GameArena from "./engine/arena";
 import SoundEngine from "./engine/Sound";
 import Ticker from "./engine/Ticker";
-import { gameTickRate, renderFps } from "./game-timing";
+import { gameTickRate } from "./game-timing";
 import {
   getHighScores,
   getHighScoreThresholds,
@@ -359,6 +359,10 @@ export class TimePilot {
     this.saveGameSessionSnapshot();
     this.removeSessionSnapshotListeners();
     this.removeBrowserHistoryNavigationListener();
+    window.removeEventListener(
+      "timePilot:userOptionsChanged",
+      this.syncTickerTiming
+    );
     this.releaseScreenWakeLock();
     this.isDestroyed = true;
     this.isDemoMode = false;
@@ -387,6 +391,17 @@ export class TimePilot {
     });
     this.context._currentController = [];
     this.context._gameArena.destroy?.();
+  };
+
+  private getRenderFpsCap = (): number | undefined =>
+    userOptions.renderFps === "max" ? undefined : userOptions.renderFps;
+
+  private getEffectiveGameTickRate = (): number =>
+    gameTickRate * userOptions.gameSpeed;
+
+  private syncTickerTiming = (): void => {
+    this.context._renderTicker.setFps(this.getRenderFpsCap());
+    this.context._gameTicker.setFixedStepFps(this.getEffectiveGameTickRate());
   };
 
   pauseGame = (forcePause?: boolean): void => {
@@ -450,8 +465,12 @@ export class TimePilot {
     this.context._timeWarpTransition = undefined;
     this.context._nextParachuteScore = scoring.parachute.min;
     this.context._gameArena = new GameArena(this.container);
-    this.context._renderTicker = new Ticker({ fps: renderFps });
-    this.context._gameTicker = new Ticker({ fixedStepFps: gameTickRate });
+    this.context._renderTicker = new Ticker({
+      fps: this.getRenderFpsCap(),
+    });
+    this.context._gameTicker = new Ticker({
+      fixedStepFps: this.getEffectiveGameTickRate(),
+    });
     this.context._bullets = new BulletFactory(this.context);
     this.context._enemyBullets = new BulletFactory(this.context);
     this.context._player = new Player(this.context);
@@ -581,6 +600,10 @@ export class TimePilot {
 
     this.addSessionSnapshotListeners();
     this.addBrowserHistoryNavigationListener();
+    window.addEventListener(
+      "timePilot:userOptionsChanged",
+      this.syncTickerTiming
+    );
     this.context._player.setData("level", 1);
     this.context._gameArena.renderText("Loading", 20, 10, { size: 30 });
 

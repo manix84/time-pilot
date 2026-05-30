@@ -50,11 +50,13 @@ describe("TimePilot engine", () => {
     userOptions.setDebugOption("invincible", true);
     localStorage.clear();
     userOptions.setOption("controllerType", "keyboard1");
+    userOptions.setOption("gameSpeed", 1);
     userOptions.setOption("gameZoom", 100);
     userOptions.setOption("gamepadEnabled", true);
     userOptions.setOption("keepScreenAwake", true);
     userOptions.setOption("language", "en");
     userOptions.setOption("logLevel", "off");
+    userOptions.setOption("renderFps", "max");
     userOptions.setOption("uiZoom", 100);
     Object.defineProperty(HTMLMediaElement.prototype, "canPlay", {
       configurable: true,

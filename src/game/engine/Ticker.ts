@@ -34,8 +34,8 @@ const requestAnimationFrame =
 class Ticker implements TickerInstance {
   private _frame = 0;
   private _accumulatedStepTime = 0;
-  private readonly _fixedStepInterval?: number;
-  private readonly _frameInterval?: number;
+  private _fixedStepInterval?: number;
+  private _frameInterval?: number;
   private _lastStepTime: number | null = null;
   private readonly _maxCatchUpFrames: number;
   private _schedule: Record<number, TickerScheduleItem> = {};
@@ -55,6 +55,24 @@ class Ticker implements TickerInstance {
     this._frameInterval = options.fps ? 1000 / options.fps : undefined;
     this._maxCatchUpFrames = options.maxCatchUpFrames ?? 10;
   }
+
+  setFps = (fps?: number): void => {
+    if (this._fixedStepInterval) {
+      throw new Error("Ticker cannot set fps while using fixedStepFps.");
+    }
+
+    this._frameInterval = fps ? 1000 / fps : undefined;
+    this.resetTiming();
+  };
+
+  setFixedStepFps = (fps: number): void => {
+    if (this._frameInterval) {
+      throw new Error("Ticker cannot set fixedStepFps while using fps.");
+    }
+
+    this._fixedStepInterval = 1000 / fps;
+    this.resetTiming();
+  };
 
   start = (): void => {
     if (this.isRunning) {
@@ -103,6 +121,11 @@ class Ticker implements TickerInstance {
       this.killCallback();
       delete this.killCallback;
     }
+  };
+
+  private resetTiming = (): void => {
+    this._accumulatedStepTime = 0;
+    this._lastStepTime = null;
   };
 
   private getFramesToRun = (timestamp: number): number => {

@@ -45,6 +45,44 @@ describe("user options persistence", () => {
     expect(userOptions.keepScreenAwake).toBe(true);
     expect(userOptions.language).toBe("en");
     expect(userOptions.logLevel).toBe("off");
+    expect(userOptions.gameSpeed).toBe(1);
+    expect(userOptions.renderFps).toBe("max");
+  });
+
+  it("normalizes persisted render FPS and game speed options", async () => {
+    vi.resetModules();
+    Object.defineProperty(globalThis, "localStorage", {
+      configurable: true,
+      value: createStorageMock({
+        "timePilot.userOptions": JSON.stringify({
+          gameSpeed: 1.25,
+          renderFps: 30,
+        }),
+      }),
+    });
+
+    const { default: userOptions } = await import("../user-options");
+
+    expect(userOptions.gameSpeed).toBe(1.25);
+    expect(userOptions.renderFps).toBe(30);
+  });
+
+  it("ignores unsupported render FPS and game speed options", async () => {
+    vi.resetModules();
+    Object.defineProperty(globalThis, "localStorage", {
+      configurable: true,
+      value: createStorageMock({
+        "timePilot.userOptions": JSON.stringify({
+          gameSpeed: 9,
+          renderFps: 999,
+        }),
+      }),
+    });
+
+    const { default: userOptions } = await import("../user-options");
+
+    expect(userOptions.gameSpeed).toBe(1);
+    expect(userOptions.renderFps).toBe("max");
   });
 
   it("normalizes persisted log levels", async () => {
@@ -144,10 +182,12 @@ describe("user options persistence", () => {
     const { default: userOptions, resetUserOptions } = await import("../user-options");
 
     userOptions.setOption("uiZoom", 150);
+    userOptions.setOption("gameSpeed", 1.5);
     userOptions.setOption("language", "es");
     userOptions.setOption("keepScreenAwake", false);
     userOptions.setOption("logLevel", "error");
     userOptions.setOption("touchSteeringOverlay", false);
+    userOptions.setOption("renderFps", 30);
     userOptions.setKeyboardBinding("fire", [13]);
 
     resetUserOptions();
@@ -156,6 +196,8 @@ describe("user options persistence", () => {
     expect(userOptions.keepScreenAwake).toBe(true);
     expect(userOptions.language).toBe("en");
     expect(userOptions.logLevel).toBe("off");
+    expect(userOptions.gameSpeed).toBe(1);
+    expect(userOptions.renderFps).toBe("max");
     expect(userOptions.touchSteeringOverlay).toBe(true);
     expect(userOptions.keyboardBindings.fire).toEqual([32]);
     expect(localStorage.getItem("timePilot.userOptions")).toBeNull();
