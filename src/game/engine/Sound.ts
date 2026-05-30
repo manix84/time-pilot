@@ -1,12 +1,15 @@
 /* Converted from engine/Sound.js (AMD) to ESM TypeScript. */
-import { logger } from "../logger";
-import userOptions from "../user-options";
+import type {
+  SoundChannel,
+  SoundEngineConfiguration,
+  SoundPlaybackBlockedDetails,
+} from "./types";
 
 interface SoundOptions {
   loop?: boolean;
   autoplay?: boolean;
   instantDestroy?: boolean;
-  channel?: "effects" | "music";
+  channel?: SoundChannel;
   onEnded?: () => void;
 }
 
@@ -30,8 +33,12 @@ class Sound {
   private static _instances = new Set<Sound>();
   private static _isMuted = false;
   private static _pausedInstances = new Set<Sound>();
-  private static _isListeningForUserOptions = false;
-  private readonly _channel: "effects" | "music";
+  private static _getVolume: (channel: SoundChannel) => number = () => 1;
+  private static _onPlaybackBlocked?: (
+    details: SoundPlaybackBlockedDetails
+  ) => void;
+  private static _volumeChangeEventCleanup?: () => void;
+  private readonly _channel: SoundChannel;
   private readonly _instantDestroy: boolean;
   private readonly _onEnded?: () => void;
   private readonly _urls: string[];
@@ -65,6 +72,33 @@ class Sound {
 
   static setMuted = (isMuted: boolean): void => {
     Sound._isMuted = isMuted;
+  };
+
+  static configure = (configuration: SoundEngineConfiguration = {}): void => {
+    Sound._volumeChangeEventCleanup?.();
+    Sound._volumeChangeEventCleanup = undefined;
+    Sound._getVolume = configuration.getVolume ?? (() => 1);
+    Sound._onPlaybackBlocked = configuration.onPlaybackBlocked;
+
+    if (
+      configuration.volumeChangeEventName &&
+      configuration.volumeChangeEventTarget
+    ) {
+      const refreshVolumes = () => Sound.refreshAllVolumes();
+
+      configuration.volumeChangeEventTarget.addEventListener(
+        configuration.volumeChangeEventName,
+        refreshVolumes
+      );
+      Sound._volumeChangeEventCleanup = () => {
+        configuration.volumeChangeEventTarget?.removeEventListener(
+          configuration.volumeChangeEventName as string,
+          refreshVolumes
+        );
+      };
+    }
+
+    Sound.refreshAllVolumes();
   };
 
   static pauseAll = (): void => {
@@ -136,7 +170,6 @@ class Sound {
 
     this._theSound.addEventListener("canplay", this._markCanPlay, false);
     this._theSound.addEventListener("ended", this._markEnded, false);
-    Sound.listenForUserOptionChanges();
     Sound._instances.add(this);
   }
 
@@ -252,17 +285,10 @@ class Sound {
   };
 
   private applyVolume = (): void => {
-    const channelVolume =
-      this._channel === "music"
-        ? userOptions.musicVolume
-        : userOptions.effectsVolume;
-
     this._theSound.volume =
       Sound._isMuted && this._channel === "effects"
         ? 0
-        : (userOptions.masterVolume / 10) *
-          (channelVolume / 10) *
-          this._fadeMultiplier;
+        : Sound._getVolume(this._channel) * this._fadeMultiplier;
   };
 
   private cancelFade = (): void => {
@@ -309,17 +335,6 @@ class Sound {
     this._fadeFrame = window.requestAnimationFrame(update);
   };
 
-  private static listenForUserOptionChanges = (): void => {
-    if (Sound._isListeningForUserOptions) {
-      return;
-    }
-
-    window.addEventListener("timePilot:userOptionsChanged", () => {
-      Sound.refreshAllVolumes();
-    });
-    Sound._isListeningForUserOptions = true;
-  };
-
   private playElement = (): void => {
     this.ensureSpatialAudio();
     const playPromise = this._theSound.play();
@@ -330,7 +345,7 @@ class Sound {
       void playPromise.catch(() => {
         this._isPlaying = false;
         Sound._pausedInstances.delete(this);
-        logger.warning("Audio playback was blocked", {
+        Sound._onPlaybackBlocked?.({
           channel: this._channel,
           sources: this._urls,
         });

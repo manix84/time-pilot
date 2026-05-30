@@ -1,7 +1,7 @@
 /* Converted from TimePilot.BulletFactory.js (AMD) to ESM TypeScript. */
 import Bullet from "./bullet";
 import { player } from "./constants";
-import SoundEngine from "./engine/Sound";
+import { Sound as SoundEngine } from "./engine";
 import type {
   BulletData,
   BulletFactoryInstance,

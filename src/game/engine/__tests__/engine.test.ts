@@ -1,19 +1,42 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import userOptions from "../../user-options";
 import GameArena from "../arena";
 import Sound from "../Sound";
 import Ticker from "../Ticker";
 
+const soundOptionsChangedEvent = "test:soundOptionsChanged";
+let volumeSettings = {
+  effects: 8,
+  master: 10,
+  music: 8,
+};
+
+const dispatchSoundOptionsChanged = (): void => {
+  window.dispatchEvent(new CustomEvent(soundOptionsChangedEvent));
+};
+
 describe("engine modules", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    volumeSettings = {
+      effects: 8,
+      master: 10,
+      music: 8,
+    };
+    Sound.configure({
+      getVolume: (channel) => {
+        const channelVolume =
+          channel === "music" ? volumeSettings.music : volumeSettings.effects;
+
+        return (volumeSettings.master / 10) * (channelVolume / 10);
+      },
+      volumeChangeEventName: soundOptionsChangedEvent,
+      volumeChangeEventTarget: window,
+    });
   });
 
   afterEach(() => {
-    userOptions.setOption("masterVolume", 10);
-    userOptions.setOption("musicVolume", 8);
-    userOptions.setOption("effectsVolume", 8);
     Sound.destroyAll();
+    Sound.configure();
     vi.unstubAllGlobals();
   });
 
@@ -290,9 +313,12 @@ describe("engine modules", () => {
       configurable: true,
       value: true,
     });
-    userOptions.setOption("masterVolume", 5);
-    userOptions.setOption("musicVolume", 4);
-    userOptions.setOption("effectsVolume", 9);
+    volumeSettings = {
+      effects: 9,
+      master: 5,
+      music: 4,
+    };
+    dispatchSoundOptionsChanged();
     const sound = new Sound("/music/main_menu.ogg", {
       autoplay: false,
       channel: "music",
@@ -304,7 +330,8 @@ describe("engine modules", () => {
 
     expect(element.volume).toBeCloseTo(0.2);
 
-    userOptions.setOption("musicVolume", 2);
+    volumeSettings.music = 2;
+    dispatchSoundOptionsChanged();
 
     expect(element.volume).toBeCloseTo(0.1);
 
@@ -355,8 +382,12 @@ describe("engine modules", () => {
       configurable: true,
       value: true,
     });
-    userOptions.setOption("masterVolume", 10);
-    userOptions.setOption("musicVolume", 5);
+    volumeSettings = {
+      effects: 8,
+      master: 10,
+      music: 5,
+    };
+    dispatchSoundOptionsChanged();
     const sound = new Sound("/music/main_menu.ogg", {
       autoplay: false,
       channel: "music",
@@ -370,7 +401,8 @@ describe("engine modules", () => {
 
     sound.fadeOutAndDestroy(700);
     Sound.stopAll();
-    userOptions.setOption("musicVolume", 2);
+    volumeSettings.music = 2;
+    dispatchSoundOptionsChanged();
 
     expect(element.volume).toBeCloseTo(0.5);
   });

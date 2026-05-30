@@ -10,9 +10,7 @@ import Keyboard2 from "./controller/keyboard2";
 import Mouse from "./controller/mouse";
 import Touch from "./controller/touch";
 import EnemyFactory from "./enemy-factory";
-import GameArena from "./engine/arena";
-import SoundEngine from "./engine/Sound";
-import Ticker from "./engine/Ticker";
+import { GameArena, Sound as SoundEngine, Ticker } from "./engine";
 import { gameTickRate } from "./game-timing";
 import {
   getHighScores,
@@ -26,6 +24,7 @@ import Hud from "./hud";
 import i18n from "./i18n";
 import { logger } from "./logger";
 import Menus from "./menus";
+import palette from "./palette";
 import Player from "./player";
 import Preroll from "./preroll";
 import PropFactory from "./prop-factory";
@@ -111,6 +110,20 @@ const demoProjectileAvoidanceStrength = 3.2;
 const playerRotationStep = 360 / player.rotationFrameCount;
 const gameSessionStorageKey = "timePilot.gameSession";
 const gameSessionSnapshotVersion = 1;
+
+SoundEngine.configure({
+  getVolume: (channel) => {
+    const channelVolume =
+      channel === "music" ? userOptions.musicVolume : userOptions.effectsVolume;
+
+    return (userOptions.masterVolume / 10) * (channelVolume / 10);
+  },
+  onPlaybackBlocked: (details) => {
+    logger.warning("Audio playback was blocked", details);
+  },
+  volumeChangeEventName: "timePilot:userOptionsChanged",
+  volumeChangeEventTarget: typeof window !== "undefined" ? window : undefined,
+});
 
 type HighScoreRunReceipt = Awaited<ReturnType<typeof startHighScoreRun>>;
 
@@ -473,7 +486,12 @@ export class TimePilot {
     this.context._levelIntroUntilTick = 0;
     this.context._timeWarpTransition = undefined;
     this.context._nextParachuteScore = scoring.parachute.min;
-    this.context._gameArena = new GameArena(this.container);
+    this.context._gameArena = new GameArena(this.container, {
+      debugGridColor: palette.menu.disabledText,
+      defaultTextColor: palette.text.white,
+      fontFamily: "theFont",
+      fontUrl: assetPath("fonts/font.ttf"),
+    });
     this.context._renderTicker = new Ticker({
       fps: this.getRenderFpsCap(),
     });
