@@ -427,6 +427,35 @@ describe("engine modules", () => {
     expect(play).toHaveBeenCalledTimes(1);
   });
 
+  it("notifies configured consumers when sound playback is blocked", async () => {
+    Object.defineProperty(HTMLMediaElement.prototype, "canPlay", {
+      configurable: true,
+      value: true,
+    });
+    const onPlaybackBlocked = vi.fn();
+    const play = vi.mocked(HTMLMediaElement.prototype.play);
+
+    Sound.configure({
+      onPlaybackBlocked,
+    });
+    play.mockRejectedValueOnce(new DOMException("Blocked", "NotAllowedError"));
+
+    const sound = new Sound("/music/game_start.ogg", {
+      autoplay: false,
+      channel: "music",
+    });
+
+    sound.play();
+    await Promise.resolve();
+    sound.destroy();
+
+    expect(onPlaybackBlocked).toHaveBeenCalledTimes(1);
+    expect(onPlaybackBlocked).toHaveBeenCalledWith({
+      channel: "music",
+      sources: ["/music/game_start.ogg"],
+    });
+  });
+
   it("disconnects and closes spatial audio resources on destroy", () => {
     Object.defineProperty(HTMLMediaElement.prototype, "canPlay", {
       configurable: true,
