@@ -255,7 +255,7 @@ const AudioScene = ({
   return (
     <div className={"storybook-surface"}>
       <section className={"storybook-section"}>
-        <p className={"storybook-eyebrow"}>{"Audio"}</p>
+        <p className={"storybook-eyebrow"}>{"Arcade-Engine Audio"}</p>
         <h1 className={"storybook-title"}>{"Spatial and Global Sound"}</h1>
         <div className={"storybook-controls"}>
           <button type={"button"} onClick={playSound}>
@@ -334,7 +334,7 @@ const meta = {
     docs: {
       description: {
         component:
-          "Audition global and spatial sound effects through the shared game sound engine.",
+          "Audition global and spatial sound effects through Arcade-Engine's sound wrapper.",
       },
     },
     options: {

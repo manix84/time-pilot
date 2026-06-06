@@ -259,7 +259,7 @@ function App() {
             <p className={styles.heroSummary}>
               A modern React + TypeScript port of a canvas arcade game, packaged
               as a playable browser demo and installable standalone PWA with
-              typed engine modules, achievements, skippable startup preroll,
+              Arcade-Engine primitives, achievements, skippable startup preroll,
               fullscreen play entry, paused session restore, configurable
               controls, and automated release checks.
             </p>
@@ -287,7 +287,7 @@ function App() {
           >
             <div className={styles.gamePanelHeader}>
               <span>Live build</span>
-              <span>Canvas engine</span>
+              <span>Arcade-Engine</span>
             </div>
             <TimePilotGame />
           </section>
