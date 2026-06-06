@@ -63,7 +63,8 @@ jobs:
 
           mkdir -p release-package/assets
           cp dist/assets/app.css release-package/assets/
-          cp dist/assets/main.js release-package/assets/
+          perl -0pe 's#new URL\(`cover\.png`,import\.meta\.url\)\.href#"./assets/cover.png"#g; s#new URL\(`titleBanner\.png`,import\.meta\.url\)\.href#"./assets/titleBanner.png"#g' \
+            dist/assets/main.js > release-package/assets/main.js
           cp -R dist/fonts release-package/fonts
           cp -R dist/logos release-package/logos
           cp -R dist/music release-package/music
@@ -73,6 +74,8 @@ jobs:
             | grep -v 'rel="manifest"' \
             | grep -v 'rel="icon"' \
             | grep -v 'rel="apple-touch-icon"' \
+            | sed 's#<script type="module" crossorigin src="./assets/main.js"></script>#<script defer src="./assets/main.js"></script>#' \
+            | sed 's#<link rel="stylesheet" crossorigin href="./assets/app.css">#<link rel="stylesheet" href="./assets/app.css">#' \
             > release-package/index.html
 
           cat > dist/README.txt <<EOF
@@ -80,19 +83,8 @@ jobs:
 
           This archive contains the built web version of Time Pilot.
 
-          To play locally, extract the archive, serve the extracted directory
-          with any static web server, then open the local URL in your browser.
-
-          Choose one static-server command:
-
-          Option 1, with npm:
-            npx serve .
-
-          Option 2, with Python:
-            python3 -m http.server 8080
-
-          Opening index.html directly from the file system is not recommended
-          because browser security rules can block module and asset loading.
+          To play locally, extract the archive and open index.html in your
+          browser.
           EOF
           mv dist/README.txt release-package/README.txt
 
@@ -125,5 +117,5 @@ jobs:
               --title "Time Pilot ${tag}" \
               --notes "Release ${tag} from ${GITHUB_SHA}.
 
-          Download \`time-pilot-v${VERSION}-web.zip\`, extract it, serve the extracted directory with a local static web server, and open the local URL in your browser."
+          Download \`time-pilot-v${VERSION}-web.zip\`, extract it, and open \`index.html\` in your browser."
           fi
