@@ -63,7 +63,12 @@ jobs:
 
           mkdir -p release-package/assets
           cp dist/assets/app.css release-package/assets/
-          cp dist/assets/main.js release-package/assets/
+          browser_entry=$(
+            node -e 'const { readFileSync } = require("node:fs"); const html = readFileSync("dist/pwa/index.html", "utf8"); const match = html.match(/<script\s+type="module"[^>]*\bsrc="([^"]+\.js)"[^>]*><\/script>/); if (!match) { console.error("Unable to find PWA browser entry script."); process.exit(1); } const src = match[1].replace(/^\.\.\//, "").replace(/^\.\//, ""); console.log(`dist/${src}`);'
+          )
+          test -f "${browser_entry}"
+          perl -0pe 's#new URL\(`cover\.png`,import\.meta\.url\)\.href#"./assets/cover.png"#g; s#new URL\(`titleBanner\.png`,import\.meta\.url\)\.href#"./assets/titleBanner.png"#g' \
+            "${browser_entry}" > release-package/assets/app.js
           cp -R dist/fonts release-package/fonts
           cp -R dist/logos release-package/logos
           cp -R dist/music release-package/music
@@ -73,6 +78,8 @@ jobs:
             | grep -v 'rel="manifest"' \
             | grep -v 'rel="icon"' \
             | grep -v 'rel="apple-touch-icon"' \
+            | perl -0pe 's#<script\s+type="module"[^>]*\bsrc="\./assets/[^"]+\.js"[^>]*></script>#<script defer src="./assets/app.js"></script>#' \
+            | sed 's#<link rel="stylesheet" crossorigin href="./assets/app.css">#<link rel="stylesheet" href="./assets/app.css">#' \
             > release-package/index.html
 
           cat > dist/README.txt <<EOF
@@ -80,19 +87,8 @@ jobs:
 
           This archive contains the built web version of Time Pilot.
 
-          To play locally, extract the archive, serve the extracted directory
-          with any static web server, then open the local URL in your browser.
-
-          Choose one static-server command:
-
-          Option 1, with npm:
-            npx serve .
-
-          Option 2, with Python:
-            python3 -m http.server 8080
-
-          Opening index.html directly from the file system is not recommended
-          because browser security rules can block module and asset loading.
+          To play locally, extract the archive and open index.html in your
+          browser.
           EOF
           mv dist/README.txt release-package/README.txt
 
@@ -125,5 +121,5 @@ jobs:
               --title "Time Pilot ${tag}" \
               --notes "Release ${tag} from ${GITHUB_SHA}.
 
-          Download \`time-pilot-v${VERSION}-web.zip\`, extract it, serve the extracted directory with a local static web server, and open the local URL in your browser."
+          Download \`time-pilot-v${VERSION}-web.zip\`, extract it, and open \`index.html\` in your browser."
           fi

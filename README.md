@@ -423,29 +423,14 @@ To play it locally:
 
 1. Download the `time-pilot-vX.Y.Z-web.zip` asset from the release.
 2. Extract it.
-3. Serve the extracted directory with a static web server.
-4. Open the local URL in your browser.
-
-Choose one static-server command.
-
-With npm:
-
-```bash
-npx serve .
-```
-
-With Python:
-
-```bash
-python3 -m http.server 8080
-```
+3. Open `index.html` in your browser.
 
 The release bundle is built with `VITE_APP_MODE=pwa`, `VITE_BASE_PATH=./`,
 `VITE_API_MODE=offline`, and service-worker registration disabled so it opens
 directly into the game from the extracted directory without GitHub Pages
 routing, the landing site, Storybook, install prompts, or the hosted high-score
-API. Opening `index.html` directly with a `file://` URL is not recommended
-because browser security rules can block module and asset loading.
+API. The release HTML loads the bundled JavaScript as a classic script so it can
+run from `file://` without a local static server.
 
 ## 🔢 Versioning
 
