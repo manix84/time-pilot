@@ -7,7 +7,10 @@ export const isShowcaseMode = (): boolean => {
 export const isPwaRoute = (): boolean => {
   const url = new URL(window.location.href);
 
-  return /\/pwa(?:\/index\.html|\/)?$/.test(url.pathname);
+  return (
+    import.meta.env.VITE_APP_MODE === "pwa" ||
+    /\/pwa(?:\/index\.html|\/)?$/.test(url.pathname)
+  );
 };
 
 export const isAboutRoute = (): boolean => {

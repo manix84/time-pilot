@@ -2,6 +2,8 @@
 
 interface ImportMetaEnv {
   readonly VITE_API_MODE?: "auto" | "offline";
+  readonly VITE_APP_MODE?: "pwa";
+  readonly VITE_SERVICE_WORKER?: "enabled" | "disabled";
 }
 
 declare const __TIME_PILOT_VERSION__: string;
