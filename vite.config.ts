@@ -167,14 +167,6 @@ export default defineConfig({
       },
     },
   },
-  resolve: {
-    alias: {
-      "@time-pilot/arcade-engine": path.resolve(
-        dirname,
-        "packages/arcade-engine/src/index.ts"
-      ),
-    },
-  },
   server: {
     host: "0.0.0.0",
     open: true,

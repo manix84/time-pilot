@@ -3,7 +3,7 @@ import type {
   GameArenaInstance,
   Heading,
   TickerInstance,
-} from "@time-pilot/arcade-engine";
+} from "arcade-engine";
 export type {
   AssetProgress,
   CircleOptions,
@@ -18,14 +18,14 @@ export type {
   SoundPlaybackBlockedDetails,
   SpriteFrame,
   TickerInstance,
-} from "@time-pilot/arcade-engine";
+} from "arcade-engine";
 export type {
   DebugVectorColors,
   DebugVectorOptions,
   ViewportAreaScaleOptions,
   ViewportDimensions,
   ViewportRadiusOptions,
-} from "@time-pilot/arcade-engine";
+} from "arcade-engine";
 
 /**
  * Mutable player state stored in the game data context.

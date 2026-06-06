@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { Ticker } from "@time-pilot/arcade-engine";
+import { Ticker } from "arcade-engine";
 import palette from "../game/palette";
 import "./storybook.scss";
 

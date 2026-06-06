@@ -14,7 +14,7 @@ import {
   GameArena,
   Sound as SoundEngine,
   Ticker,
-} from "@time-pilot/arcade-engine";
+} from "arcade-engine";
 import { gameTickRate } from "./game-timing";
 import {
   getHighScores,
