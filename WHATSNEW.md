@@ -1,5 +1,17 @@
 # 🗒️ What's New
 
+## 📦 Arcade-Engine Package
+
+- Extracted the reusable canvas, ticker, sound, helper, viewport, and
+  debug-vector layer into the standalone
+  [`arcade-engine`](https://www.npmjs.com/package/arcade-engine) npm package.
+- Switched Time Pilot to consume `arcade-engine` as a normal dependency instead
+  of compiling an embedded `packages/arcade-engine` source tree.
+- Removed the local engine package, Vite alias, TypeScript path mapping, and
+  embedded-engine source tests from this repository.
+- Kept Time Pilot-specific orchestration, entities, controllers, systems,
+  menus, achievements, scoring, assets, and React integration in this project.
+
 ## 🧱 Modern React + TypeScript Foundation
 
 - Migrated the browser-game prototype into a Vite app.
@@ -17,8 +29,9 @@
   - `controller/keyboard1.ts`
 - Removed the unused legacy menu definition modules now that the canvas menu
   system owns root, pause, options, achievements, and debug flows directly.
-- Added shared `types.ts` contracts for game data, controllers, assets, and engine APIs.
-- Added JSDoc coverage across public game utilities, engine entry points,
+- Added shared `types.ts` contracts for game data, controllers, assets, and
+  Arcade-Engine integration APIs.
+- Added JSDoc coverage across public game utilities, game entry points,
   systems, controllers, React bridge components, and maintenance helpers.
 
 ## 🧠 Engine Architecture
@@ -27,7 +40,7 @@
 - Removed the global game data-store singleton.
 - Introduced explicit game context injection for entities, factories, HUD, and input systems.
 - Added `useTimePilot` as the React lifecycle bridge.
-- Converted the remaining prototype-style runtime modules into class-based entities, factories, controllers, engine wrappers, HUD, and menu systems.
+- Converted the remaining prototype-style runtime modules into class-based entities, factories, controllers, HUD, and menu systems.
 - Split collision handling, entity spawning, and frame rendering into dedicated systems.
 - Separated simulation ticking from rendering: game-state calculations run on a 50Hz fixed step, while canvas rendering is independently capped.
 - Removed the old 50,000-tick gameplay pause failsafe so long sessions can keep
@@ -199,7 +212,8 @@
 
 - Added Vitest with jsdom for fast local and CI test runs.
 - Added browser API shims for canvas, media, animation frames, and gamepads.
-- Covered core engine helpers, arena behavior, ticker timing, sound wrappers, controllers, menus, factories, entities, HUD wiring, the `TimePilot` class, and the React host component.
+- Covered Arcade-Engine integration, controllers, menus, factories, entities,
+  HUD wiring, the `TimePilot` class, and the React host component.
 - Covered menu back navigation, paused root-menu resume behavior, debug level select previews, zoom controls, and keyboard/gamepad menu shortcuts.
 - Added coverage for touch menu routing and scrolling, staged-only hook logic,
   update menu availability, filter editing baselines, time-warp previews, and

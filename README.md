@@ -1,6 +1,6 @@
 # 🕹️ Time Pilot
 
-**Time Pilot** is a modernized React + TypeScript rebuild of an older browser-game prototype. The game still renders through a pixel-art canvas engine, but it now lives inside a Vite application with typed game modules, React lifecycle integration, SCSS module styling, CI checks, GitHub Pages deployment, and release automation.
+**Time Pilot** is a modernized React + TypeScript rebuild of an older browser-game prototype. The game renders through the published Arcade-Engine canvas package, and it now lives inside a Vite application with typed game modules, React lifecycle integration, SCSS module styling, CI checks, GitHub Pages deployment, and release automation.
 
 ## 🕰️ Project History
 
@@ -13,10 +13,11 @@ game properly while preserving the original canvas-era feel.
 
 - 🎮 Canvas-based arcade gameplay hosted inside React.
 - ⚛️ Thin React integration via `useTimePilot`.
-- 🧠 Typed game engine modules with explicit game context injection.
+- 🧠 Typed game modules with explicit game context injection.
+- 📦 Canvas, ticker, audio, helper, viewport, and debug-vector primitives supplied by [`arcade-engine`](https://www.npmjs.com/package/arcade-engine).
 - 🎨 Component-scoped SCSS modules for the React shell, canvas host, and update overlay.
 - 🧱 Feature-oriented source layout under `src/game`.
-- 🧪 Vitest coverage for engine helpers, controllers, menus, factories, the game host, and React integration.
+- 🧪 Vitest coverage for Arcade-Engine integration, controllers, menus, factories, the game host, and React integration.
 - 🎛️ Keyboard, touch, and gamepad controller support.
 - 🧭 Canvas-rendered start/options/debug menus with keyboard, gamepad, mouse, and touch interaction.
 - 🔎 UI zoom and game POV zoom with automatic viewport scaling.
@@ -91,6 +92,25 @@ should not try to contact backend APIs.
 Builds also publish the Storybook reference site to `dist/stories`, so the
 deployed site exposes it under `/stories/`. The showcase page links to that
 route for sprite, menu, preroll, achievement, audio, and UI reference views.
+
+## 📦 Arcade-Engine
+
+Time Pilot now consumes the reusable canvas engine as the public npm package
+[`arcade-engine`](https://www.npmjs.com/package/arcade-engine). The embedded
+`packages/arcade-engine` source has been removed from this repository.
+
+Arcade-Engine provides the browser canvas arena, animation tickers, sound
+wrapper, geometry/collision helpers, viewport helpers, and debug-vector
+rendering used by the game:
+
+```ts
+import { GameArena, Sound, Ticker, helpers } from "arcade-engine";
+```
+
+This repository keeps the Time Pilot-specific orchestration, entities,
+controllers, menus, HUD, achievements, scoring, assets, and React shell. Engine
+changes should happen in the standalone Arcade-Engine package, then be consumed
+here through a normal dependency update.
 
 ## 🏅 High Score Storage
 
@@ -225,12 +245,12 @@ npm run typecheck
 npm run build
 ```
 
-`npm test` runs the Vitest suite in jsdom.
+`npm test` runs the Vitest suite in jsdom and browser-backed Storybook tests.
 
 The test suite covers:
 
-- Engine helpers, collision checks, object cloning, headings, and rotation math.
-- Canvas arena, ticker, and sound wrappers using browser API shims.
+- Arcade-Engine integration points used by Time Pilot, including canvas arena,
+  ticker, sound, helpers, viewport scaling, and debug-vector imports.
 - Keyboard, gamepad, mouse, and touch controller adapters.
 - Menu definitions and state callbacks.
 - Game entities, factories, HUD wiring, and context-backed modules.
@@ -348,7 +368,6 @@ src/
     preroll.ts              Startup author logo, flyby, and menu handoff
     __tests__/              Game module test coverage
     controller/             Keyboard and gamepad input adapters
-    engine/                 Canvas arena, ticker, sound, helpers
     menus/                  Menu definitions
     systems/                Collision, spawning, and rendering systems
     ui-scale.ts             UI and game zoom helpers
@@ -365,14 +384,14 @@ The current design keeps React out of the game loop. This is deliberate.
 - React handles lifecycle, layout, and app composition.
 - `useTimePilot` creates and destroys the game instance.
 - `TimePilot` owns the game context and wires systems together.
-- Entities, factories, controllers, HUD, and engine wrappers are class-based modules.
+- Entities, factories, controllers, HUD, and systems are class-based modules.
 - Collision, spawning, and frame rendering live in dedicated systems under `src/game/systems`.
 - Entities and factories receive explicit context instead of reading a global singleton.
-- Simulation uses a fixed-step 50Hz ticker for movement, spawning, collisions, cleanup, and player actions.
-- Rendering uses a separate FPS-capped animation-frame ticker to paint the latest entity locations and orientations without changing gameplay speed.
+- Simulation uses Arcade-Engine's fixed-step 50Hz ticker for movement, spawning, collisions, cleanup, and player actions.
+- Rendering uses a separate Arcade-Engine FPS-capped animation-frame ticker to paint the latest entity locations and orientations without changing gameplay speed.
 - Game rendering applies pixelated POV scaling separately from HUD and menu UI scaling.
 - Rendering stays canvas-based for predictable paint ordering and frame-by-frame control.
-- Public game utilities, engine entry points, systems, controllers, and React
+- Public game utilities, game entry points, systems, controllers, and React
   bridge components include JSDoc comments for generated API documentation and
   easier maintenance.
 
@@ -392,6 +411,39 @@ GitHub Pages builds with:
 ```bash
 VITE_BASE_PATH=/time-pilot/ npm run build
 ```
+
+## 📦 Downloadable Releases
+
+Every `main` release also uploads a built browser bundle to GitHub Releases as
+`time-pilot-vX.Y.Z-web.zip`. The archive contains the production `dist/`
+output, including the playable game and Storybook reference.
+
+To play it locally:
+
+1. Download the `time-pilot-vX.Y.Z-web.zip` asset from the release.
+2. Extract it.
+3. Serve the extracted directory with a static web server.
+4. Open the local URL in your browser.
+
+Choose one static-server command.
+
+With npm:
+
+```bash
+npx serve .
+```
+
+With Python:
+
+```bash
+python3 -m http.server 8080
+```
+
+The release bundle is built with `VITE_BASE_PATH=./` and
+`VITE_API_MODE=offline` so it can run from the extracted directory without
+GitHub Pages routing or the hosted high-score API. Opening `index.html`
+directly with a `file://` URL is not recommended because browser security rules
+can block module, asset, and PWA behavior.
 
 ## 🔢 Versioning
 

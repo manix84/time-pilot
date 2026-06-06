@@ -118,7 +118,7 @@ const TickerStories = () => {
   return (
     <main className={"storybook-surface"}>
       <section className={"storybook-section"}>
-        <p className={"storybook-eyebrow"}>Engine</p>
+        <p className={"storybook-eyebrow"}>Arcade-Engine</p>
         <h1 className={"storybook-title"}>Ticker Demos</h1>
         <div className={"storybook-demo-grid"}>
           <GeneralTickerDemo />
@@ -130,7 +130,7 @@ const TickerStories = () => {
 };
 
 const meta = {
-  title: "Engine/Ticker",
+  title: "Arcade-Engine/Ticker",
   component: TickerStories,
 } satisfies Meta<typeof TickerStories>;
 

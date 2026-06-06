@@ -36,13 +36,50 @@ jobs:
           npm test
           npm run lint
           npm run typecheck
-          npm run build
 
       - name: Read package version
         id: package
         run: |
           version=$(node -p "require('./package.json').version")
           echo "version=${version}" >> "$GITHUB_OUTPUT"
+
+      - name: Build downloadable release
+        env:
+          VITE_API_MODE: offline
+          VITE_BASE_PATH: ./
+        run: npm run build
+
+      - name: Package downloadable release
+        env:
+          VERSION: ${{ steps.package.outputs.version }}
+        run: |
+          set -euo pipefail
+          archive="time-pilot-v${VERSION}-web.zip"
+
+          mkdir -p release-assets
+          cat > dist/README.txt <<EOF
+          Time Pilot v${VERSION}
+
+          This archive contains the built web version of Time Pilot.
+
+          To play locally, extract the archive, serve the extracted directory
+          with any static web server, then open the local URL in your browser.
+
+          Choose one static-server command:
+
+          Option 1, with npm:
+            npx serve .
+
+          Option 2, with Python:
+            python3 -m http.server 8080
+
+          Opening index.html directly from the file system is not recommended
+          because browser security rules can block module, asset, and PWA
+          behavior.
+          EOF
+
+          cd dist
+          zip -r "../release-assets/${archive}" .
 
       - name: Create tag and release
         env:
@@ -66,6 +103,9 @@ jobs:
             echo "Release ${tag} already exists."
           else
             gh release create "${tag}" \
+              "release-assets/time-pilot-v${VERSION}-web.zip" \
               --title "Time Pilot ${tag}" \
-              --notes "Release ${tag} from ${GITHUB_SHA}."
+              --notes "Release ${tag} from ${GITHUB_SHA}.
+
+          Download \`time-pilot-v${VERSION}-web.zip\`, extract it, serve the extracted directory with a local static web server, and open the local URL in your browser."
           fi
