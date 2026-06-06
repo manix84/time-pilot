@@ -45,8 +45,10 @@ jobs:
 
       - name: Build downloadable release
         env:
+          VITE_APP_MODE: pwa
           VITE_API_MODE: offline
           VITE_BASE_PATH: ./
+          VITE_SERVICE_WORKER: disabled
         run: npm run build
 
       - name: Package downloadable release
@@ -56,7 +58,23 @@ jobs:
           set -euo pipefail
           archive="time-pilot-v${VERSION}-web.zip"
 
-          mkdir -p release-assets
+          rm -rf release-assets release-package
+          mkdir -p release-assets release-package
+
+          mkdir -p release-package/assets
+          cp dist/assets/app.css release-package/assets/
+          cp dist/assets/main.js release-package/assets/
+          cp -R dist/fonts release-package/fonts
+          cp -R dist/logos release-package/logos
+          cp -R dist/music release-package/music
+          cp -R dist/sounds release-package/sounds
+          cp -R dist/sprites release-package/sprites
+          sed 's#\.\./#./#g' dist/pwa/index.html \
+            | grep -v 'rel="manifest"' \
+            | grep -v 'rel="icon"' \
+            | grep -v 'rel="apple-touch-icon"' \
+            > release-package/index.html
+
           cat > dist/README.txt <<EOF
           Time Pilot v${VERSION}
 
@@ -74,11 +92,11 @@ jobs:
             python3 -m http.server 8080
 
           Opening index.html directly from the file system is not recommended
-          because browser security rules can block module, asset, and PWA
-          behavior.
+          because browser security rules can block module and asset loading.
           EOF
+          mv dist/README.txt release-package/README.txt
 
-          cd dist
+          cd release-package
           zip -r "../release-assets/${archive}" .
 
       - name: Create tag and release

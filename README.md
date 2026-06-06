@@ -415,8 +415,9 @@ VITE_BASE_PATH=/time-pilot/ npm run build
 ## 📦 Downloadable Releases
 
 Every `main` release also uploads a built browser bundle to GitHub Releases as
-`time-pilot-vX.Y.Z-web.zip`. The archive contains the production `dist/`
-output, including the playable game and Storybook reference.
+`time-pilot-vX.Y.Z-web.zip`. The archive is a trimmed local-play build: its
+root `index.html` is the full-screen game page, without the landing page, About
+page, Storybook reference, service worker, or installable-PWA metadata.
 
 To play it locally:
 
@@ -439,11 +440,12 @@ With Python:
 python3 -m http.server 8080
 ```
 
-The release bundle is built with `VITE_BASE_PATH=./` and
-`VITE_API_MODE=offline` so it can run from the extracted directory without
-GitHub Pages routing or the hosted high-score API. Opening `index.html`
-directly with a `file://` URL is not recommended because browser security rules
-can block module, asset, and PWA behavior.
+The release bundle is built with `VITE_APP_MODE=pwa`, `VITE_BASE_PATH=./`,
+`VITE_API_MODE=offline`, and service-worker registration disabled so it opens
+directly into the game from the extracted directory without GitHub Pages
+routing, the landing site, Storybook, install prompts, or the hosted high-score
+API. Opening `index.html` directly with a `file://` URL is not recommended
+because browser security rules can block module and asset loading.
 
 ## 🔢 Versioning
 
