@@ -1,6 +1,6 @@
 /* Converted from TimePilot.Bonus.js (AMD) to ESM TypeScript. */
 import { levels, scoring } from "./constants";
-import { helpers } from "@time-pilot/arcade-engine";
+import { helpers } from "arcade-engine";
 import palette from "./palette";
 import userOptions from "./user-options";
 import { getDespawnRadius } from "./viewport";

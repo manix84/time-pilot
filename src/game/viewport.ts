@@ -3,13 +3,13 @@ import {
   getScaledViewportLimit,
   getViewportAreaScale as getEngineViewportAreaScale,
   getViewportPaddedRadius,
-} from "@time-pilot/arcade-engine";
+} from "arcade-engine";
 import type { ViewportDimensions } from "./types";
 
 const spawnPadding = 96;
 const despawnPadding = 160;
 
-export { getViewportRadius } from "@time-pilot/arcade-engine";
+export { getViewportRadius } from "arcade-engine";
 
 /**
  * Calculates the distance from center where entities can spawn safely off-screen.

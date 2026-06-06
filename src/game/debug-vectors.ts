@@ -1,5 +1,5 @@
 import palette from "./palette";
-import { drawDebugVectors as drawEngineDebugVectors } from "@time-pilot/arcade-engine";
+import { drawDebugVectors as drawEngineDebugVectors } from "arcade-engine";
 import type { Heading } from "./types";
 
 interface DebugVectorOptions {

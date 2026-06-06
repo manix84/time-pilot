@@ -1,5 +1,5 @@
 /* Converted from TimePilot.Controller.Keyboard1.js (AMD) to ESM TypeScript. */
-import { helpers } from "@time-pilot/arcade-engine";
+import { helpers } from "arcade-engine";
 import userOptions from "../user-options";
 import type {
   ControlInputName,
