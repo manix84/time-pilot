@@ -412,6 +412,39 @@ GitHub Pages builds with:
 VITE_BASE_PATH=/time-pilot/ npm run build
 ```
 
+## 📦 Downloadable Releases
+
+Every `main` release also uploads a built browser bundle to GitHub Releases as
+`time-pilot-vX.Y.Z-web.zip`. The archive contains the production `dist/`
+output, including the playable game and Storybook reference.
+
+To play it locally:
+
+1. Download the `time-pilot-vX.Y.Z-web.zip` asset from the release.
+2. Extract it.
+3. Serve the extracted directory with a static web server.
+4. Open the local URL in your browser.
+
+Choose one static-server command.
+
+With npm:
+
+```bash
+npx serve .
+```
+
+With Python:
+
+```bash
+python3 -m http.server 8080
+```
+
+The release bundle is built with `VITE_BASE_PATH=./` and
+`VITE_API_MODE=offline` so it can run from the extracted directory without
+GitHub Pages routing or the hosted high-score API. Opening `index.html`
+directly with a `file://` URL is not recommended because browser security rules
+can block module, asset, and PWA behavior.
+
 ## 🔢 Versioning
 
 The repo includes a pre-commit hook at `.githooks/pre-commit`.
