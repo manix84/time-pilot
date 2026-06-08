@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { filterPresets } from "../../filter-settings";
+import { displayFilterPresets as filterPresets } from "arcade-engine";
 import Menus from "../../menus";
 import type { GameArenaInstance } from "../../types";
 import userOptions from "../../user-options";

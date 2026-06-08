@@ -1,6 +1,12 @@
 /* Converted from TimePilot.userOptions.js (AMD) to ESM TypeScript. */
 import {
   createUserOptionsStore,
+  defaultCustomDisplayFilterSettings as defaultCustomFilterSettings,
+  defaultDisplayFilterMode as defaultFilterMode,
+  displayFilterModes as filterModes,
+  isRuntimeLogLevel as isLogLevel,
+  normalizeDisplayFilterIntensity as normalizeFilterIntensity,
+  normalizeDisplayFilterSettings as normalizeFilterSettings,
   normalizeUserOptions,
   userOptionsChangedEventName,
 } from "arcade-engine";
@@ -12,19 +18,11 @@ import type {
   UserOptions,
 } from "./types";
 import {
-  defaultCustomFilterSettings,
-  defaultFilterMode,
-  filterModes,
-  normalizeFilterIntensity,
-  normalizeFilterSettings,
-} from "./filter-settings";
-import {
   defaultGameSpeed,
   defaultRenderFps,
   normalizeGameSpeed,
   normalizeRenderFps,
 } from "./game-timing";
-import { isLogLevel } from "./log-levels";
 
 const supportedLanguages: GameLanguage[] = [
   "en",

@@ -1,7 +1,7 @@
 import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { appExitBlockedEvent } from "../../game/app-exit";
+import { appExitBlockedEventName } from "arcade-engine";
 import userOptions from "../../game/user-options";
 import TimePilotGame from "../TimePilotGame";
 import UpdateOverlay from "../UpdateOverlay";
@@ -135,7 +135,7 @@ describe("TimePilotGame", () => {
     });
 
     await act(async () => {
-      window.dispatchEvent(new CustomEvent(appExitBlockedEvent));
+      window.dispatchEvent(new CustomEvent(appExitBlockedEventName));
       await Promise.resolve();
     });
 

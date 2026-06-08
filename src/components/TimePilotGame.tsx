@@ -8,14 +8,15 @@ import {
   type CSSProperties,
 } from "react";
 import classNames from "classnames";
-import { appExitBlockedEvent, exitInstalledApp } from "../game/app-exit";
-import { getFilterSettingsForMode } from "../game/filter-settings";
-import { enterGameFullscreen } from "../game/immersive-mode";
 import {
+  appExitBlockedEventName,
   canUseScreenWakeLock,
+  exitInstalledApp,
+  getDisplayFilterSettingsForMode as getFilterSettingsForMode,
   ScreenWakeLockController,
-} from "../game/screen-wake-lock";
-import { userOptionsChangedEventName } from "arcade-engine";
+  userOptionsChangedEventName,
+} from "arcade-engine";
+import { enterGameFullscreen } from "../game/immersive-mode";
 import { useTimePilot } from "../game/use-time-pilot";
 import userOptions from "../game/user-options";
 import styles from "./TimePilotGame.module.scss";
@@ -189,10 +190,10 @@ function TimePilotGame({
       setIsExitFallbackVisible(true);
     };
 
-    window.addEventListener(appExitBlockedEvent, handleAppExitBlocked);
+    window.addEventListener(appExitBlockedEventName, handleAppExitBlocked);
 
     return () => {
-      window.removeEventListener(appExitBlockedEvent, handleAppExitBlocked);
+      window.removeEventListener(appExitBlockedEventName, handleAppExitBlocked);
     };
   }, [enableAppExit]);
 

@@ -22,6 +22,11 @@ export type {
 export type {
   DebugVectorColors,
   DebugVectorOptions,
+  DisplayFilterMode as FilterMode,
+  DisplayFilterRuntimeBoosts as FilterRuntimeBoosts,
+  DisplayFilterSettingKey as FilterSettingKey,
+  DisplayFilterSettings as FilterSettings,
+  RuntimeLogLevel as LogLevel,
   ViewportAreaScaleOptions,
   ViewportDimensions,
   ViewportRadiusOptions,
@@ -107,21 +112,15 @@ export interface ControllerCommands {
  * Supported keyboard controller layouts.
  */
 export type ControllerType = "keyboard1" | "keyboard2";
-export type {
-  FilterMode,
-  FilterRuntimeBoosts,
-  FilterSettingKey,
-  FilterSettings,
-} from "./filter-settings";
 import type {
-  FilterMode,
-  FilterSettingKey,
-  FilterSettings,
-} from "./filter-settings";
+  DisplayFilterMode as FilterMode,
+  DisplayFilterSettingKey as FilterSettingKey,
+  DisplayFilterSettings as FilterSettings,
+  RuntimeLogLevel as LogLevel,
+} from "arcade-engine";
 import type AchievementSystem from "./achievements";
 import type { AchievementStatus } from "./achievements";
 import type { RenderFps } from "./game-timing";
-import type { LogLevel } from "./log-levels";
 import type { StoredDataResetScope } from "./storage-reset";
 export type GameLanguage = "de" | "en" | "es" | "fr" | "it" | "nl" | "ro";
 export type ControlInputName =

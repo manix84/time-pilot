@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   canUseScreenWakeLock,
   ScreenWakeLockController,
-} from "../screen-wake-lock";
+} from "arcade-engine";
 
 describe("screen wake lock", () => {
   afterEach(() => {
