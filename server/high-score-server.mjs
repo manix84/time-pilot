@@ -6,6 +6,10 @@ import { mkdir, readFile, stat, writeFile } from "node:fs/promises";
 import { createServer } from "node:http";
 import { dirname, extname, resolve, sep } from "node:path";
 import { fileURLToPath, URL } from "node:url";
+import {
+  getHighScorePlausibilityReasons,
+  validateHighScoreSubmission,
+} from "arcade-engine";
 import pg from "pg";
 
 const { Pool } = pg;
@@ -20,10 +24,6 @@ const staticRootPath = resolve(__dirname, "../dist");
 const jsonStorePath = resolve(__dirname, "../data/high-scores.json");
 const maxBodyBytes = 64 * 1024;
 const maxGameEra = 5;
-const highScoreIntegrityVersion = 1;
-const highScoreIntegrityHashModulo = 1000003;
-const highScoreIntegrityMinMultiplier = 101;
-const highScoreIntegrityMultiplierRange = 897;
 const maxPlausibleAccuracy = 100;
 const maxPlausibleBonuses = 200;
 const maxPlausibleBosses = 5;
@@ -36,6 +36,27 @@ const maxPortAttempts = 20;
 const runReceiptTtlMs = 6 * 60 * 60 * 1000;
 const supportedGameSpeeds = [0.5, 0.75, 0.9, 1, 1.1, 1.25, 1.5, 2];
 const supportedRenderFps = [30, 40, 50, 60, 75, 90, 120, 144, "max"];
+const highScorePlausibilityRules = {
+  baseScoreBudget: 250000,
+  maxScore: 10000000,
+  minimumScoreBudget: 500000,
+  scoreBudget: [
+    { points: 25000, stat: "Enemies" },
+    { points: 10000, stat: "Bonuses" },
+    { points: 75000, stat: "Bosses" },
+    { points: 150000, stat: "Era" },
+  ],
+  statMaximums: {
+    Accuracy: maxPlausibleAccuracy,
+    Bonuses: maxPlausibleBonuses,
+    Bosses: maxPlausibleBosses,
+    Enemies: maxPlausibleEnemies,
+    Era: maxGameEra,
+  },
+  statMinimums: {
+    Era: 1,
+  },
+};
 
 const loadEnvFiles = () => {
   for (const filePath of envFilePaths) {
@@ -558,69 +579,46 @@ const handleSubmitScore = async (request, response) => {
 };
 
 const validateScoreSubmission = async (payload) => {
-  if (!payload || typeof payload !== "object") {
-    return reject("invalid_payload");
+  const validation = validateHighScoreSubmission(payload, {
+    allowLegacyMissingSettingsChecksum: true,
+    formatSettings: formatScoreSettingsForIntegrity,
+    maxStats: maxScoreStats,
+    normalizeName,
+    normalizeSettings: normalizeScoreSettings,
+    rules: highScorePlausibilityRules,
+  });
+
+  if (!validation.accepted) {
+    return validation;
   }
 
-  const { entry, gameVersion, integrity, run, submittedAt } = payload;
-
-  if (!isPublicScore(entry) || typeof submittedAt !== "number") {
-    return reject("invalid_score");
-  }
-
-  if (!isRunReceipt(run)) {
-    return reject("missing_run_receipt", 401);
-  }
-
-  if (!isValidHighScoreIntegrity(entry, integrity, run, submittedAt)) {
-    return reject("invalid_score_integrity", 422);
-  }
-
-  if (!isPlausibleScore(entry)) {
+  if (!hasPlausibleShotStats(validation.score.stats)) {
     return reject("implausible_score", 422);
   }
 
   return {
     accepted: true,
-    gameVersion:
-      typeof gameVersion === "string" && gameVersion.length <= 32
-        ? gameVersion
-        : "unknown",
-    run,
+    gameVersion: validation.gameVersion,
+    run: validation.run,
     score: {
       id: randomUUID(),
-      name: normalizeName(entry.name),
-      score: Math.max(0, Math.floor(entry.score)),
-      settings: normalizeScoreSettings(entry.settings),
-      stats: entry.stats.slice(0, maxScoreStats),
+      name: validation.score.name,
+      score: validation.score.score,
+      settings: validation.score.settings,
+      stats: validation.score.stats,
     },
-    submittedAt: Math.max(0, Math.floor(submittedAt)),
+    submittedAt: validation.submittedAt,
   };
 };
 
-const isPlausibleScore = (entry) => {
-  if (entry.score <= 0 || entry.score > 10000000) {
-    return false;
-  }
+const isPlausibleScore = (entry) =>
+  getHighScorePlausibilityReasons(entry, highScorePlausibilityRules).length ===
+    0 && hasPlausibleShotStats(entry.stats);
 
-  const parsed = parseStats(entry.stats);
+const hasPlausibleShotStats = (stats) => {
+  const parsed = parseStats(stats);
 
-  if (parsed.shotsHit > parsed.shotsFired) {
-    return false;
-  }
-
-  if (parsed.accuracy > maxPlausibleAccuracy) {
-    return false;
-  }
-
-  const scoreBudget =
-    250000 +
-    parsed.enemies * 25000 +
-    parsed.bonuses * 10000 +
-    parsed.bosses * 75000 +
-    parsed.levels * 150000;
-
-  return entry.score <= Math.max(scoreBudget, 500000);
+  return parsed.shotsHit <= parsed.shotsFired;
 };
 
 const parseStats = (stats) => {
@@ -654,103 +652,6 @@ const clampNumber = (value, min, max) => {
   }
 
   return Math.max(min, Math.min(max, value));
-};
-
-const isValidHighScoreIntegrity = (entry, integrity, run, submittedAt) => {
-  if (!isHighScoreIntegrity(integrity)) {
-    return false;
-  }
-
-  const expectedScoreProduct =
-    Math.max(0, Math.floor(entry.score)) * integrity.multiplier;
-  const expectedStatsProduct =
-    (hashText(entry.stats.join("\n")) % highScoreIntegrityHashModulo) *
-    integrity.multiplier;
-
-  return (
-    integrity.scoreProduct === expectedScoreProduct &&
-    integrity.statsProduct === expectedStatsProduct &&
-    [
-      createHighScoreIntegrityChecksum(
-        entry,
-        run,
-        submittedAt,
-        integrity.multiplier,
-        integrity.scoreProduct,
-        integrity.statsProduct
-      ),
-      ...(entry.settings
-        ? []
-        : [
-          createHighScoreIntegrityChecksum(
-            entry,
-            run,
-            submittedAt,
-            integrity.multiplier,
-            integrity.scoreProduct,
-            integrity.statsProduct,
-            { includeSettings: false }
-          ),
-        ]),
-    ].includes(integrity.checksum)
-  );
-};
-
-const isHighScoreIntegrity = (value) => {
-  if (!value || typeof value !== "object") {
-    return false;
-  }
-
-  return (
-    value.version === highScoreIntegrityVersion &&
-    Number.isInteger(value.multiplier) &&
-    value.multiplier >= highScoreIntegrityMinMultiplier &&
-    value.multiplier <
-      highScoreIntegrityMinMultiplier + highScoreIntegrityMultiplierRange &&
-    Number.isInteger(value.scoreProduct) &&
-    Number.isInteger(value.statsProduct) &&
-    typeof value.checksum === "string"
-  );
-};
-
-const createHighScoreIntegrityChecksum = (
-  entry,
-  run,
-  submittedAt,
-  multiplier,
-  scoreProduct,
-  statsProduct,
-  options = {}
-) =>
-  hashText(
-    [
-      highScoreIntegrityVersion,
-      run.runId,
-      run.token,
-      run.issuedAt,
-      entry.id,
-      entry.name,
-      Math.max(0, Math.floor(entry.score)),
-      ...(options.includeSettings === false
-        ? []
-        : [formatScoreSettingsForIntegrity(entry.settings)]),
-      entry.stats.join("\n"),
-      submittedAt,
-      multiplier,
-      scoreProduct,
-      statsProduct,
-    ].join("|")
-  ).toString(36);
-
-const hashText = (text) => {
-  let hash = 2166136261;
-
-  for (let index = 0; index < text.length; index += 1) {
-    hash ^= text.charCodeAt(index);
-    hash = Math.imul(hash, 16777619);
-  }
-
-  return hash >>> 0;
 };
 
 export const __testHooks = {
@@ -812,24 +713,6 @@ const safeTokenEqual = (left, right) => {
   );
 };
 
-const isRunReceipt = (value) =>
-  !!value &&
-  typeof value === "object" &&
-  typeof value.runId === "string" &&
-  typeof value.token === "string" &&
-  typeof value.issuedAt === "number";
-
-const isPublicScore = (value) =>
-  !!value &&
-  typeof value === "object" &&
-  (value.createdAt === undefined || typeof value.createdAt === "number") &&
-  typeof value.name === "string" &&
-  typeof value.score === "number" &&
-  (value.settings === undefined || isSupportedScoreSettings(value.settings)) &&
-  Array.isArray(value.stats) &&
-  value.stats.length <= maxScoreStats &&
-  value.stats.every((stat) => typeof stat === "string" && stat.length <= 80);
-
 const toPublicScore = (score) => ({
   createdAt: score.createdAt ?? score.receivedAt,
   id: score.id,
@@ -857,13 +740,6 @@ const normalizeScoreSettings = (value) => {
 
   return { gameSpeed, renderFps };
 };
-
-const isSupportedScoreSettings = (value) =>
-  !!value &&
-  typeof value === "object" &&
-  typeof value.gameSpeed === "number" &&
-  supportedGameSpeeds.includes(value.gameSpeed) &&
-  supportedRenderFps.includes(value.renderFps);
 
 const formatScoreSettingsForIntegrity = (settings) =>
   settings

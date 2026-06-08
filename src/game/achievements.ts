@@ -1,3 +1,11 @@
+import {
+  addAchievementProgress,
+  createAchievementState,
+  getAchievementStatuses as getEngineAchievementStatuses,
+  unlockAchievement,
+  type AchievementDefinition as EngineAchievementDefinition,
+  type AchievementState,
+} from "arcade-engine";
 import { assetPath } from "./asset-path";
 import { gameTickRate } from "./game-timing";
 import { logger } from "./logger";
@@ -40,7 +48,8 @@ export type AchievementId =
 /**
  * Static achievement metadata.
  */
-export interface AchievementDefinition {
+export interface AchievementDefinition
+  extends EngineAchievementDefinition<AchievementId> {
   /**
    * Stable achievement identifier used for persistence.
    */
@@ -251,10 +260,8 @@ export const achievementDefinitions: AchievementDefinition[] = [
 
 type PlayerHitCause = "enemy" | "projectile";
 
-interface AchievementStorageState {
+interface LegacyAchievementStorageState extends Partial<AchievementState<AchievementId>> {
   counters?: Partial<Record<"continuesUsed", number>>;
-  unlocked?: AchievementId[];
-  unlockedAt?: Partial<Record<AchievementId, number>>;
 }
 
 interface RunState {
@@ -319,19 +326,32 @@ const getStorage = (): Storage | null => {
   }
 };
 
-const readStorage = (): AchievementStorageState => {
+const readStorage = (): AchievementState<AchievementId> => {
   const storage = getStorage();
 
   if (!storage) {
-    return {};
+    return createAchievementState<AchievementId>();
   }
 
   try {
-    return JSON.parse(
+    const stored = JSON.parse(
       storage.getItem(achievementStorageKey) ?? "{}"
-    ) as AchievementStorageState;
+    ) as LegacyAchievementStorageState;
+    const progress = {
+      ...stored.progress,
+      ...(stored.progress?.["quarter-master"] === undefined &&
+      stored.counters?.continuesUsed !== undefined
+        ? { "quarter-master": stored.counters.continuesUsed }
+        : {}),
+    };
+
+    return createAchievementState<AchievementId>({
+      progress,
+      unlocked: stored.unlocked,
+      unlockedAt: stored.unlockedAt,
+    });
   } catch {
-    return {};
+    return createAchievementState<AchievementId>();
   }
 };
 
@@ -356,45 +376,25 @@ const createDefaultRunState = (): RunState => ({
  */
 class AchievementSystem {
   private readonly context: GameDataStore;
-  private counters: Record<"continuesUsed", number>;
   private era: EraState | undefined;
   private run: RunState = createDefaultRunState();
-  private readonly unlocked: Set<AchievementId>;
-  private readonly unlockedAt: Partial<Record<AchievementId, number>>;
+  private state: AchievementState<AchievementId>;
   private readonly waves = new Map<string, WaveState>();
 
   constructor(context: GameDataStore) {
     this.context = context;
-    const storage = readStorage();
-
-    this.counters = {
-      continuesUsed: storage.counters?.continuesUsed ?? 0,
-    };
-    this.unlocked = new Set(storage.unlocked ?? []);
-    this.unlockedAt = { ...storage.unlockedAt };
+    this.state = readStorage();
   }
 
-  getUnlocked = (): AchievementId[] => [...this.unlocked];
+  getUnlocked = (): AchievementId[] => [...this.state.unlocked];
 
-  hasUnlocked = (id: AchievementId): boolean => this.unlocked.has(id);
+  hasUnlocked = (id: AchievementId): boolean => this.state.unlocked.includes(id);
 
   getStatuses = (): AchievementStatus[] =>
-    achievementDefinitions.map((achievement) => {
-      const progress =
-        achievement.id === "quarter-master" && achievement.progressGoal
-          ? {
-            current: this.counters.continuesUsed,
-            goal: achievement.progressGoal,
-          }
-          : undefined;
-
-      return {
-        ...achievement,
-        progress,
-        unlocked: this.hasUnlocked(achievement.id),
-        unlockedAt: this.unlockedAt[achievement.id],
-      };
-    });
+    getEngineAchievementStatuses(
+      achievementDefinitions,
+      this.state
+    ) as AchievementStatus[];
 
   onRunStarted = (playerData: PlayerData): void => {
     if (!this.canTrackAchievements()) {
@@ -436,19 +436,13 @@ class AchievementSystem {
     this.run.bossDefeatedAfterContinueUntilTick = this.getTicks() + immediateBossTicks;
     this.run.usedEveryContinue =
       this.run.initialContinues > 0 && remainingContinues <= 0;
-    this.counters.continuesUsed += 1;
-
     this.unlock("insert-coin");
 
     if (this.run.usedEveryContinue) {
       this.unlock("credit-feeder");
     }
 
-    if (this.counters.continuesUsed >= 25) {
-      this.unlock("quarter-master");
-    }
-
-    this.persist();
+    this.addProgress("quarter-master", 1);
   };
 
   onGameOver = (): void => {
@@ -687,15 +681,9 @@ class AchievementSystem {
 
   reset = (): void => {
     logger.warning("Resetting achievements");
-    this.counters = {
-      continuesUsed: 0,
-    };
     this.era = undefined;
     this.run = createDefaultRunState();
-    this.unlocked.clear();
-    Object.keys(this.unlockedAt).forEach((id) => {
-      delete this.unlockedAt[id as AchievementId];
-    });
+    this.state = createAchievementState<AchievementId>();
     this.waves.clear();
 
     try {
@@ -760,14 +748,38 @@ class AchievementSystem {
   private canTrackAchievements = (): boolean => !this.context._isDemoMode;
 
   private unlock = (id: AchievementId): void => {
-    if (this.unlocked.has(id)) {
+    const result = unlockAchievement(this.state, id, Date.now());
+
+    this.state = result.state;
+
+    if (!result.unlocked) {
       return;
     }
 
-    this.unlocked.add(id);
-    this.unlockedAt[id] = Date.now();
-    logger.info("Achievement unlocked", { id });
+    this.handleUnlocked(id);
     this.persist();
+  };
+
+  private addProgress = (id: AchievementId, amount: number): void => {
+    const result = addAchievementProgress(
+      achievementDefinitions,
+      this.state,
+      id,
+      amount,
+      Date.now()
+    );
+
+    this.state = result.state;
+
+    if (result.unlocked) {
+      this.handleUnlocked(id);
+    }
+
+    this.persist();
+  };
+
+  private handleUnlocked = (id: AchievementId): void => {
+    logger.info("Achievement unlocked", { id });
     window.dispatchEvent(
       new CustomEvent("timePilot:achievementUnlocked", {
         detail: achievementDefinitions.find((achievement) => achievement.id === id),
@@ -785,11 +797,7 @@ class AchievementSystem {
     try {
       storage.setItem(
         achievementStorageKey,
-        JSON.stringify({
-          counters: this.counters,
-          unlocked: this.getUnlocked(),
-          unlockedAt: this.unlockedAt,
-        } satisfies AchievementStorageState)
+        JSON.stringify(this.state)
       );
     } catch {
       // Achievement persistence should never interrupt gameplay.
