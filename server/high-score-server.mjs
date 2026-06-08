@@ -1,15 +1,19 @@
-/* global Buffer, console, process */
+/* global console, process */
 
-import { createHmac, randomUUID, timingSafeEqual } from "node:crypto";
+import { randomUUID } from "node:crypto";
 import { createReadStream, existsSync, readFileSync } from "node:fs";
 import { mkdir, readFile, stat, writeFile } from "node:fs/promises";
 import { createServer } from "node:http";
 import { dirname, extname, resolve, sep } from "node:path";
 import { fileURLToPath, URL } from "node:url";
 import {
+  createHighScoreServerRunReceipt,
   getHighScorePlausibilityReasons,
+  isHighScoreServerRunRecord,
+  isHighScoreServerRunRecordUsable,
+  validateHighScoreServerRunReceipt,
   validateHighScoreSubmission,
-} from "arcade-engine";
+} from "arcade-engine/high-scores";
 import pg from "pg";
 
 const { Pool } = pg;
@@ -243,28 +247,45 @@ const createPostgresStore = (pool) => ({
       [run.runId, run.tokenHash, run.issuedAt, run.expiresAt]
     );
   },
-  async saveScoreForRun(runId, tokenHash, now, score) {
+  async saveScoreForRun(receipt, now, score) {
     const client = await pool.connect();
 
     try {
       await client.query("begin");
       const result = await client.query(
-        `update time_pilot_high_score_runs
-          set used = true
+        `select run_id, token_hash, issued_at, expires_at, used
+          from time_pilot_high_score_runs
           where run_id = $1
-            and token_hash = $2
-            and used = false
-            and expires_at >= $3
-          returning run_id, token_hash, issued_at, expires_at, used`,
-        [runId, tokenHash, now]
+          for update`,
+        [receipt.runId]
       );
       const row = result.rows[0];
+      const run = row
+        ? {
+          expiresAt: Number(row.expires_at),
+          issuedAt: Number(row.issued_at),
+          runId: row.run_id,
+          tokenHash: row.token_hash,
+          used: Boolean(row.used),
+        }
+        : null;
 
-      if (!row) {
+      if (
+        !(await validateHighScoreServerRunReceipt(receipt, run, {
+          now: () => now,
+          secret: serverSecret,
+        }))
+      ) {
         await client.query("rollback");
         return null;
       }
 
+      await client.query(
+        `update time_pilot_high_score_runs
+          set used = true
+          where run_id = $1`,
+        [receipt.runId]
+      );
       await client.query(
         `insert into time_pilot_high_scores
           (id, created_at, name, score, settings, stats, game_version, submitted_at, received_at, run_id)
@@ -280,16 +301,16 @@ const createPostgresStore = (pool) => ({
           score.gameVersion,
           score.submittedAt,
           score.receivedAt,
-          score.runId,
+          receipt.runId,
         ]
       );
       await client.query("commit");
 
       return {
-        expiresAt: Number(row.expires_at),
-        issuedAt: Number(row.issued_at),
-        runId: row.run_id,
-        tokenHash: row.token_hash,
+        expiresAt: run.expiresAt,
+        issuedAt: run.issuedAt,
+        runId: run.runId,
+        tokenHash: run.tokenHash,
         used: true,
       };
     } catch (error) {
@@ -324,7 +345,9 @@ const loadJsonState = async () => {
   try {
     const data = JSON.parse(await readFile(jsonStorePath, "utf8"));
 
-    jsonState.runs = Array.isArray(data.runs) ? data.runs : [];
+    jsonState.runs = Array.isArray(data.runs)
+      ? data.runs.filter(isHighScoreServerRunRecord)
+      : [];
     jsonState.scores = Array.isArray(data.scores) ? data.scores : [];
   } catch {
     jsonState.runs = [];
@@ -355,14 +378,15 @@ const createJsonStore = () => ({
     jsonState.runs.push(run);
     await saveJsonState();
   },
-  async saveScoreForRun(runId, tokenHash, now, score) {
-    const run = jsonState.runs.find((candidate) => candidate.runId === runId);
+  async saveScoreForRun(receipt, now, score) {
+    const run = jsonState.runs.find((candidate) => candidate.runId === receipt.runId);
 
     if (
-      !run ||
-      run.used ||
-      run.expiresAt < now ||
-      !safeTokenEqual(run.tokenHash, tokenHash)
+      !isHighScoreServerRunRecordUsable(run, now) ||
+      !(await validateHighScoreServerRunReceipt(receipt, run, {
+        now: () => now,
+        secret: serverSecret,
+      }))
     ) {
       return null;
     }
@@ -524,19 +548,16 @@ const handleListScores = async (response) => {
 
 const handleCreateRun = async (response) => {
   const store = await getStore();
-  const issuedAt = Date.now();
-  const runId = randomUUID();
-  const token = signRunToken(runId, issuedAt);
-
-  await store.createRun({
-    expiresAt: issuedAt + runReceiptTtlMs,
-    issuedAt,
-    runId,
-    tokenHash: hashToken(token),
-    used: false,
+  const { receipt, record } = await createHighScoreServerRunReceipt({
+    now: () => Date.now(),
+    randomUUID,
+    secret: serverSecret,
+    ttlMs: runReceiptTtlMs,
   });
 
-  sendJson(response, 201, { issuedAt, runId, token });
+  await store.createRun(record);
+
+  sendJson(response, 201, receipt);
 };
 
 const handleSubmitScore = async (request, response) => {
@@ -564,8 +585,7 @@ const handleSubmitScore = async (request, response) => {
   };
   const store = await getStore();
   const storedRun = await store.saveScoreForRun(
-    validation.run.runId,
-    hashToken(validation.run.token),
+    validation.run,
     receivedAt,
     scoreRecord
   );
@@ -693,24 +713,6 @@ const setCorsHeaders = (response) => {
   response.setHeader("Access-Control-Allow-Origin", corsOrigin);
   response.setHeader("Access-Control-Allow-Methods", "GET,POST,OPTIONS");
   response.setHeader("Access-Control-Allow-Headers", "Content-Type");
-};
-
-const signRunToken = (runId, issuedAt) =>
-  createHmac("sha256", serverSecret)
-    .update(`${runId}:${issuedAt}`)
-    .digest("base64url");
-
-const hashToken = (token) =>
-  createHmac("sha256", serverSecret).update(token).digest("base64url");
-
-const safeTokenEqual = (left, right) => {
-  const leftBuffer = Buffer.from(left);
-  const rightBuffer = Buffer.from(right);
-
-  return (
-    leftBuffer.length === rightBuffer.length &&
-    timingSafeEqual(leftBuffer, rightBuffer)
-  );
 };
 
 const toPublicScore = (score) => ({

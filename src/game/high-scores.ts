@@ -155,14 +155,22 @@ export const saveHighScore = (
   stats: string[],
   run?: HighScoreRunReceipt | null,
   settings?: HighScoreSettings
-): HighScoreEntry =>
-  getHighScoreManager().saveHighScore(
+): HighScoreEntry => {
+  const manager = getHighScoreManager();
+  const entry = manager.saveHighScore(
     name,
     score,
     stats,
     run,
     normalizeHighScoreSettings(settings)
   ) as HighScoreEntry;
+
+  if (!run && !isApiDisabledByConfig()) {
+    void manager.syncHighScores();
+  }
+
+  return entry;
+};
 
 /**
  * Best-effort two-way sync between local high scores and the remote API.

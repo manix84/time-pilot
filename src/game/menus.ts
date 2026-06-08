@@ -1,16 +1,17 @@
 /* Converted from TimePilot.Menu.js (AMD) to ESM TypeScript. */
+import {
+  defaultDisplayFilterMode as defaultFilterMode,
+  displayFilterModeLabels as filterModeLabels,
+  displayFilterModes as filterModes,
+  displayFilterPresets as filterPresets,
+  displayFilterSettingDescriptions as filterSettingDescriptions,
+  displayFilterSettingKeys as filterSettingKeys,
+  displayFilterSettingLabels as filterSettingLabels,
+  getNextRuntimeLogLevel as getNextLogLevel,
+  normalizeDisplayFilterIntensity as normalizeFilterIntensity,
+} from "arcade-engine";
 import { assetPath } from "./asset-path";
 import { levels, player } from "./constants";
-import {
-  defaultFilterMode,
-  filterModeLabels,
-  filterModes,
-  filterSettingKeys,
-  filterSettingLabels,
-  filterSettingDescriptions,
-  filterPresets,
-  normalizeFilterIntensity,
-} from "./filter-settings";
 import { gameSpeedOptions, renderFpsOptions } from "./game-timing";
 import { fakeHighScores } from "./high-scores";
 import i18n, {
@@ -23,7 +24,6 @@ import {
   achievementCardIconSize,
   achievementCardWidth,
 } from "./achievement-layout";
-import { getNextLogLevel } from "./log-levels";
 import palette from "./palette";
 import type { AchievementStatus } from "./achievements";
 import type {

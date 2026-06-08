@@ -1,9 +1,4 @@
-/**
- * Browser orientation API shape used by mobile PWAs.
- */
-type LockableScreenOrientation = ScreenOrientation & {
-  lock?: (orientation: "landscape") => Promise<void>;
-};
+import { enterImmersiveMode } from "arcade-engine";
 
 /**
  * Requests fullscreen canvas presentation and landscape orientation.
@@ -13,15 +8,5 @@ type LockableScreenOrientation = ScreenOrientation & {
  * during automatic app boot.
  */
 export const enterGameFullscreen = async (): Promise<void> => {
-  try {
-    if (!document.fullscreenElement) {
-      await document.documentElement.requestFullscreen();
-    }
-
-    await (screen.orientation as LockableScreenOrientation | undefined)?.lock?.(
-      "landscape"
-    );
-  } catch {
-    // Some browsers block fullscreen or orientation locking; the game still runs.
-  }
+  await enterImmersiveMode({ orientation: "landscape" });
 };

@@ -1,4 +1,15 @@
 /* Converted from TimePilot.userOptions.js (AMD) to ESM TypeScript. */
+import {
+  createUserOptionsStore,
+  defaultCustomDisplayFilterSettings as defaultCustomFilterSettings,
+  defaultDisplayFilterMode as defaultFilterMode,
+  displayFilterModes as filterModes,
+  isRuntimeLogLevel as isLogLevel,
+  normalizeDisplayFilterIntensity as normalizeFilterIntensity,
+  normalizeDisplayFilterSettings as normalizeFilterSettings,
+  normalizeUserOptions,
+  userOptionsChangedEventName,
+} from "arcade-engine";
 import type {
   ControllerType,
   FilterMode,
@@ -7,19 +18,11 @@ import type {
   UserOptions,
 } from "./types";
 import {
-  defaultCustomFilterSettings,
-  defaultFilterMode,
-  filterModes,
-  normalizeFilterIntensity,
-  normalizeFilterSettings,
-} from "./filter-settings";
-import {
   defaultGameSpeed,
   defaultRenderFps,
   normalizeGameSpeed,
   normalizeRenderFps,
 } from "./game-timing";
-import { isLogLevel } from "./log-levels";
 
 const supportedLanguages: GameLanguage[] = [
   "en",
@@ -61,7 +64,7 @@ type PersistedUserOptions = Pick<
   | "videoFilterMode"
 > & {
   optionsVersion?: number;
-};
+} & Record<string, unknown>;
 
 /**
  * Local storage key for persisted user options.
@@ -176,6 +179,79 @@ const getOptionsStorage = (): Storage | null => {
   }
 };
 
+const optionsStorage = {
+  getItem: (key: string): string | null => {
+    const storage = getOptionsStorage();
+
+    if (!storage) {
+      return null;
+    }
+
+    try {
+      if (key !== userOptionsStorageKey) {
+        return storage.getItem(key);
+      }
+
+      const storedOptions = parseStoredOptions(
+        storage.getItem(userOptionsStorageKey)
+      );
+      const legacyDebugOptions = parseStoredOptions(
+        storage.getItem(legacyDebugStorageKey)
+      ) as Partial<Pick<UserOptions, "debug" | "enableDebug">>;
+
+      return JSON.stringify({
+        ...legacyDebugOptions,
+        ...storedOptions,
+        debug: {
+          ...getObjectRecord(legacyDebugOptions.debug),
+          ...getObjectRecord(storedOptions.debug),
+        },
+      });
+    } catch {
+      return null;
+    }
+  },
+  removeItem: (key: string): void => {
+    const storage = getOptionsStorage();
+
+    try {
+      storage?.removeItem(key);
+
+      if (key === userOptionsStorageKey) {
+        storage?.removeItem(legacyDebugStorageKey);
+      }
+    } catch {
+      // Preference persistence is best-effort.
+    }
+  },
+  setItem: (key: string, value: string): void => {
+    try {
+      getOptionsStorage()?.setItem(key, value);
+    } catch {
+      // Preference persistence is best-effort.
+    }
+  },
+};
+
+const parseStoredOptions = (value: string | null): Record<string, unknown> => {
+  if (!value) {
+    return {};
+  }
+
+  try {
+    const parsed = JSON.parse(value);
+
+    return parsed && typeof parsed === "object"
+      ? (parsed as Record<string, unknown>)
+      : {};
+  } catch {
+    return {};
+  }
+};
+
+const getObjectRecord = (value: unknown): Record<string, unknown> =>
+  value && typeof value === "object" ? (value as Record<string, unknown>) : {};
+
 const isNumberArray = (value: unknown): value is number[] => {
   return Array.isArray(value) && value.every((item) => typeof item === "number");
 };
@@ -198,243 +274,162 @@ const normalizeKeyboardBindings = (bindings: unknown): KeyboardBindings => {
   return normalized;
 };
 
-const readStoredOptions = (): Partial<PersistedUserOptions> => {
-  const storage = getOptionsStorage();
+const normalizeStoredOptions = (
+  stored: unknown,
+  defaults: PersistedUserOptions
+): PersistedUserOptions => {
+  const base = normalizeUserOptions(stored, defaults);
+  const storedOptions =
+    stored && typeof stored === "object"
+      ? (stored as Partial<PersistedUserOptions>)
+      : {};
 
-  if (!storage) {
-    return {};
-  }
-
-  try {
-    const storedOptions = JSON.parse(
-      storage.getItem(userOptionsStorageKey) ?? "{}"
-    ) as Partial<PersistedUserOptions>;
-    const legacyDebugOptions = JSON.parse(
-      storage.getItem(legacyDebugStorageKey) ?? "{}"
-    ) as Partial<Pick<UserOptions, "debug" | "enableDebug">>;
-
-    return {
-      ...legacyDebugOptions,
-      ...storedOptions,
-      debug: {
-        ...legacyDebugOptions.debug,
-        ...storedOptions.debug,
-      },
-    };
-  } catch {
-    return {};
-  }
+  return {
+    ...base,
+    debug: {
+      ...defaults.debug,
+      ...(storedOptions.debug && typeof storedOptions.debug === "object"
+        ? storedOptions.debug
+        : {}),
+    },
+    controllerType:
+      storedOptions.controllerType === "keyboard1" ||
+      storedOptions.controllerType === "keyboard2" ||
+      storedOptions.controllerType === "touch"
+        ? storedOptions.controllerType
+        : defaults.controllerType,
+    debugContinues: normalizeIntegerOption(
+      storedOptions.debugContinues,
+      defaults.debugContinues,
+      0,
+      99
+    ),
+    debugLives: normalizeIntegerOption(
+      storedOptions.debugLives,
+      defaults.debugLives,
+      1,
+      99
+    ),
+    filterSettings: normalizeFilterSettings(storedOptions.filterSettings),
+    gameSpeed: normalizeGameSpeed(storedOptions.gameSpeed),
+    gameZoom: normalizeZoomOption(storedOptions.gameZoom),
+    keyboardBindings: normalizeKeyboardBindings(storedOptions.keyboardBindings),
+    language: supportedLanguages.includes(storedOptions.language as GameLanguage)
+      ? storedOptions.language as GameLanguage
+      : defaults.language,
+    logLevel: isLogLevel(storedOptions.logLevel)
+      ? storedOptions.logLevel
+      : defaults.logLevel,
+    renderFps: normalizeRenderFps(storedOptions.renderFps),
+    touchSteeringOverlay:
+      storedOptions.optionsVersion === userOptionsVersion
+        ? storedOptions.touchSteeringOverlay ?? defaults.touchSteeringOverlay
+        : defaults.touchSteeringOverlay,
+    uiZoom: normalizeZoomOption(storedOptions.uiZoom),
+    videoFilterMode: filterModes.includes(storedOptions.videoFilterMode as FilterMode)
+      ? storedOptions.videoFilterMode as FilterMode
+      : defaults.videoFilterMode,
+  };
 };
 
-const storedOptions = readStoredOptions();
-const storedLanguage = supportedLanguages.includes(storedOptions.language as GameLanguage)
-  ? storedOptions.language as GameLanguage
-  : defaultPersistedOptions.language;
-const storedFilterMode = filterModes.includes(storedOptions.videoFilterMode as FilterMode)
-  ? storedOptions.videoFilterMode as FilterMode
-  : defaultPersistedOptions.videoFilterMode;
-const storedLogLevel = isLogLevel(storedOptions.logLevel)
-  ? storedOptions.logLevel
-  : defaultPersistedOptions.logLevel;
-const storedTouchSteeringOverlay =
-  storedOptions.optionsVersion === userOptionsVersion
-    ? storedOptions.touchSteeringOverlay
-    : undefined;
+const userOptionsStore = createUserOptionsStore<PersistedUserOptions>({
+  defaults: cloneDefaultPersistedOptions(),
+  eventName: userOptionsChangedEventName,
+  normalize: normalizeStoredOptions,
+  storage: optionsStorage,
+  storageKey: userOptionsStorageKey,
+  version: userOptionsVersion,
+});
 
-const dispatchUserOptionsChanged = (): void => {
-  window.dispatchEvent(new CustomEvent("timePilot:userOptionsChanged"));
+const applyPersistedOptions = (options: PersistedUserOptions): void => {
+  userOptions.debug = { ...options.debug };
+  userOptions.debugContinues = options.debugContinues;
+  userOptions.debugLives = options.debugLives;
+  userOptions.enableDebug = options.enableDebug;
+  userOptions.controllerType = options.controllerType;
+  userOptions.gameZoom = options.gameZoom;
+  userOptions.gamepadEnabled = options.gamepadEnabled;
+  userOptions.gameSpeed = options.gameSpeed;
+  userOptions.filterSettings = { ...options.filterSettings };
+  userOptions.keyboardBindings = {
+    down: [...options.keyboardBindings.down],
+    fire: [...options.keyboardBindings.fire],
+    fullscreen: [...options.keyboardBindings.fullscreen],
+    left: [...options.keyboardBindings.left],
+    menu: [...options.keyboardBindings.menu],
+    pause: [...options.keyboardBindings.pause],
+    restart: [...options.keyboardBindings.restart],
+    right: [...options.keyboardBindings.right],
+    up: [...options.keyboardBindings.up],
+  };
+  userOptions.keepScreenAwake = options.keepScreenAwake;
+  userOptions.language = options.language;
+  userOptions.logLevel = options.logLevel;
+  userOptions.masterVolume = options.masterVolume;
+  userOptions.musicVolume = options.musicVolume;
+  userOptions.renderFps = options.renderFps;
+  userOptions.effectsVolume = options.effectsVolume;
+  userOptions.touchSteeringOverlay = options.touchSteeringOverlay;
+  userOptions.uiZoom = options.uiZoom;
+  userOptions.videoFilterMode = options.videoFilterMode;
 };
 
-const writeUserOptions = (): void => {
-  const storage = getOptionsStorage();
-
-  if (!storage) {
-    dispatchUserOptionsChanged();
-    return;
-  }
-
-  try {
-    storage.setItem(
-      userOptionsStorageKey,
-      JSON.stringify({
-        controllerType: userOptions.controllerType,
-        debug: userOptions.debug,
-        debugContinues: userOptions.debugContinues,
-        debugLives: userOptions.debugLives,
-        enableDebug: userOptions.enableDebug,
-        effectsVolume: userOptions.effectsVolume,
-        gamepadEnabled: userOptions.gamepadEnabled,
-        gameSpeed: userOptions.gameSpeed,
-        gameZoom: userOptions.gameZoom,
-        filterSettings: userOptions.filterSettings,
-        keyboardBindings: userOptions.keyboardBindings,
-        keepScreenAwake: userOptions.keepScreenAwake,
-        language: userOptions.language,
-        logLevel: userOptions.logLevel,
-        masterVolume: userOptions.masterVolume,
-        musicVolume: userOptions.musicVolume,
-        renderFps: userOptions.renderFps,
-        optionsVersion: userOptionsVersion,
-        touchSteeringOverlay: userOptions.touchSteeringOverlay,
-        uiZoom: userOptions.uiZoom,
-        videoFilterMode: userOptions.videoFilterMode,
-      } satisfies PersistedUserOptions)
-    );
-  } catch {
-    // Persistence is best-effort; gameplay should not depend on storage.
-  }
-
-  dispatchUserOptionsChanged();
-};
+const initialOptions = userOptionsStore.getOptions();
 
 var userOptions: UserOptions = {
-  debug: {
-    /**
-     * Draw either a circle or a box showing what counts as a hit, either by a bullet/missile or the player.
-     * @type {Boolean}
-     */
-    showHitboxes:
-      storedOptions.debug?.showHitboxes ??
-      defaultPersistedOptions.debug.showHitboxes,
-
-    /**
-     * Render corner points to show the sprite dimensions.
-     * @type {Boolean}
-     */
-    showSpriteCorners:
-      storedOptions.debug?.showSpriteCorners ??
-      defaultPersistedOptions.debug.showSpriteCorners,
-
-    /**
-     * Render corner points to show the sprite dimensions.
-     * @type {Boolean}
-     */
-    showSpriteCenters:
-      storedOptions.debug?.showSpriteCenters ??
-      defaultPersistedOptions.debug.showSpriteCenters,
-
-    /**
-     * Display gameplay controls on the HUD.
-     * @type {Boolean}
-     */
-    showControlsOverlay:
-      storedOptions.debug?.showControlsOverlay ??
-      defaultPersistedOptions.debug.showControlsOverlay,
-
-    /**
-     * Draw facing and steering vectors for intentional moving entities.
-     * @type {Boolean}
-     */
-    showHeadingVectors:
-      storedOptions.debug?.showHeadingVectors ??
-      defaultPersistedOptions.debug.showHeadingVectors,
-
-    /**
-     * Write the current player coordinates on screen.
-     * @type {Boolean}
-     */
-    showPlayerCoordinates:
-      storedOptions.debug?.showPlayerCoordinates ??
-      defaultPersistedOptions.debug.showPlayerCoordinates,
-
-    /**
-     * Fill the shortest turning arc between heading and steering vectors.
-     * @type {Boolean}
-     */
-    showSteeringArc:
-      storedOptions.debug?.showSteeringArc ??
-      defaultPersistedOptions.debug.showSteeringArc,
-
-    /**
-     * Make the player immortal.
-     * @type {boolean}
-     */
-    invincible:
-      storedOptions.debug?.invincible ??
-      defaultPersistedOptions.debug.invincible,
-  },
-
-  /**
-   * Enable debug menus and overlays.
-   * @type {Boolean}
-   */
-  enableDebug:
-    storedOptions.enableDebug ?? defaultPersistedOptions.enableDebug,
-
-  /**
-   * Selected controller to be accessed on the controlInterface.
-   * @type {String}
-   */
-  controllerType:
-    storedOptions.controllerType ?? defaultPersistedOptions.controllerType,
-  debugContinues: normalizeIntegerOption(
-    storedOptions.debugContinues,
-    defaultPersistedOptions.debugContinues,
-    0,
-    99
-  ),
-  debugLives: normalizeIntegerOption(
-    storedOptions.debugLives,
-    defaultPersistedOptions.debugLives,
-    1,
-    99
-  ),
-  gameZoom: normalizeZoomOption(storedOptions.gameZoom),
-
-  /**
-   * Poll the browser Gamepad API alongside the selected keyboard layout.
-   */
-  gamepadEnabled:
-    storedOptions.gamepadEnabled ?? defaultPersistedOptions.gamepadEnabled,
-  gameSpeed: normalizeGameSpeed(storedOptions.gameSpeed),
-
-  filterSettings: normalizeFilterSettings(storedOptions.filterSettings),
-
-  keyboardBindings: normalizeKeyboardBindings(storedOptions.keyboardBindings),
-
-  /**
-   * Keep the screen awake during player runs in installed PWA mode.
-   */
-  keepScreenAwake:
-    storedOptions.keepScreenAwake ?? defaultPersistedOptions.keepScreenAwake,
-
-  language: storedLanguage,
-  logLevel: storedLogLevel,
-  masterVolume: storedOptions.masterVolume ?? defaultPersistedOptions.masterVolume,
-  musicVolume: storedOptions.musicVolume ?? defaultPersistedOptions.musicVolume,
-  renderFps: normalizeRenderFps(storedOptions.renderFps),
-  effectsVolume: storedOptions.effectsVolume ?? defaultPersistedOptions.effectsVolume,
-  /**
-   * Display a live touch steering guide during gameplay.
-   */
-  touchSteeringOverlay:
-    storedTouchSteeringOverlay ?? defaultPersistedOptions.touchSteeringOverlay,
-  uiZoom: normalizeZoomOption(storedOptions.uiZoom),
-  videoFilterMode: storedFilterMode,
+  ...initialOptions,
 
   /**
    * Set options in this object (userOptions), and store it so that the user doesn't have to set options each time
    * @method
    */
   setOption: (key, value) => {
-    userOptions[key] = value;
-    writeUserOptions();
+    if (
+      key === "setOption" ||
+      key === "setKeyboardBinding" ||
+      key === "setDebugOption" ||
+      key === "setFilterSetting"
+    ) {
+      return;
+    }
+
+    applyPersistedOptions(
+      userOptionsStore.setOption(key as keyof PersistedUserOptions, value as never)
+    );
   },
 
   setKeyboardBinding: (key, value) => {
-    userOptions.keyboardBindings[key] = value;
-    writeUserOptions();
+    applyPersistedOptions(
+      userOptionsStore.setOptions((current) => ({
+        keyboardBindings: {
+          ...current.keyboardBindings,
+          [key]: value,
+        },
+      }))
+    );
   },
 
   setDebugOption: (key, value) => {
-    userOptions.debug[key] = value;
-    writeUserOptions();
+    applyPersistedOptions(
+      userOptionsStore.setOptions((current) => ({
+        debug: {
+          ...current.debug,
+          [key]: value,
+        },
+      }))
+    );
   },
 
   setFilterSetting: (key, value) => {
-    userOptions.filterSettings[key] = normalizeFilterIntensity(value);
-    userOptions.videoFilterMode = "custom";
-    writeUserOptions();
+    applyPersistedOptions(
+      userOptionsStore.setOptions((current) => ({
+        filterSettings: {
+          ...current.filterSettings,
+          [key]: normalizeFilterIntensity(value),
+        },
+        videoFilterMode: "custom",
+      }))
+    );
   },
 };
 
@@ -442,38 +437,7 @@ var userOptions: UserOptions = {
  * Restores runtime user options to defaults and removes persisted preferences.
  */
 export const resetUserOptions = (): void => {
-  const defaults = cloneDefaultPersistedOptions();
-  const storage = getOptionsStorage();
-
-  userOptions.debug = defaults.debug;
-  userOptions.debugContinues = defaults.debugContinues;
-  userOptions.debugLives = defaults.debugLives;
-  userOptions.enableDebug = defaults.enableDebug;
-  userOptions.controllerType = defaults.controllerType;
-  userOptions.gameZoom = defaults.gameZoom;
-  userOptions.gamepadEnabled = defaults.gamepadEnabled;
-  userOptions.gameSpeed = defaults.gameSpeed;
-  userOptions.filterSettings = defaults.filterSettings;
-  userOptions.keyboardBindings = defaults.keyboardBindings;
-  userOptions.keepScreenAwake = defaults.keepScreenAwake;
-  userOptions.language = defaults.language;
-  userOptions.logLevel = defaults.logLevel;
-  userOptions.masterVolume = defaults.masterVolume;
-  userOptions.musicVolume = defaults.musicVolume;
-  userOptions.renderFps = defaults.renderFps;
-  userOptions.effectsVolume = defaults.effectsVolume;
-  userOptions.touchSteeringOverlay = defaults.touchSteeringOverlay;
-  userOptions.uiZoom = defaults.uiZoom;
-  userOptions.videoFilterMode = defaults.videoFilterMode;
-
-  try {
-    storage?.removeItem(userOptionsStorageKey);
-    storage?.removeItem(legacyDebugStorageKey);
-  } catch {
-    // Resetting preferences should remain best-effort like normal persistence.
-  }
-
-  dispatchUserOptionsChanged();
+  applyPersistedOptions(userOptionsStore.reset());
 };
 
 export default userOptions;
