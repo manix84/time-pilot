@@ -15,6 +15,7 @@ import {
   canUseScreenWakeLock,
   ScreenWakeLockController,
 } from "../game/screen-wake-lock";
+import { userOptionsChangedEventName } from "arcade-engine";
 import { useTimePilot } from "../game/use-time-pilot";
 import userOptions from "../game/user-options";
 import styles from "./TimePilotGame.module.scss";
@@ -215,10 +216,10 @@ function TimePilotGame({
       setFilterVersion((version) => version + 1);
     };
 
-    window.addEventListener("timePilot:userOptionsChanged", handleOptionsChanged);
+    window.addEventListener(userOptionsChangedEventName, handleOptionsChanged);
 
     return () => {
-      window.removeEventListener("timePilot:userOptionsChanged", handleOptionsChanged);
+      window.removeEventListener(userOptionsChangedEventName, handleOptionsChanged);
     };
   }, []);
 

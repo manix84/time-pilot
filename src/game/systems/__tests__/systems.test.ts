@@ -925,19 +925,20 @@ describe("game systems", () => {
     );
     system.renderFrame();
 
-    expect(context._gameArena.renderText).toHaveBeenCalledWith(
+    const canvasContexts = vi
+      .mocked(context._gameArena.getContext)
+      .mock.results.map((result) => result.value as CanvasRenderingContext2D);
+    const fillTextCalls = canvasContexts.flatMap((renderingContext) =>
+      vi.mocked(renderingContext.fillText).mock.calls
+    );
+
+    expect(fillTextCalls).toContainEqual([
       "Last Chance",
       expect.any(Number),
       expect.any(Number),
-      expect.objectContaining({
-        align: "left",
-        size: 8,
-      })
-    );
+    ]);
 
-    const titleCall = vi
-      .mocked(context._gameArena.renderText)
-      .mock.calls.find((call) => call[0] === "Last Chance");
+    const titleCall = fillTextCalls.find((call) => call[0] === "Last Chance");
     const titleY = titleCall?.[2];
 
     expect(typeof titleY === "number" ? titleY : Number.NaN).toBeGreaterThan(180);

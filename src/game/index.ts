@@ -14,6 +14,7 @@ import {
   GameArena,
   Sound as SoundEngine,
   Ticker,
+  userOptionsChangedEventName,
 } from "arcade-engine";
 import { gameTickRate } from "./game-timing";
 import {
@@ -125,7 +126,7 @@ SoundEngine.configure({
   onPlaybackBlocked: (details) => {
     logger.warning("Audio playback was blocked", details);
   },
-  volumeChangeEventName: "timePilot:userOptionsChanged",
+  volumeChangeEventName: userOptionsChangedEventName,
   volumeChangeEventTarget: typeof window !== "undefined" ? window : undefined,
 });
 
@@ -378,7 +379,7 @@ export class TimePilot {
     this.removeSessionSnapshotListeners();
     this.removeBrowserHistoryNavigationListener();
     window.removeEventListener(
-      "timePilot:userOptionsChanged",
+      userOptionsChangedEventName,
       this.syncTickerTiming
     );
     this.releaseScreenWakeLock();
@@ -632,7 +633,7 @@ export class TimePilot {
     this.addSessionSnapshotListeners();
     this.addBrowserHistoryNavigationListener();
     window.addEventListener(
-      "timePilot:userOptionsChanged",
+      userOptionsChangedEventName,
       this.syncTickerTiming
     );
     this.context._player.setData("level", 1);
