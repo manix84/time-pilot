@@ -49,6 +49,66 @@ describe("user options persistence", () => {
     expect(userOptions.renderFps).toBe("max");
   });
 
+  it("uses defaults when persisted options contain corrupted JSON", async () => {
+    vi.resetModules();
+    Object.defineProperty(globalThis, "localStorage", {
+      configurable: true,
+      value: createStorageMock({
+        "timePilot.debugOptions": "{bad debug json",
+        "timePilot.userOptions": "{bad options json",
+      }),
+    });
+
+    const { default: userOptions } = await import("../user-options");
+
+    expect(userOptions.keyboardBindings.up).toEqual([38, 87]);
+    expect(userOptions.keepScreenAwake).toBe(true);
+    expect(userOptions.language).toBe("en");
+  });
+
+  it("uses defaults when localStorage reads throw", async () => {
+    vi.resetModules();
+    Object.defineProperty(globalThis, "localStorage", {
+      configurable: true,
+      value: {
+        ...createStorageMock(),
+        getItem: vi.fn(() => {
+          throw new DOMException("Blocked", "SecurityError");
+        }),
+      },
+    });
+
+    const { default: userOptions } = await import("../user-options");
+
+    expect(userOptions.keyboardBindings.up).toEqual([38, 87]);
+    expect(userOptions.keepScreenAwake).toBe(true);
+    expect(userOptions.language).toBe("en");
+  });
+
+  it("does not throw when localStorage writes and removes fail", async () => {
+    vi.resetModules();
+    Object.defineProperty(globalThis, "localStorage", {
+      configurable: true,
+      value: {
+        ...createStorageMock(),
+        removeItem: vi.fn(() => {
+          throw new DOMException("Blocked", "SecurityError");
+        }),
+        setItem: vi.fn(() => {
+          throw new DOMException("Quota exceeded", "QuotaExceededError");
+        }),
+      },
+    });
+
+    const { default: userOptions, resetUserOptions } = await import("../user-options");
+
+    expect(() => {
+      userOptions.setOption("uiZoom", 125);
+      resetUserOptions();
+    }).not.toThrow();
+    expect(userOptions.uiZoom).toBe(100);
+  });
+
   it("normalizes persisted render FPS and game speed options", async () => {
     vi.resetModules();
     Object.defineProperty(globalThis, "localStorage", {

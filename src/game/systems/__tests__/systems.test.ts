@@ -931,12 +931,22 @@ describe("game systems", () => {
     const fillTextCalls = canvasContexts.flatMap((renderingContext) =>
       vi.mocked(renderingContext.fillText).mock.calls
     );
+    const drawImageCalls = canvasContexts.flatMap((renderingContext) =>
+      vi.mocked(renderingContext.drawImage).mock.calls
+    );
 
     expect(fillTextCalls).toContainEqual([
       "Last Chance",
       expect.any(Number),
       expect.any(Number),
     ]);
+    expect(
+      drawImageCalls.some(
+        ([image]) =>
+          image instanceof HTMLImageElement &&
+          image.src.endsWith(achievement.icon.src)
+      )
+    ).toBe(true);
 
     const titleCall = fillTextCalls.find((call) => call[0] === "Last Chance");
     const titleY = titleCall?.[2];

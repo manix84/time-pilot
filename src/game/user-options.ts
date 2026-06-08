@@ -187,39 +187,70 @@ const optionsStorage = {
       return null;
     }
 
-    if (key !== userOptionsStorageKey) {
-      return storage.getItem(key);
+    try {
+      if (key !== userOptionsStorageKey) {
+        return storage.getItem(key);
+      }
+
+      const storedOptions = parseStoredOptions(
+        storage.getItem(userOptionsStorageKey)
+      );
+      const legacyDebugOptions = parseStoredOptions(
+        storage.getItem(legacyDebugStorageKey)
+      ) as Partial<Pick<UserOptions, "debug" | "enableDebug">>;
+
+      return JSON.stringify({
+        ...legacyDebugOptions,
+        ...storedOptions,
+        debug: {
+          ...getObjectRecord(legacyDebugOptions.debug),
+          ...getObjectRecord(storedOptions.debug),
+        },
+      });
+    } catch {
+      return null;
     }
-
-    const storedOptions = JSON.parse(
-      storage.getItem(userOptionsStorageKey) ?? "{}"
-    ) as Partial<PersistedUserOptions>;
-    const legacyDebugOptions = JSON.parse(
-      storage.getItem(legacyDebugStorageKey) ?? "{}"
-    ) as Partial<Pick<UserOptions, "debug" | "enableDebug">>;
-
-    return JSON.stringify({
-      ...legacyDebugOptions,
-      ...storedOptions,
-      debug: {
-        ...legacyDebugOptions.debug,
-        ...storedOptions.debug,
-      },
-    });
   },
   removeItem: (key: string): void => {
     const storage = getOptionsStorage();
 
-    storage?.removeItem(key);
+    try {
+      storage?.removeItem(key);
 
-    if (key === userOptionsStorageKey) {
-      storage?.removeItem(legacyDebugStorageKey);
+      if (key === userOptionsStorageKey) {
+        storage?.removeItem(legacyDebugStorageKey);
+      }
+    } catch {
+      // Preference persistence is best-effort.
     }
   },
   setItem: (key: string, value: string): void => {
-    getOptionsStorage()?.setItem(key, value);
+    try {
+      getOptionsStorage()?.setItem(key, value);
+    } catch {
+      // Preference persistence is best-effort.
+    }
   },
 };
+
+const parseStoredOptions = (value: string | null): Record<string, unknown> => {
+  if (!value) {
+    return {};
+  }
+
+  try {
+    const parsed = JSON.parse(value);
+
+    return parsed && typeof parsed === "object"
+      ? (parsed as Record<string, unknown>)
+      : {};
+  } catch {
+    return {};
+  }
+};
+
+const getObjectRecord = (value: unknown): Record<string, unknown> =>
+  value && typeof value === "object" ? (value as Record<string, unknown>) : {};
 
 const isNumberArray = (value: unknown): value is number[] => {
   return Array.isArray(value) && value.every((item) => typeof item === "number");

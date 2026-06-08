@@ -36,10 +36,7 @@ class AchievementNotifications {
         frameWidth: achievement.icon.frameWidth,
         frameX: achievement.icon.unlockedFrameX * achievement.icon.frameWidth,
         frameY: 0,
-        image:
-          sprite.complete && sprite.naturalWidth > 0 && sprite.naturalHeight > 0
-            ? sprite
-            : undefined,
+        image: sprite,
       },
       name: achievement.name,
     });
